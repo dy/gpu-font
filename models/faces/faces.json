@@ -1,0 +1,242 @@
+[
+  {
+    "id": "inter-400-normal",
+    "family": "inter",
+    "weight": 400,
+    "style": "normal"
+  },
+  {
+    "id": "inter-700-normal",
+    "family": "inter",
+    "weight": 700,
+    "style": "normal"
+  },
+  {
+    "id": "inter-400-italic",
+    "family": "inter",
+    "weight": 400,
+    "style": "italic"
+  },
+  {
+    "id": "inter-700-italic",
+    "family": "inter",
+    "weight": 700,
+    "style": "italic"
+  },
+  {
+    "id": "roboto-400-normal",
+    "family": "roboto",
+    "weight": 400,
+    "style": "normal"
+  },
+  {
+    "id": "roboto-700-normal",
+    "family": "roboto",
+    "weight": 700,
+    "style": "normal"
+  },
+  {
+    "id": "roboto-400-italic",
+    "family": "roboto",
+    "weight": 400,
+    "style": "italic"
+  },
+  {
+    "id": "roboto-700-italic",
+    "family": "roboto",
+    "weight": 700,
+    "style": "italic"
+  },
+  {
+    "id": "open-sans-400-normal",
+    "family": "open-sans",
+    "weight": 400,
+    "style": "normal"
+  },
+  {
+    "id": "open-sans-700-normal",
+    "family": "open-sans",
+    "weight": 700,
+    "style": "normal"
+  },
+  {
+    "id": "open-sans-400-italic",
+    "family": "open-sans",
+    "weight": 400,
+    "style": "italic"
+  },
+  {
+    "id": "open-sans-700-italic",
+    "family": "open-sans",
+    "weight": 700,
+    "style": "italic"
+  },
+  {
+    "id": "source-sans-3-400-normal",
+    "family": "source-sans-3",
+    "weight": 400,
+    "style": "normal"
+  },
+  {
+    "id": "source-sans-3-700-normal",
+    "family": "source-sans-3",
+    "weight": 700,
+    "style": "normal"
+  },
+  {
+    "id": "source-sans-3-400-italic",
+    "family": "source-sans-3",
+    "weight": 400,
+    "style": "italic"
+  },
+  {
+    "id": "source-sans-3-700-italic",
+    "family": "source-sans-3",
+    "weight": 700,
+    "style": "italic"
+  },
+  {
+    "id": "montserrat-400-normal",
+    "family": "montserrat",
+    "weight": 400,
+    "style": "normal"
+  },
+  {
+    "id": "montserrat-700-normal",
+    "family": "montserrat",
+    "weight": 700,
+    "style": "normal"
+  },
+  {
+    "id": "montserrat-400-italic",
+    "family": "montserrat",
+    "weight": 400,
+    "style": "italic"
+  },
+  {
+    "id": "montserrat-700-italic",
+    "family": "montserrat",
+    "weight": 700,
+    "style": "italic"
+  },
+  {
+    "id": "poppins-400-normal",
+    "family": "poppins",
+    "weight": 400,
+    "style": "normal"
+  },
+  {
+    "id": "poppins-700-normal",
+    "family": "poppins",
+    "weight": 700,
+    "style": "normal"
+  },
+  {
+    "id": "poppins-400-italic",
+    "family": "poppins",
+    "weight": 400,
+    "style": "italic"
+  },
+  {
+    "id": "poppins-700-italic",
+    "family": "poppins",
+    "weight": 700,
+    "style": "italic"
+  },
+  {
+    "id": "nunito-400-normal",
+    "family": "nunito",
+    "weight": 400,
+    "style": "normal"
+  },
+  {
+    "id": "nunito-700-normal",
+    "family": "nunito",
+    "weight": 700,
+    "style": "normal"
+  },
+  {
+    "id": "nunito-400-italic",
+    "family": "nunito",
+    "weight": 400,
+    "style": "italic"
+  },
+  {
+    "id": "nunito-700-italic",
+    "family": "nunito",
+    "weight": 700,
+    "style": "italic"
+  },
+  {
+    "id": "lora-400-normal",
+    "family": "lora",
+    "weight": 400,
+    "style": "normal"
+  },
+  {
+    "id": "lora-700-normal",
+    "family": "lora",
+    "weight": 700,
+    "style": "normal"
+  },
+  {
+    "id": "lora-400-italic",
+    "family": "lora",
+    "weight": 400,
+    "style": "italic"
+  },
+  {
+    "id": "lora-700-italic",
+    "family": "lora",
+    "weight": 700,
+    "style": "italic"
+  },
+  {
+    "id": "merriweather-400-normal",
+    "family": "merriweather",
+    "weight": 400,
+    "style": "normal"
+  },
+  {
+    "id": "merriweather-700-normal",
+    "family": "merriweather",
+    "weight": 700,
+    "style": "normal"
+  },
+  {
+    "id": "merriweather-400-italic",
+    "family": "merriweather",
+    "weight": 400,
+    "style": "italic"
+  },
+  {
+    "id": "merriweather-700-italic",
+    "family": "merriweather",
+    "weight": 700,
+    "style": "italic"
+  },
+  {
+    "id": "playfair-display-400-normal",
+    "family": "playfair-display",
+    "weight": 400,
+    "style": "normal"
+  },
+  {
+    "id": "playfair-display-700-normal",
+    "family": "playfair-display",
+    "weight": 700,
+    "style": "normal"
+  },
+  {
+    "id": "playfair-display-400-italic",
+    "family": "playfair-display",
+    "weight": 400,
+    "style": "italic"
+  },
+  {
+    "id": "playfair-display-700-italic",
+    "family": "playfair-display",
+    "weight": 700,
+    "style": "italic"
+  }
+]

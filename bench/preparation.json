@@ -1,0 +1,438 @@
+{
+  "modelSha256": "66b98a49d1bebe9b2e56bc896f1fbe9b8e76ece52e74608aeae58ef3dd4cefbb",
+  "manifestSha256": "248e80c2ca1875bf90a0f2420be34de2cbfe677798f6ad12f6141eecb70096e1",
+  "lineSha256": "e35378b08a94e5e0539fabbc1c2f0075177a73ae1b88f5721dcd90f102e01b39",
+  "scope": "Frozen weights; new synthetic development bank, no final-test claims. Oracle uses renderer word boxes and the known rotation.",
+  "methods": {
+    "current": {
+      "groups": {
+        "all": {
+          "count": 6400,
+          "correct": 3845,
+          "top5": 5252,
+          "accuracy": 0.60078125,
+          "top5Accuracy": 0.820625
+        },
+        "clean": {
+          "count": 1600,
+          "correct": 1180,
+          "top5": 1483,
+          "accuracy": 0.7375,
+          "top5Accuracy": 0.926875
+        },
+        "length/1": {
+          "count": 1600,
+          "correct": 731,
+          "top5": 1209,
+          "accuracy": 0.456875,
+          "top5Accuracy": 0.755625
+        },
+        "pillow": {
+          "count": 3200,
+          "correct": 1921,
+          "top5": 2629,
+          "accuracy": 0.6003125,
+          "top5Accuracy": 0.8215625
+        },
+        "small": {
+          "count": 1600,
+          "correct": 684,
+          "top5": 1063,
+          "accuracy": 0.4275,
+          "top5Accuracy": 0.664375
+        },
+        "rotate": {
+          "count": 1600,
+          "correct": 796,
+          "top5": 1235,
+          "accuracy": 0.4975,
+          "top5Accuracy": 0.771875
+        },
+        "neighbor": {
+          "count": 1600,
+          "correct": 1185,
+          "top5": 1471,
+          "accuracy": 0.740625,
+          "top5Accuracy": 0.919375
+        },
+        "length/2-3": {
+          "count": 1600,
+          "correct": 662,
+          "top5": 1124,
+          "accuracy": 0.41375,
+          "top5Accuracy": 0.7025
+        },
+        "length/4-7": {
+          "count": 1600,
+          "correct": 1264,
+          "top5": 1476,
+          "accuracy": 0.79,
+          "top5Accuracy": 0.9225
+        },
+        "length/8+": {
+          "count": 1600,
+          "correct": 1188,
+          "top5": 1443,
+          "accuracy": 0.7425,
+          "top5Accuracy": 0.901875
+        },
+        "chromium": {
+          "count": 3200,
+          "correct": 1924,
+          "top5": 2623,
+          "accuracy": 0.60125,
+          "top5Accuracy": 0.8196875
+        }
+      },
+      "preparationMs": {
+        "median": 0.2648330000010901,
+        "p95": 1.1363750000018626
+      },
+      "windows": 10296
+    },
+    "groups": {
+      "groups": {
+        "all": {
+          "count": 6400,
+          "correct": 3401,
+          "top5": 4975,
+          "accuracy": 0.53140625,
+          "top5Accuracy": 0.77734375
+        },
+        "clean": {
+          "count": 1600,
+          "correct": 1071,
+          "top5": 1455,
+          "accuracy": 0.669375,
+          "top5Accuracy": 0.909375
+        },
+        "length/1": {
+          "count": 1600,
+          "correct": 733,
+          "top5": 1216,
+          "accuracy": 0.458125,
+          "top5Accuracy": 0.76
+        },
+        "pillow": {
+          "count": 3200,
+          "correct": 1703,
+          "top5": 2493,
+          "accuracy": 0.5321875,
+          "top5Accuracy": 0.7790625
+        },
+        "small": {
+          "count": 1600,
+          "correct": 610,
+          "top5": 1017,
+          "accuracy": 0.38125,
+          "top5Accuracy": 0.635625
+        },
+        "rotate": {
+          "count": 1600,
+          "correct": 658,
+          "top5": 1085,
+          "accuracy": 0.41125,
+          "top5Accuracy": 0.678125
+        },
+        "neighbor": {
+          "count": 1600,
+          "correct": 1062,
+          "top5": 1418,
+          "accuracy": 0.66375,
+          "top5Accuracy": 0.88625
+        },
+        "length/2-3": {
+          "count": 1600,
+          "correct": 668,
+          "top5": 1117,
+          "accuracy": 0.4175,
+          "top5Accuracy": 0.698125
+        },
+        "length/4-7": {
+          "count": 1600,
+          "correct": 1082,
+          "top5": 1430,
+          "accuracy": 0.67625,
+          "top5Accuracy": 0.89375
+        },
+        "length/8+": {
+          "count": 1600,
+          "correct": 918,
+          "top5": 1212,
+          "accuracy": 0.57375,
+          "top5Accuracy": 0.7575
+        },
+        "chromium": {
+          "count": 3200,
+          "correct": 1698,
+          "top5": 2482,
+          "accuracy": 0.530625,
+          "top5Accuracy": 0.775625
+        }
+      },
+      "preparationMs": {
+        "median": 0.5644590000010794,
+        "p95": 2.6634160000030533
+      },
+      "windows": 8599
+    },
+    "deskew": {
+      "groups": {
+        "all": {
+          "count": 6400,
+          "correct": 3596,
+          "top5": 5167,
+          "accuracy": 0.561875,
+          "top5Accuracy": 0.80734375
+        },
+        "clean": {
+          "count": 1600,
+          "correct": 1071,
+          "top5": 1455,
+          "accuracy": 0.669375,
+          "top5Accuracy": 0.909375
+        },
+        "length/1": {
+          "count": 1600,
+          "correct": 733,
+          "top5": 1216,
+          "accuracy": 0.458125,
+          "top5Accuracy": 0.76
+        },
+        "pillow": {
+          "count": 3200,
+          "correct": 1797,
+          "top5": 2593,
+          "accuracy": 0.5615625,
+          "top5Accuracy": 0.8103125
+        },
+        "small": {
+          "count": 1600,
+          "correct": 610,
+          "top5": 1017,
+          "accuracy": 0.38125,
+          "top5Accuracy": 0.635625
+        },
+        "rotate": {
+          "count": 1600,
+          "correct": 853,
+          "top5": 1277,
+          "accuracy": 0.533125,
+          "top5Accuracy": 0.798125
+        },
+        "neighbor": {
+          "count": 1600,
+          "correct": 1062,
+          "top5": 1418,
+          "accuracy": 0.66375,
+          "top5Accuracy": 0.88625
+        },
+        "length/2-3": {
+          "count": 1600,
+          "correct": 668,
+          "top5": 1117,
+          "accuracy": 0.4175,
+          "top5Accuracy": 0.698125
+        },
+        "length/4-7": {
+          "count": 1600,
+          "correct": 1088,
+          "top5": 1430,
+          "accuracy": 0.68,
+          "top5Accuracy": 0.89375
+        },
+        "length/8+": {
+          "count": 1600,
+          "correct": 1107,
+          "top5": 1404,
+          "accuracy": 0.691875,
+          "top5Accuracy": 0.8775
+        },
+        "chromium": {
+          "count": 3200,
+          "correct": 1799,
+          "top5": 2574,
+          "accuracy": 0.5621875,
+          "top5Accuracy": 0.804375
+        }
+      },
+      "preparationMs": {
+        "median": 0.6237909999908879,
+        "p95": 4.110999999997148
+      },
+      "windows": 9125
+    },
+    "deskew-windows": {
+      "groups": {
+        "all": {
+          "count": 6400,
+          "correct": 3978,
+          "top5": 5327,
+          "accuracy": 0.6215625,
+          "top5Accuracy": 0.83234375
+        },
+        "clean": {
+          "count": 1600,
+          "correct": 1180,
+          "top5": 1483,
+          "accuracy": 0.7375,
+          "top5Accuracy": 0.926875
+        },
+        "length/1": {
+          "count": 1600,
+          "correct": 731,
+          "top5": 1209,
+          "accuracy": 0.456875,
+          "top5Accuracy": 0.755625
+        },
+        "pillow": {
+          "count": 3200,
+          "correct": 1985,
+          "top5": 2666,
+          "accuracy": 0.6203125,
+          "top5Accuracy": 0.833125
+        },
+        "small": {
+          "count": 1600,
+          "correct": 684,
+          "top5": 1063,
+          "accuracy": 0.4275,
+          "top5Accuracy": 0.664375
+        },
+        "rotate": {
+          "count": 1600,
+          "correct": 929,
+          "top5": 1310,
+          "accuracy": 0.580625,
+          "top5Accuracy": 0.81875
+        },
+        "neighbor": {
+          "count": 1600,
+          "correct": 1185,
+          "top5": 1471,
+          "accuracy": 0.740625,
+          "top5Accuracy": 0.919375
+        },
+        "length/2-3": {
+          "count": 1600,
+          "correct": 662,
+          "top5": 1124,
+          "accuracy": 0.41375,
+          "top5Accuracy": 0.7025
+        },
+        "length/4-7": {
+          "count": 1600,
+          "correct": 1283,
+          "top5": 1489,
+          "accuracy": 0.801875,
+          "top5Accuracy": 0.930625
+        },
+        "length/8+": {
+          "count": 1600,
+          "correct": 1302,
+          "top5": 1505,
+          "accuracy": 0.81375,
+          "top5Accuracy": 0.940625
+        },
+        "chromium": {
+          "count": 3200,
+          "correct": 1993,
+          "top5": 2661,
+          "accuracy": 0.6228125,
+          "top5Accuracy": 0.8315625
+        }
+      },
+      "preparationMs": {
+        "median": 0.29966600000625476,
+        "p95": 3.1364579999935813
+      },
+      "windows": 10583
+    },
+    "oracle": {
+      "groups": {
+        "all": {
+          "count": 6400,
+          "correct": 3745,
+          "top5": 5266,
+          "accuracy": 0.58515625,
+          "top5Accuracy": 0.8228125
+        },
+        "clean": {
+          "count": 1600,
+          "correct": 1071,
+          "top5": 1441,
+          "accuracy": 0.669375,
+          "top5Accuracy": 0.900625
+        },
+        "length/1": {
+          "count": 1600,
+          "correct": 727,
+          "top5": 1217,
+          "accuracy": 0.454375,
+          "top5Accuracy": 0.760625
+        },
+        "pillow": {
+          "count": 3200,
+          "correct": 1862,
+          "top5": 2646,
+          "accuracy": 0.581875,
+          "top5Accuracy": 0.826875
+        },
+        "small": {
+          "count": 1600,
+          "correct": 644,
+          "top5": 1042,
+          "accuracy": 0.4025,
+          "top5Accuracy": 0.65125
+        },
+        "rotate": {
+          "count": 1600,
+          "correct": 962,
+          "top5": 1343,
+          "accuracy": 0.60125,
+          "top5Accuracy": 0.839375
+        },
+        "neighbor": {
+          "count": 1600,
+          "correct": 1068,
+          "top5": 1440,
+          "accuracy": 0.6675,
+          "top5Accuracy": 0.9
+        },
+        "length/2-3": {
+          "count": 1600,
+          "correct": 669,
+          "top5": 1123,
+          "accuracy": 0.418125,
+          "top5Accuracy": 0.701875
+        },
+        "length/4-7": {
+          "count": 1600,
+          "correct": 1106,
+          "top5": 1447,
+          "accuracy": 0.69125,
+          "top5Accuracy": 0.904375
+        },
+        "length/8+": {
+          "count": 1600,
+          "correct": 1243,
+          "top5": 1479,
+          "accuracy": 0.776875,
+          "top5Accuracy": 0.924375
+        },
+        "chromium": {
+          "count": 3200,
+          "correct": 1883,
+          "top5": 2620,
+          "accuracy": 0.5884375,
+          "top5Accuracy": 0.81875
+        }
+      },
+      "preparationMs": {
+        "median": 0.6444159999955446,
+        "p95": 3.32583399998839
+      },
+      "windows": 9600
+    }
+  }
+}

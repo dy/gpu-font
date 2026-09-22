@@ -1,0 +1,8 @@
+{
+  "modelSha256": "89df149d5e55170edd4c545ea0475081367c8f2e5be38249d83cdcdadee66281",
+  "classes": 40,
+  "cpuError": 0.0000457763671875,
+  "gpuError": 0.0000762939453125,
+  "cases": 4,
+  "sequence": "A → A → maximum → odd → small → A"
+}
