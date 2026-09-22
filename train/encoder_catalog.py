@@ -72,8 +72,8 @@ def read_catalog(catalog,encoder_path):
 
 def rejection(scores,samples,families,threshold):
     positions={f:i for i,f in enumerate(families)};predicted=scores.argmax(1);top=scores.max(1);present=np.array([s['family'] in positions for s in samples])
-    correct=np.array([positions.get(s['family'],-1)==i for s,i in zip(samples,predicted)]);accepted=top>=threshold
-    return {'threshold':float(threshold),'presentQueries':int(present.sum()),'absentQueries':int((~present).sum()),'acceptedPresent':int((accepted&present).sum()),
+    correct=np.array([positions.get(s['family'],-1)==i for s,i in zip(samples,predicted)]);accepted=np.zeros(len(top),dtype=bool) if threshold is None else top>=threshold
+    return {'threshold':None if threshold is None else float(threshold),'presentQueries':int(present.sum()),'absentQueries':int((~present).sum()),'acceptedPresent':int((accepted&present).sum()),
             'presentCoverage':float((accepted&present).sum()/max(1,present.sum())),
             'acceptedPresentAccuracy':float((correct&accepted).sum()/max(1,(accepted&present).sum())),
             'absentAcceptance':float((accepted&~present).sum()/max(1,(~present).sum()))}
@@ -96,18 +96,42 @@ def calibrate(scores,samples,families):
     order=np.argsort(-top,kind='stable');ends=np.r_[np.flatnonzero(np.diff(top[order])),len(top)-1]
     n=np.cumsum(present[order])[ends];hits=np.cumsum(correct[order])[ends];unknown=np.cumsum(~present[order])[ends]
     good=(n>0)&(hits/np.maximum(n,1)>=.95)&(unknown/(~present).sum()<=.05)
-    threshold=float(top[order[ends[np.flatnonzero(good)[-1]]]]) if good.any() else float(np.nextafter(np.float32(1),np.float32(2)))
+    threshold=float(top[order[ends[np.flatnonzero(good)[-1]]]]) if good.any() else None
     return rejection(scores,samples,families,threshold)
 
 
+def confidence_intervals(report,split):
+    """Resample whole lineage groups, keeping equal weight per family within a draw."""
+    result={};rng=np.random.default_rng(62922)
+    for role in ['train','development','test']:
+        groups=[[report['groups']['family/'+f] for f in group if 'family/'+f in report['groups']]
+                for group in split['groups'] if split['families'][group[0]]==role]
+        groups=[g for g in groups if g]
+        if not groups:continue
+        counts=np.array([len(g) for g in groups])
+        totals=np.array([[sum(f[key] for f in g) for key in ['top1','top5Accuracy']] for g in groups])
+        draws=rng.integers(len(groups),size=(2000,len(groups)))
+        values=totals[draws].sum(1)/counts[draws].sum(1)[:,None]
+        result[role]={'families':int(counts.sum()),'lineageGroups':len(groups),
+                      'macroTop1':np.quantile(values[:,0],[.025,.975]).tolist(),
+                      'macroTop5':np.quantile(values[:,1],[.025,.975]).tolist()}
+    return {'method':'95% percentile intervals, 2,000 lineage-group bootstrap draws, seed 62922; conditional on these synthetic texts and this trained seed.','splits':result}
+
+
 def evaluate_final():
-    torch.set_num_threads(4)
+    torch.set_num_threads(4);torch.use_deterministic_algorithms(True)
     selected=read(SELECTION);method=selected['method'];encoder_path=DATA/method/'encoder.json';original_hash=sha(encoder_path)
     if original_hash!=selected['encoderSha256'] or sha(SPLIT)!=selected['splitSha256'] or sha(ROOT/f'bench/encoder-{method}.json')!=selected['reportSha256']:raise ValueError('Changed frozen selection')
     if not torch.backends.mps.is_available():raise ValueError('MPS unavailable')
     model=load_encoder(encoder_path).to('mps');count=selected['referencesPerFace'];inventory=read(ROOT/'bench/corpus.json')
-    dev,dp,split=load_data();_,_,data=assess(model,dev,dp,counts=(count,),quantized=True)
-    families,rs,rv,qs,qv=data;kept,absent=absent_catalog(families,split,'development')
+    dev,dp,split=load_data();quantized,_,data=assess(model,dev,dp,counts=(count,),quantized=True)
+    families,rs,rv,qs,qv=data
+    float_refs,float_owners,_,_=references(rv,rs,families,count,False)
+    weights_only=metrics(rank(qv,float_refs,float_owners,families),qs,families)
+    float_result=read(ROOT/f'bench/encoder-{method}.json')['validationFloat'][str(count)]
+    quantization={name:{key:report['groups'][key] for key in ['all','split/train','split/development']} for name,report in
+                  [('float',float_result),('int8Weights',weights_only),('int8WeightsAndReferences',quantized[str(count)])]}
+    kept,absent=absent_catalog(families,split,'development')
     refs,owners,_,_=references(rv,rs,kept,count,True);calibration=calibrate(rank(qv,refs,owners,kept),qs,kept)
     calibration.update(catalogFamilies=len(kept),absentFamilies=absent,scope='Synthetic development-only threshold; no real-image probability claim.')
     del dev,dp,data,rv,qv,qs,rs
@@ -132,7 +156,8 @@ def evaluate_final():
     np.testing.assert_array_equal(a,b[:,inverse])
     if sha(encoder_path)!=original_hash or sha(out/'encoder.json')!=original_hash:raise ValueError('Encoder changed during indexing')
     report={'selection':selected,'encoderSha256':original_hash,'catalogSha256':sha(out/'google-fonts.json'),'finalDataSha256':sha(DATA/'final.json'),
-            'results':results[str(count)],'catalogAddition':slices,'calibration':calibration,'rejection':absent_result,'payload':sizes,
+            'results':results[str(count)],'catalogAddition':slices,'developmentQuantization':quantization,'calibration':calibration,'rejection':absent_result,'payload':sizes,
+            'confidenceIntervals':confidence_intervals(results[str(count)],split),
             'encoderUnchangedAfterIndexing':True,'reorderedScoresIdentical':True,
             'scope':'All 2,004 families indexed with frozen encoder. Final 300 families never optimized or used for selection. Strict identity, synthetic mixed-renderer queries; no independent screenshot or weight/style detection claim.'}
     save(ROOT/'bench/encoder-test.json',report)

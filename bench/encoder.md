@@ -36,4 +36,27 @@ npm test
 
 The two renderers can run concurrently after normal face instances are ready. Training requires MPS access on the local Mac. The `.data/encoder/` archive is separate from the deployed demo. Each arm writes `progress.json`, an exact optimizer/scheduler/random-state `last.pt` for `--resume`, a selected `best.pt`, and `encoder.json`. Resume rejects changed training code, data, split, method or total step budget. Reports are written to `bench/encoder-episodic.json` and `bench/encoder-classification.json` only after the arm finishes.
 
-This file records the protocol before optimization. Results and final catalog commands will be added after measurement; no recognition gain is claimed yet.
+Development preparation contains **348,416 images / 689,157 windows / 3,653,928,403 tensor bytes**: 157,376 training images, 47,760 references and 143,280 queries. Both renderers completed all 1,704 non-final families. These training assets do not ship to the browser.
+
+## Encoder and catalog contract
+
+The experimental encoder JSON has `kind: "font-encoder"`, `dimensions: 128`, `normalization: "l2"`, the convolution/projection tensors and preparation hashes. It contains no font labels. The current classifier runtime is reused only through a feature-channel adapter in `checks/encoder.mjs`; the released catalog loader/search API and demo integration remain gated on quality.
+
+The separate JSON catalog has `kind: "font-catalog"`, exact `encoderSha256` and `preparationSha256`, face metadata, and packed int8 vectors with per-row scales and owners. Version 1 indexes one selected normal face per family, with one or four reference vectors. Face weight/style are source metadata, not predicted attributes. The reader rejects incompatible hashes, duplicate identities, malformed dimensions/scales/owners, missing bytes and trailing bytes. Preserve the exact encoder file bytes used to build the catalog.
+
+After both arms finish, selection is frozen before final pixels are generated:
+
+```sh
+node scripts/python.mjs -m train.encoder_catalog select
+node scripts/python.mjs -m train.encoder_data plan --phase final
+node scripts/python.mjs -m train.encoder_data faces --phase final --workers 6
+node scripts/python.mjs -m train.encoder_data render --phase final --workers 6
+node scripts/encoder-browser.mjs final
+node scripts/python.mjs -m train.encoder_data pack --phase final
+node scripts/python.mjs -m train.encoder_catalog test
+node checks/encoder.mjs
+```
+
+Final evaluation compares the 1,704-entry catalog with all 2,004 families, verifies unchanged encoder bytes and reordered scores, and separates float, int8-weight and int8-reference development results. A rejection threshold is chosen on a development catalog with whole family groups removed; a separate final removal measures transfer as catalog membership changes. It is not a calibrated probability or a guarantee for arbitrary user catalogs.
+
+Results will be added after the matched comparison and final measurement. The independent preview archive is reference material; none of its captures enter this training run or its reported query tests.

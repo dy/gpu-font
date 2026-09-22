@@ -6,7 +6,7 @@ import unittest
 
 import numpy as np
 
-from train.encoder_catalog import read_catalog,preparation_hash,calibrate,rejection,absent_catalog
+from train.encoder_catalog import read_catalog,preparation_hash,calibrate,rejection,absent_catalog,confidence_intervals
 from train.encoder_data import save
 from train.robustness import sha
 
@@ -22,6 +22,10 @@ class EncoderCatalogTests(unittest.TestCase):
             for _ in range(2):
                 vectors,owners,families=read_catalog(catalog,path);np.testing.assert_array_equal(vectors[:,:2],np.eye(2));np.testing.assert_array_equal(vectors[:,2:],0)
                 self.assertEqual(families,['a','b']);self.assertEqual(owners.tolist(),[0,1])
+            smallest=copy.deepcopy(catalog);smallest['faces']=smallest['faces'][:1]
+            smallest['vectors'].update(shape=[1,128],data=base64.b64encode(raw[:128]).decode(),scales=[1/127],owners=[0])
+            self.assertEqual(read_catalog(smallest,path)[0][0].tolist(),[1.]+[0.]*127)
+            for value in [None,{},[],{'faces':None}]:self.assertRaises(ValueError,read_catalog,value,path)
             for content in [b'',raw[:-1],raw+b'\0']:
                 bad=copy.deepcopy(catalog);bad['vectors']['data']=base64.b64encode(content).decode();self.assertRaisesRegex(ValueError,'vectors',read_catalog,bad,path)
             for key,value in [('encoderSha256','wrong'),('preparationSha256','wrong'),('dimensions',64),('dimensions',128.0),('version',True),('faces',[]),('referencesPerFace',2),('referencesPerFace',True)]:
@@ -42,6 +46,11 @@ class EncoderCatalogTests(unittest.TestCase):
         self.assertEqual(result,rejection(scores,samples,['a','b'],result['threshold']))
         tied=calibrate(np.array([[.9],[.9]]),[{'family':'a'},{'family':'unknown'}],['a'])
         self.assertEqual(tied['acceptedPresent'],0);self.assertEqual(tied['absentAcceptance'],0)
+        self.assertIsNone(tied['threshold'])
+        # Normalized float32 dot products can round slightly above one. A missing
+        # operating point must reject explicitly, not use a near-one sentinel.
+        rounded=rejection(np.array([[1.0000003],[1.0000003]]),[{'family':'a'},{'family':'unknown'}],['a'],tied['threshold'])
+        self.assertEqual(rounded['acceptedPresent'],0);self.assertEqual(rounded['absentAcceptance'],0)
         self.assertRaises(ValueError,calibrate,scores[:1],samples[:1],['a','b'])
 
     def test_absent_catalog_removes_complete_family_groups(self):
@@ -50,6 +59,15 @@ class EncoderCatalogTests(unittest.TestCase):
         self.assertEqual(len(absent),2);self.assertIn('known',kept);self.assertFalse(set(kept)&set(absent))
         self.assertEqual(set(kept)|set(absent),set(split['families']))
         for group in split['groups']:self.assertTrue(set(group)<=set(kept) or set(group)<=set(absent))
+
+    def test_intervals_resample_lineages_and_weight_families_not_query_counts(self):
+        split={'groups':[['a','b'],['c']], 'families':{'a':'test','b':'test','c':'development'}}
+        report={'groups':{'family/a':{'count':1000,'top1':0.,'top5Accuracy':.5},
+                          'family/b':{'count':1,'top1':1.,'top5Accuracy':1.}}}
+        result=confidence_intervals(report,split)
+        self.assertEqual(result,confidence_intervals(report,split))
+        self.assertEqual(result['splits'],{'test':{'families':2,'lineageGroups':1,'macroTop1':[.5,.5],'macroTop5':[.75,.75]}})
+        self.assertEqual(confidence_intervals({'groups':{}},split)['splits'],{})
 
 
 if __name__=='__main__':unittest.main()
