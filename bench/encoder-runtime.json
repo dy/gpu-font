@@ -1,0 +1,70 @@
+{
+  "encoderSha256": "2d14ce60f0e988f2bef2e0d95648957b823521536bd25d528ddebe0b7ace5d32",
+  "dimensions": 128,
+  "hardware": "Apple M4 Max",
+  "cpuError": 0.00000286102294921875,
+  "gpuError": 0.00000476837158203125,
+  "embeddingError": 1.5370459097163724e-7,
+  "timing": {
+    "adapter": "metal-3",
+    "initializationMs": 320.5,
+    "warmWindowP50Ms": 0.9000005722045898,
+    "warmWindowP95Ms": 2.1999998092651367,
+    "samples": 20,
+    "width": 128,
+    "height": 48
+  },
+  "payload": [
+    {
+      "path": "models/encoder/encoder.json",
+      "sha256": "2d14ce60f0e988f2bef2e0d95648957b823521536bd25d528ddebe0b7ace5d32",
+      "bytes": 489155,
+      "gzipBytes": 361192,
+      "brotliBytes": 348272
+    },
+    {
+      "path": "models/encoder/google-fonts.json",
+      "sha256": "d1309c528a36949b83c7accd9d5cee93dd2fc479f39d8f316ef0c27ec109c597",
+      "bytes": 908717,
+      "gzipBytes": 386992,
+      "brotliBytes": 358997
+    },
+    {
+      "path": "src/network.mjs",
+      "sha256": "554f3eeac08fcfa2191d252485b37b0874c2651cbd80dff03f0cb07f02526a06",
+      "bytes": 5881,
+      "gzipBytes": 2014,
+      "brotliBytes": 1810
+    },
+    {
+      "path": "src/network-gpu.mjs",
+      "sha256": "4ed6b458bca0eed491b51ebddd68a6a322c0bd2fd337dd0a8fb28b9e2fd4a12d",
+      "bytes": 6143,
+      "gzipBytes": 2123,
+      "brotliBytes": 1905
+    },
+    {
+      "path": "src/prepare.mjs",
+      "sha256": "c48ce58778ad111f611ed96ad73a41b0c5821c2d1733cc3368931c4abafd7a13",
+      "bytes": 5811,
+      "gzipBytes": 2127,
+      "brotliBytes": 1897
+    },
+    {
+      "path": "src/input.mjs",
+      "sha256": "6499378ce15d196937fab2e76c87c4b3bdd802981a01e363a0fbcddeb5b6d853",
+      "bytes": 2150,
+      "gzipBytes": 916,
+      "brotliBytes": 799
+    },
+    {
+      "path": "src/line.mjs",
+      "sha256": "e35378b08a94e5e0539fabbc1c2f0075177a73ae1b88f5721dcd90f102e01b39",
+      "bytes": 7764,
+      "gzipBytes": 2632,
+      "brotliBytes": 2342
+    }
+  ],
+  "componentBytes": 1425621,
+  "scope": "Existing CPU/Metal convolution kernels with a feature-channel adapter. Single-window projection timing excludes image preparation and catalog search. Bytes include encoder, catalog and existing inference/preparation modules; exclude the not-yet-released catalog API, demo and optional font previews."
+}

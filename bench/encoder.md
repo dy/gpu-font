@@ -59,4 +59,58 @@ node checks/encoder.mjs
 
 Final evaluation compares the 1,704-entry catalog with all 2,004 families, verifies unchanged encoder bytes and reordered scores, and separates float, int8-weight and int8-reference development results. A rejection threshold is chosen on a development catalog with whole family groups removed; a separate final removal measures transfer as catalog membership changes. It is not a calibrated probability or a guarantee for arbitrary user catalogs.
 
-Results will be added after the matched comparison and final measurement. The independent preview archive is reference material; none of its captures enter this training run or its reported query tests.
+## Matched training result
+
+Both arms completed 20,000 updates and selected their final checkpoint. The [frozen selection](encoder-selection.json) retains the classification-trained encoder with **one reference vector per family**. Its training-only classifier is discarded: the exported encoder has no family labels, and new families require indexing rather than optimization. This is one seeded comparison, not evidence that classification always beats episodic training.
+
+| Training objective / references | Known-family macro top-5 | Unseen-family macro top-5 | All-query top-5 |
+| --- | ---: | ---: | ---: |
+| Episodic / 1 | 55.28% | 56.37% | 45.95% |
+| Episodic / 4 by text length | 54.64% | 56.38% | 45.33% |
+| Classification / 1 | **56.59%** | **56.47%** | **47.65%** |
+| Classification / 4 by text length | 55.34% | 55.17% | 46.52% |
+
+These are int8 weights and references, searching all 1,704 non-final families on 143,280 development queries (118,032 known-family and 25,248 unseen-family queries). Macro scores give each family equal weight; the all-query column weights every crop equally. The selected encoder's unseen-family query-weighted top-1/top-5 is **27.21% / 49.03%**. Its 74.49% quick-check unseen-family macro top-5 applies only to clean 8+ character queries and is not the full result.
+
+The encoder has **349,920 parameters**, a 128-dimensional output and **489,155 raw JSON bytes**. Training plus per-arm evaluation took 1,234 seconds episodic and 964 seconds classification on the local Apple M4 Max/MPS, excluding data preparation. Reports preserve [episodic](encoder-episodic.json) and [classification](encoder-classification.json) per-family, script, length, renderer and condition slices, float/int8 measurements and checkpoint histories.
+
+A development diagnostic of the selected encoder gives 72.24% macro top-5 across 956 single-script families, versus 36.55% across 748 multi-script families. This association does not establish causation. One cross-script centroid may discard useful distinctions; four centroids grouped by text length did not solve it. A fixed-encoder comparison of script-separated or clustered references is a cheaper next experiment than increasing network size. Use development data for it and reserve new final queries before subsequent selection.
+
+## Frozen final result
+
+The [final report](encoder-test.json) searches **all 2,004 families** with the selected frozen encoder. Final preparation contains 223,488 images / 442,232 windows: 55,872 references and 167,616 separate queries. The 300 final families contribute 24,336 queries and were never used for optimization or selection.
+
+| Family split | Families | Query top-1 | Query top-5 | Macro family top-5 |
+| --- | ---: | ---: | ---: | ---: |
+| Training | 1,403 | 24.16% | 44.92% | 53.84% |
+| Development | 301 | 24.67% | 46.03% | 53.34% |
+| Final unseen | 300 | **26.78%** | **47.31%** | **54.75%** |
+
+Final unseen-family macro top-5 has a 95% lineage-bootstrap interval of **51.69–57.64%**. Intervals resample 2,000 whole lineage-group draws and are conditional on this trained seed and synthetic text set. They do not quantify independent screenshot performance. The final unseen-family browser-only query top-5 is 47.55%, versus Pillow's 47.07%.
+
+Across all family splits, top-5 is 25.65% for 2–3 characters, 44.40% for 4–7, and 55.85% for 8+. It is 52.13% on clean inputs, 44.36% on rotated inputs, and 39.82% on reduced-resolution inputs. These are strict family identity results, not visual similarity judgments. No weight/style prediction or arbitrary screenshot reliability is established.
+
+Indexing the 300 final families left the encoder SHA-256 unchanged, and reversed catalog order preserved scores exactly on the checked 64 queries. On the same fresh final queries, adding these distractors changes training-family macro top-5 from 55.69% to 53.84% and development-family macro top-5 from 56.04% to 53.34%. Catalog addition works mechanically; gate B's recognition-quality requirement remains unmet.
+
+Development calibration chose cosine 0.9866603. With 60 final families removed as absent queries, it accepts only **45 of 162,480 present-font queries (0.0277%)**, of which 42 are correct (93.33%). It accepts none of 5,136 absent-font queries. This fails both the accepted-accuracy and useful-coverage requirements; it is not usable certainty. A null threshold in future reports means calibration found no qualifying operating point and all queries are rejected explicitly.
+
+Int8 compression is not the main accuracy loss: development all-query top-5 is 47.726% with float weights/references, 47.654% with int8 weights alone, and 47.653% with int8 weights and references, a combined **0.073 percentage-point** reduction.
+
+## Browser and storage checks
+
+The [CPU/Metal check](encoder-runtime.json) exercised 1×1, 128×48, 127×47 and 7×3 inputs, including repeated A → A → B → C → D → A use. Maximum projection error versus PyTorch is 2.86e-6 on CPU and 4.77e-6 on Metal; maximum normalized embedding error is 1.54e-7.
+
+On Apple M4 Max / Chromium Metal, one warm 128×48 projection takes **0.9 ms median / 2.2 ms p95** over 20 measured runs. GPU initialization with already-loaded JSON takes 320.5 ms. This excludes image preparation, multi-window aggregation, catalog search and network loading; phone and end-to-end release timings remain unmeasured.
+
+| Artifact | Raw bytes | Brotli bytes |
+| --- | ---: | ---: |
+| Encoder JSON | 489,155 | 348,272 |
+| 2,004-family catalog JSON | 908,717 | 358,997 |
+| Existing inference/preparation modules | 27,749 | 8,753 |
+| Measured components | **1,425,621** | **716,022** |
+
+These components fit the 10 MB ceiling. They exclude the unreleased public catalog API, the website, optional font-preview assets and the training-only checkpoint. Artifacts are in [`models/encoder/`](../models/encoder/); the deployed demo is unchanged by this experiment.
+
+`npm test` passes all **56 JavaScript + 70 Python tests**. The size, parity and catalog-mechanics checks pass; retrieval and rejection gates fail. Preserve this candidate as a measured baseline. Next compare script-separated/clustered references on development data before spending on a larger encoder, then evaluate a training-only glyph objective if text invariance remains weak. Independent screenshots and genuine face coverage remain necessary before a release claim.
+
+The independent preview archive is reference material; none of its captures enter this training run or its reported query tests.

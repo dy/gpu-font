@@ -58,11 +58,13 @@ assert.ok(cpuError < 1e-4, `CPU projection error ${cpuError}`)
 assert.ok(gpuError < 1e-4, `GPU projection error ${gpuError}`)
 assert.ok(embeddingError < 1e-4, `Normalized embedding error ${embeddingError}`)
 const payload = []
-for (const path of ['models/encoder/encoder.json', 'models/encoder/google-fonts.json']) {
+for (const path of ['models/encoder/encoder.json', 'models/encoder/google-fonts.json',
+  'src/network.mjs', 'src/network-gpu.mjs', 'src/prepare.mjs', 'src/input.mjs', 'src/line.mjs']) {
   const bytes = await readFile(path)
   payload.push({ path, sha256: hash(bytes), bytes: bytes.length, gzipBytes: gzipSync(bytes, { level: 9 }).length, brotliBytes: brotliCompressSync(bytes).length })
 }
 const report = { encoderSha256: reference.encoderSha256, dimensions: encoder.dimensions, hardware: cpus()[0]?.model, cpuError, gpuError, embeddingError, timing, payload,
-  scope: 'Existing CPU/Metal convolution kernels with a feature-channel adapter. Single-window projection timing excludes image preparation and catalog search. This is not the released catalog runtime.' }
+  componentBytes: payload.reduce((sum, item) => sum + item.bytes, 0),
+  scope: 'Existing CPU/Metal convolution kernels with a feature-channel adapter. Single-window projection timing excludes image preparation and catalog search. Bytes include encoder, catalog and existing inference/preparation modules; exclude the not-yet-released catalog API, demo and optional font previews.' }
 await writeFile('bench/encoder-runtime.json', JSON.stringify(report, null, 2) + '\n')
 console.log(report)
