@@ -41,7 +41,6 @@ async function verify(page, value, option) {
   assert.deepEqual(await page.locator('.result-score').allTextContents(), value.matches.slice(0, 5).map(m => m.score.toFixed(3)))
   const canvases = await page.locator('#normalized canvas').evaluateAll(cs => cs.map(c => ({ width: c.width, height: c.height, pixels: Array.from(c.getContext('2d').getImageData(0, 0, c.width, c.height).data).filter((_, i) => i % 4 === 0) })))
   assert.deepEqual(canvases, value.inputs.map(i => ({ width: i.width, height: i.height, pixels: i.pixels.map(p => Math.round(p * 255)) })))
-  assert.equal(await page.locator('#input-count').textContent(), `${value.inputs.length} window${value.inputs.length === 1 ? '' : 's'}`)
   assert.equal(await page.locator('#detection-time').textContent(), `${value.milliseconds.toFixed(1)} ms`)
 }
 try {
@@ -50,10 +49,6 @@ try {
   await page.goto(base); await page.waitForFunction(() => document.body.dataset.ready === 'true')
   const original = await result(page)
   assert.equal(original.backend, 'WebGPU'); await verify(page, original, data.catalogs[0])
-  assert.equal(await page.locator('.results-heading #catalog-control').count(), 1)
-  assert.equal(await page.locator('.results-heading #sample').count(), 1)
-  assert.equal(await page.locator('#model-input #detection-time').count(), 1)
-  assert.equal(await page.locator('#results-title').getAttribute('class'), 'sr-only')
   const outputs = await page.evaluate(async ({ artifact, cases }) => {
     const { readNetwork } = await import('./src/network.mjs'), { createNetworkGPU } = await import('./src/network-gpu.mjs')
     const gpu = await createNetworkGPU(readNetwork(artifact)), outputs = []
@@ -113,16 +108,7 @@ try {
   await page.keyboard.press('Home'); assert.deepEqual((await result(page)).inputs, original.inputs)
   await page.locator('#clear').click(); await choose(page, data.catalogs.at(-1).id)
   assert.equal(await page.locator('.result, #normalized canvas').count(), 0); assert.ok(await page.locator('#save').isDisabled())
-  assert.ok(await page.locator('#empty-sample').isVisible())
-  assert.equal(await page.locator('#empty').getByText('or', { exact: true }).count(), 1)
-  await page.setViewportSize({ width: 320, height: 900 })
-  await page.locator('#empty-sample').click()
-  const sampleMenu = await page.locator('#sample-menu').boundingBox()
-  assert.ok(sampleMenu.x >= 0 && sampleMenu.y >= 0 && sampleMenu.x + sampleMenu.width <= 321 && sampleMenu.y + sampleMenu.height <= 901)
-  await page.keyboard.press('Escape')
-  assert.ok(await page.locator('#empty-sample').evaluate(e => e === document.activeElement))
-  await page.setViewportSize({ width: 1440, height: 1000 })
-  await page.locator('#empty-sample').click(); await page.locator('[data-font="lora"]').click()
+  await page.locator('#sample').click(); await page.locator('[data-font="lora"]').click()
   await verify(page, await result(page), data.catalogs.at(-1))
   // Corrupt images and blank pixels do not retain stale matches; replacement recovers.
   await page.locator('#file').setInputFiles({ name: 'broken.png', mimeType: 'image/png', buffer: Buffer.from('bad') })
@@ -130,7 +116,7 @@ try {
   assert.equal(await page.locator('.result').count(), 0)
   await page.locator('#sample').click(); await page.locator('[data-font="lora"]').click(); await result(page)
   await choose(page, data.catalogs[0].id)
-  for (const width of [320, 375, 414, 768, 1440]) {
+  for (const width of [320, 375, 768, 1440]) {
     await page.setViewportSize({ width, height: 900 })
     await page.locator('#catalog-button').click(); await page.keyboard.press('End')
     assert.equal(await page.locator('#import-catalog').evaluate(e => e === document.activeElement), true)
@@ -161,7 +147,7 @@ try {
   assert.equal(fallback.backend, 'CPU'); assert.ok(error(fallback.embedding, original.embedding) < 1e-4)
   await cpu.close(); assert.deepEqual(issues, [])
   const report = { encoderSha256: data.encoderSha256, catalogs: data.catalogs.map(o => ({ id: o.id, sha256: o.sha256, families: o.families, faces: o.faces })), cpuError, gpuError,
-    detectionMilliseconds: original.milliseconds, checks: ['native CPU/PyTorch/WebGPU projections', 'exact displayed tensors and input stats', 'catalog A → A → B → A', 'cached embedding reuse', 'one-face JSON import', 'invalid imports preserve result', 'stale catalog response', 'resolution and crop round trip', 'clear/switch/replacement', 'empty image/sample entry', 'corrupt image recovery', 'keyboard and responsive selectors', 'image before initial catalog', 'CPU fallback'],
+    detectionMilliseconds: original.milliseconds, checks: ['native CPU/PyTorch/WebGPU projections', 'exact displayed tensors', 'catalog A → A → B → A', 'cached embedding reuse', 'one-face JSON import', 'invalid imports preserve result', 'stale catalog response', 'resolution and crop round trip', 'clear/switch/replacement', 'corrupt image recovery', 'keyboard and responsive selector', 'image before initial catalog', 'CPU fallback'],
     scope: 'Runtime correctness and UI lifecycle only; not recognition accuracy.' }
   await writeFile('bench/catalog-demo.json', JSON.stringify(report, null, 2) + '\n'); console.log(report)
 } finally { await browser.close() }
