@@ -35,9 +35,9 @@ def banks(families):
     return {script: preferred.get(script, ''.join(c for c, _ in sorted(count.items(), key=lambda v: (-v[1], v[0]))[:64])) for script, count in sorted(counts.items())}
 
 
-def texts(alphabet, script, role, avoid=()):
+def texts(alphabet, script, role, avoid=(), revision=1):
     if len(set(alphabet)) < 8 or len(set(alphabet)) != len(alphabet): raise ValueError('Invalid text alphabet')
-    seed = int.from_bytes(hashlib.sha256((script + ':' + role).encode()).digest()[:8])
+    seed = int.from_bytes(hashlib.sha256((script + ':' + role + (f':v{revision}' if revision != 1 else '')).encode()).digest()[:8])
     rng = random.Random(seed)
     count = 64 if role == 'train' else 8
     used = {t.casefold() for t in avoid}; result = []
@@ -58,7 +58,10 @@ def plans(family, pools):
         if len(alphabet) < 8: alphabet = ''.join(sorted(coverage))[:64]
         splits = {}; used = []
         for role in ['train', 'validation', 'test']:
-            splits[role] = texts(alphabet, script, role, used); used.extend(splits[role])
+            # The initial test crops informed an axis/rendering audit. Reserve fresh final strings.
+            previous = texts(alphabet, script, role, used) if role == 'test' else []
+            splits[role] = texts(alphabet, script, role, used + previous, revision=2 if role=='test' else 1)
+            used.extend(splits[role])
         for role, values in splits.items():
             for i, text in enumerate(values):
                 index = int.from_bytes(script.encode(), 'big') * 80 + {'train':0,'validation':64,'test':72}[role] + i
@@ -79,7 +82,9 @@ def render_family(job):
     font_cache = {}; images = []; samples = []; unhinted = None
     def render(plan):
         size = plan['size']
-        if size not in font_cache: font_cache[size] = ImageFont.truetype(io.BytesIO(unhinted) if unhinted else str(source), size, layout_engine=ImageFont.Layout.RAQM)
+        if size not in font_cache:
+            font_cache[size] = ImageFont.truetype(io.BytesIO(unhinted) if unhinted else str(source), size, layout_engine=ImageFont.Layout.RAQM)
+            if face['axes']: font_cache[size].set_variation_by_axes([family['trainingAxes'][tag] for tag in face['axes']])
         font = font_cache[size]; left, top, right, bottom = font.getbbox(plan['text'])
         if right <= left or bottom <= top: raise ValueError('Empty supported text in ' + family['id'])
         image = Image.new('L', (right-left+12, bottom-top+12), 255)

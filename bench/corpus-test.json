@@ -1,0 +1,1359 @@
+{
+  "modelSha256": "e1a4508931294eb90a1ae95e04073f9aeb2d208f568951c188acf8b9f935f4ea",
+  "dataSha256": "eecbd546e0fddc64f929631b03fa334d2d3f52ce653e6836d7bb962f46d78393",
+  "scope": "Closed-set recognition at each family's available normal face/axes; synthetic RAQM/Pillow crops, per-alphabet disjoint text banks. No real-screenshot, unknown-rejection, weight/style or universal-script accuracy claim.",
+  "test": {
+    "groups": {
+      "all": {
+        "count": 83808,
+        "correct": 36736,
+        "top5": 54437,
+        "accuracy": 0.4383352424589538,
+        "top5Accuracy": 0.6495441962581138,
+        "macroAccuracy": 0.500887733461648
+      },
+      "condition/clean": {
+        "count": 27936,
+        "correct": 15241,
+        "top5": 21213,
+        "accuracy": 0.5455684421534936,
+        "top5Accuracy": 0.7593427835051546
+      },
+      "length/2-3": {
+        "count": 20952,
+        "correct": 4535,
+        "top5": 8726,
+        "accuracy": 0.2164471172203131,
+        "top5Accuracy": 0.41647575410462007
+      },
+      "script/Latn": {
+        "count": 47352,
+        "correct": 20299,
+        "top5": 29486,
+        "accuracy": 0.4286830545700287,
+        "top5Accuracy": 0.6226980908937321
+      },
+      "added-families": {
+        "count": 79800,
+        "correct": 35291,
+        "top5": 52059,
+        "accuracy": 0.44224310776942355,
+        "top5Accuracy": 0.6523684210526316
+      },
+      "condition/rotate": {
+        "count": 27936,
+        "correct": 12320,
+        "top5": 18589,
+        "accuracy": 0.44100801832760594,
+        "top5Accuracy": 0.6654138029782359
+      },
+      "condition/small": {
+        "count": 27936,
+        "correct": 9175,
+        "top5": 14635,
+        "accuracy": 0.32842926689576174,
+        "top5Accuracy": 0.5238760022909508
+      },
+      "length/4-7": {
+        "count": 20952,
+        "correct": 9135,
+        "top5": 14079,
+        "accuracy": 0.43599656357388317,
+        "top5Accuracy": 0.6719644902634594
+      },
+      "length/8+": {
+        "count": 41904,
+        "correct": 23066,
+        "top5": 31632,
+        "accuracy": 0.5504486445208094,
+        "top5Accuracy": 0.7548682703321878
+      },
+      "script/Cyrl": {
+        "count": 7608,
+        "correct": 3338,
+        "top5": 5179,
+        "accuracy": 0.43874868559411145,
+        "top5Accuracy": 0.6807308096740273
+      },
+      "script/Grek": {
+        "count": 4968,
+        "correct": 1778,
+        "top5": 3069,
+        "accuracy": 0.357890499194847,
+        "top5Accuracy": 0.6177536231884058
+      },
+      "script/Hani": {
+        "count": 2328,
+        "correct": 613,
+        "top5": 1201,
+        "accuracy": 0.26331615120274915,
+        "top5Accuracy": 0.5158934707903781
+      },
+      "script/Hira": {
+        "count": 2544,
+        "correct": 892,
+        "top5": 1514,
+        "accuracy": 0.35062893081761004,
+        "top5Accuracy": 0.595125786163522
+      },
+      "script/Kana": {
+        "count": 2472,
+        "correct": 923,
+        "top5": 1615,
+        "accuracy": 0.37338187702265374,
+        "top5Accuracy": 0.6533171521035599
+      },
+      "script/Hang": {
+        "count": 1488,
+        "correct": 583,
+        "top5": 925,
+        "accuracy": 0.3918010752688172,
+        "top5Accuracy": 0.6216397849462365
+      },
+      "script/Sinh": {
+        "count": 264,
+        "correct": 146,
+        "top5": 203,
+        "accuracy": 0.553030303030303,
+        "top5Accuracy": 0.7689393939393939
+      },
+      "seed-100": {
+        "count": 4008,
+        "correct": 1445,
+        "top5": 2378,
+        "accuracy": 0.36052894211576847,
+        "top5Accuracy": 0.593313373253493
+      },
+      "script/Ethi": {
+        "count": 168,
+        "correct": 112,
+        "top5": 125,
+        "accuracy": 0.6666666666666666,
+        "top5Accuracy": 0.7440476190476191
+      },
+      "script/Adlm": {
+        "count": 72,
+        "correct": 48,
+        "top5": 61,
+        "accuracy": 0.6666666666666666,
+        "top5Accuracy": 0.8472222222222222
+      },
+      "script/Tfng": {
+        "count": 72,
+        "correct": 24,
+        "top5": 45,
+        "accuracy": 0.3333333333333333,
+        "top5Accuracy": 0.625
+      },
+      "script/Knda": {
+        "count": 288,
+        "correct": 164,
+        "top5": 246,
+        "accuracy": 0.5694444444444444,
+        "top5Accuracy": 0.8541666666666666
+      },
+      "script/Telu": {
+        "count": 696,
+        "correct": 511,
+        "top5": 614,
+        "accuracy": 0.7341954022988506,
+        "top5Accuracy": 0.882183908045977
+      },
+      "script/Deva": {
+        "count": 1608,
+        "correct": 773,
+        "top5": 1174,
+        "accuracy": 0.48072139303482586,
+        "top5Accuracy": 0.7300995024875622
+      },
+      "script/Arab": {
+        "count": 1416,
+        "correct": 596,
+        "top5": 962,
+        "accuracy": 0.4209039548022599,
+        "top5Accuracy": 0.6793785310734464
+      },
+      "script/Hebr": {
+        "count": 1656,
+        "correct": 881,
+        "top5": 1265,
+        "accuracy": 0.5320048309178744,
+        "top5Accuracy": 0.7638888888888888
+      },
+      "script/Beng": {
+        "count": 312,
+        "correct": 177,
+        "top5": 243,
+        "accuracy": 0.5673076923076923,
+        "top5Accuracy": 0.7788461538461539
+      },
+      "script/Orya": {
+        "count": 168,
+        "correct": 85,
+        "top5": 136,
+        "accuracy": 0.5059523809523809,
+        "top5Accuracy": 0.8095238095238095
+      },
+      "script/Gujr": {
+        "count": 336,
+        "correct": 216,
+        "top5": 289,
+        "accuracy": 0.6428571428571429,
+        "top5Accuracy": 0.8601190476190477
+      },
+      "script/Guru": {
+        "count": 288,
+        "correct": 129,
+        "top5": 194,
+        "accuracy": 0.4479166666666667,
+        "top5Accuracy": 0.6736111111111112
+      },
+      "script/Mlym": {
+        "count": 264,
+        "correct": 162,
+        "top5": 224,
+        "accuracy": 0.6136363636363636,
+        "top5Accuracy": 0.8484848484848485
+      },
+      "script/Taml": {
+        "count": 456,
+        "correct": 253,
+        "top5": 349,
+        "accuracy": 0.5548245614035088,
+        "top5Accuracy": 0.7653508771929824
+      },
+      "script/Khmr": {
+        "count": 696,
+        "correct": 421,
+        "top5": 570,
+        "accuracy": 0.6048850574712644,
+        "top5Accuracy": 0.8189655172413793
+      },
+      "script/Thai": {
+        "count": 840,
+        "correct": 488,
+        "top5": 676,
+        "accuracy": 0.580952380952381,
+        "top5Accuracy": 0.8047619047619048
+      },
+      "script/Copt": {
+        "count": 264,
+        "correct": 96,
+        "top5": 160,
+        "accuracy": 0.36363636363636365,
+        "top5Accuracy": 0.6060606060606061
+      },
+      "script/Cans": {
+        "count": 72,
+        "correct": 37,
+        "top5": 49,
+        "accuracy": 0.5138888888888888,
+        "top5Accuracy": 0.6805555555555556
+      },
+      "script/Bopo": {
+        "count": 648,
+        "correct": 115,
+        "top5": 276,
+        "accuracy": 0.17746913580246915,
+        "top5Accuracy": 0.42592592592592593
+      },
+      "script/Goth": {
+        "count": 48,
+        "correct": 26,
+        "top5": 38,
+        "accuracy": 0.5416666666666666,
+        "top5Accuracy": 0.7916666666666666
+      },
+      "script/Ital": {
+        "count": 48,
+        "correct": 14,
+        "top5": 17,
+        "accuracy": 0.2916666666666667,
+        "top5Accuracy": 0.3541666666666667
+      },
+      "script/Runr": {
+        "count": 72,
+        "correct": 50,
+        "top5": 62,
+        "accuracy": 0.6944444444444444,
+        "top5Accuracy": 0.8611111111111112
+      },
+      "script/Talu": {
+        "count": 48,
+        "correct": 23,
+        "top5": 32,
+        "accuracy": 0.4791666666666667,
+        "top5Accuracy": 0.6666666666666666
+      },
+      "script/Laoo": {
+        "count": 168,
+        "correct": 73,
+        "top5": 117,
+        "accuracy": 0.43452380952380953,
+        "top5Accuracy": 0.6964285714285714
+      },
+      "script/Cher": {
+        "count": 72,
+        "correct": 43,
+        "top5": 54,
+        "accuracy": 0.5972222222222222,
+        "top5Accuracy": 0.75
+      },
+      "script/Armn": {
+        "count": 168,
+        "correct": 77,
+        "top5": 118,
+        "accuracy": 0.4583333333333333,
+        "top5Accuracy": 0.7023809523809523
+      },
+      "script/Geor": {
+        "count": 72,
+        "correct": 45,
+        "top5": 58,
+        "accuracy": 0.625,
+        "top5Accuracy": 0.8055555555555556
+      },
+      "script/Syrc": {
+        "count": 120,
+        "correct": 47,
+        "top5": 107,
+        "accuracy": 0.39166666666666666,
+        "top5Accuracy": 0.8916666666666667
+      },
+      "script/Tibt": {
+        "count": 72,
+        "correct": 60,
+        "top5": 69,
+        "accuracy": 0.8333333333333334,
+        "top5Accuracy": 0.9583333333333334
+      },
+      "script/Kali": {
+        "count": 72,
+        "correct": 50,
+        "top5": 57,
+        "accuracy": 0.6944444444444444,
+        "top5Accuracy": 0.7916666666666666
+      },
+      "script/Krai": {
+        "count": 24,
+        "correct": 16,
+        "top5": 19,
+        "accuracy": 0.6666666666666666,
+        "top5Accuracy": 0.7916666666666666
+      },
+      "script/Lisu": {
+        "count": 96,
+        "correct": 30,
+        "top5": 45,
+        "accuracy": 0.3125,
+        "top5Accuracy": 0.46875
+      },
+      "script/Lepc": {
+        "count": 48,
+        "correct": 38,
+        "top5": 42,
+        "accuracy": 0.7916666666666666,
+        "top5Accuracy": 0.875
+      },
+      "script/Limb": {
+        "count": 48,
+        "correct": 38,
+        "top5": 40,
+        "accuracy": 0.7916666666666666,
+        "top5Accuracy": 0.8333333333333334
+      },
+      "script/Gong": {
+        "count": 48,
+        "correct": 36,
+        "top5": 41,
+        "accuracy": 0.75,
+        "top5Accuracy": 0.8541666666666666
+      },
+      "script/Hluw": {
+        "count": 24,
+        "correct": 21,
+        "top5": 22,
+        "accuracy": 0.875,
+        "top5Accuracy": 0.9166666666666666
+      },
+      "script/Avst": {
+        "count": 24,
+        "correct": 13,
+        "top5": 19,
+        "accuracy": 0.5416666666666666,
+        "top5Accuracy": 0.7916666666666666
+      },
+      "script/Bali": {
+        "count": 48,
+        "correct": 42,
+        "top5": 46,
+        "accuracy": 0.875,
+        "top5Accuracy": 0.9583333333333334
+      },
+      "script/Bamu": {
+        "count": 24,
+        "correct": 10,
+        "top5": 13,
+        "accuracy": 0.4166666666666667,
+        "top5Accuracy": 0.5416666666666666
+      },
+      "script/Bass": {
+        "count": 24,
+        "correct": 17,
+        "top5": 20,
+        "accuracy": 0.7083333333333334,
+        "top5Accuracy": 0.8333333333333334
+      },
+      "script/Batk": {
+        "count": 24,
+        "correct": 23,
+        "top5": 24,
+        "accuracy": 0.9583333333333334,
+        "top5Accuracy": 1.0
+      },
+      "script/Bhks": {
+        "count": 24,
+        "correct": 22,
+        "top5": 22,
+        "accuracy": 0.9166666666666666,
+        "top5Accuracy": 0.9166666666666666
+      },
+      "script/Brah": {
+        "count": 24,
+        "correct": 16,
+        "top5": 18,
+        "accuracy": 0.6666666666666666,
+        "top5Accuracy": 0.75
+      },
+      "script/Bugi": {
+        "count": 24,
+        "correct": 21,
+        "top5": 23,
+        "accuracy": 0.875,
+        "top5Accuracy": 0.9583333333333334
+      },
+      "script/Buhd": {
+        "count": 24,
+        "correct": 19,
+        "top5": 23,
+        "accuracy": 0.7916666666666666,
+        "top5Accuracy": 0.9583333333333334
+      },
+      "script/Cari": {
+        "count": 24,
+        "correct": 7,
+        "top5": 14,
+        "accuracy": 0.2916666666666667,
+        "top5Accuracy": 0.5833333333333334
+      },
+      "script/Aghb": {
+        "count": 24,
+        "correct": 16,
+        "top5": 18,
+        "accuracy": 0.6666666666666666,
+        "top5Accuracy": 0.75
+      },
+      "script/Cakm": {
+        "count": 24,
+        "correct": 19,
+        "top5": 22,
+        "accuracy": 0.7916666666666666,
+        "top5Accuracy": 0.9166666666666666
+      },
+      "script/Cham": {
+        "count": 24,
+        "correct": 21,
+        "top5": 21,
+        "accuracy": 0.875,
+        "top5Accuracy": 0.875
+      },
+      "script/Chrs": {
+        "count": 24,
+        "correct": 14,
+        "top5": 16,
+        "accuracy": 0.5833333333333334,
+        "top5Accuracy": 0.6666666666666666
+      },
+      "script/Xsux": {
+        "count": 24,
+        "correct": 23,
+        "top5": 23,
+        "accuracy": 0.9583333333333334,
+        "top5Accuracy": 0.9583333333333334
+      },
+      "script/Cprt": {
+        "count": 24,
+        "correct": 13,
+        "top5": 15,
+        "accuracy": 0.5416666666666666,
+        "top5Accuracy": 0.625
+      },
+      "script/Cpmn": {
+        "count": 24,
+        "correct": 17,
+        "top5": 20,
+        "accuracy": 0.7083333333333334,
+        "top5Accuracy": 0.8333333333333334
+      },
+      "script/Dsrt": {
+        "count": 24,
+        "correct": 15,
+        "top5": 20,
+        "accuracy": 0.625,
+        "top5Accuracy": 0.8333333333333334
+      },
+      "script/Dupl": {
+        "count": 24,
+        "correct": 11,
+        "top5": 17,
+        "accuracy": 0.4583333333333333,
+        "top5Accuracy": 0.7083333333333334
+      },
+      "script/Egyp": {
+        "count": 24,
+        "correct": 16,
+        "top5": 21,
+        "accuracy": 0.6666666666666666,
+        "top5Accuracy": 0.875
+      },
+      "script/Elba": {
+        "count": 24,
+        "correct": 1,
+        "top5": 3,
+        "accuracy": 0.041666666666666664,
+        "top5Accuracy": 0.125
+      },
+      "script/Elym": {
+        "count": 24,
+        "correct": 22,
+        "top5": 24,
+        "accuracy": 0.9166666666666666,
+        "top5Accuracy": 1.0
+      },
+      "script/Glag": {
+        "count": 48,
+        "correct": 33,
+        "top5": 40,
+        "accuracy": 0.6875,
+        "top5Accuracy": 0.8333333333333334
+      },
+      "script/Gran": {
+        "count": 48,
+        "correct": 33,
+        "top5": 40,
+        "accuracy": 0.6875,
+        "top5Accuracy": 0.8333333333333334
+      },
+      "script/Rohg": {
+        "count": 24,
+        "correct": 18,
+        "top5": 19,
+        "accuracy": 0.75,
+        "top5Accuracy": 0.7916666666666666
+      },
+      "script/Hano": {
+        "count": 24,
+        "correct": 20,
+        "top5": 23,
+        "accuracy": 0.8333333333333334,
+        "top5Accuracy": 0.9583333333333334
+      },
+      "script/Hatr": {
+        "count": 24,
+        "correct": 15,
+        "top5": 20,
+        "accuracy": 0.625,
+        "top5Accuracy": 0.8333333333333334
+      },
+      "script/Armi": {
+        "count": 24,
+        "correct": 21,
+        "top5": 23,
+        "accuracy": 0.875,
+        "top5Accuracy": 0.9583333333333334
+      },
+      "script/Phli": {
+        "count": 24,
+        "correct": 16,
+        "top5": 23,
+        "accuracy": 0.6666666666666666,
+        "top5Accuracy": 0.9583333333333334
+      },
+      "script/Prti": {
+        "count": 24,
+        "correct": 18,
+        "top5": 20,
+        "accuracy": 0.75,
+        "top5Accuracy": 0.8333333333333334
+      },
+      "script/Java": {
+        "count": 24,
+        "correct": 18,
+        "top5": 23,
+        "accuracy": 0.75,
+        "top5Accuracy": 0.9583333333333334
+      },
+      "script/Kthi": {
+        "count": 24,
+        "correct": 16,
+        "top5": 21,
+        "accuracy": 0.6666666666666666,
+        "top5Accuracy": 0.875
+      },
+      "script/Kawi": {
+        "count": 24,
+        "correct": 11,
+        "top5": 16,
+        "accuracy": 0.4583333333333333,
+        "top5Accuracy": 0.6666666666666666
+      },
+      "script/Khar": {
+        "count": 24,
+        "correct": 21,
+        "top5": 24,
+        "accuracy": 0.875,
+        "top5Accuracy": 1.0
+      },
+      "script/Khoj": {
+        "count": 48,
+        "correct": 39,
+        "top5": 42,
+        "accuracy": 0.8125,
+        "top5Accuracy": 0.875
+      },
+      "script/Sind": {
+        "count": 24,
+        "correct": 11,
+        "top5": 16,
+        "accuracy": 0.4583333333333333,
+        "top5Accuracy": 0.6666666666666666
+      },
+      "script/Lina": {
+        "count": 24,
+        "correct": 14,
+        "top5": 19,
+        "accuracy": 0.5833333333333334,
+        "top5Accuracy": 0.7916666666666666
+      },
+      "script/Linb": {
+        "count": 24,
+        "correct": 14,
+        "top5": 19,
+        "accuracy": 0.5833333333333334,
+        "top5Accuracy": 0.7916666666666666
+      },
+      "script/Lyci": {
+        "count": 24,
+        "correct": 12,
+        "top5": 21,
+        "accuracy": 0.5,
+        "top5Accuracy": 0.875
+      },
+      "script/Lydi": {
+        "count": 24,
+        "correct": 17,
+        "top5": 18,
+        "accuracy": 0.7083333333333334,
+        "top5Accuracy": 0.75
+      },
+      "script/Mahj": {
+        "count": 24,
+        "correct": 18,
+        "top5": 20,
+        "accuracy": 0.75,
+        "top5Accuracy": 0.8333333333333334
+      },
+      "script/Mand": {
+        "count": 24,
+        "correct": 14,
+        "top5": 16,
+        "accuracy": 0.5833333333333334,
+        "top5Accuracy": 0.6666666666666666
+      },
+      "script/Mani": {
+        "count": 24,
+        "correct": 20,
+        "top5": 22,
+        "accuracy": 0.8333333333333334,
+        "top5Accuracy": 0.9166666666666666
+      },
+      "script/Marc": {
+        "count": 24,
+        "correct": 20,
+        "top5": 20,
+        "accuracy": 0.8333333333333334,
+        "top5Accuracy": 0.8333333333333334
+      },
+      "script/Gonm": {
+        "count": 24,
+        "correct": 19,
+        "top5": 22,
+        "accuracy": 0.7916666666666666,
+        "top5Accuracy": 0.9166666666666666
+      },
+      "script/Medf": {
+        "count": 24,
+        "correct": 16,
+        "top5": 21,
+        "accuracy": 0.6666666666666666,
+        "top5Accuracy": 0.875
+      },
+      "script/Mtei": {
+        "count": 24,
+        "correct": 16,
+        "top5": 20,
+        "accuracy": 0.6666666666666666,
+        "top5Accuracy": 0.8333333333333334
+      },
+      "script/Mend": {
+        "count": 24,
+        "correct": 16,
+        "top5": 19,
+        "accuracy": 0.6666666666666666,
+        "top5Accuracy": 0.7916666666666666
+      },
+      "script/Merc": {
+        "count": 24,
+        "correct": 9,
+        "top5": 15,
+        "accuracy": 0.375,
+        "top5Accuracy": 0.625
+      },
+      "script/Mero": {
+        "count": 24,
+        "correct": 14,
+        "top5": 22,
+        "accuracy": 0.5833333333333334,
+        "top5Accuracy": 0.9166666666666666
+      },
+      "script/Plrd": {
+        "count": 24,
+        "correct": 9,
+        "top5": 16,
+        "accuracy": 0.375,
+        "top5Accuracy": 0.6666666666666666
+      },
+      "script/Modi": {
+        "count": 24,
+        "correct": 20,
+        "top5": 21,
+        "accuracy": 0.8333333333333334,
+        "top5Accuracy": 0.875
+      },
+      "script/Mong": {
+        "count": 24,
+        "correct": 20,
+        "top5": 21,
+        "accuracy": 0.8333333333333334,
+        "top5Accuracy": 0.875
+      },
+      "script/Mroo": {
+        "count": 24,
+        "correct": 11,
+        "top5": 15,
+        "accuracy": 0.4583333333333333,
+        "top5Accuracy": 0.625
+      },
+      "script/Mult": {
+        "count": 24,
+        "correct": 18,
+        "top5": 20,
+        "accuracy": 0.75,
+        "top5Accuracy": 0.8333333333333334
+      },
+      "script/Mymr": {
+        "count": 120,
+        "correct": 80,
+        "top5": 92,
+        "accuracy": 0.6666666666666666,
+        "top5Accuracy": 0.7666666666666667
+      },
+      "script/Nbat": {
+        "count": 24,
+        "correct": 16,
+        "top5": 18,
+        "accuracy": 0.6666666666666666,
+        "top5Accuracy": 0.75
+      },
+      "script/Nagm": {
+        "count": 24,
+        "correct": 18,
+        "top5": 21,
+        "accuracy": 0.75,
+        "top5Accuracy": 0.875
+      },
+      "script/Nand": {
+        "count": 24,
+        "correct": 18,
+        "top5": 19,
+        "accuracy": 0.75,
+        "top5Accuracy": 0.7916666666666666
+      },
+      "script/Newa": {
+        "count": 24,
+        "correct": 10,
+        "top5": 20,
+        "accuracy": 0.4166666666666667,
+        "top5Accuracy": 0.8333333333333334
+      },
+      "script/Nkoo": {
+        "count": 72,
+        "correct": 32,
+        "top5": 58,
+        "accuracy": 0.4444444444444444,
+        "top5Accuracy": 0.8055555555555556
+      },
+      "script/Nshu": {
+        "count": 48,
+        "correct": 37,
+        "top5": 43,
+        "accuracy": 0.7708333333333334,
+        "top5Accuracy": 0.8958333333333334
+      },
+      "script/Ogam": {
+        "count": 24,
+        "correct": 20,
+        "top5": 20,
+        "accuracy": 0.8333333333333334,
+        "top5Accuracy": 0.8333333333333334
+      },
+      "script/Olck": {
+        "count": 24,
+        "correct": 21,
+        "top5": 21,
+        "accuracy": 0.875,
+        "top5Accuracy": 0.875
+      },
+      "script/Hung": {
+        "count": 24,
+        "correct": 19,
+        "top5": 21,
+        "accuracy": 0.7916666666666666,
+        "top5Accuracy": 0.875
+      },
+      "script/Narb": {
+        "count": 24,
+        "correct": 18,
+        "top5": 21,
+        "accuracy": 0.75,
+        "top5Accuracy": 0.875
+      },
+      "script/Perm": {
+        "count": 24,
+        "correct": 13,
+        "top5": 19,
+        "accuracy": 0.5416666666666666,
+        "top5Accuracy": 0.7916666666666666
+      },
+      "script/Xpeo": {
+        "count": 24,
+        "correct": 17,
+        "top5": 22,
+        "accuracy": 0.7083333333333334,
+        "top5Accuracy": 0.9166666666666666
+      },
+      "script/Sogo": {
+        "count": 24,
+        "correct": 19,
+        "top5": 21,
+        "accuracy": 0.7916666666666666,
+        "top5Accuracy": 0.875
+      },
+      "script/Sarb": {
+        "count": 24,
+        "correct": 19,
+        "top5": 22,
+        "accuracy": 0.7916666666666666,
+        "top5Accuracy": 0.9166666666666666
+      },
+      "script/Orkh": {
+        "count": 24,
+        "correct": 11,
+        "top5": 21,
+        "accuracy": 0.4583333333333333,
+        "top5Accuracy": 0.875
+      },
+      "script/Osge": {
+        "count": 24,
+        "correct": 14,
+        "top5": 17,
+        "accuracy": 0.5833333333333334,
+        "top5Accuracy": 0.7083333333333334
+      },
+      "script/Osma": {
+        "count": 24,
+        "correct": 19,
+        "top5": 21,
+        "accuracy": 0.7916666666666666,
+        "top5Accuracy": 0.875
+      },
+      "script/Hmng": {
+        "count": 24,
+        "correct": 12,
+        "top5": 14,
+        "accuracy": 0.5,
+        "top5Accuracy": 0.5833333333333334
+      },
+      "script/Palm": {
+        "count": 24,
+        "correct": 21,
+        "top5": 22,
+        "accuracy": 0.875,
+        "top5Accuracy": 0.9166666666666666
+      },
+      "script/Pauc": {
+        "count": 24,
+        "correct": 11,
+        "top5": 13,
+        "accuracy": 0.4583333333333333,
+        "top5Accuracy": 0.5416666666666666
+      },
+      "script/Phag": {
+        "count": 24,
+        "correct": 20,
+        "top5": 22,
+        "accuracy": 0.8333333333333334,
+        "top5Accuracy": 0.9166666666666666
+      },
+      "script/Phnx": {
+        "count": 48,
+        "correct": 32,
+        "top5": 35,
+        "accuracy": 0.6666666666666666,
+        "top5Accuracy": 0.7291666666666666
+      },
+      "script/Phlp": {
+        "count": 24,
+        "correct": 14,
+        "top5": 21,
+        "accuracy": 0.5833333333333334,
+        "top5Accuracy": 0.875
+      },
+      "script/Rjng": {
+        "count": 24,
+        "correct": 18,
+        "top5": 21,
+        "accuracy": 0.75,
+        "top5Accuracy": 0.875
+      },
+      "script/Samr": {
+        "count": 24,
+        "correct": 17,
+        "top5": 20,
+        "accuracy": 0.7083333333333334,
+        "top5Accuracy": 0.8333333333333334
+      },
+      "script/Saur": {
+        "count": 24,
+        "correct": 17,
+        "top5": 20,
+        "accuracy": 0.7083333333333334,
+        "top5Accuracy": 0.8333333333333334
+      },
+      "script/Shrd": {
+        "count": 24,
+        "correct": 10,
+        "top5": 16,
+        "accuracy": 0.4166666666666667,
+        "top5Accuracy": 0.6666666666666666
+      },
+      "script/Shaw": {
+        "count": 24,
+        "correct": 15,
+        "top5": 19,
+        "accuracy": 0.625,
+        "top5Accuracy": 0.7916666666666666
+      },
+      "script/Sidd": {
+        "count": 24,
+        "correct": 23,
+        "top5": 24,
+        "accuracy": 0.9583333333333334,
+        "top5Accuracy": 1.0
+      },
+      "script/Sogd": {
+        "count": 24,
+        "correct": 16,
+        "top5": 19,
+        "accuracy": 0.6666666666666666,
+        "top5Accuracy": 0.7916666666666666
+      },
+      "script/Sora": {
+        "count": 24,
+        "correct": 23,
+        "top5": 23,
+        "accuracy": 0.9583333333333334,
+        "top5Accuracy": 0.9583333333333334
+      },
+      "script/Soyo": {
+        "count": 24,
+        "correct": 21,
+        "top5": 22,
+        "accuracy": 0.875,
+        "top5Accuracy": 0.9166666666666666
+      },
+      "script/Sund": {
+        "count": 24,
+        "correct": 20,
+        "top5": 22,
+        "accuracy": 0.8333333333333334,
+        "top5Accuracy": 0.9166666666666666
+      },
+      "script/Sunu": {
+        "count": 24,
+        "correct": 11,
+        "top5": 14,
+        "accuracy": 0.4583333333333333,
+        "top5Accuracy": 0.5833333333333334
+      },
+      "script/Sylo": {
+        "count": 24,
+        "correct": 19,
+        "top5": 20,
+        "accuracy": 0.7916666666666666,
+        "top5Accuracy": 0.8333333333333334
+      },
+      "script/Tglg": {
+        "count": 24,
+        "correct": 21,
+        "top5": 22,
+        "accuracy": 0.875,
+        "top5Accuracy": 0.9166666666666666
+      },
+      "script/Tagb": {
+        "count": 24,
+        "correct": 21,
+        "top5": 22,
+        "accuracy": 0.875,
+        "top5Accuracy": 0.9166666666666666
+      },
+      "script/Tale": {
+        "count": 24,
+        "correct": 11,
+        "top5": 14,
+        "accuracy": 0.4583333333333333,
+        "top5Accuracy": 0.5833333333333334
+      },
+      "script/Lana": {
+        "count": 24,
+        "correct": 19,
+        "top5": 22,
+        "accuracy": 0.7916666666666666,
+        "top5Accuracy": 0.9166666666666666
+      },
+      "script/Tavt": {
+        "count": 48,
+        "correct": 30,
+        "top5": 40,
+        "accuracy": 0.625,
+        "top5Accuracy": 0.8333333333333334
+      },
+      "script/Takr": {
+        "count": 24,
+        "correct": 11,
+        "top5": 17,
+        "accuracy": 0.4583333333333333,
+        "top5Accuracy": 0.7083333333333334
+      },
+      "script/Tnsa": {
+        "count": 24,
+        "correct": 21,
+        "top5": 22,
+        "accuracy": 0.875,
+        "top5Accuracy": 0.9166666666666666
+      },
+      "script/Thaa": {
+        "count": 24,
+        "correct": 20,
+        "top5": 22,
+        "accuracy": 0.8333333333333334,
+        "top5Accuracy": 0.9166666666666666
+      },
+      "script/Tirh": {
+        "count": 24,
+        "correct": 10,
+        "top5": 20,
+        "accuracy": 0.4166666666666667,
+        "top5Accuracy": 0.8333333333333334
+      },
+      "script/Ugar": {
+        "count": 24,
+        "correct": 21,
+        "top5": 21,
+        "accuracy": 0.875,
+        "top5Accuracy": 0.875
+      },
+      "script/Vaii": {
+        "count": 24,
+        "correct": 20,
+        "top5": 24,
+        "accuracy": 0.8333333333333334,
+        "top5Accuracy": 1.0
+      },
+      "script/Vith": {
+        "count": 48,
+        "correct": 31,
+        "top5": 35,
+        "accuracy": 0.6458333333333334,
+        "top5Accuracy": 0.7291666666666666
+      },
+      "script/Wcho": {
+        "count": 24,
+        "correct": 14,
+        "top5": 18,
+        "accuracy": 0.5833333333333334,
+        "top5Accuracy": 0.75
+      },
+      "script/Wara": {
+        "count": 24,
+        "correct": 8,
+        "top5": 15,
+        "accuracy": 0.3333333333333333,
+        "top5Accuracy": 0.625
+      },
+      "script/Yiii": {
+        "count": 48,
+        "correct": 37,
+        "top5": 42,
+        "accuracy": 0.7708333333333334,
+        "top5Accuracy": 0.875
+      },
+      "script/Zanb": {
+        "count": 24,
+        "correct": 17,
+        "top5": 20,
+        "accuracy": 0.7083333333333334,
+        "top5Accuracy": 0.8333333333333334
+      },
+      "script/Ahom": {
+        "count": 24,
+        "correct": 18,
+        "top5": 20,
+        "accuracy": 0.75,
+        "top5Accuracy": 0.8333333333333334
+      },
+      "script/Diak": {
+        "count": 24,
+        "correct": 15,
+        "top5": 20,
+        "accuracy": 0.625,
+        "top5Accuracy": 0.8333333333333334
+      },
+      "script/Dogr": {
+        "count": 24,
+        "correct": 16,
+        "top5": 19,
+        "accuracy": 0.6666666666666666,
+        "top5Accuracy": 0.7916666666666666
+      },
+      "script/Kits": {
+        "count": 24,
+        "correct": 15,
+        "top5": 20,
+        "accuracy": 0.625,
+        "top5Accuracy": 0.8333333333333334
+      },
+      "script/Maka": {
+        "count": 24,
+        "correct": 24,
+        "top5": 24,
+        "accuracy": 1.0,
+        "top5Accuracy": 1.0
+      },
+      "script/Hmnp": {
+        "count": 48,
+        "correct": 21,
+        "top5": 48,
+        "accuracy": 0.4375,
+        "top5Accuracy": 1.0
+      },
+      "script/Ougr": {
+        "count": 24,
+        "correct": 17,
+        "top5": 19,
+        "accuracy": 0.7083333333333334,
+        "top5Accuracy": 0.7916666666666666
+      },
+      "script/Tang": {
+        "count": 24,
+        "correct": 21,
+        "top5": 23,
+        "accuracy": 0.875,
+        "top5Accuracy": 0.9583333333333334
+      },
+      "script/Todr": {
+        "count": 24,
+        "correct": 11,
+        "top5": 18,
+        "accuracy": 0.4583333333333333,
+        "top5Accuracy": 0.75
+      },
+      "script/Toto": {
+        "count": 24,
+        "correct": 20,
+        "top5": 21,
+        "accuracy": 0.8333333333333334,
+        "top5Accuracy": 0.875
+      },
+      "script/Yezi": {
+        "count": 24,
+        "correct": 13,
+        "top5": 18,
+        "accuracy": 0.5416666666666666,
+        "top5Accuracy": 0.75
+      }
+    },
+    "confusions": [
+      {
+        "true": "batang",
+        "predicted": "batangche",
+        "count": 47
+      },
+      {
+        "true": "wdxllubrifontjpn",
+        "predicted": "wdxllubrifonttc",
+        "count": 37
+      },
+      {
+        "true": "wdxllubrifontsc",
+        "predicted": "wdxllubrifonttc",
+        "count": 37
+      },
+      {
+        "true": "yujiboku",
+        "predicted": "yujisyuku",
+        "count": 36
+      },
+      {
+        "true": "yujimai",
+        "predicted": "yujisyuku",
+        "count": 36
+      },
+      {
+        "true": "bizudmincho",
+        "predicted": "bizudpmincho",
+        "count": 33
+      },
+      {
+        "true": "wdxllubrifontsc",
+        "predicted": "wdxllubrifontjpn",
+        "count": 33
+      },
+      {
+        "true": "wdxllubrifonttc",
+        "predicted": "wdxllubrifontjpn",
+        "count": 32
+      },
+      {
+        "true": "cascadiamono",
+        "predicted": "cascadiacode",
+        "count": 28
+      },
+      {
+        "true": "jainipurva",
+        "predicted": "jaini",
+        "count": 28
+      },
+      {
+        "true": "wdxllubrifontjpn",
+        "predicted": "zcoolqingkehuangyou",
+        "count": 27
+      },
+      {
+        "true": "wdxllubrifontsc",
+        "predicted": "zcoolqingkehuangyou",
+        "count": 27
+      },
+      {
+        "true": "wdxllubrifonttc",
+        "predicted": "zcoolqingkehuangyou",
+        "count": 27
+      },
+      {
+        "true": "kosugimaru",
+        "predicted": "huninn",
+        "count": 25
+      },
+      {
+        "true": "huninn",
+        "predicted": "varelaround",
+        "count": 24
+      },
+      {
+        "true": "iosevkacharon",
+        "predicted": "iosevkacharonmono",
+        "count": 24
+      },
+      {
+        "true": "mochiypopone",
+        "predicted": "mochiypoppone",
+        "count": 24
+      },
+      {
+        "true": "shipporiantiqueb1",
+        "predicted": "shipporiantique",
+        "count": 23
+      },
+      {
+        "true": "ysabeau",
+        "predicted": "ysabeauoffice",
+        "count": 22
+      },
+      {
+        "true": "zenantique",
+        "predicted": "zenantiquesoft",
+        "count": 22
+      },
+      {
+        "true": "ysabeauinfant",
+        "predicted": "ysabeauoffice",
+        "count": 21
+      },
+      {
+        "true": "zenantiquesoft",
+        "predicted": "zenantique",
+        "count": 21
+      },
+      {
+        "true": "zenkakugothicantique",
+        "predicted": "zenkakugothicnew",
+        "count": 21
+      },
+      {
+        "true": "cormorantunicase",
+        "predicted": "cormorantsc",
+        "count": 20
+      },
+      {
+        "true": "lxgwwenkaimonotc",
+        "predicted": "iansui",
+        "count": 20
+      },
+      {
+        "true": "lxgwwenkaitc",
+        "predicted": "iansui",
+        "count": 20
+      },
+      {
+        "true": "yujimai",
+        "predicted": "yujiboku",
+        "count": 20
+      },
+      {
+        "true": "alumnisanscollegiateone",
+        "predicted": "alumnisanscollegiateonesc",
+        "count": 19
+      },
+      {
+        "true": "huninn",
+        "predicted": "kosugimaru",
+        "count": 19
+      },
+      {
+        "true": "kaiseitokumin",
+        "predicted": "kaiseiopti",
+        "count": 19
+      }
+    ]
+  }
+}

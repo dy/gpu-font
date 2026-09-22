@@ -2,6 +2,8 @@ import assert from 'node:assert/strict'
 import { readFile, mkdir, writeFile } from 'node:fs/promises'
 import { spawnSync } from 'node:child_process'
 import { createHash } from 'node:crypto'
+import { cpus } from 'node:os'
+import { gzipSync, brotliCompressSync } from 'node:zlib'
 import { chromium } from 'playwright'
 import { readNetwork, inferCPU } from '../src/network.mjs'
 
@@ -47,6 +49,13 @@ try {
   timing = outputs.timing
 } finally { await browser.close() }
 assert.ok(cpuError < 1e-4, `CPU error ${cpuError}`); assert.ok(gpuError < 1e-4, `GPU error ${gpuError}`)
-const report = { modelSha256: reference.modelSha256, runtimeSha256:createHash('sha256').update(await readFile(runtimePath)).digest('hex'), classes: model.fonts.length, cpuError, gpuError, timing, cases: 4, sequence: 'A → A → maximum → odd → small → A' }
+const files = []
+for (const file of [path, 'src/network.mjs', runtimePath, 'src/input.mjs', 'src/line.mjs', 'src/prepare.mjs']) {
+  const bytes = await readFile(file)
+  files.push({ path: file, sha256: createHash('sha256').update(bytes).digest('hex'), raw: bytes.length, gzip: gzipSync(bytes, { level: 9 }).length, brotli: brotliCompressSync(bytes).length })
+}
+const payload = { files, raw: files.reduce((n,f) => n+f.raw,0), gzip: files.reduce((n,f) => n+f.gzip,0), brotli: files.reduce((n,f) => n+f.brotli,0) }
+assert.ok(payload.raw <= 10_000_000, `Recognition payload exceeds 10 MB: ${payload.raw}`)
+const report = { modelSha256: reference.modelSha256, runtimeSha256:createHash('sha256').update(await readFile(runtimePath)).digest('hex'), classes: model.fonts.length, cpuError, gpuError, hardware: cpus()[0]?.model, timing, payload, cases: 4, sequence: 'A → A → maximum → odd → small → A' }
 await writeFile(`.data/artifact-checks/${reference.modelSha256}.json`, JSON.stringify(report, null, 2) + '\n')
 console.log(report)

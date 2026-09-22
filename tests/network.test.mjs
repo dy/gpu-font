@@ -81,6 +81,17 @@ test('temperature scales logits before window averaging and rejects invalid cali
   for (const t of [0, -1, NaN, Infinity, null]) assert.throws(() => rankWindows(logits, names, t), /temperature/)
 })
 
+test('the loader retains the model preparation method and rejects unknown methods', () => {
+  const a = artifact()
+  assert.equal(readNetwork(a).preparation.method, 'windows')
+  a.preparation.method = 'deskew-windows'
+  const model = readNetwork(a)
+  assert.equal(model.preparation.method, 'deskew-windows')
+  a.preparation.method = 'unsupported'
+  assert.throws(() => readNetwork(a), /preparation method/)
+  assert.equal(model.preparation.method, 'deskew-windows')
+})
+
 test('the optional context convolution preserves bounded variable-size classification', () => {
   const names = Array.from({ length: 100 }, (_, i) => `font-${i}`), a = artifact(names)
   a.architecture = 'font-conv16-32-48-64-64-v2'

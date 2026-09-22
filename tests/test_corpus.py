@@ -13,15 +13,67 @@ from fontTools.fontBuilder import FontBuilder
 from fontTools.pens.ttGlyphPen import TTGlyphPen
 from fontTools.ttLib import TTFont, newTable
 from fontTools.ttLib.tables.ttProgram import Program
+from fontTools.ttLib.tables.TupleVariation import TupleVariation
 
 from scripts import corpus
 from train.corpus_data import texts, banks, plans, without_hints
 from train.corpus import widen
+import train.corpus as trainer
+import train.corpus_data as corpus_data
 from train.ten_model import Classifier, export, load_export
 from train.faces import qat_snapshot, Int8Weights
 
 
 class CorpusTests(unittest.TestCase):
+    def test_normal_axes_and_rendering_do_not_use_a_variable_fonts_thin_default(self):
+        axes={'wght':{'min':100,'default':100,'max':900},'wdth':{'min':75,'default':75,'max':100},'opsz':{'min':8,'default':14,'max':72}}
+        self.assertEqual(corpus.normal_axes({'axes':axes}),{'wght':400,'wdth':100,'opsz':14})
+        self.assertEqual(corpus.normal_axes({'axes':{'wght':{'min':500,'default':700,'max':900}}}),{'wght':500})
+        with tempfile.TemporaryDirectory() as tmp, patch.object(corpus_data,'DATA',Path(tmp)), patch.object(corpus_data,'CACHE',Path(tmp)):
+            root=Path(tmp); (root/'shards').mkdir(); path=root/'variable.ttf'
+            fb=FontBuilder(1000,isTTF=True); fb.setupGlyphOrder(['.notdef','A'])
+            pen=TTGlyphPen(None); pen.moveTo((0,0)); pen.lineTo((200,0)); pen.lineTo((100,600)); pen.closePath()
+            fb.setupGlyf({'.notdef':TTGlyphPen(None).glyph(),'A':pen.glyph()})
+            fb.setupHorizontalMetrics({'.notdef':(500,0),'A':(500,0)}); fb.setupHorizontalHeader(ascent=800,descent=-200)
+            fb.setupCharacterMap({ord('A'):'A'}); fb.setupNameTable({'familyName':'Variable test','styleName':'Thin'})
+            fb.setupOS2(usWeightClass=100); fb.setupPost(); fb.setupMaxp(); fb.setupFvar([('wght',100,100,900,'Weight')],[])
+            gvar=newTable('gvar'); gvar.version=1; gvar.reserved=0
+            gvar.variations={'A':[TupleVariation({'wght':(0,1,1)},[(0,0),(200,0),(100,0),(0,0),(200,0),(0,0),(0,0)])]}; fb.font['gvar']=gvar; fb.save(path)
+            original=path.read_bytes(); face={'path':'variable.ttf','blob':corpus.blob(original),'axes':{'wght':axes['wght']}}
+            family={'id':'normal','selected':'variable.ttf','faces':[face],'trainingAxes':{'wght':400}}
+            plan={'size':40,'text':'A','role':'train','script':'Latn','index':0,'length':'1','light':False}
+            with patch.object(corpus_data,'plans',return_value=[plan]):
+                corpus_data.render_family((family,{},{}))
+                corpus_data.render_family(({**family,'id':'thin','trainingAxes':{'wght':100}},{},{}))
+            normal=json.loads((root/'shards/normal.json').read_text()); thin=json.loads((root/'shards/thin.json').read_text())
+            self.assertGreater(normal['windows'][0]['width'],thin['windows'][0]['width'])
+            self.assertEqual(path.read_bytes(),original)
+
+    def test_packed_corpus_checks_splits_labels_and_both_sides_of_final_byte(self):
+        with tempfile.TemporaryDirectory() as tmp, patch.object(trainer,'DATA',Path(tmp)), patch.object(trainer,'pins',return_value={'test':'pin'}):
+            path=Path(tmp); raw=bytes([0,40,80,120,160,200]); (path/'prepared.u8').write_bytes(raw)
+            samples=[{'label':i,'family':name,'role':role} for i,name in enumerate(['a','b']) for role in ['train','validation','test']]
+            manifest={'fonts':['a','b'],'pins':{'test':'pin'},'sha256':hashlib.sha256(raw).hexdigest(),'samples':samples,
+                      'windows':[{'source':i,'offset':i,'width':1,'height':1} for i in range(6)]}
+            def load(value, pixels=raw):
+                value=json.loads(json.dumps(value)); value['sha256']=hashlib.sha256(pixels).hexdigest()
+                (path/'prepared.u8').write_bytes(pixels); (path/'prepared.json').write_text(json.dumps(value))
+                return trainer.load_data()
+            for _ in range(2):
+                decoded,pixels=load(manifest); self.assertEqual(decoded['samples'],samples); self.assertEqual(pixels.tolist(),list(raw)); del pixels
+            for pixels in [b'',raw[:-1],raw+b'\0']: self.assertRaisesRegex(ValueError,'Incomplete',load,manifest,pixels)
+            for field,value in [('width',0),('height',49),('offset',0.0),('source',6)]:
+                bad=json.loads(json.dumps(manifest)); bad['windows'][0][field]=value
+                self.assertRaisesRegex(ValueError,'window',load,bad)
+            for field,value in [('label',-1),('label',2),('label',True),('family','absent'),('role','other')]:
+                bad=json.loads(json.dumps(manifest)); bad['samples'][0][field]=value
+                self.assertRaisesRegex(ValueError,'sample',load,bad)
+            bad=json.loads(json.dumps(manifest)); bad['samples'][0]['role']='test'
+            self.assertRaisesRegex(ValueError,'split coverage',load,bad)
+            bad=json.loads(json.dumps(manifest)); bad['pins']={}
+            self.assertRaisesRegex(ValueError,'Changed',load,bad)
+            decoded,pixels=load(manifest); self.assertEqual(pixels.tolist(),list(raw)); del pixels
+
     def test_pinned_fetch_reuses_exact_blob_and_rejects_corrupt_cache(self):
         data=b'source'; item={'path':'ofl/a/A.ttf','size':len(data),'sha':corpus.blob(data)}
         with tempfile.TemporaryDirectory() as tmp, patch.object(corpus,'CACHE',Path(tmp)), patch.object(corpus,'request',return_value=data) as request:
@@ -73,6 +125,11 @@ class CorpusTests(unittest.TestCase):
         split={r:{s['text'].casefold() for s in a if s['role']==r} for r in ['train','validation','test']}
         for x,y in [('train','validation'),('train','test'),('validation','test')]: self.assertFalse(split[x]&split[y])
         for sample in a: self.assertLessEqual(set(sample['text']),set(families[0]['alphabets'][sample['script']]))
+        for script in families[0]['alphabets']:
+            used=[s['text'] for s in a if s['script']==script and s['role']!='test']
+            old=texts(pools[script],script,'test',used)
+            fresh=[s['text'] for s in a if s['script']==script and s['role']=='test']
+            self.assertFalse({t.casefold() for t in old}&{t.casefold() for t in fresh})
         self.assertRaises(ValueError,texts,'abc','Latn','train')
         small = {'alphabets':{'Latn':'ABCDabcd'}}
         self.assertEqual(len(plans(small,{'Latn':'ABCDabcd'})),80)

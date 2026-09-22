@@ -88,6 +88,12 @@ def metadata_strings(text, field):
     return [json.loads(m) for m in re.findall(r'^' + re.escape(field) + r':\s*("(?:[^"\\]|\\.)*")\s*$', text, re.M)]
 
 
+def normal_axes(face):
+    """Match normal CSS weight/width/style within the font's genuine axis ranges."""
+    normal = {'wght':400, 'wdth':100, 'ital':0, 'slnt':0}
+    return {tag:min(axis['max'], max(axis['min'], normal.get(tag,axis['default']))) for tag,axis in face['axes'].items()}
+
+
 def face_info(item):
     # The download command verifies all blobs first. Fail fast on incomplete caches.
     path = source_path(item['path'])
@@ -144,8 +150,8 @@ def catalog():
         else:
             name = folder.split('/')[-1]; subsets = []; license_names = []
         faces = [face_info(f) for f in sources]
-        # The genuine upright face closest to regular; variable fonts use their actual defaults.
-        selected, groups = min(faces, key=lambda pair: (pair[0]['italic'], abs(pair[0]['axes'].get('wght', {}).get('default', pair[0]['weight']) - 400), pair[0]['path']))
+        # A variable font's binary default may be Thin; normal CSS requests weight 400.
+        selected, groups = min(faces, key=lambda pair: (pair[0]['italic'], abs(normal_axes(pair[0]).get('wght', pair[0]['weight']) - 400), pair[0]['path']))
         reason = 'unregistered' if not metadata else 'color' if selected['color'] else 'no-letter-glyphs' if not groups else None
         # Keep all letter scripts. Training text pools are shared per script, never per-family secret phrases.
         alphabets = {s: ''.join(map(chr, cps)) for s, cps in groups.items() if len(cps) >= 8 and s not in ('Zyyy', 'Zinh')}
@@ -156,12 +162,13 @@ def catalog():
                         'declaredLicense': license_names,
                         'licenses': [{'path': f['path'], 'blob': f['sha']} for f in licenses],
                         'faces': [f for f, _ in faces], 'selected': selected['path'],
+                        'trainingAxes': normal_axes(selected),
                         'alphabets': alphabets, 'excluded': reason})
         if (i + 1) % 100 == 0: print(f'Catalog {i+1}/{len(folders)}', flush=True)
     ids = [e['id'] for e in entries]
     if len(set(ids)) != len(ids): raise ValueError('Duplicate family IDs')
     result = {'version': 1, 'commit': COMMIT, 'source': 'https://github.com/google/fonts',
-              'scope': 'All TTF files under the three font license roots at the pinned revision. One default face per eligible family; exclusions explicit.',
+              'scope': 'All TTF files under the three font license roots at the pinned revision. One face nearest normal CSS weight/width/style per eligible family; exclusions explicit.',
               'fontFiles': sum(len(e['faces']) for e in entries), 'sourceBytes': sum(f['size'] for f in files if f['path'].endswith('.ttf')),
               'families': entries}
     MANIFEST.write_text(json.dumps(result, ensure_ascii=False, separators=(',', ':')) + '\n')

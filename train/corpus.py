@@ -77,7 +77,7 @@ def evaluate(model, manifest, pixels, role, quick=False):
     return {'groups':groups, 'confusions':[{'true':manifest['fonts'][a], 'predicted':manifest['fonts'][b], 'count':count} for (a,b),count in confusions.most_common(30)]}
 
 
-def train(steps, resume=False):
+def train(steps, resume=False, initial=None):
     if steps < 1: raise ValueError('Positive training steps required')
     torch.set_num_threads(4); torch.manual_seed(20260930); torch.use_deterministic_algorithms(True)
     if not torch.backends.mps.is_available(): raise ValueError('MPS unavailable')
@@ -93,10 +93,11 @@ def train(steps, resume=False):
             j = fonts.index(name.replace('-', ''))
             model.head.weight[j].copy_(source.head.weight[i].repeat_interleave(2) / 2)
             model.head.bias[j].copy_(source.head.bias[i])
-    initial_checkpoint = sha(DATA/'best.pt' if resume else ROOT/'models/deskew/best.pt')
-    if resume:
-        saved = torch.load(DATA / 'best.pt', weights_only=True, map_location='cpu')
-        if saved['fonts'] != fonts or saved['dataSha256'] != sha(DATA/'prepared.json'): raise ValueError('Changed resume labels/data')
+    checkpoint_path = Path(initial) if initial else DATA/'best.pt' if resume else ROOT/'models/deskew/best.pt'
+    initial_checkpoint = sha(checkpoint_path)
+    if resume or initial:
+        saved = torch.load(checkpoint_path, weights_only=True, map_location='cpu')
+        if saved['fonts'] != fonts or (resume and saved['dataSha256'] != sha(DATA/'prepared.json')): raise ValueError('Changed resume labels/data')
         model.load_state_dict(saved['state'])
     model.to('mps'); windows = manifest['windows']; samples = manifest['samples']
     pools = [[] for _ in fonts]
@@ -104,7 +105,7 @@ def train(steps, resume=False):
         if samples[w['source']]['role'] == 'train': pools[samples[w['source']]['label']].append(i)
     if any(not pool for pool in pools): raise ValueError('Missing family training windows')
     aliases = {(label, group['script']): group['labels'] for group in manifest['aliases'] for label in group['labels']}
-    rng = np.random.default_rng(20260930); rate = .0003 if resume else .001
+    rng = np.random.default_rng(20260930); rate = .0003 if resume or initial else .001
     optimizer = torch.optim.AdamW(model.parameters(), lr=rate, weight_decay=1e-4)
     scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, steps, eta_min=rate/30)
     best = -1; history = []; start = time.perf_counter(); losses = []; data_sha = sha(DATA/'prepared.json')
@@ -144,7 +145,7 @@ def train(steps, resume=False):
     for family in catalog['families']:
         if family['id'] not in fonts: continue
         face = next(f for f in family['faces'] if f['path'] == family['selected'])
-        artifact['catalog'].append({'id':family['id'], 'family':family['family'], 'trainingFace':{'weight':face['axes'].get('wght',{}).get('default',face['weight']), 'style':'italic' if face['italic'] else 'normal'}, 'scripts':sorted(family['alphabets'])})
+        artifact['catalog'].append({'id':family['id'], 'family':family['family'], 'trainingFace':{'weight':family['trainingAxes'].get('wght',face['weight']), 'style':'italic' if face['italic'] else 'normal', 'axes':family['trainingAxes']}, 'scripts':sorted(family['alphabets'])})
     write(DATA/'model.json', artifact)
     quant_report = evaluate(restored.to('mps'), manifest, pixels, 'validation')
     encoded = (DATA/'model.json').read_bytes()
@@ -152,10 +153,10 @@ def train(steps, resume=False):
     report = {'seed':20260930, 'steps':steps, 'selectedStep':checkpoint['step'], 'seconds':time.perf_counter()-start,
               'families':len(fonts), 'parameters':sum(p.numel() for p in model.parameters()), 'modelBytes':len(encoded), 'gzipBytes':len(gzip.compress(encoded,compresslevel=9,mtime=0)),
               'modelSha256':sha(DATA/'model.json'), 'dataSha256':sha(DATA/'prepared.json'), 'catalogSha256':sha(ROOT/'bench/corpus.json'),
-              'trainerSha256':sha(Path(__file__)), 'encoderSha256':sha(ROOT/'train/ten_model.py'), 'initialModelSha256':sha(ROOT/'models/deskew/model.json'), 'initialCheckpointSha256':initial_checkpoint, 'continuedFromCorpus':resume,
+              'trainerSha256':sha(Path(__file__)), 'encoderSha256':sha(ROOT/'train/ten_model.py'), 'initialModelSha256':sha(ROOT/'models/deskew/model.json'), 'initialCheckpointSha256':initial_checkpoint, 'continuedFromCorpus':bool(resume or initial),
               'history':history, 'validationFloat':float_report, 'validationInt8':quant_report,
               'quantizationGatePassed':quant_report['groups']['all']['accuracy'] >= float_report['groups']['all']['accuracy']-.01,
-              'scope':'Default-face closed-set recognition; synthetic RAQM/Pillow crops, disjoint text banks. No real-screenshot, unknown-rejection, weight/style or universal-script accuracy claim.'}
+              'scope':'Closed-set recognition at each family\'s available normal face/axes; synthetic RAQM/Pillow crops, per-alphabet disjoint text banks. No real-screenshot, unknown-rejection, weight/style or universal-script accuracy claim.'}
     write(ROOT/'bench/corpus-training.json', report)
     print({k:report[k] for k in ['families','modelBytes','quantizationGatePassed']}, quant_report['groups']['all'], flush=True)
 
@@ -177,6 +178,7 @@ def final_evaluation(browser=False):
 
 
 if __name__ == '__main__':
-    p = argparse.ArgumentParser(); p.add_argument('command', choices=['train','test','browser']); p.add_argument('--steps', type=int, default=40000); p.add_argument('--resume', action='store_true'); args=p.parse_args()
-    if args.command == 'train': train(args.steps, args.resume)
+    p = argparse.ArgumentParser(); p.add_argument('command', choices=['train','test','browser']); p.add_argument('--steps', type=int, default=40000)
+    start=p.add_mutually_exclusive_group(); start.add_argument('--resume', action='store_true'); start.add_argument('--initial',type=Path); args=p.parse_args()
+    if args.command == 'train': train(args.steps, args.resume, args.initial)
     else: final_evaluation(args.command=='browser')

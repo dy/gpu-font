@@ -34,5 +34,73 @@
     },
     "cases": 4,
     "sequence": "A → A → maximum → odd → small → A"
+  },
+  "candidate": {
+    "modelSha256": "e1a4508931294eb90a1ae95e04073f9aeb2d208f568951c188acf8b9f935f4ea",
+    "runtimeSha256": "4ed6b458bca0eed491b51ebddd68a6a322c0bd2fd337dd0a8fb28b9e2fd4a12d",
+    "classes": 2004,
+    "cpuError": 0.00002288818359375,
+    "gpuError": 0.0000457763671875,
+    "hardware": "Apple M4 Max",
+    "timing": {
+      "adapter": "metal-3",
+      "initializationMs": 58.20000076293945,
+      "warmWindowP50Ms": 0.8999996185302734,
+      "warmWindowP95Ms": 2.1000003814697266,
+      "samples": 20,
+      "width": 128,
+      "height": 48
+    },
+    "payload": {
+      "files": [
+        {
+          "path": "models/corpus/model.json",
+          "sha256": "e1a4508931294eb90a1ae95e04073f9aeb2d208f568951c188acf8b9f935f4ea",
+          "raw": 1475833,
+          "gzip": 483811,
+          "brotli": 443336
+        },
+        {
+          "path": "src/network.mjs",
+          "sha256": "554f3eeac08fcfa2191d252485b37b0874c2651cbd80dff03f0cb07f02526a06",
+          "raw": 5881,
+          "gzip": 2014,
+          "brotli": 1810
+        },
+        {
+          "path": "src/network-gpu.mjs",
+          "sha256": "4ed6b458bca0eed491b51ebddd68a6a322c0bd2fd337dd0a8fb28b9e2fd4a12d",
+          "raw": 6143,
+          "gzip": 2123,
+          "brotli": 1905
+        },
+        {
+          "path": "src/input.mjs",
+          "sha256": "6499378ce15d196937fab2e76c87c4b3bdd802981a01e363a0fbcddeb5b6d853",
+          "raw": 2150,
+          "gzip": 916,
+          "brotli": 799
+        },
+        {
+          "path": "src/line.mjs",
+          "sha256": "e35378b08a94e5e0539fabbc1c2f0075177a73ae1b88f5721dcd90f102e01b39",
+          "raw": 7764,
+          "gzip": 2632,
+          "brotli": 2342
+        },
+        {
+          "path": "src/prepare.mjs",
+          "sha256": "c48ce58778ad111f611ed96ad73a41b0c5821c2d1733cc3368931c4abafd7a13",
+          "raw": 5811,
+          "gzip": 2127,
+          "brotli": 1897
+        }
+      ],
+      "raw": 1503582,
+      "gzip": 493623,
+      "brotli": 452089
+    },
+    "cases": 4,
+    "sequence": "A → A → maximum → odd → small → A"
   }
 }

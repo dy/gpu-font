@@ -1,12 +1,22 @@
 # gpu-font — implementation plan
 
-Build a tiny JavaScript library that turns a cropped image of text into a reusable typography vector and ranked font matches. Inference runs locally in the browser. New fonts enter a versioned data catalog without changing the runtime or retraining the frozen encoder.
+Build a small JavaScript library that turns a cropped image of text into ranked font matches, with inference in the browser. The current neural classifier needs training when families are added. Adding fonts to a frozen embedding remains a research goal; the measured retrieval experiments have not established that capability.
 
 The first user is a designer or developer with a screenshot and no access to the original font declaration. The useful result is a short list of plausible families, with an honest indication when the catalog cannot provide a reliable match.
 
-Current state: **100-font neural classification**, with explicit uncertainty and a tested crop UI. The user’s original ten are included. Model selection compares equal-budget continuations and keeps the extra context layer (+2.84 validation points, 89,812 parameters). See [the 100-font report](bench/hundred.md).
+Current deployed state: **100-font neural classification**, with explicit uncertainty and a tested crop UI. The user’s original ten are included. The new corpus experiment covers **2,004 families at normal face/axis settings across 162 scripts**, with 614,592 synthetic images and a separate Chromium holdout. See [the corpus protocol](bench/corpus.md); its model remains separate from the website until its preparation and catalog are integrated together.
 
-Next: [the measured scaling analysis and ordered experiments](bench/scaling.md). The deployment ceiling is now **10 MB for model + catalog + required runtime**, before HTTP compression. The previous 100 KiB target is superseded. Full Google Fonts coverage remains the destination; first isolate lost glyph evidence and train for content-independent style at the current scale.
+Scope update, 2026-09-22: the user explicitly requested full Google Fonts expansion now. This supersedes the earlier 100/500-family sequencing gates. The **10 MB ceiling for model + catalog + required runtime**, before HTTP compression, still applies. Accuracy and rejection gates measure release readiness, not permission to expand the experiment.
+
+- [x] Download and verify all 3,886 pinned font binaries, metadata and licensing files; account for every family and exclusion in [the coverage manifest](bench/corpus.json).
+- [x] Prepare all 2,004 eligible families through the shared browser normalizer; reject invisible glyphs, record hinting fallbacks and identical rendering groups, and keep text splits disjoint.
+- [x] Expand CPU/WebGPU support to 10,000 labels and a wider encoder; pool once per input rather than once per candidate. Verify 2,055-class numerical parity on Metal.
+- [x] Catch the variable-font default/normal-weight mismatch with a tensor audit and a real variable-font regression fixture; correct 180 families and reserve fresh final-test strings.
+- [x] Continue for 20,000 updates from the selected initial corpus checkpoint, compare float/int8 accuracy, and preserve the candidate: **1.50 MB including runtime**, with 0.053 percentage-point quantization loss.
+- [x] Run frozen Pillow and Chromium tests (83,808 queries each), publish length/condition/script slices, and verify the final artifact on CPU/Metal WebGPU. Browser top-1/top-5 is **28.4%/48.7%**; the quality gate is not met.
+- [ ] Compare mixed Chromium/Pillow training with the current renderer-only continuation at equal update budgets. Use renderer-balanced validation and new final text banks; measure short crops and exact-name ambiguity separately before changing model capacity.
+- [ ] Add genuine weight/style/axis samples to the full catalog. Use confusable-family validation examples to select the next training improvement; keep the existing final tests historical after opening them.
+- [ ] Build a verified screenshot benchmark and calibrate unknown/ambiguous results before claiming reliable recognition from arbitrary images.
 
 - [x] Commit the baseline and trained checkpoint; simplify the image menu, edit previews inline, show detection time, and move diagnostic export/acceptance out of the primary results.
 - [x] Restore model scores beside all five matches and reproduce the Geist Mono/Bebas example with exact exported probabilities. Scores are not visual-similarity measurements.
@@ -19,7 +29,7 @@ Next: [the measured scaling analysis and ordered experiments](bench/scaling.md).
 - [ ] Compare one wider encoder and a training-only glyph head with matched budgets on new development data; preserve glyph boundaries without sacrificing raster height. The newly opened verification set is now historical.
 - [ ] Measure visual similarity separately from exact identity with verified human judgments. Do not interpret classifier probabilities as similarity scores.
 - [ ] Integrate an improved candidate's versioned preparation, source polygons, calibration and weights together when updating inference in the separately owned website session. The UI handoff is commit `acc91da`; no demo files changed in subsequent training commits.
-- [ ] Advance to 500 families and then a pinned Google Fonts corpus with explicit family/face/script coverage, repeated validation, catalog-specific calibration and a measured download below 10 MB.
+- [x] Bring forward the pinned Google Fonts experiment with explicit family/face/script coverage. Training, calibration and release readiness are tracked above.
 
 - [x] Import 100 pinned regular families and reserve 13 unknown families across validation/test.
 - [x] Train on single glyphs, random short strings, words and phrases in two renderers, with edge cuts, scale changes, rotation, shadows and margins.
@@ -31,7 +41,7 @@ Next: [the measured scaling analysis and ordered experiments](bench/scaling.md).
 - [x] Add single/short strings and partial neighboring-letter views to development; publish the weak length slices rather than assuming any glyph identifies a font.
 - [ ] Collect verified independent screenshots for the included families, split by source, and reserve a new final test before further tuning. Existing ten-font and 100-font tests are historical.
 - [x] Establish held-out weight/italic evidence for the ten-family pilot.
-- [ ] Extend genuine face/axis coverage to the current 100 families, with explicit missing-face/script coverage. Keep 500/full-corpus training behind the accuracy and rejection gates.
+- [ ] Extend genuine face/axis coverage beyond the ten-family pilot, using the full pinned catalog's real available faces and axes.
 
 Historical descriptor scores are archived, not an active product path. Earlier evidence and the reason for local windows remain in [bench/focus.md](bench/focus.md).
 
@@ -48,7 +58,7 @@ The conversation's 20–50k parameters, 32 dimensions, approximately 100 KB pack
 
 ## Sequence and decision gates
 
-Complete phases 0–4 before committing to a release architecture. Scope update, 2026-09-21: at the user's request, a small CPU/WebGPU demo was brought forward to make the current algorithm inspectable. It does not satisfy the accuracy, size, hardware, or release gates below. Phases 5–7 produce v0.1. Phase 8 expands coverage after that release passes its gates. Dataset collection can continue while experiments run.
+The phases below preserve the original roadmap. The demo was brought forward on 2026-09-21 and full Google Fonts experimentation on 2026-09-22 at the user's request. Neither expansion by itself satisfies the accuracy, rejection, hardware or release gates. Phases 5–7 describe release work; the current corpus experiment brings part of phase 8 forward.
 
 These are proposed engineering targets, not achieved results or literature benchmarks. Freeze them and the evaluation protocol in phase 0; record any later scope change explicitly.
 
@@ -211,7 +221,7 @@ Completion is measured coverage per release, not an assertion of universal recog
 
 ## Start here
 
-- [ ] Build the 20-family input experiment in [bench/protocol.md](bench/protocol.md), then expand to a pinned 50-family smoke subset.
-- [ ] Produce one verified browser screenshot and one synthetic training crop per family; inspect their normalized tensors.
-- [x] Run the descriptor baseline and a tiny-model smoke experiment through the same evaluator.
-- [ ] Improve the failed pilot, scale the fixed experiment to 500 families, and resolve gates A–C before release optimization or broad commercial catalogs.
+- [x] Build the pinned full-corpus data pipeline and wider browser-compatible encoder.
+- [ ] Finish and evaluate the corpus candidate with the commands in [bench/corpus.md](bench/corpus.md).
+- [ ] Use the measured failures to prioritize genuine face/axis coverage, hard confusable families and short/partial glyph crops.
+- [ ] Resolve reliability and unknown-font rejection on independent screenshots before a release claim or further commercial-source expansion.

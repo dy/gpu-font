@@ -14,6 +14,8 @@ export function readNetwork(artifact) {
   if (!Array.isArray(dilations) || dilations.length !== depth || dilations.some(d => d !== 1 && d !== 2)) throw new Error('Invalid filter dilations')
   if (!Array.isArray(fonts) || !fonts.length || fonts.length > 10000 || fonts.some(f => typeof f !== 'string' || !f) || new Set(fonts).size !== fonts.length) throw new Error('Invalid font labels')
   if (p?.width !== 128 || p.height !== 48 || p.windows !== 3) throw new Error('Unsupported input preparation')
+  const method = p.method ?? 'windows'
+  if (!['windows', 'deskew-windows'].includes(method)) throw new Error('Unsupported input preparation method')
   if (!Array.isArray(artifact.layers) || artifact.layers.length !== depth + 1) throw new Error('Invalid network layers')
   const layers = artifact.layers.map((layer, i) => {
     const shape = i === depth ? [fonts.length, shapeChannels.at(-1)] : [shapeChannels[i + 1], shapeChannels[i], 3, 3]
@@ -28,7 +30,7 @@ export function readNetwork(artifact) {
     if (!weights.every(Number.isFinite) || !bias.every(Number.isFinite)) throw new Error('Weight overflow')
     return { shape, weights, bias }
   })
-  return { fonts: [...fonts], layers, channels: [...shapeChannels], strides: [...shapeStrides], dilations: [...dilations], preparation: { width: p.width, height: p.height, windows: p.windows } }
+  return { fonts: [...fonts], layers, channels: [...shapeChannels], strides: [...shapeStrides], dilations: [...dilations], preparation: { width: p.width, height: p.height, windows: p.windows, method } }
 }
 
 export function checkInput(input) {

@@ -1,0 +1,279 @@
+[
+  {
+    "family": "inter",
+    "script": "Latn",
+    "inputs": [
+      {
+        "renderer": "shards",
+        "text": "YItbWYFm",
+        "windows": [
+          [
+            127,
+            46
+          ],
+          [
+            128,
+            46
+          ],
+          [
+            126,
+            46
+          ]
+        ],
+        "inkFraction": 0.288300407461855
+      },
+      {
+        "renderer": "browser",
+        "text": "YItbWYFm",
+        "windows": [
+          [
+            127,
+            46
+          ],
+          [
+            127,
+            46
+          ],
+          [
+            127,
+            46
+          ]
+        ],
+        "inkFraction": 0.3204916840637887
+      }
+    ],
+    "normalAxes": {
+      "opsz": 14.0,
+      "wght": 400
+    },
+    "correctedInkFraction": 0.288300407461855
+  },
+  {
+    "family": "geistmono",
+    "script": "Latn",
+    "inputs": [
+      {
+        "renderer": "shards",
+        "text": "YItbWYFm",
+        "windows": [
+          [
+            127,
+            46
+          ],
+          [
+            128,
+            46
+          ],
+          [
+            127,
+            46
+          ]
+        ],
+        "inkFraction": 0.31007373584535114
+      },
+      {
+        "renderer": "browser",
+        "text": "YItbWYFm",
+        "windows": [
+          [
+            128,
+            46
+          ],
+          [
+            128,
+            46
+          ],
+          [
+            127,
+            46
+          ]
+        ],
+        "inkFraction": 0.3318119392154637
+      }
+    ],
+    "normalAxes": {
+      "wght": 400
+    },
+    "correctedInkFraction": 0.31007373584535114
+  },
+  {
+    "family": "notosansjp",
+    "script": "Hani",
+    "inputs": [
+      {
+        "renderer": "shards",
+        "text": "年出种用方得之上",
+        "windows": [
+          [
+            127,
+            46
+          ],
+          [
+            128,
+            46
+          ],
+          [
+            127,
+            46
+          ]
+        ],
+        "inkFraction": 0.12253071954937222
+      },
+      {
+        "renderer": "browser",
+        "text": "年出种用方得之上",
+        "windows": [
+          [
+            127,
+            46
+          ],
+          [
+            128,
+            46
+          ],
+          [
+            127,
+            46
+          ]
+        ],
+        "inkFraction": 0.30634320197462095
+      }
+    ],
+    "normalAxes": {
+      "wght": 400
+    },
+    "correctedInkFraction": 0.2696585030552171
+  },
+  {
+    "family": "notosanskr",
+    "script": "Hang",
+    "inputs": [
+      {
+        "renderer": "shards",
+        "text": "ㅟㅐ감감ㅞㄼㅟ갊",
+        "windows": [
+          [
+            127,
+            46
+          ],
+          [
+            128,
+            46
+          ],
+          [
+            127,
+            47
+          ]
+        ],
+        "inkFraction": 0.10024184372884698
+      },
+      {
+        "renderer": "browser",
+        "text": "ㅟㅐ감감ㅞㄼㅟ갊",
+        "windows": [
+          [
+            127,
+            46
+          ],
+          [
+            128,
+            46
+          ],
+          [
+            126,
+            46
+          ]
+        ],
+        "inkFraction": 0.2598904037251098
+      }
+    ],
+    "normalAxes": {
+      "wght": 400
+    },
+    "correctedInkFraction": 0.23818619639979827
+  },
+  {
+    "family": "amiri",
+    "script": "Arab",
+    "inputs": [
+      {
+        "renderer": "shards",
+        "text": "ﻪۃےڤقىھے",
+        "windows": [
+          [
+            127,
+            46
+          ],
+          [
+            127,
+            35
+          ]
+        ],
+        "inkFraction": 0.17631238361000082
+      },
+      {
+        "renderer": "browser",
+        "text": "ﻪۃےڤقىھے",
+        "windows": [
+          [
+            126,
+            46
+          ],
+          [
+            127,
+            44
+          ]
+        ],
+        "inkFraction": 0.18079244347071224
+      }
+    ],
+    "normalAxes": {},
+    "correctedInkFraction": 0.17631238361000082
+  },
+  {
+    "family": "kumarone",
+    "script": "Gujr",
+    "inputs": [
+      {
+        "renderer": "shards",
+        "text": "છધડટભખલઇ",
+        "windows": [
+          [
+            126,
+            46
+          ],
+          [
+            128,
+            40
+          ],
+          [
+            127,
+            45
+          ]
+        ],
+        "inkFraction": 0.4209629784208795
+      },
+      {
+        "renderer": "browser",
+        "text": "છધડટભખલઇ",
+        "windows": [
+          [
+            124,
+            46
+          ],
+          [
+            128,
+            40
+          ],
+          [
+            127,
+            45
+          ]
+        ],
+        "inkFraction": 0.46287906540571366
+      }
+    ],
+    "normalAxes": {},
+    "correctedInkFraction": 0.4209629784208795
+  }
+]
