@@ -31,7 +31,7 @@ test('catalog parser rejects empty, incompatible, truncated, trailing, zero and 
   for (const bad of [null, {}, [], { ...catalog(), faces: [] }]) assert.throws(() => readCatalog(bad, binding))
   for (const key of Object.keys(binding)) assert.throws(() => readCatalog(catalog(), { ...binding, [key]: 'other' }), /different/)
   const changes = [
-    a => a.version = 3, a => a.version = 1, a => a.dimensions = 64, a => a.referencesPerFace = 2,
+    a => a.version = 4, a => a.version = 1, a => a.dimensions = 64, a => a.referencesPerFace = 2,
     a => a.faces[1].id = a.faces[0].id, a => a.faces[1].family = 'different',
     a => a.vectors.owners = [0, 0, 2], a => a.vectors.owners = [0, 1, 3],
     ...[0, NaN, Infinity, 1e40].map(s => a => a.vectors.scales[0] = s),
@@ -40,6 +40,19 @@ test('catalog parser rejects empty, incompatible, truncated, trailing, zero and 
   ]
   for (const change of changes) { const a = catalog(); change(a); assert.throws(() => readCatalog(a, binding)) }
   for (const q of [null, [], vector(0, NaN), vector(0, 0), [1]]) assert.throws(() => rankCatalog(q, readCatalog(catalog(), binding)))
+})
+test('variable references keep distinct scripts and require every face to own a vector', () => {
+  const data = catalog(); data.version = 3; delete data.referencesPerFace
+  data.faces.splice(1, 1); data.vectors.owners = [0, 0, 1]
+  const before = structuredClone(data)
+  for (const query of [vector(0, 1), vector(1, 1), vector(0, -1), vector(0, 1)]) {
+    const result = rankCatalog(query, readCatalog(data, binding))
+    assert.equal(result[0].family, query[0] < 0 ? 'b' : 'a'); assert.equal(result[0].score, 1)
+  }
+  assert.deepEqual(data, before)
+  for (const change of [a => a.referencesPerFace = 1, a => a.vectors.owners = [0, 0, 0], a => a.vectors.shape = [0, 128], a => a.vectors.shape = [640001, 128], a => a.vectors.shape = [3.5, 128], a => a.vectors.shape = null]) {
+    const bad = structuredClone(data); change(bad); assert.throws(() => readCatalog(bad, binding))
+  }
 })
 test('source embedding averages normalized windows, retaining direction rather than projection magnitude', () => {
   const a = vector(0, 100), b = vector(1, 1), embedding = embedWindows([a, b])

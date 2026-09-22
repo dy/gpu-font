@@ -12,6 +12,22 @@ from train.robustness import sha
 
 
 class EncoderCatalogTests(unittest.TestCase):
+    def test_variable_script_references_preserve_vectors_and_require_complete_owners(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            path=Path(tmp)/'encoder.json';save(path,{'preparation':{}})
+            raw=np.zeros((3,128),dtype=np.int8);raw[0,0]=127;raw[1,1]=127;raw[2,0]=-127
+            catalog={'version':3,'kind':'font-catalog','dimensions':128,'encoderSha256':sha(path),'preparationSha256':preparation_hash({}),
+                     'faces':[{'id':f,'familyId':f,'family':f} for f in ['a','b']],
+                     'vectors':{'encoding':'int8-base64','shape':[3,128],'data':base64.b64encode(raw).decode(),'scales':[1/127]*3,'owners':[0,0,1]}}
+            other=copy.deepcopy(catalog);other['faces'][1]={'id':'c','familyId':'c','family':'C'}
+            for data in [catalog,catalog,other,catalog]:
+                vectors,owners,labels=read_catalog(data,path)
+                np.testing.assert_array_equal(vectors,raw/127);self.assertEqual(owners.tolist(),[0,0,1]);self.assertEqual(labels,[f['id'] for f in data['faces']])
+            for shape in [[0,128],[640001,128],[3.5,128],None,[]]:
+                bad=copy.deepcopy(catalog);bad['vectors']['shape']=shape;self.assertRaises(ValueError,read_catalog,bad,path)
+            bad=copy.deepcopy(catalog);bad['vectors']['owners']=[0,0,0];self.assertRaisesRegex(ValueError,'owner',read_catalog,bad,path)
+            self.assertRaises(ValueError,read_catalog,{**catalog,'referencesPerFace':1},path)
+
     def test_catalog_binding_exact_packed_boundaries_and_repeated_decodes(self):
         with tempfile.TemporaryDirectory() as tmp:
             path=Path(tmp)/'encoder.json';preparation={'width':128,'height':48,'windows':3};save(path,{'preparation':preparation})

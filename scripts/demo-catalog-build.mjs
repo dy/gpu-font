@@ -3,7 +3,8 @@ import { readFile, writeFile, mkdir, cp, access } from 'node:fs/promises'
 import { createHash } from 'node:crypto'
 import { readNetwork } from '../src/network.mjs'
 import { readCatalog, preparationHash } from '../src/catalog.mjs'
-import { readJsonl, decodePng, encodePng, cropView } from './preview-lib.mjs'
+import { decodePng, encodePng, cropView } from './preview-lib.mjs'
+import { sourceCatalogs } from './catalog-sources.mjs'
 
 const hash = bytes => createHash('sha256').update(bytes).digest('hex')
 const read = async path => JSON.parse(await readFile(path, 'utf8'))
@@ -18,14 +19,14 @@ await mkdir('dist/src', { recursive: true })
 for (const name of ['prepare', 'input', 'line', 'network', 'network-gpu', 'catalog']) await cp(`src/${name}.mjs`, `dist/src/${name}.mjs`)
 await writeFile('dist/assets/model.json', bytes)
 const options = [], previews = {}, inventory = await read('bench/corpus.json'), notices = []
-async function addCatalog(id, name, path) {
-  const bytes = await readFile(path), data = JSON.parse(bytes), decoded = readCatalog(data, binding)
+async function addCatalog(id, name, bytes) {
+  const data = JSON.parse(bytes), decoded = readCatalog(data, binding)
   const file = `assets/catalogs/${id}.json`
   await writeFile(`dist/${file}`, bytes)
   options.push({ id, name, file, sha256: hash(bytes), families: decoded.families, faces: data.faces.length })
   return data
 }
-const google = await addCatalog('google-fonts', 'Google Fonts', 'models/encoder/google-fonts.json')
+const google = await addCatalog('google-fonts', 'Google Fonts', await readFile('models/encoder/google-fonts.json'))
 await mkdir('dist/assets/google-fonts', { recursive: true })
 for (const face of google.faces) {
   const id = face.familyId, path = `.data/encoder/faces/${id}.ttf`, info = await read(`.data/encoder/faces/${id}.json`)
@@ -53,31 +54,42 @@ for (const font of manifest.fonts) {
   await writeFile(`dist/${file}`, bytes); fonts.push({ id: font.id, name: font.family, file })
 }
 await cp('.data/fonts/source-serif-4.ttf', 'dist/assets/fonts/source-serif-4.ttf')
+const sources = []
 for (const version of ['v1', 'v2']) {
   const archive = `.data/previews/pilot-${version}`, compiled = `.data/catalogs/preview-pilot-${version}`
   if (!await access(`${compiled}/report.json`).then(() => true, () => false)) continue
-  const report = await read(`${compiled}/report.json`), records = await readJsonl(`${archive}/manifest.jsonl`)
-  if (hash(await readFile(`${archive}/manifest.jsonl`)) !== report.sourceManifestSha256) throw new Error('Changed preview archive')
-  for (const recipe of ['words', 'alphabet', 'provided']) {
-    const product = report.catalogs.find(c => c.recipe === recipe)
-    if (!product) continue
-    const path = `${compiled}/${product.path}`
-    if (hash(await readFile(path)) !== product.sha256) throw new Error('Changed preview catalog')
-    const data = await addCatalog(`previews-${version}-${recipe}`, `Previews ${version.slice(1)} · ${recipe === 'provided' ? 'source pages' : recipe}`, path)
-    for (const face of data.faces) {
-      if (previews[face.id]) continue
-      const record = records.find(r => r.id === face.referenceIds[0])
-      const bytes = await readFile(`${archive}/${record.image.path}`)
-      if (hash(bytes) !== record.image.sha256) throw new Error('Changed reference image')
-      const image = cropView(decodePng(bytes), record.region), file = `assets/catalogs/${hash(Buffer.from(face.id))}.png`
-      await writeFile(`dist/${file}`, encodePng(image))
-      previews[face.id] = { image: file, text: record.text, width: image.width, height: image.height }
-    }
+  const report = await read(`${compiled}/report.json`), snapshot = await readFile(`${compiled}/inputs.json`)
+  if (hash(snapshot) !== report.inputsSha256) throw new Error('Changed preview input snapshot; recompile the catalog')
+  const inputs = JSON.parse(snapshot), records = inputs.samples
+  if (inputs.manifestSha256 !== report.sourceManifestSha256 || inputs.encoderSha256 !== binding.encoderSha256) throw new Error('Incompatible preview snapshot')
+  const product = report.catalogs.find(c => c.recipe === 'words')
+  if (!product) continue
+  const path = `${compiled}/${product.path}`
+  if (hash(await readFile(path)) !== product.sha256) throw new Error('Changed preview catalog')
+  const data = await read(path)
+  sources.push({ catalog: data, records })
+  for (const face of data.faces) {
+    if (previews[face.id]) continue
+    const record = records.find(r => r.id === face.referenceIds[0])
+    const bytes = await readFile(`${archive}/${record.image.path}`)
+    if (hash(bytes) !== record.image.sha256) throw new Error('Changed reference image')
+    const image = cropView(decodePng(bytes), record.region), file = `assets/catalogs/${hash(Buffer.from(face.id))}.png`
+    await writeFile(`dist/${file}`, encodePng(image))
+    previews[face.id] = { image: file, text: record.text, width: image.width, height: image.height }
   }
 }
-const metrics = await read('bench/encoder-test.json')
-if (metrics.encoderSha256 !== binding.encoderSha256) throw new Error('Changed encoder evaluation')
+for (const source of sourceCatalogs(sources, binding)) {
+  if (source.id === 'google-fonts') continue // The complete Google corpus is already indexed.
+  await addCatalog(source.id, source.name, Buffer.from(JSON.stringify(source.data) + '\n'))
+}
+const measured = await read('bench/encoder-test.json')
+let metrics = measured.encoderSha256 === binding.encoderSha256 && measured.catalogSha256 === options[0].sha256 ? measured.results.groups['split/test'] : null
+if (await access('bench/encoder-quality.json').then(() => true, () => false)) {
+  const quality = (await read('bench/encoder-quality.json')).reports.after
+  if (quality.encoderSha256 === binding.encoderSha256 && quality.catalogSha256 === options[0].sha256) metrics = quality.historical['split/test']
+}
+if (!metrics) throw new Error('Changed encoder/catalog evaluation')
 await writeFile('dist/assets/catalog.json', JSON.stringify({ ...binding, modelSha256: binding.encoderSha256, fonts, catalogs: options, previews,
-  parameters: model.layers.reduce((sum, l) => sum + l.weights.length + l.bias.length, 0), metrics: metrics.results.groups['split/test'] }))
+  parameters: model.layers.reduce((sum, l) => sum + l.weights.length + l.bias.length, 0), metrics }))
 await writeFile('dist/assets/font-notices.json', JSON.stringify({ sourceCommit: inventory.commit, google: notices, samples: manifest, previewArchives: 'Local research captures; see .data/previews/pilot-v*/report.md. Not a redistribution grant.' }))
 console.log(`Built shared-encoder demo: ${options.map(o => `${o.name} (${o.families})`).join(', ')}. Specimen assets load only when shown.`)
