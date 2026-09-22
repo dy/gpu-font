@@ -6,6 +6,10 @@ import unittest
 
 import numpy as np
 import torch
+from fontTools.fontBuilder import FontBuilder
+from fontTools.pens.ttGlyphPen import TTGlyphPen
+from fontTools.ttLib import TTFont,newTable
+from fontTools.ttLib.tables.TupleVariation import TupleVariation
 
 from train.encoder_data import family_groups,assign_groups,text_plan,validate_shard
 from train.encoder import unit,episode,training_pools,alias_targets,episodic_loss,references,rank,metrics
@@ -13,7 +17,9 @@ from train.encoder import load_encoder
 from train.encoder_data import save
 from train.ten_model import Classifier,export
 from train import encoder
+from train import encoder_data
 from train.robustness import sha
+from scripts.corpus import blob
 
 
 class EncoderTests(unittest.TestCase):
@@ -77,6 +83,28 @@ class EncoderTests(unittest.TestCase):
                 for key,value in [('family','c'),('role','test'),('renderer','other'),('text','reference')]:
                     bad=copy.deepcopy(manifest);bad['samples'][0][key]=value;self.assertRaises(ValueError,load,bad)
                 _,pixels,_=load(manifest);self.assertEqual(pixels.tolist(),list(raw));del pixels
+
+    def test_browser_face_freezes_variable_axes_and_recovers_corrupt_cache(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root=Path(tmp);path=root/'variable.ttf';fb=FontBuilder(1000,isTTF=True)
+            fb.setupGlyphOrder(['.notdef','A']);pen=TTGlyphPen(None);pen.moveTo((0,0));pen.lineTo((200,0));pen.lineTo((100,600));pen.closePath()
+            fb.setupGlyf({'.notdef':TTGlyphPen(None).glyph(),'A':pen.glyph()});fb.setupHorizontalMetrics({'.notdef':(500,0),'A':(500,0)})
+            fb.setupHorizontalHeader(ascent=800,descent=-200);fb.setupCharacterMap({ord('A'):'A'})
+            fb.setupNameTable({'familyName':'Variable fixture','styleName':'Thin'});fb.setupOS2(usWeightClass=100);fb.setupPost();fb.setupMaxp()
+            fb.setupFvar([('wght',100,100,900,'Weight')],[])
+            gvar=newTable('gvar');gvar.version=1;gvar.reserved=0;gvar.variations={'A':[TupleVariation({'wght':(0,1,1)},[(0,0),(200,0),(100,0),(0,0),(200,0),(0,0),(0,0)])]};fb.font['gvar']=gvar;fb.save(path)
+            original=path.read_bytes();face={'path':'variable.ttf','blob':blob(original),'axes':{'wght':{'min':100,'default':100,'max':900}}}
+            family={'id':'fixture','selected':'variable.ttf','faces':[face],'trainingAxes':{'wght':400}}
+            with patch.object(encoder_data,'DATA',root),patch.object(encoder_data,'CACHE',root):
+                encoder_data.render_face(family);output=root/'faces/fixture.ttf';normal=output.read_bytes();time=output.stat().st_mtime_ns
+                with TTFont(output) as font:
+                    self.assertNotIn('fvar',font);self.assertEqual(font['OS/2'].usWeightClass,400)
+                    normal_width=font['glyf']['A'].xMax
+                encoder_data.render_face(family);self.assertEqual(output.stat().st_mtime_ns,time)
+                output.write_bytes(b'corrupt');encoder_data.render_face(family);self.assertEqual(output.read_bytes(),normal)
+                encoder_data.render_face({**family,'trainingAxes':{'wght':100}})
+                with TTFont(output) as font:self.assertLess(font['glyf']['A'].xMax,normal_width)
+                encoder_data.render_face(family);self.assertEqual(output.read_bytes(),normal);self.assertEqual(path.read_bytes(),original)
 
     def fixture(self):
         samples=[];windows=[]
