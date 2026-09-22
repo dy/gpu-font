@@ -8,7 +8,7 @@ const source = $('source'), ctx = source.getContext('2d', { willReadFrequently: 
 let model, catalog, gpu, gpuReason = '', current = null, crop = null, last = null
 let revision = 0, analysis = 0, dragging = null, armed = null
 let scheduled = 0, running = false, pending = false
-let previewText = $('preview-text').value
+let previewText = 'Quiet rivers flow', previewValid = true
 const fonts = new Map()
 
 function message(text = '', error = false) {
@@ -31,7 +31,7 @@ function invalidate(retain = false) {
   $('save').disabled = true
   $('model-input').hidden = true
   $('normalized').replaceChildren(); $('input-regions').replaceChildren()
-  $('result-summary').textContent = ''
+  $('result-summary').textContent = ''; $('detection-time').textContent = ''
   $('results-empty').textContent = 'No matches yet.'
   $('timing').textContent = '—'
   $('results').removeAttribute('aria-busy')
@@ -98,7 +98,7 @@ async function loadFont(id) {
 }
 async function sample(id) {
   if (!catalog) return
-  if (!updatePreview()) { $('preview-text').focus(); return }
+  if (!previewValid) { $('results').querySelector('[aria-invalid="true"]')?.focus(); return }
   const text = previewText
   const version = ++revision
   invalidate(); message('Loading sample…')
@@ -167,7 +167,7 @@ async function analyze() {
     const prepared = prepareInput(image, { ...model.preparation, background: matte })
     if (prepared.status !== 'ok') {
       $('results').replaceChildren(); $('results-empty').hidden = false; $('save').disabled = true; last = null
-      $('result-summary').textContent = ''
+      $('result-summary').textContent = ''; $('detection-time').textContent = ''
       $('results-empty').textContent = 'No matches.'
       message(prepared.status === 'blank' ? 'No visible text in this crop.' : 'Not enough contrast in this crop.', true)
       return
@@ -190,7 +190,8 @@ async function analyze() {
       inputs: prepared.windows.map(input => ({ ...input, pixels: Array.from(input.pixels) })), matches }
     showInput(prepared.windows, region, sampled)
     renderResults()
-    $('result-summary').textContent = !last.accepted ? 'Uncertain match' : `${elapsed.toFixed(1)} ms`
+    $('result-summary').textContent = last.accepted ? 'Above threshold' : 'Below threshold'
+    $('detection-time').textContent = `${elapsed.toFixed(1)} ms`
     $('timing').textContent = `${elapsed.toFixed(1)} ms (prepare + infer + rank)`
     $('save').disabled = false
   } catch (error) { if (run === analysis) { invalidate(); message(`Could not analyze this crop: ${error.message}`, true) } }
@@ -202,12 +203,13 @@ async function analyze() {
 }
 function renderResults() {
   if (!last) return
+  previewValid = true; $('preview-error').hidden = true
   $('results-empty').hidden = true
   const fragment = document.createDocumentFragment()
   for (const [i, match] of last.matches.slice(0, 5).entries()) {
     const font = catalog.fonts.find(f => f.id === match.family)
     const item = document.createElement('li'); item.className = 'result'
-    item.innerHTML = '<div class="result-top"><span class="rank"></span><span class="font-name"><a target="_blank" rel="noopener"></a></span><span class="result-score"></span></div><p class="result-preview"></p>'
+    item.innerHTML = '<div class="result-top"><span class="rank"></span><span class="font-name"><a target="_blank" rel="noopener"></a></span><span class="result-score"></span></div><input class="result-preview" type="text" maxlength="80" spellcheck="false" autocomplete="off" aria-describedby="preview-error">'
     item.querySelector('.rank').textContent = String(i + 1).padStart(2, '0')
     const score = item.querySelector('.result-score')
     score.textContent = match.score < .001 ? '<0.1%' : match.score > .999 ? '>99.9%' : `${(match.score * 100).toFixed(1)}%`
@@ -216,19 +218,25 @@ function renderResults() {
     link.href = `https://fonts.google.com/specimen/${encodeURIComponent(font.name).replaceAll('%20', '+')}`
     link.setAttribute('aria-label', `${font.name} on Google Fonts`)
     const preview = item.querySelector('.result-preview')
-    preview.textContent = previewText
+    preview.value = previewText
+    preview.setAttribute('aria-label', `Preview ${font.name}`)
+    if (i === 0) preview.id = 'preview-text'
     preview.style.setProperty('--font-specimen', `"specimen-${font.id}"`)
     fragment.append(item)
   }
   $('results').replaceChildren(fragment)
 }
-function updatePreview() {
-  const text = $('preview-text').value.trim() || 'Quiet rivers flow'
-  const valid = /^[\x20-\x7e]+$/.test(text) && !/[~^]/.test(text)
-  $('preview-error').hidden = valid
-  $('preview-text').setAttribute('aria-invalid', String(!valid))
-  if (valid) previewText = text
-  return valid
+function updatePreview(input) {
+  const text = input.value.trim() || 'Quiet rivers flow'
+  previewValid = /^[\x20-\x7e]+$/.test(text) && !/[~^]/.test(text)
+  $('preview-error').hidden = previewValid
+  input.setAttribute('aria-invalid', String(!previewValid))
+  if (!previewValid) return
+  previewText = text
+  for (const other of $('results').querySelectorAll('.result-preview')) {
+    other.setAttribute('aria-invalid', 'false')
+    if (other !== input) other.value = text
+  }
 }
 function point(event) {
   const r = source.getBoundingClientRect()
@@ -272,7 +280,7 @@ $('image-frame').addEventListener('keydown', event => {
 })
 $('resolution').addEventListener('input', () => { resolution(); invalidate(true); message(); schedule() })
 $('empty').addEventListener('click', () => $('file').click())
-$('upload').addEventListener('click', () => $('file').click())
+$('upload').addEventListener('click', () => { $('sample-menu').hidePopover(); $('file').click() })
 $('file').addEventListener('change', () => { const file = $('file').files[0]; if (file) openImage(file); $('file').value = '' })
 document.addEventListener('paste', event => {
   const file = [...(event.clipboardData?.items || [])].find(item => item.type.startsWith('image/'))?.getAsFile()
@@ -282,9 +290,9 @@ document.addEventListener('dragover', event => { if (event.dataTransfer.types.in
 document.addEventListener('drop', event => { event.preventDefault(); $('stage').classList.remove('dragover'); const file = event.dataTransfer.files[0]; if (file) openImage(file) })
 $('stage').addEventListener('dragover', event => { event.preventDefault(); $('stage').classList.add('dragover') })
 $('stage').addEventListener('dragleave', () => $('stage').classList.remove('dragover'))
-$('preview-text').addEventListener('input', () => { if (updatePreview()) renderResults() })
+$('results').addEventListener('input', event => { if (event.target.matches('.result-preview')) updatePreview(event.target) })
 function sampleLabel() {
-  $('sample-label').textContent = catalog?.fonts.find(f => f.id === current?.known)?.name || 'Samples'
+  $('sample-label').textContent = catalog?.fonts.find(f => f.id === current?.known)?.name || current?.name || ''
 }
 const specimens = new IntersectionObserver(entries => {
   for (const entry of entries) if (entry.isIntersecting) {
@@ -293,6 +301,7 @@ const specimens = new IntersectionObserver(entries => {
   }
 }, { root: $('sample-menu'), rootMargin: '100px' })
 function sampleList() {
+  if (!catalog) return
   specimens.disconnect()
   const query = $('sample-search').value.trim().toLowerCase()
   const found = catalog.fonts.filter(f => f.name.toLowerCase().includes(query))
@@ -358,8 +367,8 @@ async function initialize() {
     model = readNetwork(artifact); catalog = data
     try { gpu = await createNetworkGPU(model) } catch (error) { gpuReason = `CPU fallback: ${error.message}` }
     backend(); controls()
-    $('sample').disabled = false
-    document.querySelector('.scope').textContent = `${data.fonts.length} fonts`
+    if ($('sample-menu').matches(':popover-open')) sampleList()
+    $('catalog-size').textContent = `${data.fonts.length} families`
     const measured = data.metrics.groups.all
     $('metrics').textContent = `Top-1 on ${measured.count.toLocaleString()} synthetic ${data.metrics.split} crops: ${(measured.accuracy * 100).toFixed(1)}%. Real-image accuracy is unmeasured.`
     if (data.metrics.groups['length/1']) {

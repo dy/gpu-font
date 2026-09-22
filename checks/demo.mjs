@@ -36,7 +36,7 @@ async function saveResult(page) {
       assert.ok(Math.abs(parseFloat(score.text) / 100 - actual) <= .000500001)
     }
   }
-  assert.equal(await page.locator('#result-summary').textContent() === 'Uncertain match', !result.accepted)
+  assert.equal(await page.locator('#result-summary').textContent() === 'Below threshold', !result.accepted)
   return result
 }
 async function chooseSample(page, id) {
@@ -147,6 +147,7 @@ try {
     const result = await saveResult(scorePage)
     assert.deepEqual(result.matches.slice(0, 5).map(m => m.score), scores)
     assert.deepEqual(await scorePage.locator('.result-score').allTextContents(), labels)
+    assert.match(await scorePage.locator('#detection-time').textContent(), /^\d+\.\d ms$/)
     assert.equal(result.accepted, scores[0] >= (catalog.calibration?.threshold ?? 1.01))
   }
   const whitePixel = await scorePage.evaluate(() => {
@@ -235,25 +236,40 @@ try {
   }, { ids: ['inter', 'roboto', 'open-sans', 'source-sans-3', 'montserrat', 'poppins', 'nunito', 'lora', 'merriweather', 'playfair-display'], temperature, threshold: catalog.calibration?.threshold ?? 1.01 })
   await chooseSample(page, 'lora')
   await saveResult(page)
+  const beforeEditing = await saveResult(page)
+  await page.locator('.result-preview').nth(2).fill('Editable in every face')
+  assert.equal(await page.locator('.result-preview').nth(2).evaluate(input => input === document.activeElement), true)
+  assert.deepEqual(await page.locator('.result-preview').evaluateAll(inputs => inputs.map(input => input.value)), Array(5).fill('Editable in every face'))
+  assert.deepEqual((await saveResult(page)).inputs, beforeEditing.inputs, 'Preview edits must not alter inference pixels')
   await page.locator('#preview-text').fill('A different phrase')
-  assert.equal(await page.locator('.result-preview').first().textContent(), 'A different phrase')
+  assert.equal(await page.locator('.result-preview').nth(1).inputValue(), 'A different phrase')
   const specimen = await page.locator('#source').getAttribute('aria-label')
   await page.locator('#preview-text').fill('你好 🪷')
   assert.ok(await page.locator('#preview-error').isVisible())
-  assert.equal(await page.locator('.result-preview').first().textContent(), 'A different phrase')
+  assert.equal(await page.locator('.result-preview').nth(1).inputValue(), 'A different phrase')
   await chooseSample(page, 'inter')
   assert.equal(await page.locator('#source').getAttribute('aria-label'), specimen, 'Unsupported glyphs must not produce mislabeled samples')
   assert.equal(await page.evaluate(() => document.activeElement.id), 'preview-text')
   await page.locator('#preview-text').fill('   ')
   assert.ok(await page.locator('#preview-error').isHidden())
-  assert.equal(await page.locator('.result-preview').first().textContent(), 'Quiet rivers flow')
+  assert.equal(await page.locator('.result-preview').nth(1).inputValue(), 'Quiet rivers flow')
   await page.locator('#preview-text').fill('A different phrase')
   await page.waitForFunction(() => !document.querySelector('#save').disabled)
+
+  await page.locator('#preview-text').fill('你好')
+  await page.locator('#sample').click()
+  const menuChooser = page.waitForEvent('filechooser')
+  await page.locator('#upload').click()
+  assert.equal(await page.locator('#sample-menu').evaluate(el => el.matches(':popover-open')), false)
+  await (await menuChooser).setFiles({ name: 'menu-open.png', mimeType: 'image/png', buffer: Buffer.from(png, 'base64') })
+  await saveResult(page)
+  assert.ok(await page.locator('#preview-error').isHidden(), 'Replacing an image clears stale preview validation')
+  await chooseSample(page, 'lora'); await saveResult(page)
 
   await page.locator('#file').setInputFiles({ name: 'specimen.png', mimeType: 'image/png', buffer: Buffer.from(png, 'base64') })
   await page.waitForFunction(() => !document.querySelector('#save').disabled)
   const download = page.waitForEvent('download')
-  await page.locator('#save').click()
+  await page.locator('#save').evaluate(button => button.click())
   assert.equal((await download).suggestedFilename(), 'gpu-font-result.json')
   await page.evaluate(base64 => {
     const bytes = Uint8Array.from(atob(base64), c => c.charCodeAt(0))
@@ -325,7 +341,7 @@ try {
   await page.locator('#sample').click()
   assert.equal(await page.locator('[data-font="merriweather"]').getAttribute('aria-pressed'), 'true')
   await page.screenshot({ path: '.data/demo-checks/popover.png', fullPage: true })
-  await page.locator('#results-title').click()
+  await page.locator('.wordmark').focus(); await page.keyboard.press('Escape')
   assert.equal(await page.locator('#sample-menu').evaluate(el => el.matches(':popover-open')), false)
 
   const readCrop = () => page.locator('#selection').evaluate(el => {
@@ -404,7 +420,10 @@ try {
     else assert.notDeepEqual(result.inputs, originalResolution.inputs, 'Resolution must change the actual inference input')
   }
   assert.equal(await page.locator('#method, #paste, #clear, #full-crop, .crop-details, .crop-hint, #analyze, #matte, #source-meta').count(), 0)
-  assert.equal(await page.locator('.image-heading #upload').count(), 1)
+  assert.equal(await page.locator('#sample-menu #upload').count(), 1)
+  assert.equal(await page.locator('.scope, .score-label, .result-foot, .result-preview-control').count(), 0)
+  assert.ok(!await page.locator('footer').textContent().then(text => text.includes('Images stay')))
+  assert.match(await page.locator('#detection-time').textContent(), /^\d+\.\d ms$/)
 
   // Hold one real GPU readback while 50 new crop updates arrive.
   await page.evaluate(() => {

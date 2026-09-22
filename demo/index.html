@@ -12,14 +12,17 @@
   <a class="skip" href="#workbench">Skip to workbench</a>
   <header class="masthead">
     <h1><a href="./" class="wordmark" aria-label="gpu-font home">gpu-font</a></h1>
-    <div class="runtime"><span class="status-dot" aria-hidden="true"></span><span id="backend" role="status">Loading…</span></div>
+    <div class="runtime"><span class="status-dot" aria-hidden="true"></span><span id="backend" role="status">Loading…</span><span id="detection-time" role="status"></span></div>
   </header>
   <main>
     <div id="workbench" class="workbench">
       <section class="source-panel" aria-labelledby="source-title">
-        <div class="panel-heading"><div class="image-heading"><h2 id="source-title">Image</h2><button id="upload" class="icon-button" aria-label="Open image" title="Open image"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M3 7a2 2 0 0 1 2-2h5l2 3h7a2 2 0 0 1 2 2v1M3 7v11a1 1 0 0 0 1 1h15l3-8H6l-3 7" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/></svg></button></div><div class="sample-picker">
-          <button id="sample" class="text-button" popovertarget="sample-menu" aria-haspopup="dialog" aria-expanded="false" disabled><span id="sample-label">Samples</span><svg width="14" height="14" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="m4 6 4 4 4-4" stroke="currentColor" stroke-width="1.2"/></svg></button>
-          <div id="sample-menu" class="sample-menu" popover="auto" role="dialog" aria-label="Sample fonts"><label class="sr-only" for="sample-search">Search fonts</label><input id="sample-search" type="search" autofocus placeholder="Search fonts" autocomplete="off" spellcheck="false"><div id="sample-list" class="sample-list"></div><p id="sample-empty" hidden>No fonts found.</p></div>
+        <div class="panel-heading image-heading"><h2 id="source-title" class="sr-only">Image</h2><div class="sample-picker">
+          <button id="sample" class="image-picker" popovertarget="sample-menu" aria-haspopup="dialog" aria-expanded="false"><span>Image</span><span id="sample-label"></span><svg width="14" height="14" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="m4 6 4 4 4-4" stroke="currentColor" stroke-width="1.2"/></svg></button>
+          <div id="sample-menu" class="sample-menu" popover="auto" role="dialog" aria-label="Choose image">
+            <button id="upload" class="menu-open">Open image…<span aria-hidden="true">↗</span></button>
+            <label class="sr-only" for="sample-search">Search sample fonts</label><input id="sample-search" type="search" autofocus placeholder="Search samples" autocomplete="off" spellcheck="false"><div id="sample-list" class="sample-list"></div><p id="sample-empty" hidden>No fonts found.</p>
+          </div>
         </div></div>
         <div id="stage" class="stage" aria-label="Image drop area">
           <div class="image-viewport">
@@ -39,19 +42,16 @@
       </section>
 
       <section class="results-panel" aria-labelledby="results-title">
-        <div class="panel-heading"><h2 id="results-title">Matches</h2><span class="score-label">Model score</span></div>
-        <p class="scope">100 fonts</p>
-        <div class="result-preview-control"><label for="preview-text">Preview text</label><input id="preview-text" maxlength="80" value="Quiet rivers flow" autocomplete="off" spellcheck="false" aria-describedby="preview-error"></div>
+        <h2 id="results-title" class="sr-only">Font matches</h2>
         <p id="preview-error" class="message" data-error role="status" hidden>These font previews don’t support this character.</p>
         <p id="results-empty" class="results-empty">No matches yet.</p>
-        <ol id="results" class="results" aria-label="Ranked font matches" aria-describedby="score-note" aria-live="polite"></ol>
-        <div class="result-foot"><span id="result-summary"></span><button id="save" class="text-button" disabled>Save result <span aria-hidden="true">↓</span></button></div>
+        <ol id="results" class="results" aria-label="Ranked font matches" aria-describedby="score-note"></ol>
       </section>
     </div>
 
-    <details id="about" class="about"><summary><span>Model & results</span></summary><div class="about-content"><div><p id="metrics"></p><p id="score-note">Model scores compare the fonts in this collection. They are not measured certainty or visual similarity.</p><table id="accuracy" class="accuracy" hidden><caption>Top-1 by source text length</caption><thead><tr><th scope="col">Characters</th><th scope="col">Clean</th><th scope="col">All views</th></tr></thead><tbody></tbody></table><p>Regular Latin text on a plain background. Select one font at a time. Fonts outside this collection are not reliably rejected.</p></div><div><dl><div><dt>Classifier</dt><dd id="parameters">—</dd></div><div><dt>Input</dt><dd>Up to 3 tight text windows</dd></div><div><dt>Weights</dt><dd>Int8</dd></div><div><dt>Last inference</dt><dd id="timing">—</dd></div><div><dt>Compute</dt><dd id="device">Initializing…</dd></div></dl></div></div></details>
+    <details id="about" class="about"><summary><span>Model & results</span></summary><div class="about-content"><div><p id="metrics"></p><p id="score-note">Model scores compare the fonts in this collection. They are not measured certainty or visual similarity.</p><table id="accuracy" class="accuracy" hidden><caption>Top-1 by source text length</caption><thead><tr><th scope="col">Characters</th><th scope="col">Clean</th><th scope="col">All views</th></tr></thead><tbody></tbody></table><p>Regular Latin text on a plain background. Select one font at a time. Fonts outside this collection are not reliably rejected.</p></div><div><dl><div><dt>Catalog</dt><dd id="catalog-size">—</dd></div><div><dt>Classifier</dt><dd id="parameters">—</dd></div><div><dt>Input</dt><dd>Up to 3 tight text windows</dd></div><div><dt>Weights</dt><dd>Int8</dd></div><div><dt>Acceptance</dt><dd id="result-summary"></dd></div><div><dt>Last inference</dt><dd id="timing">—</dd></div><div><dt>Compute</dt><dd id="device">Initializing…</dd></div></dl><button id="save" class="text-button" disabled>Download diagnostic JSON</button></div></div></details>
   </main>
-  <footer><span>Images stay in your browser.</span><a href="./assets/font-notices.json" target="_blank" rel="noopener">Font notices</a></footer>
+  <footer><a href="./assets/font-notices.json" target="_blank" rel="noopener">Font notices</a></footer>
 
 
   <script type="module" src="./app.mjs"></script>

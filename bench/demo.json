@@ -3,12 +3,12 @@
   "timings": {
     "gpu": {
       "median": 3.1999998092651367,
-      "p95": 4,
+      "p95": 3.6000003814697266,
       "count": 20
     },
     "cpu": {
-      "median": 164.4000005722046,
-      "p95": 167.10000038146973,
+      "median": 163.60000038146973,
+      "p95": 166.79999923706055,
       "count": 20
     },
     "windows": [
@@ -908,7 +908,7 @@
   "liveCrop": {
     "rapidUpdates": 50,
     "inferences": 6,
-    "lastInferenceMs": 5
+    "lastInferenceMs": 5.399999618530273
   },
   "automaticBackground": [
     "opaque-dark",

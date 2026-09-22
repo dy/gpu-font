@@ -1,6 +1,12 @@
 [
   {
     "date": "2026-09-22",
+    "component": "image menu and editable matches",
+    "theme": "Graphite",
+    "brief": "Unified image/file/sample menu, open specimen grid, transparent scrollbar track, inline preview editing, visible detection time; diagnostics moved out of primary results."
+  },
+  {
+    "date": "2026-09-22",
     "component": "specimen grid and crop controls",
     "theme": "Graphite",
     "brief": "Restore actual font preview grid; image opening icon and clickable empty state; movable/resizable crop with source-resolution control."

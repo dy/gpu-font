@@ -8,6 +8,7 @@ Current state: **100-font neural classification**, with explicit uncertainty and
 
 Next: [the measured scaling analysis and ordered experiments](bench/scaling.md). The deployment ceiling is now **10 MB for model + catalog + required runtime**, before HTTP compression. The previous 100 KiB target is superseded. Full Google Fonts coverage remains the destination; first isolate lost glyph evidence and train for content-independent style at the current scale.
 
+- [x] Commit the baseline and trained checkpoint; simplify the image menu, edit previews inline, show detection time, and move diagnostic export/acceptance out of the primary results.
 - [x] Restore model scores beside all five matches and reproduce the Geist Mono/Bebas example with exact exported probabilities. Scores are not visual-similarity measurements.
 - [x] Account for 10,000-class storage: a fixed current encoder plus expanded int8 head needs about 0.805 MB of binary tensors, including scales/biases. This is a size projection, not trained accuracy.
 - [ ] Build the fresh 6,400-image preparation development bank specified in [the scaling plan](bench/scaling.md#ordered-experiments-and-decision-points), including current user-reported failures and unseen text/size combinations.
