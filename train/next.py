@@ -25,10 +25,10 @@ def predict(model,pixels,windows,samples,role=None):
     return [samples[s] for s in sources],np.concatenate(outputs),np.array(owners)
 
 
-def train(method,steps=20000,seed=20260925):
-    if method not in ['current','deskew'] or type(steps) is not int or steps<1:raise ValueError('Invalid comparison settings')
+def train(method,steps=20000,seed=20260925,device='mps'):
+    if method not in ['current','deskew'] or type(steps) is not int or steps<1 or device not in ['cpu','mps']:raise ValueError('Invalid comparison settings')
     torch.set_num_threads(4);torch.manual_seed(seed);torch.use_deterministic_algorithms(True)
-    if not torch.backends.mps.is_available():raise ValueError('MPS unavailable')
+    if device=='mps' and not torch.backends.mps.is_available():raise ValueError('MPS unavailable')
     root=ROOT/'.data/next';out=root/f'{method}-{seed}';out.mkdir(parents=True,exist_ok=True)
     artifact=read(ROOT/'models/hundred/model.json');fonts=artifact['fonts']
     if method=='current':
@@ -50,7 +50,7 @@ def train(method,steps=20000,seed=20260925):
     model=Classifier(len(fonts),dilations=artifact['dilations'],context=True)
     model.load_state_dict(torch.load(ROOT/'models/hundred/best.pt',weights_only=True,map_location='cpu')['state'])
     if export(model,fonts,artifact['preparation'])[0]!=artifact:raise ValueError('Initialization mismatch')
-    model.to('mps');rng=np.random.default_rng(seed)
+    model.to(device);rng=np.random.default_rng(seed)
     pools={(family,renderer):[] for family in fonts for renderer in ['pillow','chromium']}
     for i,w in enumerate(windows):
         s=samples[w['source']]
@@ -74,14 +74,14 @@ def train(method,steps=20000,seed=20260925):
         model.train();labels=rng.integers(len(fonts),size=64)
         chosen=[int(rng.choice(pools[fonts[label],'pillow' if rng.integers(2) else 'chromium'])) for label in labels]
         optimizer.zero_grad(set_to_none=True)
-        loss=F.cross_entropy(model(*(t.to('mps') for t in batch(pixels,windows,chosen))),torch.tensor(labels,device='mps'),label_smoothing=.03)
+        loss=F.cross_entropy(model(*(t.to(device) for t in batch(pixels,windows,chosen))),torch.tensor(labels,device=device),label_smoothing=.03)
         if not torch.isfinite(loss):raise ValueError('Nonfinite training loss')
         loss.backward();optimizer.step();scheduler.step()
         if step%1000==0:print(f'{method} {step}/{steps}: {time.perf_counter()-start:.0f}s',flush=True)
         if step%5000==0 or step==steps:retain(step)
     ckpt=torch.load(out/'best.pt',weights_only=True,map_location='cpu');model.cpu().load_state_dict(ckpt['state'])
     preparation={**artifact['preparation'],**({'method':'deskew-windows','lineSha256':sha(ROOT/'src/line.mjs')} if method=='deskew' else {})}
-    packed,quantized=export(model,fonts,preparation);quantized.to('mps')
+    packed,quantized=export(model,fonts,preparation);quantized.to(device)
     known,logits,owners=predict(quantized,dev_pixels,dev_windows,dev_samples)
     unknown,other,other_owners=predict(quantized,pixels,windows,samples,'unknown-validation')
     calibration_manifest={'dataConfig':{'fonts':fonts},'samples':known+unknown}
@@ -94,4 +94,4 @@ def train(method,steps=20000,seed=20260925):
     print(f'Completed {method}: {result["groups"]["all"]["accuracy"]:.2%}',flush=True)
 
 if __name__=='__main__':
-    p=argparse.ArgumentParser();p.add_argument('method',choices=['current','deskew']);p.add_argument('--steps',type=int,default=20000);p.add_argument('--seed',type=int,default=20260925);args=p.parse_args();train(args.method,args.steps,args.seed)
+    p=argparse.ArgumentParser();p.add_argument('method',choices=['current','deskew']);p.add_argument('--steps',type=int,default=20000);p.add_argument('--seed',type=int,default=20260925);p.add_argument('--device',choices=['cpu','mps'],default='mps');args=p.parse_args();train(args.method,args.steps,args.seed,args.device)

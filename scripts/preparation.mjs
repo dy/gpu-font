@@ -5,19 +5,20 @@ import { chromium } from 'playwright'
 import { prepareInput } from '../src/input.mjs'
 import { prepareLine } from '../src/line.mjs'
 
-const dir = '.data/preparation', hash = b => createHash('sha256').update(b).digest('hex')
+const verification = process.argv[2] === 'verification'
+const dir = verification ? '.data/verification' : '.data/preparation', hash = b => createHash('sha256').update(b).digest('hex')
 const read = async path => JSON.parse(await readFile(path))
 function python(command) {
-  const result = spawnSync(process.execPath, ['scripts/python.mjs', '-m', 'train.preparation', command], { stdio: 'inherit' })
+  const result = spawnSync(process.execPath, ['scripts/python.mjs', '-m', 'train.preparation', command, ...(verification ? ['--verification'] : [])], { stdio: 'inherit' })
   if (result.error || result.status !== 0) throw result.error || new Error(`Failed ${command}`)
 }
 await mkdir(dir, { recursive: true })
-const command = process.argv[2] || 'all'
+const command = verification ? 'data' : process.argv[2] || 'all'
 if (!['all', 'data', 'prepare', 'evaluate'].includes(command)) throw new Error('Expected data, prepare or evaluate')
 if (['all', 'data'].includes(command)) {
   python('plans')
   const texts = (await read(`${dir}/plans.json`)).texts
-  const fonts = (await read('bench/fonts-100.json')).fonts.filter(f => f.split === 'train')
+  const fonts = (await read('bench/fonts-100.json')).fonts.filter(f => f.split === 'train' || (verification && f.split === 'unknown-test'))
   const browser = await chromium.launch(), raw = await open(`${dir}/browser.gray`, 'w'), samples = []
   let offset = 0
   try {
@@ -59,7 +60,7 @@ if (['all', 'data'].includes(command)) {
 }
 if (['all', 'data', 'prepare'].includes(command)) {
   const source = await read(`${dir}/source.json`), input = await readFile(`${dir}/source.gray`)
-  const methods = ['current', 'groups', 'deskew', 'deskew-windows', 'oracle'], reports = {}
+  const methods = verification ? ['current', 'deskew-windows'] : ['current', 'groups', 'deskew', 'deskew-windows', 'oracle'], reports = {}
   if (hash(input) !== source.sha256) throw new Error('Changed source pixels')
   for (const method of methods) {
     const output = await open(`${dir}/${method}.u8`, 'w'), windows = [], times = [], angles = []

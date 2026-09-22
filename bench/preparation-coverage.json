@@ -1,0 +1,46 @@
+{
+  "manifestSha256": "248e80c2ca1875bf90a0f2420be34de2cbfe677798f6ad12f6141eecb70096e1",
+  "scope": "Geometric pixel-center coverage at gray < 240, including neighbor ink. Complete-word counts use renderer boxes and require one window containing every word ink pixel. Does not measure information lost by rescaling or neural recognition.",
+  "methods": {
+    "current": {
+      "sourceInkPixels": 7050747,
+      "retainedSourceInkPixels": 6610514,
+      "retainedFraction": 0.9375622185847826,
+      "words": 9600,
+      "wholeWordsInOneWindow": 6404,
+      "wholeWordFraction": 0.6670833333333334
+    },
+    "groups": {
+      "sourceInkPixels": 7050747,
+      "retainedSourceInkPixels": 7050747,
+      "retainedFraction": 1,
+      "words": 9600,
+      "wholeWordsInOneWindow": 9584,
+      "wholeWordFraction": 0.9983333333333333
+    },
+    "deskew": {
+      "sourceInkPixels": 7050747,
+      "retainedSourceInkPixels": 7050747,
+      "retainedFraction": 1,
+      "words": 9600,
+      "wholeWordsInOneWindow": 9583,
+      "wholeWordFraction": 0.9982291666666666
+    },
+    "deskew-windows": {
+      "sourceInkPixels": 7050747,
+      "retainedSourceInkPixels": 6416726,
+      "retainedFraction": 0.910077471223971,
+      "words": 9600,
+      "wholeWordsInOneWindow": 5824,
+      "wholeWordFraction": 0.6066666666666667
+    },
+    "oracle": {
+      "sourceInkPixels": 7050747,
+      "retainedSourceInkPixels": 7040012,
+      "retainedFraction": 0.9984774662883238,
+      "words": 9600,
+      "wholeWordsInOneWindow": 9600,
+      "wholeWordFraction": 1
+    }
+  }
+}

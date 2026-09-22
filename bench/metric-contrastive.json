@@ -1,0 +1,1899 @@
+{
+  "method": "contrastive",
+  "steps": 12000,
+  "seed": 20260928,
+  "selectedStep": 0,
+  "seconds": 189.3194357091561,
+  "initialModelSha256": "66b98a49d1bebe9b2e56bc896f1fbe9b8e76ece52e74608aeae58ef3dd4cefbb",
+  "modelSha256": "66b98a49d1bebe9b2e56bc896f1fbe9b8e76ece52e74608aeae58ef3dd4cefbb",
+  "trainingTensorSha256": "3798a0ebdf7c80a0961f5d7eb3b590ecc9d5de990ae37c56a8a8098fedd7f987",
+  "developmentManifestSha256": "248e80c2ca1875bf90a0f2420be34de2cbfe677798f6ad12f6141eecb70096e1",
+  "trainerSha256": "00d0edc210b2884e48de83d0bdc1a36512bebf2041a32d96eb2576c74647e6ec",
+  "scope": "Synthetic development selection. Same-text negatives and different-text same-family positives in both arms. Harmonic mean of known/added top-5 selects one-prototype checkpoints. Added families are never optimized.",
+  "results": {
+    "1": {
+      "catalogTensorBytes": 7276,
+      "known": {
+        "all": {
+          "count": 6400,
+          "correct": 3078,
+          "top5": 4915,
+          "accuracy": 0.4809375,
+          "top5Accuracy": 0.76796875
+        },
+        "length/1": {
+          "count": 1600,
+          "correct": 600,
+          "top5": 1134,
+          "accuracy": 0.375,
+          "top5Accuracy": 0.70875
+        },
+        "condition/clean": {
+          "count": 1600,
+          "correct": 976,
+          "top5": 1395,
+          "accuracy": 0.61,
+          "top5Accuracy": 0.871875
+        },
+        "font/inter": {
+          "count": 64,
+          "correct": 10,
+          "top5": 35,
+          "accuracy": 0.15625,
+          "top5Accuracy": 0.546875
+        },
+        "condition/small": {
+          "count": 1600,
+          "correct": 538,
+          "top5": 973,
+          "accuracy": 0.33625,
+          "top5Accuracy": 0.608125
+        },
+        "condition/rotate": {
+          "count": 1600,
+          "correct": 604,
+          "top5": 1149,
+          "accuracy": 0.3775,
+          "top5Accuracy": 0.718125
+        },
+        "condition/neighbor": {
+          "count": 1600,
+          "correct": 960,
+          "top5": 1398,
+          "accuracy": 0.6,
+          "top5Accuracy": 0.87375
+        },
+        "length/2-3": {
+          "count": 1600,
+          "correct": 477,
+          "top5": 992,
+          "accuracy": 0.298125,
+          "top5Accuracy": 0.62
+        },
+        "length/4-7": {
+          "count": 1600,
+          "correct": 982,
+          "top5": 1395,
+          "accuracy": 0.61375,
+          "top5Accuracy": 0.871875
+        },
+        "length/8+": {
+          "count": 1600,
+          "correct": 1019,
+          "top5": 1394,
+          "accuracy": 0.636875,
+          "top5Accuracy": 0.87125
+        },
+        "font/roboto": {
+          "count": 64,
+          "correct": 1,
+          "top5": 27,
+          "accuracy": 0.015625,
+          "top5Accuracy": 0.421875
+        },
+        "font/open-sans": {
+          "count": 64,
+          "correct": 24,
+          "top5": 43,
+          "accuracy": 0.375,
+          "top5Accuracy": 0.671875
+        },
+        "font/source-sans-3": {
+          "count": 64,
+          "correct": 18,
+          "top5": 37,
+          "accuracy": 0.28125,
+          "top5Accuracy": 0.578125
+        },
+        "font/montserrat": {
+          "count": 64,
+          "correct": 30,
+          "top5": 53,
+          "accuracy": 0.46875,
+          "top5Accuracy": 0.828125
+        },
+        "font/poppins": {
+          "count": 64,
+          "correct": 30,
+          "top5": 54,
+          "accuracy": 0.46875,
+          "top5Accuracy": 0.84375
+        },
+        "font/nunito": {
+          "count": 64,
+          "correct": 26,
+          "top5": 40,
+          "accuracy": 0.40625,
+          "top5Accuracy": 0.625
+        },
+        "font/nunito-sans": {
+          "count": 64,
+          "correct": 11,
+          "top5": 27,
+          "accuracy": 0.171875,
+          "top5Accuracy": 0.421875
+        },
+        "font/ibm-plex-sans": {
+          "count": 64,
+          "correct": 20,
+          "top5": 40,
+          "accuracy": 0.3125,
+          "top5Accuracy": 0.625
+        },
+        "font/work-sans": {
+          "count": 64,
+          "correct": 16,
+          "top5": 31,
+          "accuracy": 0.25,
+          "top5Accuracy": 0.484375
+        },
+        "font/lora": {
+          "count": 64,
+          "correct": 21,
+          "top5": 53,
+          "accuracy": 0.328125,
+          "top5Accuracy": 0.828125
+        },
+        "font/merriweather": {
+          "count": 64,
+          "correct": 35,
+          "top5": 47,
+          "accuracy": 0.546875,
+          "top5Accuracy": 0.734375
+        },
+        "font/libre-baskerville": {
+          "count": 64,
+          "correct": 25,
+          "top5": 46,
+          "accuracy": 0.390625,
+          "top5Accuracy": 0.71875
+        },
+        "font/crimson-text": {
+          "count": 64,
+          "correct": 20,
+          "top5": 53,
+          "accuracy": 0.3125,
+          "top5Accuracy": 0.828125
+        },
+        "font/source-serif-4": {
+          "count": 64,
+          "correct": 23,
+          "top5": 47,
+          "accuracy": 0.359375,
+          "top5Accuracy": 0.734375
+        },
+        "font/ibm-plex-serif": {
+          "count": 64,
+          "correct": 20,
+          "top5": 49,
+          "accuracy": 0.3125,
+          "top5Accuracy": 0.765625
+        },
+        "font/geist-mono": {
+          "count": 64,
+          "correct": 28,
+          "top5": 36,
+          "accuracy": 0.4375,
+          "top5Accuracy": 0.5625
+        },
+        "font/oswald": {
+          "count": 64,
+          "correct": 49,
+          "top5": 58,
+          "accuracy": 0.765625,
+          "top5Accuracy": 0.90625
+        },
+        "font/bebas-neue": {
+          "count": 64,
+          "correct": 47,
+          "top5": 53,
+          "accuracy": 0.734375,
+          "top5Accuracy": 0.828125
+        },
+        "font/playfair-display": {
+          "count": 64,
+          "correct": 25,
+          "top5": 56,
+          "accuracy": 0.390625,
+          "top5Accuracy": 0.875
+        },
+        "font/adamina": {
+          "count": 64,
+          "correct": 21,
+          "top5": 38,
+          "accuracy": 0.328125,
+          "top5Accuracy": 0.59375
+        },
+        "font/urbanist": {
+          "count": 64,
+          "correct": 36,
+          "top5": 41,
+          "accuracy": 0.5625,
+          "top5Accuracy": 0.640625
+        },
+        "font/mulish": {
+          "count": 64,
+          "correct": 19,
+          "top5": 49,
+          "accuracy": 0.296875,
+          "top5Accuracy": 0.765625
+        },
+        "font/gravitas-one": {
+          "count": 64,
+          "correct": 59,
+          "top5": 60,
+          "accuracy": 0.921875,
+          "top5Accuracy": 0.9375
+        },
+        "font/lexend": {
+          "count": 64,
+          "correct": 22,
+          "top5": 39,
+          "accuracy": 0.34375,
+          "top5Accuracy": 0.609375
+        },
+        "font/mate": {
+          "count": 64,
+          "correct": 33,
+          "top5": 51,
+          "accuracy": 0.515625,
+          "top5Accuracy": 0.796875
+        },
+        "font/cookie": {
+          "count": 64,
+          "correct": 54,
+          "top5": 56,
+          "accuracy": 0.84375,
+          "top5Accuracy": 0.875
+        },
+        "font/great-vibes": {
+          "count": 64,
+          "correct": 38,
+          "top5": 60,
+          "accuracy": 0.59375,
+          "top5Accuracy": 0.9375
+        },
+        "font/italianno": {
+          "count": 64,
+          "correct": 56,
+          "top5": 62,
+          "accuracy": 0.875,
+          "top5Accuracy": 0.96875
+        },
+        "font/bitter": {
+          "count": 64,
+          "correct": 31,
+          "top5": 54,
+          "accuracy": 0.484375,
+          "top5Accuracy": 0.84375
+        },
+        "font/figtree": {
+          "count": 64,
+          "correct": 11,
+          "top5": 33,
+          "accuracy": 0.171875,
+          "top5Accuracy": 0.515625
+        },
+        "font/exo-2": {
+          "count": 64,
+          "correct": 27,
+          "top5": 42,
+          "accuracy": 0.421875,
+          "top5Accuracy": 0.65625
+        },
+        "font/noto-serif": {
+          "count": 64,
+          "correct": 29,
+          "top5": 51,
+          "accuracy": 0.453125,
+          "top5Accuracy": 0.796875
+        },
+        "font/comfortaa": {
+          "count": 64,
+          "correct": 43,
+          "top5": 55,
+          "accuracy": 0.671875,
+          "top5Accuracy": 0.859375
+        },
+        "font/vollkorn": {
+          "count": 64,
+          "correct": 25,
+          "top5": 51,
+          "accuracy": 0.390625,
+          "top5Accuracy": 0.796875
+        },
+        "font/pacifico": {
+          "count": 64,
+          "correct": 46,
+          "top5": 62,
+          "accuracy": 0.71875,
+          "top5Accuracy": 0.96875
+        },
+        "font/parisienne": {
+          "count": 64,
+          "correct": 40,
+          "top5": 62,
+          "accuracy": 0.625,
+          "top5Accuracy": 0.96875
+        },
+        "font/lemon": {
+          "count": 64,
+          "correct": 62,
+          "top5": 64,
+          "accuracy": 0.96875,
+          "top5Accuracy": 1.0
+        },
+        "font/prompt": {
+          "count": 64,
+          "correct": 16,
+          "top5": 32,
+          "accuracy": 0.25,
+          "top5Accuracy": 0.5
+        },
+        "font/cinzel": {
+          "count": 64,
+          "correct": 46,
+          "top5": 64,
+          "accuracy": 0.71875,
+          "top5Accuracy": 1.0
+        },
+        "font/red-hat-display": {
+          "count": 64,
+          "correct": 20,
+          "top5": 42,
+          "accuracy": 0.3125,
+          "top5Accuracy": 0.65625
+        },
+        "font/public-sans": {
+          "count": 64,
+          "correct": 15,
+          "top5": 40,
+          "accuracy": 0.234375,
+          "top5Accuracy": 0.625
+        },
+        "font/amiri": {
+          "count": 64,
+          "correct": 29,
+          "top5": 54,
+          "accuracy": 0.453125,
+          "top5Accuracy": 0.84375
+        },
+        "font/bodoni-moda": {
+          "count": 64,
+          "correct": 38,
+          "top5": 60,
+          "accuracy": 0.59375,
+          "top5Accuracy": 0.9375
+        },
+        "font/encode-sans": {
+          "count": 64,
+          "correct": 32,
+          "top5": 50,
+          "accuracy": 0.5,
+          "top5Accuracy": 0.78125
+        },
+        "font/cormorant": {
+          "count": 64,
+          "correct": 14,
+          "top5": 54,
+          "accuracy": 0.21875,
+          "top5Accuracy": 0.84375
+        },
+        "font/noto-sans": {
+          "count": 64,
+          "correct": 8,
+          "top5": 39,
+          "accuracy": 0.125,
+          "top5Accuracy": 0.609375
+        },
+        "font/instrument-sans": {
+          "count": 64,
+          "correct": 17,
+          "top5": 51,
+          "accuracy": 0.265625,
+          "top5Accuracy": 0.796875
+        },
+        "font/alegreya": {
+          "count": 64,
+          "correct": 30,
+          "top5": 47,
+          "accuracy": 0.46875,
+          "top5Accuracy": 0.734375
+        },
+        "font/raleway": {
+          "count": 64,
+          "correct": 32,
+          "top5": 54,
+          "accuracy": 0.5,
+          "top5Accuracy": 0.84375
+        },
+        "font/schibsted-grotesk": {
+          "count": 64,
+          "correct": 25,
+          "top5": 46,
+          "accuracy": 0.390625,
+          "top5Accuracy": 0.71875
+        },
+        "font/alex-brush": {
+          "count": 64,
+          "correct": 35,
+          "top5": 61,
+          "accuracy": 0.546875,
+          "top5Accuracy": 0.953125
+        },
+        "font/sacramento": {
+          "count": 64,
+          "correct": 43,
+          "top5": 57,
+          "accuracy": 0.671875,
+          "top5Accuracy": 0.890625
+        },
+        "font/dm-sans": {
+          "count": 64,
+          "correct": 15,
+          "top5": 42,
+          "accuracy": 0.234375,
+          "top5Accuracy": 0.65625
+        },
+        "font/hepta-slab": {
+          "count": 64,
+          "correct": 39,
+          "top5": 57,
+          "accuracy": 0.609375,
+          "top5Accuracy": 0.890625
+        },
+        "font/paytone-one": {
+          "count": 64,
+          "correct": 39,
+          "top5": 62,
+          "accuracy": 0.609375,
+          "top5Accuracy": 0.96875
+        },
+        "font/bricolage-grotesque": {
+          "count": 64,
+          "correct": 25,
+          "top5": 30,
+          "accuracy": 0.390625,
+          "top5Accuracy": 0.46875
+        },
+        "font/bangers": {
+          "count": 64,
+          "correct": 49,
+          "top5": 56,
+          "accuracy": 0.765625,
+          "top5Accuracy": 0.875
+        },
+        "font/sorts-mill-goudy": {
+          "count": 64,
+          "correct": 36,
+          "top5": 55,
+          "accuracy": 0.5625,
+          "top5Accuracy": 0.859375
+        },
+        "font/stix-two-text": {
+          "count": 64,
+          "correct": 26,
+          "top5": 54,
+          "accuracy": 0.40625,
+          "top5Accuracy": 0.84375
+        },
+        "font/hanken-grotesk": {
+          "count": 64,
+          "correct": 3,
+          "top5": 22,
+          "accuracy": 0.046875,
+          "top5Accuracy": 0.34375
+        },
+        "font/zilla-slab": {
+          "count": 64,
+          "correct": 40,
+          "top5": 57,
+          "accuracy": 0.625,
+          "top5Accuracy": 0.890625
+        },
+        "font/onest": {
+          "count": 64,
+          "correct": 11,
+          "top5": 38,
+          "accuracy": 0.171875,
+          "top5Accuracy": 0.59375
+        },
+        "font/josefin-slab": {
+          "count": 64,
+          "correct": 56,
+          "top5": 62,
+          "accuracy": 0.875,
+          "top5Accuracy": 0.96875
+        },
+        "font/rounded-mplus-1c": {
+          "count": 64,
+          "correct": 33,
+          "top5": 52,
+          "accuracy": 0.515625,
+          "top5Accuracy": 0.8125
+        },
+        "font/josefin-sans": {
+          "count": 64,
+          "correct": 50,
+          "top5": 58,
+          "accuracy": 0.78125,
+          "top5Accuracy": 0.90625
+        },
+        "font/asap": {
+          "count": 64,
+          "correct": 17,
+          "top5": 30,
+          "accuracy": 0.265625,
+          "top5Accuracy": 0.46875
+        },
+        "font/righteous": {
+          "count": 64,
+          "correct": 52,
+          "top5": 60,
+          "accuracy": 0.8125,
+          "top5Accuracy": 0.9375
+        },
+        "font/literata": {
+          "count": 64,
+          "correct": 22,
+          "top5": 46,
+          "accuracy": 0.34375,
+          "top5Accuracy": 0.71875
+        },
+        "font/anton": {
+          "count": 64,
+          "correct": 53,
+          "top5": 61,
+          "accuracy": 0.828125,
+          "top5Accuracy": 0.953125
+        },
+        "font/caveat": {
+          "count": 64,
+          "correct": 56,
+          "top5": 61,
+          "accuracy": 0.875,
+          "top5Accuracy": 0.953125
+        },
+        "font/rokkitt": {
+          "count": 64,
+          "correct": 29,
+          "top5": 54,
+          "accuracy": 0.453125,
+          "top5Accuracy": 0.84375
+        },
+        "font/sanchez": {
+          "count": 64,
+          "correct": 33,
+          "top5": 51,
+          "accuracy": 0.515625,
+          "top5Accuracy": 0.796875
+        },
+        "font/sora": {
+          "count": 64,
+          "correct": 17,
+          "top5": 43,
+          "accuracy": 0.265625,
+          "top5Accuracy": 0.671875
+        },
+        "font/manrope": {
+          "count": 64,
+          "correct": 27,
+          "top5": 51,
+          "accuracy": 0.421875,
+          "top5Accuracy": 0.796875
+        },
+        "font/commissioner": {
+          "count": 64,
+          "correct": 17,
+          "top5": 34,
+          "accuracy": 0.265625,
+          "top5Accuracy": 0.53125
+        },
+        "font/oranienbaum": {
+          "count": 64,
+          "correct": 40,
+          "top5": 57,
+          "accuracy": 0.625,
+          "top5Accuracy": 0.890625
+        },
+        "font/geist": {
+          "count": 64,
+          "correct": 11,
+          "top5": 29,
+          "accuracy": 0.171875,
+          "top5Accuracy": 0.453125
+        },
+        "font/titan-one": {
+          "count": 64,
+          "correct": 51,
+          "top5": 62,
+          "accuracy": 0.796875,
+          "top5Accuracy": 0.96875
+        },
+        "font/alfa-slab-one": {
+          "count": 64,
+          "correct": 52,
+          "top5": 63,
+          "accuracy": 0.8125,
+          "top5Accuracy": 0.984375
+        },
+        "font/outfit": {
+          "count": 64,
+          "correct": 20,
+          "top5": 45,
+          "accuracy": 0.3125,
+          "top5Accuracy": 0.703125
+        },
+        "font/cabin": {
+          "count": 64,
+          "correct": 22,
+          "top5": 32,
+          "accuracy": 0.34375,
+          "top5Accuracy": 0.5
+        },
+        "font/roboto-flex": {
+          "count": 64,
+          "correct": 20,
+          "top5": 33,
+          "accuracy": 0.3125,
+          "top5Accuracy": 0.515625
+        },
+        "font/cinzel-decorative": {
+          "count": 64,
+          "correct": 38,
+          "top5": 62,
+          "accuracy": 0.59375,
+          "top5Accuracy": 0.96875
+        },
+        "font/unna": {
+          "count": 64,
+          "correct": 24,
+          "top5": 39,
+          "accuracy": 0.375,
+          "top5Accuracy": 0.609375
+        },
+        "font/rubik-mono-one": {
+          "count": 64,
+          "correct": 44,
+          "top5": 59,
+          "accuracy": 0.6875,
+          "top5Accuracy": 0.921875
+        },
+        "font/lustria": {
+          "count": 64,
+          "correct": 33,
+          "top5": 50,
+          "accuracy": 0.515625,
+          "top5Accuracy": 0.78125
+        },
+        "font/cormorant-garamond": {
+          "count": 64,
+          "correct": 29,
+          "top5": 58,
+          "accuracy": 0.453125,
+          "top5Accuracy": 0.90625
+        },
+        "font/abril-fatface": {
+          "count": 64,
+          "correct": 32,
+          "top5": 53,
+          "accuracy": 0.5,
+          "top5Accuracy": 0.828125
+        },
+        "font/karma": {
+          "count": 64,
+          "correct": 44,
+          "top5": 59,
+          "accuracy": 0.6875,
+          "top5Accuracy": 0.921875
+        },
+        "font/varela-round": {
+          "count": 64,
+          "correct": 27,
+          "top5": 48,
+          "accuracy": 0.421875,
+          "top5Accuracy": 0.75
+        },
+        "font/sura": {
+          "count": 64,
+          "correct": 36,
+          "top5": 53,
+          "accuracy": 0.5625,
+          "top5Accuracy": 0.828125
+        },
+        "font/exo": {
+          "count": 64,
+          "correct": 26,
+          "top5": 44,
+          "accuracy": 0.40625,
+          "top5Accuracy": 0.6875
+        },
+        "font/kanit": {
+          "count": 64,
+          "correct": 34,
+          "top5": 48,
+          "accuracy": 0.53125,
+          "top5Accuracy": 0.75
+        },
+        "font/sarpanch": {
+          "count": 64,
+          "correct": 40,
+          "top5": 44,
+          "accuracy": 0.625,
+          "top5Accuracy": 0.6875
+        },
+        "font/archivo-black": {
+          "count": 64,
+          "correct": 39,
+          "top5": 63,
+          "accuracy": 0.609375,
+          "top5Accuracy": 0.984375
+        },
+        "font/pinyon-script": {
+          "count": 64,
+          "correct": 33,
+          "top5": 57,
+          "accuracy": 0.515625,
+          "top5Accuracy": 0.890625
+        },
+        "font/allura": {
+          "count": 64,
+          "correct": 32,
+          "top5": 61,
+          "accuracy": 0.5,
+          "top5Accuracy": 0.953125
+        },
+        "font/rye": {
+          "count": 64,
+          "correct": 55,
+          "top5": 57,
+          "accuracy": 0.859375,
+          "top5Accuracy": 0.890625
+        },
+        "font/space-grotesk": {
+          "count": 64,
+          "correct": 20,
+          "top5": 37,
+          "accuracy": 0.3125,
+          "top5Accuracy": 0.578125
+        }
+      },
+      "added": {
+        "all": {
+          "count": 462,
+          "correct": 262,
+          "top5": 368,
+          "accuracy": 0.5670995670995671,
+          "top5Accuracy": 0.7965367965367965
+        },
+        "length/1": {
+          "count": 84,
+          "correct": 18,
+          "top5": 50,
+          "accuracy": 0.21428571428571427,
+          "top5Accuracy": 0.5952380952380952
+        },
+        "condition/clean": {
+          "count": 77,
+          "correct": 48,
+          "top5": 67,
+          "accuracy": 0.6233766233766234,
+          "top5Accuracy": 0.8701298701298701
+        },
+        "font/syne": {
+          "count": 66,
+          "correct": 21,
+          "top5": 46,
+          "accuracy": 0.3181818181818182,
+          "top5Accuracy": 0.696969696969697
+        },
+        "condition/edge": {
+          "count": 77,
+          "correct": 47,
+          "top5": 66,
+          "accuracy": 0.6103896103896104,
+          "top5Accuracy": 0.8571428571428571
+        },
+        "condition/small": {
+          "count": 77,
+          "correct": 31,
+          "top5": 46,
+          "accuracy": 0.4025974025974026,
+          "top5Accuracy": 0.5974025974025974
+        },
+        "condition/rotate": {
+          "count": 77,
+          "correct": 37,
+          "top5": 57,
+          "accuracy": 0.4805194805194805,
+          "top5Accuracy": 0.7402597402597403
+        },
+        "condition/shadow": {
+          "count": 77,
+          "correct": 51,
+          "top5": 65,
+          "accuracy": 0.6623376623376623,
+          "top5Accuracy": 0.8441558441558441
+        },
+        "condition/margin": {
+          "count": 77,
+          "correct": 48,
+          "top5": 67,
+          "accuracy": 0.6233766233766234,
+          "top5Accuracy": 0.8701298701298701
+        },
+        "length/2-3": {
+          "count": 126,
+          "correct": 44,
+          "top5": 84,
+          "accuracy": 0.3492063492063492,
+          "top5Accuracy": 0.6666666666666666
+        },
+        "length/4-7": {
+          "count": 126,
+          "correct": 95,
+          "top5": 118,
+          "accuracy": 0.753968253968254,
+          "top5Accuracy": 0.9365079365079365
+        },
+        "length/8+": {
+          "count": 126,
+          "correct": 105,
+          "top5": 116,
+          "accuracy": 0.8333333333333334,
+          "top5Accuracy": 0.9206349206349206
+        },
+        "font/aleo": {
+          "count": 66,
+          "correct": 41,
+          "top5": 60,
+          "accuracy": 0.6212121212121212,
+          "top5Accuracy": 0.9090909090909091
+        },
+        "font/alegreya-sans": {
+          "count": 66,
+          "correct": 38,
+          "top5": 44,
+          "accuracy": 0.5757575757575758,
+          "top5Accuracy": 0.6666666666666666
+        },
+        "font/plus-jakarta-sans": {
+          "count": 66,
+          "correct": 28,
+          "top5": 47,
+          "accuracy": 0.42424242424242425,
+          "top5Accuracy": 0.7121212121212122
+        },
+        "font/yeseva-one": {
+          "count": 66,
+          "correct": 54,
+          "top5": 62,
+          "accuracy": 0.8181818181818182,
+          "top5Accuracy": 0.9393939393939394
+        },
+        "font/herr-von-muellerhoff": {
+          "count": 66,
+          "correct": 51,
+          "top5": 65,
+          "accuracy": 0.7727272727272727,
+          "top5Accuracy": 0.9848484848484849
+        },
+        "font/lato": {
+          "count": 66,
+          "correct": 29,
+          "top5": 44,
+          "accuracy": 0.4393939393939394,
+          "top5Accuracy": 0.6666666666666666
+        }
+      }
+    },
+    "4": {
+      "catalogTensorBytes": 29104,
+      "known": {
+        "all": {
+          "count": 6400,
+          "correct": 2946,
+          "top5": 4825,
+          "accuracy": 0.4603125,
+          "top5Accuracy": 0.75390625
+        },
+        "length/1": {
+          "count": 1600,
+          "correct": 569,
+          "top5": 1091,
+          "accuracy": 0.355625,
+          "top5Accuracy": 0.681875
+        },
+        "condition/clean": {
+          "count": 1600,
+          "correct": 923,
+          "top5": 1346,
+          "accuracy": 0.576875,
+          "top5Accuracy": 0.84125
+        },
+        "font/inter": {
+          "count": 64,
+          "correct": 13,
+          "top5": 37,
+          "accuracy": 0.203125,
+          "top5Accuracy": 0.578125
+        },
+        "condition/small": {
+          "count": 1600,
+          "correct": 509,
+          "top5": 973,
+          "accuracy": 0.318125,
+          "top5Accuracy": 0.608125
+        },
+        "condition/rotate": {
+          "count": 1600,
+          "correct": 602,
+          "top5": 1147,
+          "accuracy": 0.37625,
+          "top5Accuracy": 0.716875
+        },
+        "condition/neighbor": {
+          "count": 1600,
+          "correct": 912,
+          "top5": 1359,
+          "accuracy": 0.57,
+          "top5Accuracy": 0.849375
+        },
+        "length/2-3": {
+          "count": 1600,
+          "correct": 427,
+          "top5": 959,
+          "accuracy": 0.266875,
+          "top5Accuracy": 0.599375
+        },
+        "length/4-7": {
+          "count": 1600,
+          "correct": 1024,
+          "top5": 1407,
+          "accuracy": 0.64,
+          "top5Accuracy": 0.879375
+        },
+        "length/8+": {
+          "count": 1600,
+          "correct": 926,
+          "top5": 1368,
+          "accuracy": 0.57875,
+          "top5Accuracy": 0.855
+        },
+        "font/roboto": {
+          "count": 64,
+          "correct": 11,
+          "top5": 29,
+          "accuracy": 0.171875,
+          "top5Accuracy": 0.453125
+        },
+        "font/open-sans": {
+          "count": 64,
+          "correct": 12,
+          "top5": 37,
+          "accuracy": 0.1875,
+          "top5Accuracy": 0.578125
+        },
+        "font/source-sans-3": {
+          "count": 64,
+          "correct": 10,
+          "top5": 26,
+          "accuracy": 0.15625,
+          "top5Accuracy": 0.40625
+        },
+        "font/montserrat": {
+          "count": 64,
+          "correct": 26,
+          "top5": 52,
+          "accuracy": 0.40625,
+          "top5Accuracy": 0.8125
+        },
+        "font/poppins": {
+          "count": 64,
+          "correct": 24,
+          "top5": 38,
+          "accuracy": 0.375,
+          "top5Accuracy": 0.59375
+        },
+        "font/nunito": {
+          "count": 64,
+          "correct": 19,
+          "top5": 40,
+          "accuracy": 0.296875,
+          "top5Accuracy": 0.625
+        },
+        "font/nunito-sans": {
+          "count": 64,
+          "correct": 10,
+          "top5": 26,
+          "accuracy": 0.15625,
+          "top5Accuracy": 0.40625
+        },
+        "font/ibm-plex-sans": {
+          "count": 64,
+          "correct": 12,
+          "top5": 30,
+          "accuracy": 0.1875,
+          "top5Accuracy": 0.46875
+        },
+        "font/work-sans": {
+          "count": 64,
+          "correct": 13,
+          "top5": 26,
+          "accuracy": 0.203125,
+          "top5Accuracy": 0.40625
+        },
+        "font/lora": {
+          "count": 64,
+          "correct": 18,
+          "top5": 48,
+          "accuracy": 0.28125,
+          "top5Accuracy": 0.75
+        },
+        "font/merriweather": {
+          "count": 64,
+          "correct": 29,
+          "top5": 47,
+          "accuracy": 0.453125,
+          "top5Accuracy": 0.734375
+        },
+        "font/libre-baskerville": {
+          "count": 64,
+          "correct": 22,
+          "top5": 44,
+          "accuracy": 0.34375,
+          "top5Accuracy": 0.6875
+        },
+        "font/crimson-text": {
+          "count": 64,
+          "correct": 26,
+          "top5": 54,
+          "accuracy": 0.40625,
+          "top5Accuracy": 0.84375
+        },
+        "font/source-serif-4": {
+          "count": 64,
+          "correct": 24,
+          "top5": 50,
+          "accuracy": 0.375,
+          "top5Accuracy": 0.78125
+        },
+        "font/ibm-plex-serif": {
+          "count": 64,
+          "correct": 15,
+          "top5": 53,
+          "accuracy": 0.234375,
+          "top5Accuracy": 0.828125
+        },
+        "font/geist-mono": {
+          "count": 64,
+          "correct": 26,
+          "top5": 34,
+          "accuracy": 0.40625,
+          "top5Accuracy": 0.53125
+        },
+        "font/oswald": {
+          "count": 64,
+          "correct": 48,
+          "top5": 58,
+          "accuracy": 0.75,
+          "top5Accuracy": 0.90625
+        },
+        "font/bebas-neue": {
+          "count": 64,
+          "correct": 42,
+          "top5": 54,
+          "accuracy": 0.65625,
+          "top5Accuracy": 0.84375
+        },
+        "font/playfair-display": {
+          "count": 64,
+          "correct": 29,
+          "top5": 54,
+          "accuracy": 0.453125,
+          "top5Accuracy": 0.84375
+        },
+        "font/adamina": {
+          "count": 64,
+          "correct": 24,
+          "top5": 42,
+          "accuracy": 0.375,
+          "top5Accuracy": 0.65625
+        },
+        "font/urbanist": {
+          "count": 64,
+          "correct": 29,
+          "top5": 51,
+          "accuracy": 0.453125,
+          "top5Accuracy": 0.796875
+        },
+        "font/mulish": {
+          "count": 64,
+          "correct": 21,
+          "top5": 37,
+          "accuracy": 0.328125,
+          "top5Accuracy": 0.578125
+        },
+        "font/gravitas-one": {
+          "count": 64,
+          "correct": 58,
+          "top5": 63,
+          "accuracy": 0.90625,
+          "top5Accuracy": 0.984375
+        },
+        "font/lexend": {
+          "count": 64,
+          "correct": 21,
+          "top5": 32,
+          "accuracy": 0.328125,
+          "top5Accuracy": 0.5
+        },
+        "font/mate": {
+          "count": 64,
+          "correct": 30,
+          "top5": 49,
+          "accuracy": 0.46875,
+          "top5Accuracy": 0.765625
+        },
+        "font/cookie": {
+          "count": 64,
+          "correct": 54,
+          "top5": 57,
+          "accuracy": 0.84375,
+          "top5Accuracy": 0.890625
+        },
+        "font/great-vibes": {
+          "count": 64,
+          "correct": 32,
+          "top5": 57,
+          "accuracy": 0.5,
+          "top5Accuracy": 0.890625
+        },
+        "font/italianno": {
+          "count": 64,
+          "correct": 56,
+          "top5": 62,
+          "accuracy": 0.875,
+          "top5Accuracy": 0.96875
+        },
+        "font/bitter": {
+          "count": 64,
+          "correct": 27,
+          "top5": 56,
+          "accuracy": 0.421875,
+          "top5Accuracy": 0.875
+        },
+        "font/figtree": {
+          "count": 64,
+          "correct": 15,
+          "top5": 41,
+          "accuracy": 0.234375,
+          "top5Accuracy": 0.640625
+        },
+        "font/exo-2": {
+          "count": 64,
+          "correct": 30,
+          "top5": 40,
+          "accuracy": 0.46875,
+          "top5Accuracy": 0.625
+        },
+        "font/noto-serif": {
+          "count": 64,
+          "correct": 23,
+          "top5": 48,
+          "accuracy": 0.359375,
+          "top5Accuracy": 0.75
+        },
+        "font/comfortaa": {
+          "count": 64,
+          "correct": 37,
+          "top5": 54,
+          "accuracy": 0.578125,
+          "top5Accuracy": 0.84375
+        },
+        "font/vollkorn": {
+          "count": 64,
+          "correct": 24,
+          "top5": 51,
+          "accuracy": 0.375,
+          "top5Accuracy": 0.796875
+        },
+        "font/pacifico": {
+          "count": 64,
+          "correct": 48,
+          "top5": 61,
+          "accuracy": 0.75,
+          "top5Accuracy": 0.953125
+        },
+        "font/parisienne": {
+          "count": 64,
+          "correct": 41,
+          "top5": 57,
+          "accuracy": 0.640625,
+          "top5Accuracy": 0.890625
+        },
+        "font/lemon": {
+          "count": 64,
+          "correct": 62,
+          "top5": 64,
+          "accuracy": 0.96875,
+          "top5Accuracy": 1.0
+        },
+        "font/prompt": {
+          "count": 64,
+          "correct": 19,
+          "top5": 43,
+          "accuracy": 0.296875,
+          "top5Accuracy": 0.671875
+        },
+        "font/cinzel": {
+          "count": 64,
+          "correct": 40,
+          "top5": 63,
+          "accuracy": 0.625,
+          "top5Accuracy": 0.984375
+        },
+        "font/red-hat-display": {
+          "count": 64,
+          "correct": 15,
+          "top5": 38,
+          "accuracy": 0.234375,
+          "top5Accuracy": 0.59375
+        },
+        "font/public-sans": {
+          "count": 64,
+          "correct": 17,
+          "top5": 42,
+          "accuracy": 0.265625,
+          "top5Accuracy": 0.65625
+        },
+        "font/amiri": {
+          "count": 64,
+          "correct": 26,
+          "top5": 56,
+          "accuracy": 0.40625,
+          "top5Accuracy": 0.875
+        },
+        "font/bodoni-moda": {
+          "count": 64,
+          "correct": 43,
+          "top5": 57,
+          "accuracy": 0.671875,
+          "top5Accuracy": 0.890625
+        },
+        "font/encode-sans": {
+          "count": 64,
+          "correct": 30,
+          "top5": 45,
+          "accuracy": 0.46875,
+          "top5Accuracy": 0.703125
+        },
+        "font/cormorant": {
+          "count": 64,
+          "correct": 12,
+          "top5": 51,
+          "accuracy": 0.1875,
+          "top5Accuracy": 0.796875
+        },
+        "font/noto-sans": {
+          "count": 64,
+          "correct": 7,
+          "top5": 32,
+          "accuracy": 0.109375,
+          "top5Accuracy": 0.5
+        },
+        "font/instrument-sans": {
+          "count": 64,
+          "correct": 14,
+          "top5": 41,
+          "accuracy": 0.21875,
+          "top5Accuracy": 0.640625
+        },
+        "font/alegreya": {
+          "count": 64,
+          "correct": 32,
+          "top5": 49,
+          "accuracy": 0.5,
+          "top5Accuracy": 0.765625
+        },
+        "font/raleway": {
+          "count": 64,
+          "correct": 21,
+          "top5": 54,
+          "accuracy": 0.328125,
+          "top5Accuracy": 0.84375
+        },
+        "font/schibsted-grotesk": {
+          "count": 64,
+          "correct": 20,
+          "top5": 43,
+          "accuracy": 0.3125,
+          "top5Accuracy": 0.671875
+        },
+        "font/alex-brush": {
+          "count": 64,
+          "correct": 42,
+          "top5": 64,
+          "accuracy": 0.65625,
+          "top5Accuracy": 1.0
+        },
+        "font/sacramento": {
+          "count": 64,
+          "correct": 41,
+          "top5": 53,
+          "accuracy": 0.640625,
+          "top5Accuracy": 0.828125
+        },
+        "font/dm-sans": {
+          "count": 64,
+          "correct": 15,
+          "top5": 38,
+          "accuracy": 0.234375,
+          "top5Accuracy": 0.59375
+        },
+        "font/hepta-slab": {
+          "count": 64,
+          "correct": 29,
+          "top5": 53,
+          "accuracy": 0.453125,
+          "top5Accuracy": 0.828125
+        },
+        "font/paytone-one": {
+          "count": 64,
+          "correct": 43,
+          "top5": 62,
+          "accuracy": 0.671875,
+          "top5Accuracy": 0.96875
+        },
+        "font/bricolage-grotesque": {
+          "count": 64,
+          "correct": 25,
+          "top5": 33,
+          "accuracy": 0.390625,
+          "top5Accuracy": 0.515625
+        },
+        "font/bangers": {
+          "count": 64,
+          "correct": 53,
+          "top5": 59,
+          "accuracy": 0.828125,
+          "top5Accuracy": 0.921875
+        },
+        "font/sorts-mill-goudy": {
+          "count": 64,
+          "correct": 29,
+          "top5": 45,
+          "accuracy": 0.453125,
+          "top5Accuracy": 0.703125
+        },
+        "font/stix-two-text": {
+          "count": 64,
+          "correct": 18,
+          "top5": 51,
+          "accuracy": 0.28125,
+          "top5Accuracy": 0.796875
+        },
+        "font/hanken-grotesk": {
+          "count": 64,
+          "correct": 8,
+          "top5": 23,
+          "accuracy": 0.125,
+          "top5Accuracy": 0.359375
+        },
+        "font/zilla-slab": {
+          "count": 64,
+          "correct": 39,
+          "top5": 56,
+          "accuracy": 0.609375,
+          "top5Accuracy": 0.875
+        },
+        "font/onest": {
+          "count": 64,
+          "correct": 12,
+          "top5": 36,
+          "accuracy": 0.1875,
+          "top5Accuracy": 0.5625
+        },
+        "font/josefin-slab": {
+          "count": 64,
+          "correct": 54,
+          "top5": 62,
+          "accuracy": 0.84375,
+          "top5Accuracy": 0.96875
+        },
+        "font/rounded-mplus-1c": {
+          "count": 64,
+          "correct": 36,
+          "top5": 51,
+          "accuracy": 0.5625,
+          "top5Accuracy": 0.796875
+        },
+        "font/josefin-sans": {
+          "count": 64,
+          "correct": 40,
+          "top5": 58,
+          "accuracy": 0.625,
+          "top5Accuracy": 0.90625
+        },
+        "font/asap": {
+          "count": 64,
+          "correct": 16,
+          "top5": 33,
+          "accuracy": 0.25,
+          "top5Accuracy": 0.515625
+        },
+        "font/righteous": {
+          "count": 64,
+          "correct": 43,
+          "top5": 61,
+          "accuracy": 0.671875,
+          "top5Accuracy": 0.953125
+        },
+        "font/literata": {
+          "count": 64,
+          "correct": 21,
+          "top5": 47,
+          "accuracy": 0.328125,
+          "top5Accuracy": 0.734375
+        },
+        "font/anton": {
+          "count": 64,
+          "correct": 50,
+          "top5": 61,
+          "accuracy": 0.78125,
+          "top5Accuracy": 0.953125
+        },
+        "font/caveat": {
+          "count": 64,
+          "correct": 57,
+          "top5": 60,
+          "accuracy": 0.890625,
+          "top5Accuracy": 0.9375
+        },
+        "font/rokkitt": {
+          "count": 64,
+          "correct": 22,
+          "top5": 55,
+          "accuracy": 0.34375,
+          "top5Accuracy": 0.859375
+        },
+        "font/sanchez": {
+          "count": 64,
+          "correct": 24,
+          "top5": 52,
+          "accuracy": 0.375,
+          "top5Accuracy": 0.8125
+        },
+        "font/sora": {
+          "count": 64,
+          "correct": 24,
+          "top5": 39,
+          "accuracy": 0.375,
+          "top5Accuracy": 0.609375
+        },
+        "font/manrope": {
+          "count": 64,
+          "correct": 31,
+          "top5": 50,
+          "accuracy": 0.484375,
+          "top5Accuracy": 0.78125
+        },
+        "font/commissioner": {
+          "count": 64,
+          "correct": 10,
+          "top5": 27,
+          "accuracy": 0.15625,
+          "top5Accuracy": 0.421875
+        },
+        "font/oranienbaum": {
+          "count": 64,
+          "correct": 42,
+          "top5": 58,
+          "accuracy": 0.65625,
+          "top5Accuracy": 0.90625
+        },
+        "font/geist": {
+          "count": 64,
+          "correct": 17,
+          "top5": 38,
+          "accuracy": 0.265625,
+          "top5Accuracy": 0.59375
+        },
+        "font/titan-one": {
+          "count": 64,
+          "correct": 55,
+          "top5": 61,
+          "accuracy": 0.859375,
+          "top5Accuracy": 0.953125
+        },
+        "font/alfa-slab-one": {
+          "count": 64,
+          "correct": 47,
+          "top5": 63,
+          "accuracy": 0.734375,
+          "top5Accuracy": 0.984375
+        },
+        "font/outfit": {
+          "count": 64,
+          "correct": 21,
+          "top5": 41,
+          "accuracy": 0.328125,
+          "top5Accuracy": 0.640625
+        },
+        "font/cabin": {
+          "count": 64,
+          "correct": 21,
+          "top5": 33,
+          "accuracy": 0.328125,
+          "top5Accuracy": 0.515625
+        },
+        "font/roboto-flex": {
+          "count": 64,
+          "correct": 19,
+          "top5": 38,
+          "accuracy": 0.296875,
+          "top5Accuracy": 0.59375
+        },
+        "font/cinzel-decorative": {
+          "count": 64,
+          "correct": 25,
+          "top5": 62,
+          "accuracy": 0.390625,
+          "top5Accuracy": 0.96875
+        },
+        "font/unna": {
+          "count": 64,
+          "correct": 27,
+          "top5": 42,
+          "accuracy": 0.421875,
+          "top5Accuracy": 0.65625
+        },
+        "font/rubik-mono-one": {
+          "count": 64,
+          "correct": 46,
+          "top5": 60,
+          "accuracy": 0.71875,
+          "top5Accuracy": 0.9375
+        },
+        "font/lustria": {
+          "count": 64,
+          "correct": 33,
+          "top5": 48,
+          "accuracy": 0.515625,
+          "top5Accuracy": 0.75
+        },
+        "font/cormorant-garamond": {
+          "count": 64,
+          "correct": 22,
+          "top5": 52,
+          "accuracy": 0.34375,
+          "top5Accuracy": 0.8125
+        },
+        "font/abril-fatface": {
+          "count": 64,
+          "correct": 33,
+          "top5": 57,
+          "accuracy": 0.515625,
+          "top5Accuracy": 0.890625
+        },
+        "font/karma": {
+          "count": 64,
+          "correct": 46,
+          "top5": 59,
+          "accuracy": 0.71875,
+          "top5Accuracy": 0.921875
+        },
+        "font/varela-round": {
+          "count": 64,
+          "correct": 37,
+          "top5": 54,
+          "accuracy": 0.578125,
+          "top5Accuracy": 0.84375
+        },
+        "font/sura": {
+          "count": 64,
+          "correct": 35,
+          "top5": 50,
+          "accuracy": 0.546875,
+          "top5Accuracy": 0.78125
+        },
+        "font/exo": {
+          "count": 64,
+          "correct": 20,
+          "top5": 44,
+          "accuracy": 0.3125,
+          "top5Accuracy": 0.6875
+        },
+        "font/kanit": {
+          "count": 64,
+          "correct": 36,
+          "top5": 49,
+          "accuracy": 0.5625,
+          "top5Accuracy": 0.765625
+        },
+        "font/sarpanch": {
+          "count": 64,
+          "correct": 39,
+          "top5": 43,
+          "accuracy": 0.609375,
+          "top5Accuracy": 0.671875
+        },
+        "font/archivo-black": {
+          "count": 64,
+          "correct": 41,
+          "top5": 63,
+          "accuracy": 0.640625,
+          "top5Accuracy": 0.984375
+        },
+        "font/pinyon-script": {
+          "count": 64,
+          "correct": 38,
+          "top5": 57,
+          "accuracy": 0.59375,
+          "top5Accuracy": 0.890625
+        },
+        "font/allura": {
+          "count": 64,
+          "correct": 35,
+          "top5": 60,
+          "accuracy": 0.546875,
+          "top5Accuracy": 0.9375
+        },
+        "font/rye": {
+          "count": 64,
+          "correct": 55,
+          "top5": 59,
+          "accuracy": 0.859375,
+          "top5Accuracy": 0.921875
+        },
+        "font/space-grotesk": {
+          "count": 64,
+          "correct": 17,
+          "top5": 32,
+          "accuracy": 0.265625,
+          "top5Accuracy": 0.5
+        }
+      },
+      "added": {
+        "all": {
+          "count": 462,
+          "correct": 254,
+          "top5": 362,
+          "accuracy": 0.5497835497835498,
+          "top5Accuracy": 0.7835497835497836
+        },
+        "length/1": {
+          "count": 84,
+          "correct": 16,
+          "top5": 47,
+          "accuracy": 0.19047619047619047,
+          "top5Accuracy": 0.5595238095238095
+        },
+        "condition/clean": {
+          "count": 77,
+          "correct": 46,
+          "top5": 63,
+          "accuracy": 0.5974025974025974,
+          "top5Accuracy": 0.8181818181818182
+        },
+        "font/syne": {
+          "count": 66,
+          "correct": 24,
+          "top5": 43,
+          "accuracy": 0.36363636363636365,
+          "top5Accuracy": 0.6515151515151515
+        },
+        "condition/edge": {
+          "count": 77,
+          "correct": 46,
+          "top5": 64,
+          "accuracy": 0.5974025974025974,
+          "top5Accuracy": 0.8311688311688312
+        },
+        "condition/small": {
+          "count": 77,
+          "correct": 33,
+          "top5": 49,
+          "accuracy": 0.42857142857142855,
+          "top5Accuracy": 0.6363636363636364
+        },
+        "condition/rotate": {
+          "count": 77,
+          "correct": 33,
+          "top5": 58,
+          "accuracy": 0.42857142857142855,
+          "top5Accuracy": 0.7532467532467533
+        },
+        "condition/shadow": {
+          "count": 77,
+          "correct": 50,
+          "top5": 65,
+          "accuracy": 0.6493506493506493,
+          "top5Accuracy": 0.8441558441558441
+        },
+        "condition/margin": {
+          "count": 77,
+          "correct": 46,
+          "top5": 63,
+          "accuracy": 0.5974025974025974,
+          "top5Accuracy": 0.8181818181818182
+        },
+        "length/2-3": {
+          "count": 126,
+          "correct": 46,
+          "top5": 84,
+          "accuracy": 0.36507936507936506,
+          "top5Accuracy": 0.6666666666666666
+        },
+        "length/4-7": {
+          "count": 126,
+          "correct": 87,
+          "top5": 118,
+          "accuracy": 0.6904761904761905,
+          "top5Accuracy": 0.9365079365079365
+        },
+        "length/8+": {
+          "count": 126,
+          "correct": 105,
+          "top5": 113,
+          "accuracy": 0.8333333333333334,
+          "top5Accuracy": 0.8968253968253969
+        },
+        "font/aleo": {
+          "count": 66,
+          "correct": 43,
+          "top5": 61,
+          "accuracy": 0.6515151515151515,
+          "top5Accuracy": 0.9242424242424242
+        },
+        "font/alegreya-sans": {
+          "count": 66,
+          "correct": 35,
+          "top5": 43,
+          "accuracy": 0.5303030303030303,
+          "top5Accuracy": 0.6515151515151515
+        },
+        "font/plus-jakarta-sans": {
+          "count": 66,
+          "correct": 22,
+          "top5": 48,
+          "accuracy": 0.3333333333333333,
+          "top5Accuracy": 0.7272727272727273
+        },
+        "font/yeseva-one": {
+          "count": 66,
+          "correct": 53,
+          "top5": 62,
+          "accuracy": 0.803030303030303,
+          "top5Accuracy": 0.9393939393939394
+        },
+        "font/herr-von-muellerhoff": {
+          "count": 66,
+          "correct": 48,
+          "top5": 65,
+          "accuracy": 0.7272727272727273,
+          "top5Accuracy": 0.9848484848484849
+        },
+        "font/lato": {
+          "count": 66,
+          "correct": 29,
+          "top5": 40,
+          "accuracy": 0.4393939393939394,
+          "top5Accuracy": 0.6060606060606061
+        }
+      }
+    }
+  },
+  "history": [
+    {
+      "step": 0,
+      "known": {
+        "count": 6400,
+        "correct": 3065,
+        "top5": 4929,
+        "accuracy": 0.47890625,
+        "top5Accuracy": 0.77015625
+      },
+      "added": {
+        "count": 462,
+        "correct": 261,
+        "top5": 367,
+        "accuracy": 0.564935064935065,
+        "top5Accuracy": 0.7943722943722944
+      },
+      "selection": 0.7820768621171041
+    },
+    {
+      "step": 3000,
+      "known": {
+        "count": 6400,
+        "correct": 2880,
+        "top5": 4800,
+        "accuracy": 0.45,
+        "top5Accuracy": 0.75
+      },
+      "added": {
+        "count": 462,
+        "correct": 255,
+        "top5": 360,
+        "accuracy": 0.551948051948052,
+        "top5Accuracy": 0.7792207792207793
+      },
+      "selection": 0.7643312101910829
+    },
+    {
+      "step": 6000,
+      "known": {
+        "count": 6400,
+        "correct": 2987,
+        "top5": 4842,
+        "accuracy": 0.46671875,
+        "top5Accuracy": 0.7565625
+      },
+      "added": {
+        "count": 462,
+        "correct": 264,
+        "top5": 354,
+        "accuracy": 0.5714285714285714,
+        "top5Accuracy": 0.7662337662337663
+      },
+      "selection": 0.7613674220517729
+    },
+    {
+      "step": 9000,
+      "known": {
+        "count": 6400,
+        "correct": 2928,
+        "top5": 4820,
+        "accuracy": 0.4575,
+        "top5Accuracy": 0.753125
+      },
+      "added": {
+        "count": 462,
+        "correct": 260,
+        "top5": 366,
+        "accuracy": 0.5627705627705628,
+        "top5Accuracy": 0.7922077922077922
+      },
+      "selection": 0.7721721774299446
+    },
+    {
+      "step": 12000,
+      "known": {
+        "count": 6400,
+        "correct": 2941,
+        "top5": 4847,
+        "accuracy": 0.45953125,
+        "top5Accuracy": 0.75734375
+      },
+      "added": {
+        "count": 462,
+        "correct": 260,
+        "top5": 363,
+        "accuracy": 0.5627705627705628,
+        "top5Accuracy": 0.7857142857142857
+      },
+      "selection": 0.77126820871125
+    }
+  ]
+}

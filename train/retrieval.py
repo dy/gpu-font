@@ -17,14 +17,22 @@ def unit(values):
     return values/np.maximum(np.linalg.norm(values,axis=1,keepdims=True),1e-12)
 
 
-def features(model,pixels,windows,sources):
+def head_projection(weight):
+    weight=np.asarray(weight,dtype=np.float32)
+    if weight.ndim!=2 or not weight.size or not np.isfinite(weight).all():raise ValueError('Invalid learned head')
+    _,singular,right=np.linalg.svd(weight,full_matrices=False)
+    return right.T*singular
+
+
+def features(model,pixels,windows,sources,projection=None):
     if not sources or len(set(sources))!=len(sources):raise ValueError('Expected unique nonempty sources')
     mapping={s:i for i,s in enumerate(sources)};chosen=[i for i,w in enumerate(windows) if w['source'] in mapping]
-    sums=np.zeros((len(sources),64),dtype=np.float32);counts=np.zeros(len(sources),dtype=int)
+    sums=np.zeros((len(sources),64 if projection is None else projection.shape[1]),dtype=np.float32);counts=np.zeros(len(sources),dtype=int)
     device=next(model.parameters()).device;model.eval()
     with torch.no_grad():
         for start in range(0,len(chosen),128):
-            ids=chosen[start:start+128];values=unit(model(*(t.to(device) for t in batch(pixels,windows,ids))).cpu().numpy())
+            ids=chosen[start:start+128];values=model(*(t.to(device) for t in batch(pixels,windows,ids))).cpu().numpy()
+            values=unit(values if projection is None else values@projection)
             owners=[mapping[windows[i]['source']] for i in ids];np.add.at(sums,owners,values);np.add.at(counts,owners,1)
     if (counts==0).any():raise ValueError('Missing source features')
     return unit(sums/counts[:,None])
@@ -75,12 +83,13 @@ def load_data():
             'unknownIds':uids,'unknown':unknown,'known':known,'knownPixels':np.memmap(dt,mode='r',dtype=np.uint8),'knownWindows':dev['methods']['current']['windows']}
 
 
-def score(model,data):
+def score(model,data,project=False):
+    projection=head_projection(model.head.weight.detach().cpu().numpy()) if project else None
     head=model.head;model.head=torch.nn.Identity()
     try:
-        pv=features(model,data['pixels'],data['manifest']['windows'],data['prototypeIds'])
-        uv=features(model,data['pixels'],data['manifest']['windows'],data['unknownIds'])
-        kv=features(model,data['knownPixels'],data['knownWindows'],list(range(len(data['known']))))
+        pv=features(model,data['pixels'],data['manifest']['windows'],data['prototypeIds'],projection)
+        uv=features(model,data['pixels'],data['manifest']['windows'],data['unknownIds'],projection)
+        kv=features(model,data['knownPixels'],data['knownWindows'],list(range(len(data['known']))),projection)
     finally:model.head=head
     families=data['families']
     results={}
@@ -94,13 +103,15 @@ def evaluate():
     torch.set_num_threads(4)
     if not torch.backends.mps.is_available():raise ValueError('MPS unavailable')
     start=time.perf_counter();path=ROOT/'models/hundred/model.json';model_hash=sha(path);data=load_data()
-    model=load_export(data['artifact']).to('mps');results=score(model,data);families=data['families']
+    model=load_export(data['artifact']).to('mps');results=score(model,data);projected=score(model,data,project=True);families=data['families']
     for count,result in results.items():print(f'{count} per family: known {result["known"]["all"]}, added {result["added"]["all"]}',flush=True)
+    for count,result in projected.items():print(f'Learned head, {count} per family: known {result["known"]["all"]}, added {result["added"]["all"]}',flush=True)
     if sha(path)!=model_hash:raise ValueError('Encoder changed during catalog addition')
     write(ROOT/'bench/retrieval.json',{'modelSha256':model_hash,'catalog':families,'encoderTrainedFamilies':100,'addedDevelopmentFamilies':len(families)-100,
         'dimensions':64,'quantization':'int8 prototypes with float32 scales, cosine after decode','scope':'Frozen classifier features, synthetic development only. Added families were used for historical rejection validation but never encoder optimization. Six unknown-test families remain untouched. Known/added query text distributions differ; report separately.',
         'prototypeText':list(dict.fromkeys(s['text'] for s in data['prototypeSamples'])),'prototypeManifestSha256':sha(ROOT/'.data/hundred/prepared.json'),
-        'developmentManifestSha256':sha(ROOT/'.data/preparation/prepared.json'),'seconds':time.perf_counter()-start,'results':results})
+        'developmentManifestSha256':sha(ROOT/'.data/preparation/prepared.json'),'seconds':time.perf_counter()-start,'results':results,'classifierMetric':projected,
+        'projection':'SVD of the already-trained head; preserves bias-free logit dot products in at most 64 dimensions. This is learned neural geometry, no handcrafted pixel descriptor.'})
 
 
 if __name__=='__main__':evaluate()

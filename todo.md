@@ -11,10 +11,14 @@ Next: [the measured scaling analysis and ordered experiments](bench/scaling.md).
 - [x] Commit the baseline and trained checkpoint; simplify the image menu, edit previews inline, show detection time, and move diagnostic export/acceptance out of the primary results.
 - [x] Restore model scores beside all five matches and reproduce the Geist Mono/Bebas example with exact exported probabilities. Scores are not visual-similarity measurements.
 - [x] Account for 10,000-class storage: a fixed current encoder plus expanded int8 head needs about 0.805 MB of binary tensors, including scales/biases. This is a size projection, not trained accuracy.
-- [ ] Build the fresh 6,400-image preparation development bank specified in [the scaling plan](bench/scaling.md#ordered-experiments-and-decision-points), including current user-reported failures and unseen text/size combinations.
-- [ ] Compare current windows, oracle complete-glyph groups, automatic groups, and automatic groups + deskew with frozen weights; measure retained evidence, recognition and latency.
-- [ ] Run the matched 20k-update preparation/control comparison only after that diagnostic; train and display the same versioned input arrays.
-- [ ] Compare compact learned style retrieval with the classifier baseline. Test adding withheld fonts without retraining; measure exact identity and visual similarity separately. Test a training-only glyph head before considering deployed OCR.
+- [x] Build a fresh 6,400-image preparation development bank with unseen multi-character strings, two renderers, three source sizes and clean/small/rotated/neighbor views. Exact user screenshots remain development cases to preserve separately.
+- [x] Compare existing windows, renderer word boxes, image-derived groups and deskew with frozen weights; measure geometric ink/word coverage, recognition and preparation time. [Results](bench/preparation.md).
+- [x] Run the matched 20k-update preparation/control comparison with two seeds. Preserve the selected normalizer and model together; verify on 6,400 new known-family crops plus 384 absent-family crops. The deskew candidate improves top-1 from 57.5% to 62.6%, but accepted coverage is only 5.8%.
+- [x] Test compact learned retrieval and seven frozen-encoder catalog additions, including one/four references and a trained-head projection. Compare paired classification and contrastive training at 12k updates each. Both retain the original model. [Results](bench/retrieval.md).
+- [x] Train genuine weight-400/700 and upright/italic faces for the original ten families, recover int8 accuracy with QAT, run a separate test and CPU/WebGPU parity, and commit the 132 KB artifact. [Results](bench/faces.md).
+- [ ] Compare one wider encoder and a training-only glyph head with matched budgets on new development data; preserve glyph boundaries without sacrificing raster height. The newly opened verification set is now historical.
+- [ ] Measure visual similarity separately from exact identity with verified human judgments. Do not interpret classifier probabilities as similarity scores.
+- [ ] Integrate an improved candidate's versioned preparation, source polygons, calibration and weights together when updating inference in the separately owned website session. The UI handoff is commit `acc91da`; no demo files changed in subsequent training commits.
 - [ ] Advance to 500 families and then a pinned Google Fonts corpus with explicit family/face/script coverage, repeated validation, catalog-specific calibration and a measured download below 10 MB.
 
 - [x] Import 100 pinned regular families and reserve 13 unknown families across validation/test.
@@ -23,10 +27,11 @@ Next: [the measured scaling analysis and ordered experiments](bench/scaling.md).
 - [x] Verify actual input preview pixels, plain-margin invariance, crop/resize/cancel interaction, and resolution round trips.
 - [x] Complete the bounded 100-font model comparison and separate 21,600-image final test; publish per-length and per-condition results.
 - [x] Calibrate uncertainty on validation only and report acceptance coverage. Final accepted accuracy is 99.80%, but coverage is only 9.40%; the reliability gate remains unmet.
-- [ ] Inspect rotated/downscaled windows and compare inexpensive text-line deskew/height estimation on fresh validation data before adding OCR or another larger network.
-- [ ] Broaden development examples for single letters, near-clone families and partial neighboring letters. Single-glyph identifiability is not guaranteed.
+- [x] Inspect rotated/downscaled windows and compare inexpensive line deskew on fresh data before adding OCR; rotated 8+ character verification improves from 43.5% to 85.5%.
+- [x] Add single/short strings and partial neighboring-letter views to development; publish the weak length slices rather than assuming any glyph identifies a font.
 - [ ] Collect verified independent screenshots for the included families, split by source, and reserve a new final test before further tuning. Existing ten-font and 100-font tests are historical.
-- [ ] Add weight/italic variation only with corresponding held-out evidence. Do not expand beyond 100 until current failures improve.
+- [x] Establish held-out weight/italic evidence for the ten-family pilot.
+- [ ] Extend genuine face/axis coverage to the current 100 families, with explicit missing-face/script coverage. Keep 500/full-corpus training behind the accuracy and rejection gates.
 
 Historical descriptor scores are archived, not an active product path. Earlier evidence and the reason for local windows remain in [bench/focus.md](bench/focus.md).
 

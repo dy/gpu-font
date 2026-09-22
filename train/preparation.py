@@ -14,17 +14,19 @@ from train.hundred import probabilities
 ROOT = Path(__file__).resolve().parents[1]
 DATA = ROOT / '.data/preparation'
 TEXTS = ['R', 'm', 'vy', 'kt', 'cedar', 'glyphs', 'Silver marks drift', 'Nimble owls turn']
+VERIFICATION = ['B', 's', 'uw', 'nx', 'cobalt', 'thimble', 'Maple shadows lengthen', 'Velvet birds circle']
 
 
 def plans():
     DATA.mkdir(parents=True, exist_ok=True)
     used = {t.lower() for pool in read(ROOT / 'bench/hundred-texts.json').values() for t in pool}
+    if DATA.name=='verification':used.update(t.lower() for pool in read(ROOT/'bench/face-texts.json').values() for t in pool)
     if any(t.lower() in used for t in TEXTS if len(t)>1): raise ValueError('Development text repeats historical corpus')
-    write(DATA / 'plans.json', {'texts':TEXTS,'seed':20260924,'scope':'Development only; alphabet shared, multi-character strings disjoint from historical corpus.'})
+    write(DATA / 'plans.json', {'texts':TEXTS,'seed':20260924,'scope':'Post-selection synthetic verification' if DATA.name=='verification' else 'Development only; alphabet shared, multi-character strings disjoint from historical corpus.'})
 
 
 def render():
-    fonts = [f for f in read(ROOT/'bench/fonts-100.json')['fonts'] if f['split']=='train']
+    fonts = [f for f in read(ROOT/'bench/fonts-100.json')['fonts'] if f['split']=='train' or (DATA.name=='verification' and f['split']=='unknown-test')]
     browser = read(DATA/'browser.json'); raw = (DATA/'browser.gray').read_bytes()
     rows=[]
     with (DATA/'source.gray').open('wb') as out:
@@ -103,5 +105,8 @@ def evaluate():
     write(ROOT/'bench/preparation.json',{'modelSha256':sha(ROOT/'models/hundred/model.json'),'manifestSha256':sha(DATA/'prepared.json'),'lineSha256':sha(ROOT/'src/line.mjs'),'scope':'Frozen weights; new synthetic development bank, no final-test claims. Oracle uses renderer word boxes and the known rotation.','methods':report})
 
 if __name__=='__main__':
-    p=argparse.ArgumentParser();p.add_argument('command',choices=['plans','render','evaluate']);args=p.parse_args()
+    p=argparse.ArgumentParser();p.add_argument('command',choices=['plans','render','evaluate']);p.add_argument('--verification',action='store_true');args=p.parse_args()
+    if args.verification:
+        if args.command=='evaluate':raise ValueError('Use train.verification for locked candidate evaluation')
+        DATA=ROOT/'.data/verification';TEXTS=VERIFICATION
     globals()[args.command]()

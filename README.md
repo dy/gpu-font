@@ -6,6 +6,8 @@ This is experimental closed-set classification. Short fragments, low resolution,
 
 The [scaling plan](bench/scaling.md) explains the current sampling cuts, model scores, a 10 MB deployment budget, and the preparation/training experiments before expanding to the Google Fonts corpus.
 
+Completed follow-ups: [deskew and repeated training](bench/preparation.md) improved a new synthetic verification set from 57.5% to 62.6%; a [132 KB weight/italic pilot](bench/faces.md) reached 97.4% weight and 97.0% italic accuracy for ten families. [Retrieval continuations](bench/retrieval.md) did not beat the starting encoder. These candidates and their checkpoints are preserved under `models/`; the demo still uses the 100-family regular-only baseline. Independent screenshot accuracy and useful rejection coverage remain unproven.
+
 ## Open the demo
 
 With trained artifacts in `.data/`:

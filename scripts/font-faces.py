@@ -2,6 +2,7 @@
 from concurrent.futures import ThreadPoolExecutor
 import hashlib
 import json
+import re
 from pathlib import Path
 import urllib.request
 from urllib.parse import quote
@@ -12,8 +13,8 @@ ROOT=Path(__file__).resolve().parents[1]
 FONTS=['inter','roboto','open-sans','source-sans-3','montserrat','poppins','nunito','lora','merriweather','playfair-display']
 
 def fetch(path,commit,blob=None):
-    dest=ROOT/'.data/google/files'/path
-    if '..' in Path(path).parts or not path.startswith(('ofl/','apache/','ufl/')):raise ValueError('Invalid catalog path')
+    if not re.fullmatch('[a-f0-9]{40}',commit) or '..' in Path(path).parts or not path.startswith(('ofl/','apache/','ufl/')):raise ValueError('Invalid catalog path/revision')
+    dest=ROOT/'.data/google'/commit/path
     if not dest.exists():
         url='https://raw.githubusercontent.com/google/fonts/'+commit+'/'+quote(path)
         with urllib.request.urlopen(urllib.request.Request(url,headers={'User-Agent':'gpu-font'}),timeout=60) as response:data=response.read()

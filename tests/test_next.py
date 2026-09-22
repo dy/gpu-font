@@ -2,22 +2,85 @@
 import unittest
 import copy
 import json
+import hashlib
+import importlib.util
 import tempfile
+from contextlib import redirect_stdout
+from io import StringIO, BytesIO
 from pathlib import Path
 from unittest.mock import Mock, patch
 import numpy as np
 import torch
 from train import next as continuation
 from train import faces
-from train.retrieval import unit, prototypes, metrics, features
+from train.retrieval import unit, prototypes, metrics, features, head_projection
 from train.ten import batch
-from train.ten_model import Classifier
+from train.ten_model import Classifier, export
 from torch.nn.utils import parametrize
 from train.robustness import sha
 from train.metric import paired_pools, paired_batch
 
 
 class NextTests(unittest.TestCase):
+    def test_source_cache_is_revision_specific_and_checks_git_blobs(self):
+        spec=importlib.util.spec_from_file_location('font_faces',Path(__file__).resolve().parents[1]/'scripts/font-faces.py')
+        importer=importlib.util.module_from_spec(spec);spec.loader.exec_module(importer)
+        blob=lambda b:hashlib.sha1(b'blob '+str(len(b)).encode()+b'\0'+b).hexdigest()
+        with tempfile.TemporaryDirectory() as directory,patch.object(importer,'ROOT',Path(directory)),patch.object(importer.urllib.request,'urlopen',side_effect=lambda *args,**kwargs:BytesIO(b'a')) as fetch:
+            a=importer.fetch('ofl/example/OFL.txt','a'*40);b=importer.fetch('ofl/example/OFL.txt','b'*40)
+            self.assertNotEqual(a,b);self.assertEqual(fetch.call_count,2)
+            path=importer.fetch('ofl/example/Font.ttf','a'*40,blob(b'a'));self.assertEqual(path.read_bytes(),b'a')
+            importer.fetch('ofl/example/Font.ttf','a'*40,blob(b'a'));self.assertEqual(fetch.call_count,3)
+            path.write_bytes(b'changed')
+            with self.assertRaisesRegex(ValueError,'Cached source mismatch'):importer.fetch('ofl/example/Font.ttf','a'*40,blob(b'a'))
+            with self.assertRaisesRegex(ValueError,'Git blob mismatch'):importer.fetch('ofl/example/Other.ttf','a'*40,blob(b'b'))
+            self.assertFalse(path.with_name('Other.ttf').exists())
+            for p,c in [('ofl/../escape','a'*40),('/outside','a'*40),('ofl/example/Font.ttf','../escape')]:
+                with self.assertRaises(ValueError):importer.fetch(p,c)
+
+    def test_worse_continuation_preserves_step_zero_checkpoint_and_export(self):
+        torch.set_num_threads(1);torch.manual_seed(39);original=Classifier(2,context=True)
+        artifact,quantized=export(original,['a','b'],{'width':128,'height':48,'windows':3})
+        samples=[{'family':f,'renderer':r,'role':'train','text':'aa'} for f in ['a','b'] for r in ['pillow','chromium']]+[{'family':'u','role':'unknown-validation','text':'bb'}]
+        dev_samples=[{'family':f,'text':'bb','condition':'rotate'} for f in ['a','b']]
+        windows=[{'source':i,'offset':i*21,'width':7,'height':3} for i in range(5)]
+        with tempfile.TemporaryDirectory() as directory:
+            root=Path(directory)
+            for name in ['models/hundred','bench','.data/hundred','.data/preparation','src']:(root/name).mkdir(parents=True,exist_ok=True)
+            (root/'models/hundred/model.json').write_text(json.dumps(artifact));torch.save({'state':original.state_dict()},root/'models/hundred/best.pt')
+            (root/'.data/hundred/prepared.u8').write_bytes(bytes(range(105)))
+            (root/'.data/hundred/prepared.json').write_text(json.dumps({'samples':samples,'windows':windows,'tensorSha256':sha(root/'.data/hundred/prepared.u8')}))
+            (root/'.data/preparation/current.u8').write_bytes(bytes(range(42)))
+            dev={'samples':dev_samples,'methods':{'current':{'windows':windows[:2],'sha256':sha(root/'.data/preparation/current.u8')}}}
+            for key,name in [('inputSha256','input.mjs'),('normalizerSha256','prepare.mjs'),('lineSha256','line.mjs')]:
+                (root/'src'/name).write_text('fixture');dev[key]=sha(root/'src'/name)
+            (root/'.data/preparation/prepared.json').write_text(json.dumps(dev))
+            calls=[]
+            def predict(model,pixels,windows,rows,role=None):
+                calls.append(role)
+                if len(calls)==2:
+                    self.assertFalse(torch.equal(model.head.bias,original.head.bias),'An optimizer update must occur')
+                    return rows,np.array([[0.,8.],[8.,0.]]),np.arange(2)
+                if len(calls)>=3:
+                    for k,v in quantized.state_dict().items():torch.testing.assert_close(model.state_dict()[k],v,atol=0,rtol=0)
+                if role=='unknown-validation':return [samples[-1]],np.array([[0.,0.]]),np.array([0])
+                return rows,np.array([[8.,0.],[0.,8.]]),np.arange(2)
+            with patch.object(continuation,'ROOT',root),patch.object(continuation,'predict',side_effect=predict),patch.object(continuation,'calibrate',return_value={}),redirect_stdout(StringIO()):
+                continuation.train('current',steps=1,seed=39,device='cpu')
+            self.assertEqual(json.loads((root/'.data/next/current-39/model.json').read_text()),artifact)
+            report=json.loads((root/'bench/next-current-39.json').read_text())
+            self.assertEqual(report['selectedStep'],0);self.assertEqual(report['history'][1]['groups']['all']['accuracy'],0)
+
+    def test_compressed_head_projection_preserves_learned_cosine_geometry(self):
+        rng=np.random.default_rng(13)
+        for shape in [(100,64),(2,64)]:
+            weight=rng.normal(size=shape).astype(np.float32);x=rng.normal(size=(7,64)).astype(np.float32)
+            projected=unit(x@head_projection(weight));logits=unit(x@weight.T)
+            self.assertLessEqual(projected.shape[1],64)
+            np.testing.assert_allclose(projected@projected.T,logits@logits.T,atol=1e-6)
+        for bad in [[],[1,2],[[np.inf]]]:
+            with self.assertRaises(ValueError):head_projection(bad)
+
     def test_face_manifest_rejects_wrong_attributes_leakage_and_final_byte_errors(self):
         with tempfile.TemporaryDirectory() as directory:
             root=Path(directory);data=root/'.data/faces';data.mkdir(parents=True);(root/'bench').mkdir()
