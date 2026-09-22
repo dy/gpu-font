@@ -14,7 +14,9 @@ torch.set_num_threads(2)
 model_bytes = (root / 'dist/assets/model.json').read_bytes()
 artifact = json.loads(model_bytes)
 for family in artifact['fonts']:
-    with TTFont(root / f'.data/fonts/{family}.ttf') as face:
+    with TTFont(root / f'dist/assets/fonts/{family}.ttf') as face:
+        if face['OS/2'].usWeightClass != 400 or face['OS/2'].fsSelection & 0x201 or face['post'].italicAngle:
+            raise ValueError(f'Preview label requires an upright 400-weight face: {family}')
         if not (set(range(32, 127)) - {ord('^'), ord('~')}) <= face.getBestCmap().keys():
             raise ValueError(f'Incomplete preview glyph coverage: {family}')
 model = load_export(artifact)
