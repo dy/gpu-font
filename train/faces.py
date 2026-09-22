@@ -120,7 +120,7 @@ class Int8Weights(torch.nn.Module):
 
 def qat_snapshot(model):
     # Removing a parametrization from a deepcopy can mutate the live dynamic class.
-    plain=Classifier(model.head.out_features,training=False,context=model.context,dilations=model.dilations)
+    plain=Classifier(model.head.out_features,training=False,context=model.context,dilations=model.dilations,wide=model.wide)
     state={k.replace('.parametrizations.weight.original','.weight'):v.detach().cpu().clone() for k,v in model.state_dict().items()}
     plain.load_state_dict(state)
     return plain.eval()

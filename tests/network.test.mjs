@@ -63,12 +63,12 @@ test('window aggregation averages probabilities with deterministic ties and no f
   await assert.rejects(createNetworkGPU(readNetwork(artifact()), { requestAdapter: async () => null }), /adapter/)
 })
 
-test('100-class head retains the final class and rejects labels beyond the supported bound', () => {
-  const names = Array.from({ length: 100 }, (_, i) => `font-${i}`), a = artifact(names)
-  a.layers[4].bias[99] = 10
+test('10,000-class head retains the final class and rejects labels beyond the supported bound', () => {
+  const names = Array.from({ length: 10000 }, (_, i) => `font-${i}`), a = artifact(names)
+  a.layers[4].bias[9999] = 10
   const model = readNetwork(a), values = inferCPU(model, { width: 1, height: 1, pixels: new Float32Array([0]) })
-  assert.equal(values.length, 100); assert.equal(values[99], 10)
-  assert.equal(rankWindows([values], names)[0].family, 'font-99')
+  assert.equal(values.length, 10000); assert.equal(values[9999], 10)
+  assert.equal(rankWindows([values], names)[0].family, 'font-9999')
   assert.throws(() => readNetwork(artifact([...names, 'extra'])), /font labels/)
   assert.throws(() => readNetwork(artifact([])), /font labels/)
 })

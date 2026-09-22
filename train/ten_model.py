@@ -10,20 +10,22 @@ CHANNELS = [1, 16, 32, 48, 64]
 STRIDES = [1, 2, 2, 2]
 ARCH = 'font-conv16-32-48-64-v1'
 CONTEXT_ARCH = 'font-conv16-32-48-64-64-v2'
+CORPUS_ARCH = 'font-conv32-64-96-128-128-v3'
 
 
 class Classifier(nn.Module):
-    def __init__(self, classes=10, training=True, dilations=None, context=False):
+    def __init__(self, classes=10, training=True, dilations=None, context=False, wide=False):
         super().__init__()
-        self.context = context
-        self.architecture = CONTEXT_ARCH if context else ARCH
-        channels = CHANNELS + [64] if context else CHANNELS
+        if wide and not context: raise ValueError('Wide encoder requires context')
+        self.context, self.wide = context, wide
+        self.architecture = CORPUS_ARCH if wide else CONTEXT_ARCH if context else ARCH
+        channels = [1, 32, 64, 96, 128, 128] if wide else CHANNELS + [64] if context else CHANNELS
         self.strides = STRIDES + [1] if context else STRIDES
         self.dilations = dilations or [1] * len(self.strides)
         if len(self.dilations) != len(self.strides): raise ValueError('Wrong dilation count')
         self.convs = nn.ModuleList([nn.Conv2d(a, b, 3, stride=s, padding=d, dilation=d) for a, b, s, d in zip(channels, channels[1:], self.strides, self.dilations)])
         self.norms = nn.ModuleList([nn.BatchNorm2d(c) if training else nn.Identity() for c in channels[1:]])
-        self.head = nn.Linear(CHANNELS[-1], classes)
+        self.head = nn.Linear(channels[-1], classes)
 
     def forward(self, pixels, sizes=None):
         x = 1 - pixels
@@ -39,7 +41,7 @@ class Classifier(nn.Module):
         return self.head(x.sum((2, 3)) / sizes.prod(1)[:, None])
 
     def folded(self):
-        result = Classifier(self.head.out_features, training=False, dilations=self.dilations, context=self.context)
+        result = Classifier(self.head.out_features, training=False, dilations=self.dilations, context=self.context, wide=self.wide)
         self.eval()
         for i, (conv, norm) in enumerate(zip(self.convs, self.norms)):
             result.convs[i] = nn.utils.fuse_conv_bn_eval(conv, norm) if isinstance(norm, nn.BatchNorm2d) else copy.deepcopy(conv)
@@ -48,9 +50,9 @@ class Classifier(nn.Module):
 
 
 def load_export(artifact):
-    if artifact['version'] != 1 or artifact['architecture'] not in [ARCH, CONTEXT_ARCH]:
+    if artifact['version'] != 1 or artifact['architecture'] not in [ARCH, CONTEXT_ARCH, CORPUS_ARCH]:
         raise ValueError('Unsupported classifier')
-    model = Classifier(len(artifact['fonts']), training=False, dilations=artifact.get('dilations'), context=artifact['architecture'] == CONTEXT_ARCH).eval()
+    model = Classifier(len(artifact['fonts']), training=False, dilations=artifact.get('dilations'), context=artifact['architecture'] != ARCH, wide=artifact['architecture'] == CORPUS_ARCH).eval()
     modules = [*model.convs, model.head]
     if len(artifact['layers']) != len(modules):
         raise ValueError('Wrong layer count')
@@ -68,7 +70,7 @@ def load_export(artifact):
 def export(model, fonts, preparation):
     model = model.folded()
     layers = []
-    restored = Classifier(len(fonts), training=False, dilations=model.dilations, context=model.context).eval()
+    restored = Classifier(len(fonts), training=False, dilations=model.dilations, context=model.context, wide=model.wide).eval()
     for source, target in zip([*model.convs, model.head], [*restored.convs, restored.head]):
         weight = source.weight.detach().numpy()
         row = weight.reshape(len(weight), -1)

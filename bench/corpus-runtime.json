@@ -1,0 +1,38 @@
+{
+  "baselineBefore": {
+    "modelSha256": "66b98a49d1bebe9b2e56bc896f1fbe9b8e76ece52e74608aeae58ef3dd4cefbb",
+    "runtimeSha256": "4d6136099d8440d25bcb8c76a68973f23f7e26dc020a8517e6bb4e37ffb17e20",
+    "classes": 100,
+    "cpuError": 0.000030517578125,
+    "gpuError": 0.000030517578125,
+    "timing": {
+      "adapter": "metal-3",
+      "initializationMs": 305.1000003814697,
+      "warmWindowP50Ms": 1.1999998092651367,
+      "warmWindowP95Ms": 1.7999992370605469,
+      "samples": 20,
+      "width": 128,
+      "height": 48
+    },
+    "cases": 4,
+    "sequence": "A → A → maximum → odd → small → A"
+  },
+  "baselineAfter": {
+    "modelSha256": "66b98a49d1bebe9b2e56bc896f1fbe9b8e76ece52e74608aeae58ef3dd4cefbb",
+    "runtimeSha256": "4ed6b458bca0eed491b51ebddd68a6a322c0bd2fd337dd0a8fb28b9e2fd4a12d",
+    "classes": 100,
+    "cpuError": 0.000030517578125,
+    "gpuError": 0.000030517578125,
+    "timing": {
+      "adapter": "metal-3",
+      "initializationMs": 156.0999994277954,
+      "warmWindowP50Ms": 0.6999998092651367,
+      "warmWindowP95Ms": 2.6000003814697266,
+      "samples": 20,
+      "width": 128,
+      "height": 48
+    },
+    "cases": 4,
+    "sequence": "A → A → maximum → odd → small → A"
+  }
+}

@@ -1,21 +1,22 @@
 export const architecture = 'font-conv16-32-48-64-v1'
 export const contextArchitecture = 'font-conv16-32-48-64-64-v2'
+export const corpusArchitecture = 'font-conv32-64-96-128-128-v3'
 export const channels = [1, 16, 32, 48, 64]
 export const strides = [1, 2, 2, 2]
 
 export function readNetwork(artifact) {
-  if (artifact?.version !== 1 || ![architecture, contextArchitecture].includes(artifact.architecture)) throw new Error('Unsupported font classifier')
+  if (artifact?.version !== 1 || ![architecture, contextArchitecture, corpusArchitecture].includes(artifact.architecture)) throw new Error('Unsupported font classifier')
   const fonts = artifact.fonts, p = artifact.preparation
-  const context = artifact.architecture === contextArchitecture
-  const shapeChannels = context ? [...channels, 64] : channels, shapeStrides = context ? [...strides, 1] : strides
+  const context = artifact.architecture !== architecture
+  const shapeChannels = artifact.architecture === corpusArchitecture ? [1, 32, 64, 96, 128, 128] : context ? [...channels, 64] : channels, shapeStrides = context ? [...strides, 1] : strides
   const depth = shapeStrides.length
   const dilations = artifact.dilations ?? Array(depth).fill(1)
   if (!Array.isArray(dilations) || dilations.length !== depth || dilations.some(d => d !== 1 && d !== 2)) throw new Error('Invalid filter dilations')
-  if (!Array.isArray(fonts) || !fonts.length || fonts.length > 100 || fonts.some(f => typeof f !== 'string' || !f) || new Set(fonts).size !== fonts.length) throw new Error('Invalid font labels')
+  if (!Array.isArray(fonts) || !fonts.length || fonts.length > 10000 || fonts.some(f => typeof f !== 'string' || !f) || new Set(fonts).size !== fonts.length) throw new Error('Invalid font labels')
   if (p?.width !== 128 || p.height !== 48 || p.windows !== 3) throw new Error('Unsupported input preparation')
   if (!Array.isArray(artifact.layers) || artifact.layers.length !== depth + 1) throw new Error('Invalid network layers')
   const layers = artifact.layers.map((layer, i) => {
-    const shape = i === depth ? [fonts.length, 64] : [shapeChannels[i + 1], shapeChannels[i], 3, 3]
+    const shape = i === depth ? [fonts.length, shapeChannels.at(-1)] : [shapeChannels[i + 1], shapeChannels[i], 3, 3]
     if (JSON.stringify(layer.shape) !== JSON.stringify(shape)) throw new Error('Invalid layer shape')
     const [rows] = shape, count = shape.reduce((a, b) => a * b, 1)
     if (!Array.isArray(layer.scale) || layer.scale.length !== rows || layer.scale.some(s => !Number.isFinite(s) || s <= 0) || !Array.isArray(layer.bias) || layer.bias.length !== rows || !layer.bias.every(Number.isFinite)) throw new Error('Invalid layer values')
@@ -52,8 +53,8 @@ export function inferCPU(model, window) {
     }
     input = output; width = ow; height = oh
   }
-  const pooled = new Float32Array(64), count = width * height
-  for (let c = 0; c < 64; c++) {
+  const features = channels.at(-1), pooled = new Float32Array(features), count = width * height
+  for (let c = 0; c < features; c++) {
     let sum = 0
     for (let p = 0; p < count; p++) sum += input[c * count + p]
     pooled[c] = sum / count
@@ -61,7 +62,7 @@ export function inferCPU(model, window) {
   const { weights, bias } = model.layers.at(-1)
   return Float32Array.from(model.fonts, (_, d) => {
     let sum = bias[d]
-    for (let c = 0; c < 64; c++) sum += weights[d * 64 + c] * pooled[c]
+    for (let c = 0; c < features; c++) sum += weights[d * features + c] * pooled[c]
     return sum
   })
 }
