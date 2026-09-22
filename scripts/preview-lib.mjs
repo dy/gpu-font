@@ -12,22 +12,33 @@ const MAGIC = Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a])
 const CHANNELS = { 0: 1, 2: 3, 4: 2, 6: 4 }
 
 export function pngChunks(buffer) {
-  if (!buffer.subarray(0, 8).equals(MAGIC)) throw new Error('Not a PNG file')
+  if (!Buffer.isBuffer(buffer) || !buffer.subarray(0, 8).equals(MAGIC)) throw new Error('Not a PNG file')
   const chunks = []
-  for (let at = 8; at + 8 <= buffer.length;) {
+  for (let at = 8; at < buffer.length;) {
+    if (at + 12 > buffer.length) throw new Error('Truncated PNG chunk')
     const length = buffer.readUInt32BE(at), type = buffer.toString('ascii', at + 4, at + 8)
+    if (at + length + 12 > buffer.length) throw new Error('Truncated PNG chunk data')
+    if (crc32(buffer.subarray(at + 4, at + 8 + length)) !== buffer.readUInt32BE(at + 8 + length)) throw new Error('Invalid PNG chunk checksum')
+    if ((!chunks.length && type !== 'IHDR') || (type === 'IHDR' && (chunks.length || length !== 13))) throw new Error('Invalid PNG header')
     chunks.push({ type, data: buffer.subarray(at + 8, at + 8 + length) })
     at += length + 12
+    if (type === 'IEND') {
+      if (length || at !== buffer.length) throw new Error('Invalid PNG final boundary')
+      if (!chunks.some(chunk => chunk.type === 'IDAT')) throw new Error('PNG has no image data')
+      return chunks
+    }
   }
-  return chunks
+  throw new Error('PNG has no final chunk')
 }
 
-/** Header-only read: enough to confirm a manifest's declared dimensions. */
+/** Read dimensions after checking the container; decodePng also verifies scanlines. */
 export function pngSize(buffer) {
   const header = pngChunks(buffer).find(chunk => chunk.type === 'IHDR')
   if (!header) throw new Error('PNG has no IHDR chunk')
+  const width = header.data.readUInt32BE(0), height = header.data.readUInt32BE(4)
+  if (!width || !height || width * height > 16_777_216 || header.data[10] || header.data[11]) throw new Error('Unsupported PNG dimensions or coding')
   return {
-    width: header.data.readUInt32BE(0), height: header.data.readUInt32BE(4),
+    width, height,
     bitDepth: header.data[8], colorType: header.data[9], interlace: header.data[12],
   }
 }
@@ -38,7 +49,10 @@ export function decodePng(buffer) {
   if (bitDepth !== 8 || !channels || interlace !== 0)
     throw new Error(`Unsupported PNG: depth ${bitDepth}, colour type ${colorType}, interlace ${interlace}`)
   const idat = Buffer.concat(pngChunks(buffer).filter(chunk => chunk.type === 'IDAT').map(chunk => chunk.data))
-  const raw = inflateSync(idat), stride = width * channels, pixels = Buffer.alloc(height * stride)
+  const stride = width * channels, expected = height * (stride + 1)
+  const raw = inflateSync(idat, { maxOutputLength: expected })
+  if (raw.length !== expected) throw new Error('Truncated PNG scanlines')
+  const pixels = Buffer.alloc(height * stride)
   for (let row = 0; row < height; row++) {
     const filter = raw[row * (stride + 1)], line = raw.subarray(row * (stride + 1) + 1, (row + 1) * (stride + 1))
     const out = pixels.subarray(row * stride, (row + 1) * stride), prior = row ? pixels.subarray((row - 1) * stride, row * stride) : null
@@ -95,10 +109,13 @@ const lumaAt = ({ channels, pixels }, at) => {
 }
 
 /** A rectangle of an image, copied out so its own corners define its background. */
-export function cropView(image, { x, y, width, height }) {
-  const pixels = Buffer.alloc(width * height * image.channels)
+export function cropView(image, region) {
+  if (!image || ![1, 2, 3, 4].includes(image.channels) || !Number.isInteger(image.width) || !Number.isInteger(image.height) || image.width < 1 || image.height < 1 || image.pixels?.length !== image.width * image.height * image.channels) throw new Error('Invalid source image')
+  if (!region || ['x', 'y', 'width', 'height'].some(k => !Number.isInteger(region[k])) || region.x < 0 || region.y < 0 || region.width < 1 || region.height < 1 || region.x + region.width > image.width || region.y + region.height > image.height) throw new Error('Invalid image region')
+  const { x, y, width, height } = region
+  const pixels = Buffer.alloc(width * height * image.channels), source = Buffer.from(image.pixels)
   for (let row = 0; row < height; row++)
-    Buffer.from(image.pixels).copy(pixels, row * width * image.channels,
+    source.copy(pixels, row * width * image.channels,
       ((y + row) * image.width + x) * image.channels, ((y + row) * image.width + x + width) * image.channels)
   return { width, height, channels: image.channels, pixels }
 }
@@ -159,11 +176,11 @@ export function validateRecord(record) {
     if (!isText(record[key])) fail(`${key} must be a non-empty string`)
   if (record.role !== 'reference') fail(`role must be "reference", saw ${JSON.stringify(record.role)}`)
   if (!(record.styleName === null || isText(record.styleName))) fail('styleName must be a string or null')
-  if (!(record.weight === null || (typeof record.weight === 'number' && record.weight > 0))) fail('weight must be a positive number or null')
+  if (!(record.weight === null || (Number.isFinite(record.weight) && record.weight > 0))) fail('weight must be a positive number or null')
   if (!SLANTS.has(record.slant ?? null)) fail(`slant must be upright, italic, oblique or null, saw ${JSON.stringify(record.slant)}`)
   if (record.axes === null || typeof record.axes !== 'object' || Array.isArray(record.axes)) fail('axes must be an object')
   else for (const [tag, value] of Object.entries(record.axes))
-    if (typeof value !== 'number') fail(`axis ${tag} must be numeric`)
+    if (!Number.isFinite(value)) fail(`axis ${tag} must be finite numeric`)
   if (!(record.foundry === null || isText(record.foundry))) fail('foundry must be a string or null')
   if (!/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d+)?Z$/.test(record.capturedAt ?? '')) fail('capturedAt must be an ISO 8601 UTC timestamp')
   if (!(record.text === null || typeof record.text === 'string')) fail('text must be a string or null')
@@ -248,9 +265,11 @@ export async function validateArchive(dir) {
   const text = await readFile(manifestPath, 'utf8')
   const { records, problems } = parseManifest(text)
   const errors = [...problems], warnings = []
+  if (!records.length) errors.push('Empty manifest')
   const seen = new Map(), hashes = new Map(), groups = new Map()
 
   for (const record of records) {
+    if (record === null || typeof record !== 'object' || Array.isArray(record)) continue
     const label = record?.id ?? '(no id)'
     if (seen.has(record.id)) errors.push(`${label}: duplicate record id`)
     else seen.set(record.id, record)
@@ -266,7 +285,7 @@ export async function validateArchive(dir) {
     const digest = sha256(bytes)
     if (digest !== record.image.sha256) errors.push(`${label}: image sha256 mismatch (file ${digest})`)
     try {
-      const { width, height } = pngSize(bytes)
+      const { width, height } = decodePng(bytes)
       if (width !== record.image.width || height !== record.image.height)
         errors.push(`${label}: decoded size ${width}x${height} does not match the record`)
       if (record.region && Number.isInteger(record.region.x) &&

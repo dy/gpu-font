@@ -17,7 +17,7 @@
     "train:ten": "node scripts/ten.mjs",
     "demo:build": "node scripts/demo-build.mjs",
     "demo": "node scripts/demo-serve.mjs",
-    "test:demo": "node scripts/python.mjs -m scripts.demo_reference && node checks/demo.mjs",
+    "test:demo": "node checks/demo.mjs",
     "train:hundred": "node scripts/hundred.mjs"
   },
   "devDependencies": {

@@ -2,13 +2,13 @@
   "modelSha256": "66b98a49d1bebe9b2e56bc896f1fbe9b8e76ece52e74608aeae58ef3dd4cefbb",
   "timings": {
     "gpu": {
-      "median": 3.1999998092651367,
-      "p95": 3.6000003814697266,
+      "median": 1.8999996185302734,
+      "p95": 4.399999618530273,
       "count": 20
     },
     "cpu": {
-      "median": 163.60000038146973,
-      "p95": 166.79999923706055,
+      "median": 167.39999961853027,
+      "p95": 172.39999961853027,
       "count": 20
     },
     "windows": [
@@ -535,23 +535,23 @@
     "matches": [
       {
         "family": "geist-mono",
-        "score": 0.9752595541815978
+        "score": 0.9752595702587761
       },
       {
         "family": "geist",
-        "score": 0.009301831748879096
+        "score": 0.009301820795315541
       },
       {
         "family": "ibm-plex-sans",
-        "score": 0.00248474534465005
+        "score": 0.002484743745538738
       },
       {
         "family": "bebas-neue",
-        "score": 0.0014051603295739275
+        "score": 0.0014051599479304063
       },
       {
         "family": "sora",
-        "score": 0.0012896819375292203
+        "score": 0.0012896819298321518
       }
     ],
     "windows": [
@@ -592,7 +592,7 @@
       "family": "inter",
       "text": "ri",
       "predicted": "sora",
-      "score": 0.314552764210314,
+      "score": 0.3145528584048264,
       "accepted": false,
       "correct": false
     },
@@ -600,7 +600,7 @@
       "family": "inter",
       "text": "ri+sliver",
       "predicted": "sora",
-      "score": 0.363579139285038,
+      "score": 0.36357912532116743,
       "accepted": false,
       "correct": false
     },
@@ -608,7 +608,7 @@
       "family": "inter",
       "text": "rivers",
       "predicted": "inter",
-      "score": 0.5171157642278978,
+      "score": 0.517115744302385,
       "accepted": false,
       "correct": true
     },
@@ -616,7 +616,7 @@
       "family": "roboto",
       "text": "ri",
       "predicted": "roboto-flex",
-      "score": 0.33603532065206704,
+      "score": 0.3360353674945765,
       "accepted": false,
       "correct": false
     },
@@ -624,7 +624,7 @@
       "family": "roboto",
       "text": "ri+sliver",
       "predicted": "roboto-flex",
-      "score": 0.3430467974901398,
+      "score": 0.34304671760188216,
       "accepted": false,
       "correct": false
     },
@@ -632,7 +632,7 @@
       "family": "roboto",
       "text": "rivers",
       "predicted": "roboto",
-      "score": 0.5207681727688047,
+      "score": 0.5207680999948456,
       "accepted": false,
       "correct": true
     },
@@ -640,7 +640,7 @@
       "family": "open-sans",
       "text": "ri",
       "predicted": "sora",
-      "score": 0.5331440586505963,
+      "score": 0.5331440680687665,
       "accepted": false,
       "correct": false
     },
@@ -648,7 +648,7 @@
       "family": "open-sans",
       "text": "ri+sliver",
       "predicted": "sora",
-      "score": 0.1929252132483412,
+      "score": 0.19292528140569312,
       "accepted": false,
       "correct": false
     },
@@ -656,7 +656,7 @@
       "family": "open-sans",
       "text": "rivers",
       "predicted": "noto-sans",
-      "score": 0.7611140472699762,
+      "score": 0.7611140007331632,
       "accepted": false,
       "correct": false
     },
@@ -664,7 +664,7 @@
       "family": "source-sans-3",
       "text": "ri",
       "predicted": "schibsted-grotesk",
-      "score": 0.5937513310743511,
+      "score": 0.5937513459331458,
       "accepted": false,
       "correct": false
     },
@@ -672,7 +672,7 @@
       "family": "source-sans-3",
       "text": "ri+sliver",
       "predicted": "schibsted-grotesk",
-      "score": 0.37661234476984307,
+      "score": 0.3766124830126309,
       "accepted": false,
       "correct": false
     },
@@ -680,7 +680,7 @@
       "family": "source-sans-3",
       "text": "rivers",
       "predicted": "source-sans-3",
-      "score": 0.6408541626193345,
+      "score": 0.6408541644373601,
       "accepted": false,
       "correct": true
     },
@@ -688,7 +688,7 @@
       "family": "montserrat",
       "text": "ri",
       "predicted": "instrument-sans",
-      "score": 0.37824002337863494,
+      "score": 0.37824003725977784,
       "accepted": false,
       "correct": false
     },
@@ -696,7 +696,7 @@
       "family": "montserrat",
       "text": "ri+sliver",
       "predicted": "instrument-sans",
-      "score": 0.32604919425500917,
+      "score": 0.3260492263646199,
       "accepted": false,
       "correct": false
     },
@@ -704,7 +704,7 @@
       "family": "montserrat",
       "text": "rivers",
       "predicted": "montserrat",
-      "score": 0.953167491062384,
+      "score": 0.9531675023678279,
       "accepted": false,
       "correct": true
     },
@@ -712,7 +712,7 @@
       "family": "poppins",
       "text": "ri",
       "predicted": "public-sans",
-      "score": 0.3286122735960612,
+      "score": 0.3286123542937219,
       "accepted": false,
       "correct": false
     },
@@ -720,7 +720,7 @@
       "family": "poppins",
       "text": "ri+sliver",
       "predicted": "schibsted-grotesk",
-      "score": 0.5729924712610234,
+      "score": 0.5729923055948554,
       "accepted": false,
       "correct": false
     },
@@ -728,7 +728,7 @@
       "family": "poppins",
       "text": "rivers",
       "predicted": "poppins",
-      "score": 0.4676016203203469,
+      "score": 0.46760159115437017,
       "accepted": false,
       "correct": true
     },
@@ -736,7 +736,7 @@
       "family": "nunito",
       "text": "ri",
       "predicted": "nunito",
-      "score": 0.7887101841799654,
+      "score": 0.7887101845150957,
       "accepted": false,
       "correct": true
     },
@@ -744,7 +744,7 @@
       "family": "nunito",
       "text": "ri+sliver",
       "predicted": "nunito",
-      "score": 0.6313414791129366,
+      "score": 0.63134147893027,
       "accepted": false,
       "correct": true
     },
@@ -752,7 +752,7 @@
       "family": "nunito",
       "text": "rivers",
       "predicted": "nunito",
-      "score": 0.9502246776920409,
+      "score": 0.9502247090023481,
       "accepted": false,
       "correct": true
     },
@@ -760,7 +760,7 @@
       "family": "lora",
       "text": "ri",
       "predicted": "libre-baskerville",
-      "score": 0.6504636448687764,
+      "score": 0.65046382696373,
       "accepted": false,
       "correct": false
     },
@@ -768,7 +768,7 @@
       "family": "lora",
       "text": "ri+sliver",
       "predicted": "libre-baskerville",
-      "score": 0.5581539415258802,
+      "score": 0.5581539383235273,
       "accepted": false,
       "correct": false
     },
@@ -776,7 +776,7 @@
       "family": "lora",
       "text": "rivers",
       "predicted": "lora",
-      "score": 0.4842994262855233,
+      "score": 0.48429942338145515,
       "accepted": false,
       "correct": true
     },
@@ -784,7 +784,7 @@
       "family": "merriweather",
       "text": "ri",
       "predicted": "rokkitt",
-      "score": 0.4809708033021071,
+      "score": 0.4809708012183878,
       "accepted": false,
       "correct": false
     },
@@ -792,7 +792,7 @@
       "family": "merriweather",
       "text": "ri+sliver",
       "predicted": "rokkitt",
-      "score": 0.571890246203688,
+      "score": 0.571890264620722,
       "accepted": false,
       "correct": false
     },
@@ -800,7 +800,7 @@
       "family": "merriweather",
       "text": "rivers",
       "predicted": "merriweather",
-      "score": 0.9834089469306189,
+      "score": 0.983408949703154,
       "accepted": false,
       "correct": true
     },
@@ -808,7 +808,7 @@
       "family": "playfair-display",
       "text": "ri",
       "predicted": "playfair-display",
-      "score": 0.9599165786846061,
+      "score": 0.9599165427323405,
       "accepted": false,
       "correct": true
     },
@@ -816,7 +816,7 @@
       "family": "playfair-display",
       "text": "ri+sliver",
       "predicted": "playfair-display",
-      "score": 0.9705078004301041,
+      "score": 0.9705077808439071,
       "accepted": false,
       "correct": true
     },
@@ -824,7 +824,7 @@
       "family": "playfair-display",
       "text": "rivers",
       "predicted": "playfair-display",
-      "score": 0.9731318984559086,
+      "score": 0.9731318835411998,
       "accepted": false,
       "correct": true
     }
@@ -908,7 +908,7 @@
   "liveCrop": {
     "rapidUpdates": 50,
     "inferences": 6,
-    "lastInferenceMs": 5.399999618530273
+    "lastInferenceMs": 4.699999809265137
   },
   "automaticBackground": [
     "opaque-dark",

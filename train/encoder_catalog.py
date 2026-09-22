@@ -54,10 +54,14 @@ def make_catalog(encoder_path,families,samples,vectors,count,inventory):
 
 def read_catalog(catalog,encoder_path):
     encoder=read(encoder_path)
-    if not isinstance(catalog,dict) or type(catalog.get('version'))is not int or catalog['version']!=1 or catalog.get('kind')!='font-catalog' or type(catalog.get('dimensions'))is not int or catalog['dimensions']!=DIMENSIONS or type(catalog.get('referencesPerFace'))is not int or catalog['referencesPerFace'] not in [1,4]:raise ValueError('Invalid catalog schema')
+    if not isinstance(catalog,dict) or type(catalog.get('version'))is not int or catalog['version'] not in [1,2] or catalog.get('kind')!='font-catalog' or type(catalog.get('dimensions'))is not int or catalog['dimensions']!=DIMENSIONS or type(catalog.get('referencesPerFace'))is not int or catalog['referencesPerFace'] not in [1,4]:raise ValueError('Invalid catalog schema')
     if catalog.get('encoderSha256')!=sha(encoder_path) or catalog.get('preparationSha256')!=preparation_hash(encoder['preparation']):raise ValueError('Incompatible encoder/preparation')
     faces=catalog.get('faces')
-    if not isinstance(faces,list) or not 1<=len(faces)<=10000 or any(not isinstance(f,dict) or any(not isinstance(f.get(k),str) or not f[k] for k in ['id','familyId','family']) for f in faces) or len({f['id'] for f in faces})!=len(faces) or len({f['familyId'] for f in faces})!=len(faces):raise ValueError('Expected unique catalog families and faces')
+    if not isinstance(faces,list) or not 1<=len(faces)<=10000 or any(not isinstance(f,dict) or any(not isinstance(f.get(k),str) or not f[k] for k in ['id','familyId','family']) for f in faces) or len({f['id'] for f in faces})!=len(faces):raise ValueError('Expected unique catalog faces')
+    if catalog['version']==1 and len({f['familyId'] for f in faces})!=len(faces):raise ValueError('Version 1 requires unique families')
+    names={}
+    for face in faces:
+        if names.setdefault(face['familyId'],face['family'])!=face['family']:raise ValueError('Conflicting family names')
     vectors=catalog.get('vectors');rows=len(faces)*catalog['referencesPerFace']
     if not isinstance(vectors,dict) or vectors.get('encoding')!='int8-base64' or vectors.get('shape')!=[rows,DIMENSIONS] or any(type(n)is not int for n in vectors['shape']):raise ValueError('Invalid vector shape')
     try:raw=base64.b64decode(vectors['data'],validate=True)
@@ -67,7 +71,8 @@ def read_catalog(catalog,encoder_path):
     if not isinstance(scales,list) or len(scales)!=rows or any(type(s) not in [float,int] or not np.isfinite(s) or s<=0 for s in scales):raise ValueError('Invalid vector scales')
     if not isinstance(owners,list) or len(owners)!=rows or any(type(i)is not int or not 0<=i<len(faces) for i in owners) or np.any(np.bincount(owners,minlength=len(faces))!=catalog['referencesPerFace']):raise ValueError('Invalid vector owners')
     decoded=np.frombuffer(raw,dtype=np.int8).reshape(rows,DIMENSIONS).astype(np.float32)*np.array(scales,dtype=np.float32)[:,None]
-    return unit(decoded),np.array(owners),[f['familyId'] for f in faces]
+    # V1 scores unique families; V2 scores individual faces, grouped by family by the caller.
+    return unit(decoded),np.array(owners),[f['familyId' if catalog['version']==1 else 'id'] for f in faces]
 
 
 def rejection(scores,samples,families,threshold):

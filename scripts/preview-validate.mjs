@@ -6,6 +6,10 @@ import { validateArchive, readJsonl } from './preview-lib.mjs'
 
 const dir = process.argv[2] ?? '.data/previews/pilot-v1'
 const { records, errors, warnings, stray, manifestSha256 } = await validateArchive(dir)
+if (errors.length) {
+  for (const error of errors) console.error(`  error: ${error}`)
+  process.exit(1)
+}
 
 const bytesOf = async relative => (await stat(path.join(dir, relative))).size
 const unique = key => new Set(records.map(record => (typeof key === 'function' ? key(record) : record[key])))

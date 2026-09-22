@@ -1,0 +1,1021 @@
+{
+  "version": 1,
+  "generatedAt": "2026-09-22T22:53:04.318Z",
+  "recipes": [
+    {
+      "id": "latin-lower-v1",
+      "text": "abcdefghijklmnopqrstuvwxyz"
+    },
+    {
+      "id": "latin-upper-v1",
+      "text": "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+    },
+    {
+      "id": "digits-v1",
+      "text": "0123456789"
+    },
+    {
+      "id": "words-a-v1",
+      "text": "Hamburgefontsiv office minimum"
+    },
+    {
+      "id": "words-b-v1",
+      "text": "Sphinx quartz velvet rhythm"
+    }
+  ],
+  "render": {
+    "cssFontSize": 48,
+    "deviceScaleFactor": 2,
+    "zoom": 1,
+    "color": "#111111",
+    "background": "#ffffff",
+    "paddingCss": 36,
+    "lineHeight": 1.9
+  },
+  "sources": {
+    "fontshare": {
+      "name": "Fontshare (Indian Type Foundry)",
+      "home": "https://www.fontshare.com/",
+      "access": "Public catalogue API (api.fontshare.com) and public specimen pages.",
+      "reuseTerms": "ITF Fontshare licence: free for personal and commercial use, redistribution of the font files not granted. Captures kept local."
+    }
+  },
+  "inventoryComparison": {
+    "corpusCommit": "e44c4b011a820c2cbe2fd2cfa8052037d7edb571",
+    "corpusFamilies": 2055,
+    "exactNameOverlap": 0,
+    "unseenDesignClaim": false
+  },
+  "families": [
+    {
+      "key": "fontshare-synonym",
+      "source": "fontshare",
+      "family": "Synonym",
+      "familyId": "fontshare:family:81dd9b44-32b9-4a78-be7a-f7a4d96bf991",
+      "foundry": "Indian Type Foundry",
+      "designers": [
+        "Hugo Dumont"
+      ],
+      "category": "sans",
+      "sourceCategory": "Sans",
+      "role": "additional",
+      "specimenUrl": "https://www.fontshare.com/fonts/synonym",
+      "provided": true,
+      "providedUnavailable": null,
+      "providedMinChars": 8,
+      "providedViewportWidth": 2400,
+      "tokens": [
+        "synonym"
+      ],
+      "faces": [
+        {
+          "key": "fontshare-synonym-400-upright",
+          "faceId": "fontshare:style:7e7652a5-2adc-4ebd-accf-62ad801a8393",
+          "styleName": "Regular",
+          "declaredWeight": 400,
+          "declaredSlant": "upright",
+          "cssWeight": 400,
+          "cssStyle": "normal",
+          "fontUrl": "https://cdn.fontshare.com/wf/DFYGA7EPVEG7D7UPFPAIYFH2F4NM27PX/EVVPJ6WZV4QLGKO7KZL6GMJI3CXH433B/EMRNL4XMLBJQUVRD4I5XB7IIBFI5JC3Z.ttf",
+          "cssUrl": null,
+          "sourceUrl": "https://www.fontshare.com/fonts/synonym",
+          "kind": "base",
+          "cssFamilyToken": "synonym",
+          "evidenceLabels": [
+            "Regular"
+          ]
+        }
+      ]
+    },
+    {
+      "key": "fontshare-author",
+      "source": "fontshare",
+      "family": "Author",
+      "familyId": "fontshare:family:036e0f95-9213-443b-a655-262c192ec872",
+      "foundry": "Indian Type Foundry",
+      "designers": [
+        "Satya Rajpurohit"
+      ],
+      "category": "sans",
+      "sourceCategory": "Sans",
+      "role": "additional",
+      "specimenUrl": "https://www.fontshare.com/fonts/author",
+      "provided": true,
+      "providedUnavailable": null,
+      "providedMinChars": 8,
+      "providedViewportWidth": 2400,
+      "tokens": [
+        "author"
+      ],
+      "faces": [
+        {
+          "key": "fontshare-author-400-upright",
+          "faceId": "fontshare:style:1cfa3304-e97b-4038-a0be-02998c2e64ed",
+          "styleName": "Regular",
+          "declaredWeight": 400,
+          "declaredSlant": "upright",
+          "cssWeight": 400,
+          "cssStyle": "normal",
+          "fontUrl": "https://cdn.fontshare.com/wf/UETRYMOV7YFW7JHYHVOHEDDKKQBRQ3FT/SYXMTMEWAJJEDDXMTQNSJQ2DG3V6IN2Z/S4GQQ4OYJXECEGW3QXXIXQSCERFDR6WC.ttf",
+          "cssUrl": null,
+          "sourceUrl": "https://www.fontshare.com/fonts/author",
+          "kind": "base",
+          "cssFamilyToken": "author",
+          "evidenceLabels": [
+            "Regular"
+          ]
+        }
+      ]
+    },
+    {
+      "key": "fontshare-bespoke-sans",
+      "source": "fontshare",
+      "family": "Bespoke Sans",
+      "familyId": "fontshare:family:81d97f9f-5636-425d-898a-eee7328b49a4",
+      "foundry": "Indian Type Foundry",
+      "designers": [
+        "Jérémie Hornus",
+        "Théo Guillard",
+        "Morgane Pambrun",
+        "Alisa Nowak",
+        "Joachim Vu"
+      ],
+      "category": "sans",
+      "sourceCategory": "Sans",
+      "role": "additional",
+      "specimenUrl": "https://www.fontshare.com/fonts/bespoke-sans",
+      "provided": true,
+      "providedUnavailable": null,
+      "providedMinChars": 8,
+      "providedViewportWidth": 2400,
+      "tokens": [
+        "bespoke sans"
+      ],
+      "faces": [
+        {
+          "key": "fontshare-bespoke-sans-400-upright",
+          "faceId": "fontshare:style:5d184b2e-156a-465b-a076-695737be0380",
+          "styleName": "Regular",
+          "declaredWeight": 400,
+          "declaredSlant": "upright",
+          "cssWeight": 400,
+          "cssStyle": "normal",
+          "fontUrl": "https://cdn.fontshare.com/wf/VRTNE2DNXBGFJ64UDB22P5WYA3K6HG52/DWBMQL7GKH3Y3ACL7X53VLKTL64LOEVL/WME7ZNOIO65EWB3CT2N3GW2TVQIBMDRH.ttf",
+          "cssUrl": null,
+          "sourceUrl": "https://www.fontshare.com/fonts/bespoke-sans",
+          "kind": "base",
+          "cssFamilyToken": "bespoke sans",
+          "evidenceLabels": [
+            "Regular"
+          ]
+        }
+      ]
+    },
+    {
+      "key": "fontshare-amulya",
+      "source": "fontshare",
+      "family": "Amulya",
+      "familyId": "fontshare:family:28aa9e62-1337-4ded-9b86-ddaffc5e911d",
+      "foundry": "Indian Type Foundry",
+      "designers": [
+        "Joana Correia"
+      ],
+      "category": "sans",
+      "sourceCategory": "Sans",
+      "role": "additional",
+      "specimenUrl": "https://www.fontshare.com/fonts/amulya",
+      "provided": true,
+      "providedUnavailable": null,
+      "providedMinChars": 8,
+      "providedViewportWidth": 2400,
+      "tokens": [
+        "amulya"
+      ],
+      "faces": [
+        {
+          "key": "fontshare-amulya-400-upright",
+          "faceId": "fontshare:style:659742d5-35c8-41f1-8c14-01690c9ed189",
+          "styleName": "Regular",
+          "declaredWeight": 400,
+          "declaredSlant": "upright",
+          "cssWeight": 400,
+          "cssStyle": "normal",
+          "fontUrl": "https://cdn.fontshare.com/wf/GSJK57T6I7HPQWCUX7MLHBCISZLIZ4OR/DOZUNEZNWPZUV5T5LOL43ADB6CNYXNF5/QJ55ZH5AEGHTMOY3L34XTW5QXWYNA45R.ttf",
+          "cssUrl": null,
+          "sourceUrl": "https://www.fontshare.com/fonts/amulya",
+          "kind": "base",
+          "cssFamilyToken": "amulya",
+          "evidenceLabels": [
+            "Regular"
+          ]
+        }
+      ]
+    },
+    {
+      "key": "fontshare-excon",
+      "source": "fontshare",
+      "family": "Excon",
+      "familyId": "fontshare:family:b819e3f7-778b-47ed-b25c-f39eff4a2eaf",
+      "foundry": "Indian Type Foundry",
+      "designers": [
+        "Alisa Nowak"
+      ],
+      "category": "sans",
+      "sourceCategory": "Sans",
+      "role": "additional",
+      "specimenUrl": "https://www.fontshare.com/fonts/excon",
+      "provided": true,
+      "providedUnavailable": null,
+      "providedMinChars": 8,
+      "providedViewportWidth": 2400,
+      "tokens": [
+        "excon"
+      ],
+      "faces": [
+        {
+          "key": "fontshare-excon-400-upright",
+          "faceId": "fontshare:style:0942087f-dba7-40a5-9015-b37d3dd756fd",
+          "styleName": "Regular",
+          "declaredWeight": 400,
+          "declaredSlant": "upright",
+          "cssWeight": 400,
+          "cssStyle": "normal",
+          "fontUrl": "https://cdn.fontshare.com/wf/R3NZHN6TRA5YS2W64ETFLYG75RDFIQ75/6VDY32J2X4DHBKEUJ6P3M6JEHO4Y7DNQ/AIIHF6VP5NXQLXGRHLAA7UNZ4UCMUEE7.ttf",
+          "cssUrl": null,
+          "sourceUrl": "https://www.fontshare.com/fonts/excon",
+          "kind": "base",
+          "cssFamilyToken": "excon",
+          "evidenceLabels": [
+            "Regular"
+          ]
+        }
+      ]
+    },
+    {
+      "key": "fontshare-plein",
+      "source": "fontshare",
+      "family": "Plein",
+      "familyId": "fontshare:family:3f70c7e4-4631-4e90-90ba-0fcd0fed8547",
+      "foundry": "Indian Type Foundry",
+      "designers": [
+        "Inga Plönnigs"
+      ],
+      "category": "sans",
+      "sourceCategory": "Sans",
+      "role": "additional",
+      "specimenUrl": "https://www.fontshare.com/fonts/plein",
+      "provided": true,
+      "providedUnavailable": null,
+      "providedMinChars": 8,
+      "providedViewportWidth": 2400,
+      "tokens": [
+        "plein"
+      ],
+      "faces": [
+        {
+          "key": "fontshare-plein-400-upright",
+          "faceId": "fontshare:style:6b23ba26-43d7-4192-9313-4d85fda60cc0",
+          "styleName": "Regular",
+          "declaredWeight": 400,
+          "declaredSlant": "upright",
+          "cssWeight": 400,
+          "cssStyle": "normal",
+          "fontUrl": "https://cdn.fontshare.com/wf/KPP7PTIEVUFOAIUHFEZR32CC7MXUW4FO/SZUYWFM6G5VZGDODRNW3WTVNTZLUYT7T/PKLORZOG2NRJL4UEJVYU334KLICDN2UW.ttf",
+          "cssUrl": null,
+          "sourceUrl": "https://www.fontshare.com/fonts/plein",
+          "kind": "base",
+          "cssFamilyToken": "plein",
+          "evidenceLabels": [
+            "Regular"
+          ]
+        }
+      ]
+    },
+    {
+      "key": "fontshare-ranade",
+      "source": "fontshare",
+      "family": "Ranade",
+      "familyId": "fontshare:family:359fefd9-0ecf-4846-9071-a177ef693aaa",
+      "foundry": "Indian Type Foundry",
+      "designers": [
+        "Easha Ranade",
+        "Indian Type Foundry"
+      ],
+      "category": "sans",
+      "sourceCategory": "Sans",
+      "role": "additional",
+      "specimenUrl": "https://www.fontshare.com/fonts/ranade",
+      "provided": false,
+      "providedUnavailable": "No source-provided single line tied to the selected static face (4 unverified candidates).",
+      "providedMinChars": 8,
+      "providedViewportWidth": 2400,
+      "tokens": [
+        "ranade"
+      ],
+      "faces": [
+        {
+          "key": "fontshare-ranade-400-upright",
+          "faceId": "fontshare:style:ca07f5f0-5dd6-4d3b-8d6a-ff7d21895d37",
+          "styleName": "Regular",
+          "declaredWeight": 400,
+          "declaredSlant": "upright",
+          "cssWeight": 400,
+          "cssStyle": "normal",
+          "fontUrl": "https://cdn.fontshare.com/wf/VTABUNXESC35DOCRFNLIWPSTHJEOCY4Q/GIHU5SZ7WYPXDURVYYYDCWYCQVT4M3H6/RXZ46KOEDGXL7HVIXMJIAZICDYUR5QZJ.ttf",
+          "cssUrl": null,
+          "sourceUrl": "https://www.fontshare.com/fonts/ranade",
+          "kind": "base",
+          "cssFamilyToken": "ranade",
+          "evidenceLabels": [
+            "Regular"
+          ]
+        }
+      ]
+    },
+    {
+      "key": "fontshare-chillax",
+      "source": "fontshare",
+      "family": "Chillax",
+      "familyId": "fontshare:family:4d62256c-486a-49b3-a359-dfaa69993f61",
+      "foundry": "Indian Type Foundry",
+      "designers": [
+        "Manushi Parikh"
+      ],
+      "category": "sans",
+      "sourceCategory": "Sans",
+      "role": "additional",
+      "specimenUrl": "https://www.fontshare.com/fonts/chillax",
+      "provided": true,
+      "providedUnavailable": null,
+      "providedMinChars": 8,
+      "providedViewportWidth": 2400,
+      "tokens": [
+        "chillax"
+      ],
+      "faces": [
+        {
+          "key": "fontshare-chillax-400-upright",
+          "faceId": "fontshare:style:d815f77c-c342-4df1-a610-e0c04164ebfd",
+          "styleName": "Regular",
+          "declaredWeight": 400,
+          "declaredSlant": "upright",
+          "cssWeight": 400,
+          "cssStyle": "normal",
+          "fontUrl": "https://cdn.fontshare.com/wf/WSPWZKQM26GGKSLVGSP2CFUHUMS5BCYQ/UE3YJANJM3SE3IWT4TOMYQVMLCQ6GZGG/XESIRBQU62YFBC7YQZI6D2NT5CNZ4PPU.ttf",
+          "cssUrl": null,
+          "sourceUrl": "https://www.fontshare.com/fonts/chillax",
+          "kind": "base",
+          "cssFamilyToken": "chillax",
+          "evidenceLabels": [
+            "Regular"
+          ]
+        }
+      ]
+    },
+    {
+      "key": "fontshare-gambarino",
+      "source": "fontshare",
+      "family": "Gambarino",
+      "familyId": "fontshare:family:f8889f66-da78-4f3e-a15c-085ad2cec671",
+      "foundry": "Indian Type Foundry",
+      "designers": [
+        "Théo Guillard"
+      ],
+      "category": "serif",
+      "sourceCategory": "Serif",
+      "role": "additional",
+      "specimenUrl": "https://www.fontshare.com/fonts/gambarino",
+      "provided": true,
+      "providedUnavailable": null,
+      "providedMinChars": 8,
+      "providedViewportWidth": 2400,
+      "tokens": [
+        "gambarino"
+      ],
+      "faces": [
+        {
+          "key": "fontshare-gambarino-400-upright",
+          "faceId": "fontshare:style:3b6987e4-36b0-430d-9671-b8224e55d0dd",
+          "styleName": "Regular",
+          "declaredWeight": 400,
+          "declaredSlant": "upright",
+          "cssWeight": 400,
+          "cssStyle": "normal",
+          "fontUrl": "https://cdn.fontshare.com/wf/ZINX7PW4XMYISLZAZKYY4QHYYHYNPKAV/Z54IGKTR4PBLA5KTYL3IDQZHFQPJJVNZ/6KBHT5NXCZVM6GHTPKGIR6DXZLQAYIFK.ttf",
+          "cssUrl": null,
+          "sourceUrl": "https://www.fontshare.com/fonts/gambarino",
+          "kind": "base",
+          "cssFamilyToken": "gambarino",
+          "evidenceLabels": [
+            "Regular"
+          ]
+        }
+      ]
+    },
+    {
+      "key": "fontshare-rowan",
+      "source": "fontshare",
+      "family": "Rowan",
+      "familyId": "fontshare:family:7cc0dccb-747e-4150-a9fd-11e1c75f6c1a",
+      "foundry": "Indian Type Foundry",
+      "designers": [
+        "Inga Plönnigs"
+      ],
+      "category": "serif",
+      "sourceCategory": "Serif",
+      "role": "additional",
+      "specimenUrl": "https://www.fontshare.com/fonts/rowan",
+      "provided": true,
+      "providedUnavailable": null,
+      "providedMinChars": 8,
+      "providedViewportWidth": 2400,
+      "tokens": [
+        "rowan"
+      ],
+      "faces": [
+        {
+          "key": "fontshare-rowan-400-upright",
+          "faceId": "fontshare:style:4c1c15ff-c760-43ba-ad8f-ea0b2fa367b8",
+          "styleName": "Regular",
+          "declaredWeight": 400,
+          "declaredSlant": "upright",
+          "cssWeight": 400,
+          "cssStyle": "normal",
+          "fontUrl": "https://cdn.fontshare.com/wf/EJ75J347NNXMVYYDNYGPENXJVMYRZQBR/7NEP2R36W6ZEC37IAGHA3ED4JCAVNQTN/6VXKNERFU5ZN2BGRRBKJM44S3OWVP6B3.ttf",
+          "cssUrl": null,
+          "sourceUrl": "https://www.fontshare.com/fonts/rowan",
+          "kind": "base",
+          "cssFamilyToken": "rowan",
+          "evidenceLabels": [
+            "Regular"
+          ]
+        }
+      ]
+    },
+    {
+      "key": "fontshare-boska",
+      "source": "fontshare",
+      "family": "Boska",
+      "familyId": "fontshare:family:14caccfb-cd3d-441d-8a8b-58dddecd4ee1",
+      "foundry": "Indian Type Foundry",
+      "designers": [
+        "Barbara Bigosinska"
+      ],
+      "category": "serif",
+      "sourceCategory": "Serif, Display",
+      "role": "additional",
+      "specimenUrl": "https://www.fontshare.com/fonts/boska",
+      "provided": true,
+      "providedUnavailable": null,
+      "providedMinChars": 8,
+      "providedViewportWidth": 2400,
+      "tokens": [
+        "boska"
+      ],
+      "faces": [
+        {
+          "key": "fontshare-boska-400-upright",
+          "faceId": "fontshare:style:d62d2e90-f535-4160-b58a-f7b7536f1c5d",
+          "styleName": "Regular",
+          "declaredWeight": 400,
+          "declaredSlant": "upright",
+          "cssWeight": 400,
+          "cssStyle": "normal",
+          "fontUrl": "https://cdn.fontshare.com/wf/XWA5B7QYO35APXAF3YE3ZGLUEKXM5AUE/OM4E67LNKOMULZHKAOYI4D5ITKBZEHPB/2WOBSOJLL4JK7IHX3NLDIY3DAIT52O4K.ttf",
+          "cssUrl": null,
+          "sourceUrl": "https://www.fontshare.com/fonts/boska",
+          "kind": "base",
+          "cssFamilyToken": "boska",
+          "evidenceLabels": [
+            "Regular"
+          ]
+        }
+      ]
+    },
+    {
+      "key": "fontshare-bespoke-serif",
+      "source": "fontshare",
+      "family": "Bespoke Serif",
+      "familyId": "fontshare:family:0124245c-ae5c-4ff2-ba94-1b2adca01d91",
+      "foundry": "Indian Type Foundry",
+      "designers": [
+        "Jeremie Hornus",
+        "Theo Guillard",
+        "Morgane Pambrun",
+        "Alisa Nowak",
+        "Joachim Vu"
+      ],
+      "category": "serif",
+      "sourceCategory": "Serif",
+      "role": "additional",
+      "specimenUrl": "https://www.fontshare.com/fonts/bespoke-serif",
+      "provided": true,
+      "providedUnavailable": null,
+      "providedMinChars": 8,
+      "providedViewportWidth": 2400,
+      "tokens": [
+        "bespoke serif"
+      ],
+      "faces": [
+        {
+          "key": "fontshare-bespoke-serif-400-upright",
+          "faceId": "fontshare:style:0f5903e7-7296-484a-82e0-4b7c53d4504b",
+          "styleName": "Regular",
+          "declaredWeight": 400,
+          "declaredSlant": "upright",
+          "cssWeight": 400,
+          "cssStyle": "normal",
+          "fontUrl": "https://cdn.fontshare.com/wf/DGL7AR63QELJFTOEASXHFYM5NAKYODNK/GYJUWP667LEHZ5W2WM5CQDIWDFJX2DFY/DLLWXFUYSJGEWBBZLWVRWRKWK2K5HHIO.ttf",
+          "cssUrl": null,
+          "sourceUrl": "https://www.fontshare.com/fonts/bespoke-serif",
+          "kind": "base",
+          "cssFamilyToken": "bespoke serif",
+          "evidenceLabels": [
+            "Regular"
+          ]
+        }
+      ]
+    },
+    {
+      "key": "fontshare-bonny",
+      "source": "fontshare",
+      "family": "Bonny",
+      "familyId": "fontshare:family:6259bd93-1025-4941-8329-dee732b03605",
+      "foundry": "Indian Type Foundry",
+      "designers": [
+        "Barbara Bigosinska"
+      ],
+      "category": "serif",
+      "sourceCategory": "Serif",
+      "role": "additional",
+      "specimenUrl": "https://www.fontshare.com/fonts/bonny",
+      "provided": true,
+      "providedUnavailable": null,
+      "providedMinChars": 8,
+      "providedViewportWidth": 2400,
+      "tokens": [
+        "bonny"
+      ],
+      "faces": [
+        {
+          "key": "fontshare-bonny-400-upright",
+          "faceId": "fontshare:style:c31bbb1a-c461-4eba-9691-18942b007e72",
+          "styleName": "Regular",
+          "declaredWeight": 400,
+          "declaredSlant": "upright",
+          "cssWeight": 400,
+          "cssStyle": "normal",
+          "fontUrl": "https://cdn.fontshare.com/wf/AG6QG7FHAEVDKFUVQI74UJNPIUIME6ZL/DLJCIGBUV5C2CKF4VAKQEQU4BYSBGDOJ/K4WM2XCCNWATUKRUC45COB2XDN52TUYD.ttf",
+          "cssUrl": null,
+          "sourceUrl": "https://www.fontshare.com/fonts/bonny",
+          "kind": "base",
+          "cssFamilyToken": "bonny",
+          "evidenceLabels": [
+            "Regular"
+          ]
+        }
+      ]
+    },
+    {
+      "key": "fontshare-neco",
+      "source": "fontshare",
+      "family": "Neco",
+      "familyId": "fontshare:family:e4607017-d095-44dc-aee3-705f6a1487cb",
+      "foundry": "Indian Type Foundry",
+      "designers": [
+        "Jitka Janečková"
+      ],
+      "category": "serif",
+      "sourceCategory": "Serif",
+      "role": "additional",
+      "specimenUrl": "https://www.fontshare.com/fonts/neco",
+      "provided": true,
+      "providedUnavailable": null,
+      "providedMinChars": 8,
+      "providedViewportWidth": 2400,
+      "tokens": [
+        "neco"
+      ],
+      "faces": [
+        {
+          "key": "fontshare-neco-400-upright",
+          "faceId": "fontshare:style:5de2822b-09c7-4950-b1b8-ebd125a47590",
+          "styleName": "Regular",
+          "declaredWeight": 400,
+          "declaredSlant": "upright",
+          "cssWeight": 400,
+          "cssStyle": "normal",
+          "fontUrl": "https://cdn.fontshare.com/wf/SNCBY2VANYQ5HGPPHJ4N2M5CCYL3BWUJ/6D7UWYDMGQRHMCMTIQ5YRTSALARDQ5K7/OM4IMSIGIGZ5VH7YZ3YT2EVE3N2VXU7A.ttf",
+          "cssUrl": null,
+          "sourceUrl": "https://www.fontshare.com/fonts/neco",
+          "kind": "base",
+          "cssFamilyToken": "neco",
+          "evidenceLabels": [
+            "Regular"
+          ]
+        }
+      ]
+    },
+    {
+      "key": "fontshare-recia",
+      "source": "fontshare",
+      "family": "Recia",
+      "familyId": "fontshare:family:66b756cd-726e-41d1-afb3-b06bac996643",
+      "foundry": "Indian Type Foundry",
+      "designers": [
+        "Carlos de Toro"
+      ],
+      "category": "serif",
+      "sourceCategory": "Serif",
+      "role": "additional",
+      "specimenUrl": "https://www.fontshare.com/fonts/recia",
+      "provided": true,
+      "providedUnavailable": null,
+      "providedMinChars": 8,
+      "providedViewportWidth": 2400,
+      "tokens": [
+        "recia"
+      ],
+      "faces": [
+        {
+          "key": "fontshare-recia-400-upright",
+          "faceId": "fontshare:style:b9d8db9e-9fdb-4517-a838-28b7c61ba782",
+          "styleName": "Regular",
+          "declaredWeight": 400,
+          "declaredSlant": "upright",
+          "cssWeight": 400,
+          "cssStyle": "normal",
+          "fontUrl": "https://cdn.fontshare.com/wf/EKDHFA4MOYSEQZ5LG2FYZ7GAQBIWU2OL/ZPCLM6EWF2NHNYTV2CI37X2H5DIZZOAE/7XCHJ2FE6VSSCGPUIM7FUFFMDGQZLWVU.ttf",
+          "cssUrl": null,
+          "sourceUrl": "https://www.fontshare.com/fonts/recia",
+          "kind": "base",
+          "cssFamilyToken": "recia",
+          "evidenceLabels": [
+            "Regular"
+          ]
+        }
+      ]
+    },
+    {
+      "key": "fontshare-hoover",
+      "source": "fontshare",
+      "family": "Hoover",
+      "familyId": "fontshare:family:1fbee521-d727-44d6-8bb2-122b130e6baf",
+      "foundry": "Indian Type Foundry",
+      "designers": [
+        "Gaetan Baehr"
+      ],
+      "category": "slab",
+      "sourceCategory": "Slab",
+      "role": "additional",
+      "specimenUrl": "https://www.fontshare.com/fonts/hoover",
+      "provided": true,
+      "providedUnavailable": null,
+      "providedMinChars": 8,
+      "providedViewportWidth": 2400,
+      "tokens": [
+        "hoover"
+      ],
+      "faces": [
+        {
+          "key": "fontshare-hoover-400-upright",
+          "faceId": "fontshare:style:8d39eba4-0515-405e-a5d5-2322025a3aa0",
+          "styleName": "Regular",
+          "declaredWeight": 400,
+          "declaredSlant": "upright",
+          "cssWeight": 400,
+          "cssStyle": "normal",
+          "fontUrl": "https://cdn.fontshare.com/wf/OQWQQBPOJ6JEQJV3IQRYIO6O37L3RDLS/64EBY5K6OPMMQUI6U3GHDF7ETCSNWW67/5PIX6GR4DQXNGX56EQFMKN7WIMTAIE26.ttf",
+          "cssUrl": null,
+          "sourceUrl": "https://www.fontshare.com/fonts/hoover",
+          "kind": "base",
+          "cssFamilyToken": "hoover",
+          "evidenceLabels": [
+            "Regular"
+          ]
+        }
+      ]
+    },
+    {
+      "key": "fontshare-paquito",
+      "source": "fontshare",
+      "family": "Paquito",
+      "familyId": "fontshare:family:e10d59ad-81ac-4105-a846-249f192f2982",
+      "foundry": "Indian Type Foundry",
+      "designers": [
+        "Juanjo Lopez"
+      ],
+      "category": "slab",
+      "sourceCategory": "Serif, Slab",
+      "role": "additional",
+      "specimenUrl": "https://www.fontshare.com/fonts/paquito",
+      "provided": true,
+      "providedUnavailable": null,
+      "providedMinChars": 8,
+      "providedViewportWidth": 2400,
+      "tokens": [
+        "paquito"
+      ],
+      "faces": [
+        {
+          "key": "fontshare-paquito-400-upright",
+          "faceId": "fontshare:style:b5547ff3-46d6-49d4-9998-073106fb7591",
+          "styleName": "Regular",
+          "declaredWeight": 400,
+          "declaredSlant": "upright",
+          "cssWeight": 400,
+          "cssStyle": "normal",
+          "fontUrl": "https://cdn.fontshare.com/wf/ULZX7LFRNCEJDIMKUV3VTF2LKTQ4S6OO/2BKALQCTQNYPJA2Y53FVESTXK4DFE6QY/TZLLU3XJTXLOU3EH4DRXDJ32LMCC7HBG.ttf",
+          "cssUrl": null,
+          "sourceUrl": "https://www.fontshare.com/fonts/paquito",
+          "kind": "base",
+          "cssFamilyToken": "paquito",
+          "evidenceLabels": [
+            "Regular"
+          ]
+        }
+      ]
+    },
+    {
+      "key": "fontshare-rx-100",
+      "source": "fontshare",
+      "family": "RX100",
+      "familyId": "fontshare:family:d8cde3d9-cacc-40a1-9747-7d26debcaa4c",
+      "foundry": "Indian Type Foundry",
+      "designers": [
+        "Anurag Gautam",
+        "Indian Type Foundry"
+      ],
+      "category": "mono",
+      "sourceCategory": "Sans",
+      "role": "additional",
+      "specimenUrl": "https://www.fontshare.com/fonts/rx-100",
+      "provided": true,
+      "providedUnavailable": null,
+      "providedMinChars": 8,
+      "providedViewportWidth": 2400,
+      "tokens": [
+        "rx100"
+      ],
+      "faces": [
+        {
+          "key": "fontshare-rx-100-400-upright",
+          "faceId": "fontshare:style:db322ffe-f618-4bc9-a3e7-914292e6d0c0",
+          "styleName": "Regular",
+          "declaredWeight": 400,
+          "declaredSlant": "upright",
+          "cssWeight": 400,
+          "cssStyle": "normal",
+          "fontUrl": "https://cdn.fontshare.com/wf/VQMHT7VGIMIEZUW7KETAG2YQ7CFBFZQG/L2XDMVV7CQ2FM3MNRLCLZCJSSCY6LMWE/UR4RC3ALHXDTOAWHCAWE2TFIL7KJW4C7.ttf",
+          "cssUrl": null,
+          "sourceUrl": "https://www.fontshare.com/fonts/rx-100",
+          "kind": "base",
+          "cssFamilyToken": "rx100",
+          "evidenceLabels": [
+            "Regular"
+          ]
+        }
+      ]
+    },
+    {
+      "key": "fontshare-technor",
+      "source": "fontshare",
+      "family": "Technor",
+      "familyId": "fontshare:family:3ab82d39-193f-4fb3-b6c3-08638f0cf53b",
+      "foundry": "Indian Type Foundry",
+      "designers": [
+        "Jean-Baptiste Morizot"
+      ],
+      "category": "display",
+      "sourceCategory": "Sans",
+      "role": "additional",
+      "specimenUrl": "https://www.fontshare.com/fonts/technor",
+      "provided": true,
+      "providedUnavailable": null,
+      "providedMinChars": 8,
+      "providedViewportWidth": 2400,
+      "tokens": [
+        "technor"
+      ],
+      "faces": [
+        {
+          "key": "fontshare-technor-400-upright",
+          "faceId": "fontshare:style:01a9c215-a111-4a4a-906b-1bf0e62c612e",
+          "styleName": "Regular",
+          "declaredWeight": 400,
+          "declaredSlant": "upright",
+          "cssWeight": 400,
+          "cssStyle": "normal",
+          "fontUrl": "https://cdn.fontshare.com/wf/NF4IWRA6PNPPIYDTGS5XRNNMVEGVLZIX/DRSFIAYLKTCDDRGPFVNKKZB2FQOWN2HB/JCAROJ7ESNRN2KMIVGFFBB2ZPRGTA24L.ttf",
+          "cssUrl": null,
+          "sourceUrl": "https://www.fontshare.com/fonts/technor",
+          "kind": "base",
+          "cssFamilyToken": "technor",
+          "evidenceLabels": [
+            "Regular"
+          ]
+        }
+      ]
+    },
+    {
+      "key": "fontshare-pilcrow-rounded",
+      "source": "fontshare",
+      "family": "Pilcrow Rounded",
+      "familyId": "fontshare:family:a2587f86-6107-49df-bc70-5932ab09194b",
+      "foundry": "Indian Type Foundry",
+      "designers": [
+        "Satya Rajpurohit"
+      ],
+      "category": "sans",
+      "sourceCategory": "Sans",
+      "role": "additional",
+      "specimenUrl": "https://www.fontshare.com/fonts/pilcrow-rounded",
+      "provided": false,
+      "providedUnavailable": "No source-provided single line tied to the selected static face (2 unverified candidates).",
+      "providedMinChars": 8,
+      "providedViewportWidth": 2400,
+      "tokens": [
+        "pilcrow rounded"
+      ],
+      "faces": [
+        {
+          "key": "fontshare-pilcrow-rounded-400-upright",
+          "faceId": "fontshare:style:98eafc7d-669a-40bf-9128-f6da475bdde8",
+          "styleName": "Regular",
+          "declaredWeight": 400,
+          "declaredSlant": "upright",
+          "cssWeight": 400,
+          "cssStyle": "normal",
+          "fontUrl": "https://cdn.fontshare.com/wf/QT4CYRMMCSPIHTO635GDUTTAEHGLRQ54/MYVNSUIXZDTIB4UZKPO2L6VG72I633DS/6KQY4JB7EWYXSXKZEY5XPSJRA3OVSO2C.ttf",
+          "cssUrl": null,
+          "sourceUrl": "https://www.fontshare.com/fonts/pilcrow-rounded",
+          "kind": "base",
+          "cssFamilyToken": "pilcrow rounded",
+          "evidenceLabels": [
+            "Regular"
+          ]
+        }
+      ]
+    },
+    {
+      "key": "fontshare-boxing",
+      "source": "fontshare",
+      "family": "Boxing",
+      "familyId": "fontshare:family:9fac7940-f35a-4975-a273-9c398a7a9ec1",
+      "foundry": "Indian Type Foundry",
+      "designers": [
+        "Ruosi Huang"
+      ],
+      "category": "display",
+      "sourceCategory": "Display",
+      "role": "additional",
+      "specimenUrl": "https://www.fontshare.com/fonts/boxing",
+      "provided": true,
+      "providedUnavailable": null,
+      "providedMinChars": 8,
+      "providedViewportWidth": 2400,
+      "tokens": [
+        "boxing"
+      ],
+      "faces": [
+        {
+          "key": "fontshare-boxing-400-upright",
+          "faceId": "fontshare:style:0520ea2b-4e7a-4f55-b820-2631c44cb2fe",
+          "styleName": "Regular",
+          "declaredWeight": 400,
+          "declaredSlant": "upright",
+          "cssWeight": 400,
+          "cssStyle": "normal",
+          "fontUrl": "https://cdn.fontshare.com/wf/3TCCMEW7OSY4MORIBO6XAVNRHGH2GCNO/M4CQ6LURAV5JJNQN553ONEN4JC5LOWC4/TBVH46IPDALW6CXZUYYWHJP7BV43WVVF.ttf",
+          "cssUrl": null,
+          "sourceUrl": "https://www.fontshare.com/fonts/boxing",
+          "kind": "base",
+          "cssFamilyToken": "boxing",
+          "evidenceLabels": [
+            "Regular"
+          ]
+        }
+      ]
+    },
+    {
+      "key": "fontshare-striper",
+      "source": "fontshare",
+      "family": "Striper",
+      "familyId": "fontshare:family:d22e2ed9-07e1-4192-80a5-e4b028077815",
+      "foundry": "Indian Type Foundry",
+      "designers": [
+        "Jitka Janečková"
+      ],
+      "category": "display",
+      "sourceCategory": "Display",
+      "role": "additional",
+      "specimenUrl": "https://www.fontshare.com/fonts/striper",
+      "provided": false,
+      "providedUnavailable": "No single-line specimen element found in the declared face.",
+      "providedMinChars": 8,
+      "providedViewportWidth": 2400,
+      "tokens": [
+        "striper"
+      ],
+      "faces": [
+        {
+          "key": "fontshare-striper-400-upright",
+          "faceId": "fontshare:style:185ec629-647c-47ee-ac8f-e1a7ce1565ba",
+          "styleName": "Regular",
+          "declaredWeight": 400,
+          "declaredSlant": "upright",
+          "cssWeight": 400,
+          "cssStyle": "normal",
+          "fontUrl": "https://cdn.fontshare.com/wf/3PWNWRPUUTSC5E7Q6IBGLDOPGFXW4A26/WWHLMMAKXUGIHYF7AD6WYVBFUX6SSIBP/SKVWXOS7RATPO64GYZYFTJRULHWGCXTJ.ttf",
+          "cssUrl": null,
+          "sourceUrl": "https://www.fontshare.com/fonts/striper",
+          "kind": "base",
+          "cssFamilyToken": "striper",
+          "evidenceLabels": [
+            "Regular"
+          ]
+        }
+      ]
+    },
+    {
+      "key": "fontshare-nippo",
+      "source": "fontshare",
+      "family": "Nippo",
+      "familyId": "fontshare:family:198d1954-4b27-4022-8388-e4c941177af3",
+      "foundry": "Indian Type Foundry",
+      "designers": [
+        "Manushi Parikh"
+      ],
+      "category": "display",
+      "sourceCategory": "Display",
+      "role": "additional",
+      "specimenUrl": "https://www.fontshare.com/fonts/nippo",
+      "provided": true,
+      "providedUnavailable": null,
+      "providedMinChars": 8,
+      "providedViewportWidth": 2400,
+      "tokens": [
+        "nippo"
+      ],
+      "faces": [
+        {
+          "key": "fontshare-nippo-400-upright",
+          "faceId": "fontshare:style:b834e664-5128-4036-a2ab-c4c311eb56c0",
+          "styleName": "Regular",
+          "declaredWeight": 400,
+          "declaredSlant": "upright",
+          "cssWeight": 400,
+          "cssStyle": "normal",
+          "fontUrl": "https://cdn.fontshare.com/wf/U7JSLDUPOD4CH2AU5H6SM6CTOVK6PG6Z/SNDLV7SPHQN4WOXGU7TVOIAJHZT4EK44/VRZUBY2RFQGFI5FK7Z6TUCJRE5WBEFEN.ttf",
+          "cssUrl": null,
+          "sourceUrl": "https://www.fontshare.com/fonts/nippo",
+          "kind": "base",
+          "cssFamilyToken": "nippo",
+          "evidenceLabels": [
+            "Regular"
+          ]
+        }
+      ]
+    },
+    {
+      "key": "fontshare-stardom",
+      "source": "fontshare",
+      "family": "Stardom",
+      "familyId": "fontshare:family:b8ad2ebd-2cb7-49bc-acf6-92168a4cf465",
+      "foundry": "Indian Type Foundry",
+      "designers": [
+        "Indian Type Foundry"
+      ],
+      "category": "display",
+      "sourceCategory": "Display",
+      "role": "additional",
+      "specimenUrl": "https://www.fontshare.com/fonts/stardom",
+      "provided": true,
+      "providedUnavailable": null,
+      "providedMinChars": 8,
+      "providedViewportWidth": 2400,
+      "tokens": [
+        "stardom"
+      ],
+      "faces": [
+        {
+          "key": "fontshare-stardom-400-upright",
+          "faceId": "fontshare:style:b5fed783-132c-441b-a7e7-b08fafc01b30",
+          "styleName": "Regular",
+          "declaredWeight": 400,
+          "declaredSlant": "upright",
+          "cssWeight": 400,
+          "cssStyle": "normal",
+          "fontUrl": "https://cdn.fontshare.com/wf/55LJGATMQKPK2BTD7N2IXUHALPWNZDNS/GHNSWJKY6KQGQZNHIGVGKP3PVRORBVBW/NPPNOUBFWCNOP7IJUAHBBDRSDI2ZAE7F.ttf",
+          "cssUrl": null,
+          "sourceUrl": "https://www.fontshare.com/fonts/stardom",
+          "kind": "base",
+          "cssFamilyToken": "stardom",
+          "evidenceLabels": [
+            "Regular"
+          ]
+        }
+      ]
+    }
+  ]
+}

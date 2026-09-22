@@ -1,5 +1,5 @@
 // Exercise the frozen encoder with the existing convolution kernels, independently
-// of the demo classifier. Feature channel names are only an adapter for this check.
+// of the demo and its catalog ranking. Projection dimensions are native outputs.
 import assert from 'node:assert/strict'
 import { readFile, writeFile } from 'node:fs/promises'
 import { createHash } from 'node:crypto'
@@ -16,7 +16,7 @@ const bytes = await readFile(path), encoder = JSON.parse(bytes), reference = JSO
 const hash = bytes => createHash('sha256').update(bytes).digest('hex')
 assert.equal(hash(bytes), reference.encoderSha256)
 assert.equal(encoder.kind, 'font-encoder'); assert.equal(encoder.dimensions, 128); assert.equal(encoder.fonts, undefined)
-const artifact = { ...encoder, fonts: Array.from({ length: encoder.dimensions }, (_, i) => `feature-${i}`) }
+const artifact = encoder
 const model = readNetwork(artifact), error = (a, b) => Math.max(...a.map((v, i) => Math.abs(v - b[i])))
 const unit = vector => { const norm = Math.hypot(...vector); assert.ok(norm > 0); return Array.from(vector, v => v / norm) }
 let cpuError = 0, gpuError = 0, embeddingError = 0
@@ -59,12 +59,12 @@ assert.ok(gpuError < 1e-4, `GPU projection error ${gpuError}`)
 assert.ok(embeddingError < 1e-4, `Normalized embedding error ${embeddingError}`)
 const payload = []
 for (const path of ['models/encoder/encoder.json', 'models/encoder/google-fonts.json',
-  'src/network.mjs', 'src/network-gpu.mjs', 'src/prepare.mjs', 'src/input.mjs', 'src/line.mjs']) {
+  'src/network.mjs', 'src/network-gpu.mjs', 'src/catalog.mjs', 'src/prepare.mjs', 'src/input.mjs', 'src/line.mjs']) {
   const bytes = await readFile(path)
   payload.push({ path, sha256: hash(bytes), bytes: bytes.length, gzipBytes: gzipSync(bytes, { level: 9 }).length, brotliBytes: brotliCompressSync(bytes).length })
 }
 const report = { encoderSha256: reference.encoderSha256, dimensions: encoder.dimensions, hardware: cpus()[0]?.model, cpuError, gpuError, embeddingError, timing, payload,
   componentBytes: payload.reduce((sum, item) => sum + item.bytes, 0),
-  scope: 'Existing CPU/Metal convolution kernels with a feature-channel adapter. Single-window projection timing excludes image preparation and catalog search. Bytes include encoder, catalog and existing inference/preparation modules; exclude the not-yet-released catalog API, demo and optional font previews.' }
+  scope: 'Existing CPU/Metal convolution kernels with native encoder outputs. Single-window projection timing excludes image preparation and catalog search. Bytes include encoder, catalog and existing inference/preparation modules; include catalog parsing/ranking; exclude demo and optional font previews.' }
 await writeFile('bench/encoder-runtime.json', JSON.stringify(report, null, 2) + '\n')
 console.log(report)

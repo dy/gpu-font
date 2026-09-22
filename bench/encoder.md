@@ -40,7 +40,7 @@ Development preparation contains **348,416 images / 689,157 windows / 3,653,928,
 
 ## Encoder and catalog contract
 
-The experimental encoder JSON has `kind: "font-encoder"`, `dimensions: 128`, `normalization: "l2"`, the convolution/projection tensors and preparation hashes. It contains no font labels. The current classifier runtime is reused only through a feature-channel adapter in `checks/encoder.mjs`; the released catalog loader/search API and demo integration remain gated on quality.
+The experimental encoder JSON has `kind: "font-encoder"`, `dimensions: 128`, `normalization: "l2"`, the convolution/projection tensors and preparation hashes. It contains no font labels. The CPU/WebGPU runtime now supports encoder outputs directly. `src/catalog.mjs` validates and ranks compatible catalogs; the experimental demo integrates it. Reliable recognition and the public release remain gated on quality.
 
 The separate JSON catalog has `kind: "font-catalog"`, exact `encoderSha256` and `preparationSha256`, face metadata, and packed int8 vectors with per-row scales and owners. Version 1 indexes one selected normal face per family, with one or four reference vectors. Face weight/style are source metadata, not predicted attributes. The reader rejects incompatible hashes, duplicate identities, malformed dimensions/scales/owners, missing bytes and trailing bytes. Preserve the exact encoder file bytes used to build the catalog.
 
@@ -100,17 +100,17 @@ Int8 compression is not the main accuracy loss: development all-query top-5 is 4
 
 The [CPU/Metal check](encoder-runtime.json) exercised 1×1, 128×48, 127×47 and 7×3 inputs, including repeated A → A → B → C → D → A use. Maximum projection error versus PyTorch is 2.86e-6 on CPU and 4.77e-6 on Metal; maximum normalized embedding error is 1.54e-7.
 
-On Apple M4 Max / Chromium Metal, one warm 128×48 projection takes **0.9 ms median / 2.2 ms p95** over 20 measured runs. GPU initialization with already-loaded JSON takes 320.5 ms. This excludes image preparation, multi-window aggregation, catalog search and network loading; phone and end-to-end release timings remain unmeasured.
+On Apple M4 Max / Chromium Metal, one warm 128×48 projection takes **1.4 ms median / 2.1 ms p95** over 20 measured runs. GPU initialization with already-loaded JSON takes 37 ms. This excludes image preparation, multi-window aggregation, catalog search and network loading; phone and end-to-end release timings remain unmeasured. The local catalog-demo check measured one initial three-window crop at 30.9 ms, including preparation and ranking; this is not a latency distribution.
 
 | Artifact | Raw bytes | Brotli bytes |
 | --- | ---: | ---: |
 | Encoder JSON | 489,155 | 348,272 |
 | 2,004-family catalog JSON | 908,717 | 358,997 |
-| Existing inference/preparation modules | 27,749 | 8,753 |
-| Measured components | **1,425,621** | **716,022** |
+| Inference, preparation and catalog modules | 32,578 | 10,376 |
+| Measured components | **1,430,450** | **717,645** |
 
-These components fit the 10 MB ceiling. They exclude the unreleased public catalog API, the website, optional font-preview assets and the training-only checkpoint. Artifacts are in [`models/encoder/`](../models/encoder/); the deployed demo is unchanged by this experiment.
+These components fit the 10 MB ceiling. They include catalog parsing/ranking and exclude the website, optional font-preview assets and the training-only checkpoint. Artifacts are in [`models/encoder/`](../models/encoder/); the local demo now searches caller-selected catalogs with this encoder. See [preview catalog integration](preview-catalogs.md).
 
-`npm test` passes all **56 JavaScript + 70 Python tests**. The size, parity and catalog-mechanics checks pass; retrieval and rejection gates fail. Preserve this candidate as a measured baseline. Next compare script-separated/clustered references on development data before spending on a larger encoder, then evaluate a training-only glyph objective if text invariance remains weak. Independent screenshots and genuine face coverage remain necessary before a release claim.
+The training-stage suite passed **56 JavaScript + 70 Python tests**; the catalog integration expands this to **68 JavaScript + 71 Python tests**. The size, parity and catalog-mechanics checks pass; retrieval and rejection gates fail. Preserve this candidate as a measured baseline. Next compare script-separated/clustered references on development data before spending on a larger encoder, then evaluate a training-only glyph objective if text invariance remains weak. Independent screenshots and genuine face coverage remain necessary before a release claim.
 
 The independent preview archive is reference material; none of its captures enter this training run or its reported query tests.

@@ -2,6 +2,11 @@ import { readFile, writeFile, mkdir, cp, rm, readdir } from 'node:fs/promises'
 import { createHash } from 'node:crypto'
 import { readNetwork } from '../src/network.mjs'
 
+if (!process.argv.includes('--hundred') && !process.argv.includes('--ten')) {
+  await import('./demo-catalog-build.mjs')
+  process.exit(0)
+}
+
 const hash = bytes => createHash('sha256').update(bytes).digest('hex')
 const experiment = process.argv.includes('--ten') ? 'ten' : 'hundred'
 const bytes = await readFile(`.data/${experiment}/model.json`)
@@ -34,7 +39,7 @@ assets.push(['source-serif-4', display])
 await mkdir('dist/assets/fonts', { recursive: true })
 await cp('demo', 'dist', { recursive: true })
 await mkdir('dist/src', { recursive: true })
-for (const name of ['prepare', 'input', 'network', 'network-gpu']) await cp(`src/${name}.mjs`, `dist/src/${name}.mjs`)
+for (const name of ['prepare', 'input', 'line', 'catalog', 'network', 'network-gpu']) await cp(`src/${name}.mjs`, `dist/src/${name}.mjs`)
 for (const name of ['descriptor', 'rank', 'model', 'gpu']) await rm(`dist/src/${name}.mjs`, { force: true })
 await cp('tokens.css', 'dist/tokens.css')
 await writeFile('dist/assets/model.json', bytes)

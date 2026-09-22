@@ -1,7 +1,9 @@
 import { editCrop, newCrop } from './crop.mjs'
 import { prepareInput } from './src/input.mjs'
+import { prepareLine } from './src/line.mjs'
 import { readNetwork, inferCPU, rankWindows } from './src/network.mjs'
 import { createNetworkGPU } from './src/network-gpu.mjs'
+import { readCatalog, rankCatalog, embedWindows, sha256, preparationHash } from './src/catalog.mjs'
 
 const $ = id => document.getElementById(id)
 const source = $('source'), ctx = source.getContext('2d', { willReadFrequently: true })
@@ -9,7 +11,9 @@ let model, catalog, gpu, gpuReason = '', current = null, crop = null, last = nul
 let revision = 0, analysis = 0, dragging = null, armed = null
 let scheduled = 0, running = false, pending = false
 let previewText = 'Quiet rivers flow', previewValid = true
+let searchCatalog = null, catalogRevision = 0
 const fonts = new Map()
+const isEncoder = () => model?.kind === 'font-encoder'
 
 function message(text = '', error = false) {
   $('message').textContent = text
@@ -17,17 +21,22 @@ function message(text = '', error = false) {
 }
 function controls() {
   $('resolution-control').hidden = !current
+  $('clear').hidden = !current
+  $('empty').hidden = !!current
+  $('open-image').setAttribute('aria-label', current ? 'Replace image' : 'Choose an image')
 }
 function resolution() {
   const scale = Number($('resolution').value) / 100
   const width = Math.max(1, Math.round(crop.width * scale)), height = Math.max(1, Math.round(crop.height * scale))
-  $('resolution-value').textContent = `${Math.round(scale * 100)}% · ${width} × ${height}`
   return { scale, width, height }
 }
 function invalidate(retain = false) {
   analysis++; last = null; pending = false
   cancelAnimationFrame(scheduled); scheduled = 0
-  if (!retain) { $('results').replaceChildren(); $('results-empty').hidden = false }
+  if (!retain) {
+    $('results').replaceChildren(); $('results-empty').hidden = false
+    previewValid = true; $('preview-error').hidden = true
+  }
   $('save').disabled = true
   $('model-input').hidden = true
   $('normalized').replaceChildren(); $('input-regions').replaceChildren()
@@ -38,7 +47,7 @@ function invalidate(retain = false) {
   controls()
 }
 function schedule() {
-  pending = !!current && !!model
+  pending = !!current && !!model && (!isEncoder() || !!searchCatalog)
   if (!pending) return
   $('results').setAttribute('aria-busy', 'true')
   if (!running && !scheduled) scheduled = requestAnimationFrame(() => { scheduled = 0; analyze() })
@@ -71,7 +80,7 @@ function updateCrop(next) {
   const selection = $('selection')
   Object.assign(selection.style, { left: `${crop.x / source.width * 100}%`, top: `${crop.y / source.height * 100}%`, width: `${crop.width / source.width * 100}%`, height: `${crop.height / source.height * 100}%` })
   $('crop-shade').style.cssText = selection.style.cssText
-  resolution(); invalidate(true); message(); schedule()
+  invalidate(true); message(); schedule()
 }
 function resetCrop() {
   if (!current) return
@@ -84,15 +93,26 @@ function setImage(image, name, known = null) {
   current = { name, known, width: source.width, height: source.height }
   sampleLabel()
   crop = null; $('resolution').value = '100'
-  $('image-frame').hidden = false; $('empty').hidden = true
+  $('image-frame').hidden = false
   source.setAttribute('aria-label', name)
   resetCrop()
 }
-async function loadFont(id) {
+function clearImage() {
+  revision++
+  current = null; crop = null; dragging = null; armed = null
+  invalidate(); message(); sampleLabel()
+  source.width = source.height = 0
+  source.setAttribute('aria-label', 'Source image')
+  $('image-frame').hidden = true
+  $('resolution').value = '100'
+  $('sample-menu').hidePopover()
+  $('open-image').focus({ preventScroll: true })
+}
+async function loadFont(id, file = null) {
   if (!fonts.has(id)) {
     const font = catalog.fonts.find(f => f.id === id)
-    if (!font) throw new Error('Font is absent from this catalog')
-    fonts.set(id, new FontFace(`specimen-${id}`, `url("${font.file}")`).load().then(face => { document.fonts.add(face); return face.family }).catch(error => { fonts.delete(id); throw error }))
+    if (!file && !font) throw new Error('Font is absent from this catalog')
+    fonts.set(id, new FontFace(`specimen-${id}`, `url("${file || font.file}")`).load().then(face => { document.fonts.add(face); return face.family }).catch(error => { fonts.delete(id); throw error }))
   }
   return fonts.get(id)
 }
@@ -164,10 +184,9 @@ async function analyze() {
     }
     const matte = background(image.data)
     source.style.backgroundColor = matte === 0 ? '#000000' : '#ffffff'
-    const prepared = prepareInput(image, { ...model.preparation, background: matte })
+    const prepared = isEncoder() ? prepareLine(image, { ...model.preparation, background: matte, deskew: true, sampler: 'windows' }) : prepareInput(image, { ...model.preparation, background: matte })
     if (prepared.status !== 'ok') {
-      $('results').replaceChildren(); $('results-empty').hidden = false; $('save').disabled = true; last = null
-      $('result-summary').textContent = ''; $('detection-time').textContent = ''
+      invalidate()
       $('results-empty').textContent = 'No matches.'
       message(prepared.status === 'blank' ? 'No visible text in this crop.' : 'Not enough contrast in this crop.', true)
       return
@@ -183,15 +202,18 @@ async function analyze() {
     }
     if (run !== analysis) return
     if (!logits) logits = prepared.windows.map(input => inferCPU(model, input))
-    const matches = rankWindows(logits, model.fonts, catalog.calibration?.temperature ?? 1), elapsed = performance.now() - start
-    await Promise.all(matches.slice(0, 5).map(m => loadFont(m.family)))
+    const embedding = isEncoder() ? embedWindows(logits) : null
+    const matches = embedding ? rankCatalog(embedding, searchCatalog) : rankWindows(logits, model.fonts, catalog.calibration?.temperature ?? 1), elapsed = performance.now() - start
+    if (!embedding) await Promise.all(matches.slice(0, 5).map(m => loadFont(m.family)))
     if (run !== analysis) return
-    last = { accepted: matches[0].score >= (catalog.calibration?.threshold ?? 1.01), calibration: catalog.calibration, mode: 'neural', backend: used, milliseconds: elapsed, model: catalog.modelSha256, source: specimen, crop: region, resolution: sampled, background: matte,
+    last = { accepted: embedding ? null : matches[0].score >= (catalog.calibration?.threshold ?? 1.01), calibration: embedding ? null : catalog.calibration, mode: embedding ? 'encoder' : 'neural', backend: used, milliseconds: elapsed, model: catalog.modelSha256, source: specimen, crop: region, resolution: sampled, background: matte,
+      ...(embedding ? { embedding: Array.from(embedding), catalog: { id: searchCatalog.id, sha256: searchCatalog.sha256 }, scoreType: 'cosine', inferenceMilliseconds: elapsed } : {}),
       inputs: prepared.windows.map(input => ({ ...input, pixels: Array.from(input.pixels) })), matches }
     showInput(prepared.windows, region, sampled)
     renderResults()
-    $('result-summary').textContent = last.accepted ? 'Above threshold' : 'Below threshold'
+    $('result-summary').textContent = embedding ? 'Uncalibrated' : last.accepted ? 'Above threshold' : 'Below threshold'
     $('detection-time').textContent = `${elapsed.toFixed(1)} ms`
+    $('detection-time').title = 'Image preparation, inference and ranking'
     $('timing').textContent = `${elapsed.toFixed(1)} ms (prepare + infer + rank)`
     $('save').disabled = false
   } catch (error) { if (run === analysis) { invalidate(); message(`Could not analyze this crop: ${error.message}`, true) } }
@@ -207,9 +229,10 @@ function renderResults() {
   $('results-empty').hidden = true
   const fragment = document.createDocumentFragment()
   for (const [i, match] of last.matches.slice(0, 5).entries()) {
+    if (isEncoder()) { fragment.append(encoderResult(match, i)); continue }
     const font = catalog.fonts.find(f => f.id === match.family)
     const item = document.createElement('li'); item.className = 'result'
-    item.innerHTML = '<div class="result-top"><span class="rank"></span><span class="font-name"><a target="_blank" rel="noopener"></a></span><span class="result-score"></span></div><input class="result-preview" type="text" maxlength="80" spellcheck="false" autocomplete="off" aria-describedby="preview-error">'
+    item.innerHTML = '<div class="result-top"><span class="rank"></span><span class="font-name"><a target="_blank" rel="noopener"></a><span class="font-style" title="Preview face; weight and style are not detected">Regular, 400</span></span><span class="result-score"></span></div><input class="result-preview" type="text" maxlength="80" spellcheck="false" autocomplete="off" aria-describedby="preview-error">'
     item.querySelector('.rank').textContent = String(i + 1).padStart(2, '0')
     const score = item.querySelector('.result-score')
     score.textContent = match.score < .001 ? '<0.1%' : match.score > .999 ? '>99.9%' : `${(match.score * 100).toFixed(1)}%`
@@ -217,6 +240,7 @@ function renderResults() {
     const link = item.querySelector('a'); link.textContent = font.name + ' ↗'
     link.href = `https://fonts.google.com/specimen/${encodeURIComponent(font.name).replaceAll('%20', '+')}`
     link.setAttribute('aria-label', `${font.name} on Google Fonts`)
+    link.title = font.name
     const preview = item.querySelector('.result-preview')
     preview.value = previewText
     preview.setAttribute('aria-label', `Preview ${font.name}`)
@@ -226,6 +250,109 @@ function renderResults() {
   }
   $('results').replaceChildren(fragment)
 }
+
+function encoderResult(match, index) {
+  const { face, score } = match, item = document.createElement('li'); item.className = 'result'
+  item.innerHTML = '<div class="result-top"><span class="rank"></span><span class="font-name"><a target="_blank" rel="noopener"></a><span class="font-style"></span></span><span class="result-score"></span></div>'
+  item.querySelector('.rank').textContent = String(index + 1).padStart(2, '0')
+  const link = item.querySelector('a'); link.textContent = face.family
+  const url = face.sourceUrl || (searchCatalog.id === 'google-fonts' ? `https://fonts.google.com/specimen/${encodeURIComponent(face.family)}` : null)
+  if (url && /^https?:\/\//i.test(url)) { link.href = url; link.textContent += ' ↗' }
+  const style = item.querySelector('.font-style')
+  style.textContent = face.styleName || [face.style, face.weight].filter(v => v != null).join(', ')
+  style.title = 'Nearest reference face; weight and style accuracy are unmeasured'
+  const value = item.querySelector('.result-score')
+  value.textContent = score.toFixed(3); value.title = 'Cosine similarity, not certainty'; value.setAttribute('aria-label', `Cosine similarity: ${score.toFixed(3)}`)
+  const preview = searchCatalog.builtin ? catalog.previews[face.id] : null
+  if (preview?.image) {
+    const image = document.createElement('img'); image.className = 'reference-preview'; image.src = preview.image
+    image.alt = `${face.family}: ${preview.text}`; image.width = preview.width; image.height = preview.height
+    item.append(image)
+  } else if (preview?.file) {
+    // Never display a fallback face as if it were a matching specimen.
+    const input = document.createElement('input'); input.className = 'result-preview'; input.type = 'text'; input.maxLength = 80
+    input.spellcheck = false; input.autocomplete = 'off'; input.hidden = true
+    input.setAttribute('aria-label', `Preview ${face.family}`); input.setAttribute('aria-describedby', 'preview-error')
+    input.readOnly = !preview.latin; input.value = preview.latin ? previewText : preview.sampleText
+    input.style.setProperty('--font-specimen', `"specimen-${face.id}"`)
+    if (!index && preview.latin) input.id = 'preview-text'
+    item.append(input)
+    loadFont(face.id, preview.file).then(() => { input.hidden = false }).catch(() => { input.remove() })
+  }
+  return item
+}
+
+async function selectCatalog(option, file = null) {
+  const version = ++catalogRevision
+  $('catalog-menu').hidePopover(); $('catalog-button').focus({ preventScroll: true })
+  $('catalog-error').hidden = true; $('catalog-button').setAttribute('aria-busy', 'true')
+  try {
+    let bytes
+    if (file) {
+      if (file.size > 20 * 1024 * 1024) throw new Error('Choose a catalog smaller than 20 MB.')
+      bytes = await file.arrayBuffer()
+    } else {
+      const response = await fetch(option.file)
+      if (!response.ok) throw new Error('Could not load this catalog.')
+      bytes = await response.arrayBuffer()
+    }
+    const hash = await sha256(bytes)
+    if (option.sha256 && hash !== option.sha256) throw new Error('Catalog checksum failed.')
+    const data = readCatalog(JSON.parse(new TextDecoder().decode(bytes)), catalog)
+    if (version !== catalogRevision) return
+    const cached = last
+    searchCatalog = { ...option, ...data, sha256: hash, builtin: !file }
+    invalidate(); updateCatalogLabel()
+    if (cached?.embedding && current) {
+      const start = performance.now(), matches = rankCatalog(cached.embedding, searchCatalog)
+      const elapsed = performance.now() - start
+      last = { ...cached, matches, catalog: { id: option.id, sha256: hash }, milliseconds: elapsed, cachedEmbedding: true }
+      showInput(last.inputs, last.crop, last.resolution); renderResults()
+      $('detection-time').textContent = `${elapsed.toFixed(1)} ms`
+      $('detection-time').title = 'Catalog ranking; image embedding reused'
+      $('timing').textContent = `${elapsed.toFixed(1)} ms (rank; embedding reused)`
+      $('result-summary').textContent = 'Uncalibrated'; $('save').disabled = false
+    } else if (current) schedule()
+  } catch (error) {
+    if (version === catalogRevision) { $('catalog-error').textContent = error.message; $('catalog-error').hidden = false }
+  } finally { if (version === catalogRevision) $('catalog-button').removeAttribute('aria-busy') }
+}
+function updateCatalogLabel() {
+  $('catalog-label').textContent = searchCatalog.name
+  $('catalog-size').textContent = `${searchCatalog.families.toLocaleString()} families · ${searchCatalog.faces.length.toLocaleString()} faces`
+  for (const button of $('catalog-list').children) button.setAttribute('aria-pressed', String(button.dataset.catalog === searchCatalog.id))
+}
+$('catalog-file').addEventListener('change', event => {
+  const file = event.target.files[0]; event.target.value = ''
+  if (file) selectCatalog({ id: 'custom', name: file.name }, file)
+})
+$('import-catalog').addEventListener('click', () => { $('catalog-menu').hidePopover(); $('catalog-file').click() })
+function positionCatalog() {
+  const menu = $('catalog-menu'), rect = $('catalog-button').getBoundingClientRect()
+  menu.style.left = `${Math.max(12, Math.min(innerWidth - menu.offsetWidth - 12, rect.left))}px`
+  menu.style.top = `${Math.max(12, Math.min(innerHeight - menu.offsetHeight - 12, rect.bottom + 4))}px`
+}
+$('catalog-button').addEventListener('click', () => {
+  const menu = $('catalog-menu')
+  if (menu.matches(':popover-open')) menu.hidePopover()
+  else { menu.showPopover(); positionCatalog() }
+})
+$('catalog-menu').addEventListener('beforetoggle', event => {
+  const open = event.newState === 'open'; $('catalog-button').setAttribute('aria-expanded', String(open))
+  if (open) {
+    const selected = $('catalog-list').querySelector('[aria-pressed="true"]') || $('import-catalog')
+    for (const button of $('catalog-menu').querySelectorAll('button')) button.toggleAttribute('autofocus', button === selected)
+  }
+})
+$('catalog-menu').addEventListener('toggle', event => { if (event.newState === 'open') positionCatalog() })
+$('catalog-menu').addEventListener('keydown', event => {
+  if (event.key === 'Escape') { event.preventDefault(); $('catalog-menu').hidePopover(); $('catalog-button').focus(); return }
+  if (!['ArrowDown', 'ArrowUp', 'Home', 'End'].includes(event.key)) return
+  event.preventDefault()
+  const buttons = [...$('catalog-menu').querySelectorAll('button')], at = buttons.indexOf(document.activeElement)
+  buttons[event.key === 'Home' ? 0 : event.key === 'End' ? buttons.length - 1 : (at + (event.key === 'ArrowUp' ? -1 : 1) + buttons.length) % buttons.length].focus()
+})
+window.addEventListener('resize', () => { if ($('catalog-menu').matches(':popover-open')) positionCatalog() })
 function updatePreview(input) {
   const text = input.value.trim() || 'Quiet rivers flow'
   previewValid = /^[\x20-\x7e]+$/.test(text) && !/[~^]/.test(text)
@@ -234,6 +361,7 @@ function updatePreview(input) {
   if (!previewValid) return
   previewText = text
   for (const other of $('results').querySelectorAll('.result-preview')) {
+    if (other.readOnly) continue
     other.setAttribute('aria-invalid', 'false')
     if (other !== input) other.value = text
   }
@@ -248,8 +376,7 @@ function applyDrag(drag, end) {
 $('image-frame').addEventListener('pointerdown', event => {
   if (!current || dragging || !event.isPrimary || event.button !== 0) return
   const start = point(event), handle = event.target.closest('[data-handle]')?.dataset.handle
-  if (armed && !handle) { applyDrag(armed, start); armed = null; event.preventDefault(); return }
-  armed = null
+  if (armed) { applyDrag(armed, start); armed = null; event.preventDefault(); return }
   const inside = start.x >= crop.x && start.x <= crop.x + crop.width && start.y >= crop.y && start.y <= crop.y + crop.height
   dragging = { id: event.pointerId, before: { ...crop }, start, handle: handle || (inside ? 'move' : 'new'), x: event.clientX, y: event.clientY, moved: false }
   ;(handle ? event.target : $('image-frame')).focus({ preventScroll: true })
@@ -278,9 +405,9 @@ $('image-frame').addEventListener('keydown', event => {
   const handle = event.target.closest('[data-handle]')?.dataset.handle || (event.shiftKey ? 'se' : 'move')
   updateCrop(editCrop(crop, handle, dx, dy, source))
 })
-$('resolution').addEventListener('input', () => { resolution(); invalidate(true); message(); schedule() })
-$('empty').addEventListener('click', () => $('file').click())
-$('upload').addEventListener('click', () => { $('sample-menu').hidePopover(); $('file').click() })
+$('resolution').addEventListener('change', () => { invalidate(true); message(); schedule() })
+$('open-image').addEventListener('click', () => { $('sample-menu').hidePopover(); $('file').click() })
+$('clear').addEventListener('click', clearImage)
 $('file').addEventListener('change', () => { const file = $('file').files[0]; if (file) openImage(file); $('file').value = '' })
 document.addEventListener('paste', event => {
   const file = [...(event.clipboardData?.items || [])].find(item => item.type.startsWith('image/'))?.getAsFile()
@@ -292,54 +419,61 @@ $('stage').addEventListener('dragover', event => { event.preventDefault(); $('st
 $('stage').addEventListener('dragleave', () => $('stage').classList.remove('dragover'))
 $('results').addEventListener('input', event => { if (event.target.matches('.result-preview')) updatePreview(event.target) })
 function sampleLabel() {
-  $('sample-label').textContent = catalog?.fonts.find(f => f.id === current?.known)?.name || current?.name || ''
+  const name = catalog?.fonts.find(f => f.id === current?.known)?.name || current?.name || 'Choose font'
+  $('sample-label').textContent = name
+  $('sample').dataset.source = current && !current.known ? 'image' : 'font'
+  $('sample').title = name
+  $('sample').setAttribute('aria-label', current ? `Choose a font sample. Current ${current.known ? 'font' : 'image'}: ${name}` : 'Choose a font sample')
+  for (const button of $('sample-list').children) button.setAttribute('aria-pressed', String(button.dataset.font === current?.known))
 }
 const specimens = new IntersectionObserver(entries => {
   for (const entry of entries) if (entry.isIntersecting) {
     const button = entry.target; specimens.unobserve(button)
-    loadFont(button.dataset.font).then(() => { button.dataset.loaded = 'true' }).catch(() => {})
+    loadFont(button.dataset.font).catch(() => {})
   }
 }, { root: $('sample-menu'), rootMargin: '100px' })
 function sampleList() {
   if (!catalog) return
   specimens.disconnect()
-  const query = $('sample-search').value.trim().toLowerCase()
-  const found = catalog.fonts.filter(f => f.name.toLowerCase().includes(query))
-  $('sample-list').replaceChildren(...found.map(font => {
+  $('sample-list').replaceChildren(...catalog.fonts.map(font => {
     const button = document.createElement('button'); button.className = 'sample-option'; button.dataset.font = font.id; button.title = font.name
     button.setAttribute('aria-pressed', String(current?.known === font.id))
-    const name = document.createElement('span'), specimen = document.createElement('span')
+    const name = document.createElement('span')
     name.className = 'sample-name'; name.textContent = font.name
-    specimen.className = 'sample-specimen'; specimen.textContent = 'AaBb'; specimen.setAttribute('aria-hidden', 'true')
-    specimen.style.setProperty('--font-specimen', `"specimen-${font.id}"`)
-    button.append(specimen, name)
+    button.style.setProperty('--font-specimen', `"specimen-${font.id}"`)
+    button.append(name)
     specimens.observe(button)
     button.addEventListener('click', () => { $('sample-menu').hidePopover(); $('sample').focus({ preventScroll: true }); sample(font.id) })
     return button
   }))
-  $('sample-empty').hidden = !!found.length
+  $('sample-empty').textContent = 'No fonts available.'
+  $('sample-empty').hidden = !!catalog.fonts.length
+}
+function focusSample() {
+  const button = $('sample-list').querySelector('[aria-pressed="true"]') || $('sample-list').querySelector('button')
+  button?.focus({ preventScroll: true })
+  button?.scrollIntoView({ block: 'nearest' })
 }
 function positionSamples() {
   const rect = $('sample').getBoundingClientRect(), menu = $('sample-menu')
   const style = getComputedStyle(menu)
   const width = menu.offsetWidth || parseFloat(style.width), height = menu.offsetHeight || parseFloat(style.maxHeight)
-  menu.style.left = `${Math.max(20, Math.min(innerWidth - width - 20, rect.right - width))}px`
+  menu.style.left = `${Math.max(20, Math.min(innerWidth - width - 20, rect.left))}px`
   menu.style.top = `${Math.max(20, Math.min(rect.bottom + 6, innerHeight - height - 20))}px`
 }
 $('sample-menu').addEventListener('beforetoggle', event => {
   $('sample').setAttribute('aria-expanded', String(event.newState === 'open'))
-  if (event.newState === 'open') { $('sample-search').value = ''; sampleList(); positionSamples() }
+  if (event.newState === 'open') { sampleList(); positionSamples() }
 })
 $('sample-menu').addEventListener('toggle', event => {
   const open = event.newState === 'open'
   if (!open) return
-  positionSamples()
+  positionSamples(); focusSample()
 })
-$('sample-search').addEventListener('input', sampleList)
 $('sample-menu').addEventListener('keydown', event => {
   if (event.key === 'Escape') { event.preventDefault(); $('sample-menu').hidePopover(); $('sample').focus(); return }
   const buttons = [...$('sample-list').querySelectorAll('button')], index = buttons.indexOf(document.activeElement)
-  if (event.key === 'Enter' && document.activeElement === $('sample-search')) { event.preventDefault(); buttons[0]?.click() }
+  if (event.key === 'Home' || event.key === 'End') { event.preventDefault(); buttons[event.key === 'Home' ? 0 : buttons.length - 1]?.focus(); return }
   if (['ArrowDown', 'ArrowUp', 'ArrowLeft', 'ArrowRight'].includes(event.key) && (index >= 0 || ['ArrowDown', 'ArrowUp'].includes(event.key))) {
     event.preventDefault()
     const columns = getComputedStyle($('sample-list')).gridTemplateColumns.split(' ').length
@@ -359,19 +493,44 @@ window.addEventListener('pagehide', () => { invalidate(); gpu?.destroy() })
 
 async function initialize() {
   try {
-    const [artifact, data] = await Promise.all(['model', 'catalog'].map(async name => {
+    const [modelBytes, data] = await Promise.all(['model', 'catalog'].map(async name => {
       const response = await fetch(`./assets/${name}.json`)
       if (!response.ok) throw new Error(`Could not load ${name}. Run npm run demo:build and reload.`)
-      return response.json()
+      return name === 'model' ? response.arrayBuffer() : response.json()
     }))
+    const artifact = JSON.parse(new TextDecoder().decode(modelBytes))
+    if (await sha256(modelBytes) !== data.modelSha256) throw new Error('Model checksum failed.')
     model = readNetwork(artifact); catalog = data
+    if (isEncoder()) {
+      if (await preparationHash(artifact.preparation) !== data.preparationSha256) throw new Error('Preparation checksum failed.')
+      const option = data.catalogs[0], response = await fetch(option.file)
+      if (!response.ok) throw new Error('Could not load the initial catalog.')
+      const bytes = await response.arrayBuffer(), hash = await sha256(bytes)
+      if (hash !== option.sha256) throw new Error('Catalog checksum failed.')
+      searchCatalog = { ...option, ...readCatalog(JSON.parse(new TextDecoder().decode(bytes)), data), builtin: true }
+      $('catalog-control').hidden = false
+      $('catalog-list').replaceChildren(...data.catalogs.map(option => {
+        const button = document.createElement('button'); button.className = 'catalog-option'; button.dataset.catalog = option.id
+        const label = document.createElement('span'), count = document.createElement('span')
+        label.textContent = option.name; count.textContent = option.families.toLocaleString()
+        button.append(label, count); button.addEventListener('click', () => selectCatalog(option)); return button
+      }))
+      updateCatalogLabel()
+      $('metrics').textContent = `Experimental encoder. On synthetic crops of 300 unseen families: ${(data.metrics.top1 * 100).toFixed(1)}% top-1, ${(data.metrics.top5Accuracy * 100).toFixed(1)}% top-5. Real-image accuracy is unmeasured.`
+      $('score-note').textContent = 'Cosine similarity compares the crop with catalog references. It is not calibrated certainty. Face labels describe references; weight and style accuracy are unmeasured.'
+      $('method-note').textContent = 'Up to three tight grayscale windows are deskewed and encoded on WebGPU or CPU. Their normalized vectors are averaged, then compared with the selected catalog. Catalog changes reuse the image embedding.'
+      $('scope-note').textContent = 'Crop one font on a plain background. Short crops and fonts outside the selected catalog can produce misleading matches.'
+      $('network-label').textContent = 'Encoder'
+    }
     try { gpu = await createNetworkGPU(model) } catch (error) { gpuReason = `CPU fallback: ${error.message}` }
     backend(); controls()
-    if ($('sample-menu').matches(':popover-open')) sampleList()
-    $('catalog-size').textContent = `${data.fonts.length} families`
-    const measured = data.metrics.groups.all
-    $('metrics').textContent = `Top-1 on ${measured.count.toLocaleString()} synthetic ${data.metrics.split} crops: ${(measured.accuracy * 100).toFixed(1)}%. Real-image accuracy is unmeasured.`
-    if (data.metrics.groups['length/1']) {
+    if ($('sample-menu').matches(':popover-open')) { sampleList(); focusSample() }
+    if (!isEncoder()) {
+      $('catalog-size').textContent = `${data.fonts.length} families`
+      const measured = data.metrics.groups.all
+      $('metrics').textContent = `Top-1 on ${measured.count.toLocaleString()} synthetic ${data.metrics.split} crops: ${(measured.accuracy * 100).toFixed(1)}%. Real-image accuracy is unmeasured.`
+    }
+    if (data.metrics.groups?.['length/1']) {
       $('accuracy').hidden = false
       for (const length of ['1', '2-3', '4-7', '8+']) {
         const row = document.createElement('tr')
@@ -388,6 +547,9 @@ async function initialize() {
     document.body.dataset.ready = 'true'
     if (revision === 0) await sample('lora')
     else if (current) { invalidate(true); schedule() }
-  } catch (error) { $('backend').textContent = 'Model unavailable'; message(error.message, true) }
+  } catch (error) {
+    $('backend').textContent = 'Model unavailable'; message(error.message, true)
+    if (!catalog) $('sample-empty').textContent = 'Fonts unavailable.'
+  }
 }
 initialize()

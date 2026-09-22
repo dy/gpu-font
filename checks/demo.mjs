@@ -1,10 +1,16 @@
 import assert from 'node:assert/strict'
 import { readFile, mkdir, writeFile } from 'node:fs/promises'
 import { createHash } from 'node:crypto'
+import { execFileSync } from 'node:child_process'
 import { chromium } from 'playwright'
 import { readNetwork, inferCPU, rankWindows } from '../src/network.mjs'
 
 const bytes = await readFile('dist/assets/model.json'), artifact = JSON.parse(bytes)
+if (artifact.kind === 'font-encoder') {
+  await import('./catalog-demo.mjs')
+  process.exit(0)
+}
+execFileSync(process.execPath, ['scripts/python.mjs', '-m', 'scripts.demo_reference'], { stdio: 'inherit' })
 const reference = JSON.parse(await readFile('.data/demo-reference.json'))
 assert.equal(createHash('sha256').update(bytes).digest('hex'), reference.modelSha256)
 const model = readNetwork(artifact)
@@ -18,11 +24,21 @@ assert.equal((await fetch(`${base}/%ZZ`)).status, 404)
 const maxError = (a, b) => Math.max(...a.map((v, i) => Math.abs(v - b[i])))
 async function saveResult(page) {
   await page.waitForFunction(() => !document.querySelector('#save').disabled)
-  const downloading = page.waitForEvent('download')
-  await page.locator('#save').evaluate(button => button.click())
-  const download = await downloading
-  assert.equal(download.suggestedFilename(), 'gpu-font-result.json')
-  const result = JSON.parse(await readFile(await download.path(), 'utf8'))
+  // Inspect the actual export bytes without hitting Chromium's repeated-download limiter.
+  // A real download is exercised separately below.
+  const result = await page.evaluate(() => {
+    const click = HTMLAnchorElement.prototype.click
+    let exported
+    try {
+      HTMLAnchorElement.prototype.click = function () {
+        if (this.download !== 'gpu-font-result.json') throw new Error('Unexpected export filename')
+        exported = fetch(this.href).then(response => response.json())
+      }
+      document.querySelector('#save').click()
+    } finally { HTMLAnchorElement.prototype.click = click }
+    if (!exported) throw new Error('No diagnostic export was produced')
+    return exported
+  })
   // Display the full classifier distribution, never a re-normalized top five.
   const scores = await page.locator('.result-score').evaluateAll(elements => elements.map(el => ({ text: el.textContent, label: el.getAttribute('aria-label') })))
   assert.equal(scores.length, 5)
@@ -37,7 +53,22 @@ async function saveResult(page) {
     }
   }
   assert.equal(await page.locator('#result-summary').textContent() === 'Below threshold', !result.accepted)
+  assert.equal(await page.locator('#detection-time').textContent(), `${result.milliseconds.toFixed(1)} ms`)
   return result
+}
+async function assertCleared(page) {
+  assert.ok(await page.locator('#empty').isVisible())
+  for (const id of ['image-frame', 'clear', 'resolution-control', 'model-input', 'preview-error']) assert.ok(await page.locator(`#${id}`).isHidden(), id)
+  assert.equal(await page.locator('#open-image').getAttribute('aria-label'), 'Choose an image')
+  assert.equal(await page.locator('#resolution').inputValue(), '100')
+  assert.equal(await page.locator('#sample-label').textContent(), 'Choose font')
+  assert.equal(await page.locator('#sample').getAttribute('data-source'), 'font')
+  for (const id of ['detection-time', 'result-summary', 'message']) assert.equal(await page.locator(`#${id}`).textContent(), '', id)
+  assert.equal(await page.locator('.result, #normalized canvas, #input-regions span').count(), 0)
+  assert.ok(await page.locator('#save').isDisabled())
+  assert.ok(await page.locator('#results-empty').isVisible())
+  assert.equal(await page.locator('#timing').textContent(), '—')
+  assert.deepEqual(await page.locator('#source').evaluate(c => [c.width, c.height]), [0, 0])
 }
 async function chooseSample(page, id) {
   await page.locator('#sample').click()
@@ -84,6 +115,13 @@ try {
     throw error
   })
   await page.waitForFunction(() => document.querySelectorAll('.result').length === 5)
+  assert.equal(await page.locator('#sample #sample-label').textContent(), 'Lora')
+  assert.equal(await page.locator('#sample').getAttribute('data-source'), 'font')
+  assert.ok(await page.locator('#sample .font-icon').isVisible())
+  assert.ok(await page.locator('#sample .image-icon').isHidden())
+  assert.deepEqual(await page.locator('.font-style').allTextContents(), Array(5).fill('Regular, 400'))
+  assert.ok((await page.locator('.result-preview').evaluateAll(inputs => inputs.map(el => getComputedStyle(el).fontWeight === '400' && getComputedStyle(el).fontStyle === 'normal'))).every(Boolean))
+  assert.equal(await page.locator('#catalog-size').textContent(), `${catalog.fonts.length} families`)
   assert.equal(await page.locator('#backend').getAttribute('data-backend'), 'webgpu', 'Actual WebGPU is required for this integration test')
   const gpuResult = await page.evaluate(async ({ artifact, cases }) => {
     const { readNetwork, rankWindows } = await import('/src/network.mjs')
@@ -123,6 +161,19 @@ try {
   const initialResult = await saveResult(page)
   await assertInput(page, initialResult)
   assert.equal(initialResult.accepted, initialResult.matches[0].score >= (catalog.calibration?.threshold ?? 1.01))
+  // Pasting while the picker is open clears its old selection and updates the source identity.
+  await page.locator('#sample').click()
+  await page.evaluate(base64 => {
+    const dt = new DataTransfer()
+    dt.items.add(new File([Uint8Array.from(atob(base64), c => c.charCodeAt(0))], 'menu-paste.png', { type: 'image/png' }))
+    document.dispatchEvent(new ClipboardEvent('paste', { clipboardData: dt, bubbles: true, cancelable: true }))
+  }, png)
+  assert.equal((await saveResult(page)).source.name, 'menu-paste.png')
+  assert.equal(await page.locator('#sample-label').textContent(), 'menu-paste.png')
+  assert.equal(await page.locator('#sample-list [aria-pressed="true"]').count(), 0)
+  await page.keyboard.press('Escape')
+  await chooseSample(page, 'lora')
+  assert.deepEqual((await saveResult(page)).inputs, initialResult.inputs)
 
   // Exact score boundaries cannot be selected reliably with trained-model logits.
   // Substitute only ranking on an isolated page; exercise the real UI/export lifecycle.
@@ -258,19 +309,56 @@ try {
 
   await page.locator('#preview-text').fill('你好')
   await page.locator('#sample').click()
+  await page.keyboard.press('Escape')
   const menuChooser = page.waitForEvent('filechooser')
-  await page.locator('#upload').click()
+  await page.locator('#open-image').click({ position: { x: 10, y: 10 } })
   assert.equal(await page.locator('#sample-menu').evaluate(el => el.matches(':popover-open')), false)
   await (await menuChooser).setFiles({ name: 'menu-open.png', mimeType: 'image/png', buffer: Buffer.from(png, 'base64') })
   await saveResult(page)
+  assert.equal(await page.locator('#sample-label').textContent(), 'menu-open.png')
+  assert.equal(await page.locator('#sample').getAttribute('data-source'), 'image')
+  assert.ok(await page.locator('#sample .image-icon').isVisible())
+  assert.ok(await page.locator('#sample .font-icon').isHidden())
+  assert.ok(await page.locator('#sample .chevron').isHidden())
+  assert.equal(await page.locator('#open-image').getAttribute('aria-label'), 'Replace image')
   assert.ok(await page.locator('#preview-error').isHidden(), 'Replacing an image clears stale preview validation')
   await chooseSample(page, 'lora'); await saveResult(page)
+  const cancelledChooser = page.waitForEvent('filechooser')
+  await page.locator('#open-image').click({ position: { x: 10, y: 10 } })
+  await (await cancelledChooser).setFiles([])
+  assert.equal(await page.locator('#source').getAttribute('aria-label'), 'Lora sample', 'Cancelling an image choice retains the current source')
+  assert.equal(await page.locator('#sample-label').textContent(), 'Lora')
+  const beforeCorrupt = await saveResult(page)
+  await page.locator('#preview-text').fill('你好')
+  assert.ok(await page.locator('#preview-error').isVisible())
+  await page.locator('#file').setInputFiles({ name: 'broken.png', mimeType: 'image/png', buffer: Buffer.from('broken image') })
+  await page.waitForFunction(() => document.querySelector('#message').textContent.includes('Could not read'))
+  assert.equal(await page.locator('#source').getAttribute('aria-label'), 'Lora sample', 'A corrupt upload retains the current sample')
+  assert.equal(await page.locator('#sample-label').textContent(), 'Lora')
+  assert.ok(await page.locator('#preview-error').isHidden(), 'Removing preview controls clears their validation state, even when decoding fails')
+  await chooseSample(page, 'lora')
+  assert.deepEqual((await saveResult(page)).inputs, beforeCorrupt.inputs, 'A failed upload after an invalid edit must not block sample recovery')
+  await page.locator('#preview-text').fill('你好')
+  // Shrink the full sample to its one-pixel white corner through the crop controls.
+  await page.evaluate(() => {
+    const source = document.querySelector('#source'), frame = document.querySelector('#image-frame')
+    for (const [key, count] of [['ArrowLeft', source.width - 1], ['ArrowUp', source.height - 1]]) {
+      for (let i = 0; i < count; i++) frame.dispatchEvent(new KeyboardEvent('keydown', { key, shiftKey: true, bubbles: true }))
+    }
+  })
+  await page.waitForFunction(() => document.querySelector('#message').textContent === 'No visible text in this crop.')
+  assert.ok(await page.locator('#preview-error').isHidden(), 'A blank crop clears validation belonging to removed previews')
+  assert.equal(await page.locator('.result-preview').count(), 0)
+  await chooseSample(page, 'lora')
+  assert.deepEqual((await saveResult(page)).inputs, beforeCorrupt.inputs, 'A blank crop after an invalid edit must not block sample recovery')
 
   await page.locator('#file').setInputFiles({ name: 'specimen.png', mimeType: 'image/png', buffer: Buffer.from(png, 'base64') })
-  await page.waitForFunction(() => !document.querySelector('#save').disabled)
-  const download = page.waitForEvent('download')
+  const uploaded = await saveResult(page)
+  const downloading = page.waitForEvent('download')
   await page.locator('#save').evaluate(button => button.click())
-  assert.equal((await download).suggestedFilename(), 'gpu-font-result.json')
+  const download = await downloading
+  assert.equal(download.suggestedFilename(), 'gpu-font-result.json')
+  assert.deepEqual(JSON.parse(await readFile(await download.path(), 'utf8')), uploaded)
   await page.evaluate(base64 => {
     const bytes = Uint8Array.from(atob(base64), c => c.charCodeAt(0))
     const dt = new DataTransfer(); dt.items.add(new File([bytes], 'pasted.png', { type: 'image/png' }))
@@ -283,25 +371,29 @@ try {
     document.querySelector('#stage').dispatchEvent(new DragEvent('drop', { dataTransfer: dt, bubbles: true, cancelable: true }))
   }, png)
   await page.waitForFunction(() => document.querySelector('#source').getAttribute('aria-label') === 'dropped.png')
-  // A delayed decode must not overwrite a newer upload.
-  for (const action of ['replace']) {
+  // A delayed decode must neither overwrite a newer upload nor reopen or report errors on a closed image.
+  for (const action of ['replace', 'clear', 'clear-error']) {
+    if (action === 'clear-error') {
+      await page.locator('#file').setInputFiles({ name: 'before-error.png', mimeType: 'image/png', buffer: Buffer.from(png, 'base64') })
+      await saveResult(page)
+    }
     await page.evaluate(() => {
       const original = window.createImageBitmap
       window.testDecode = { original }
       window.createImageBitmap = (...args) => {
         window.createImageBitmap = original
-        return new Promise(resolve => { window.testDecode.resume = async () => resolve(await original(...args)) })
+        return new Promise((resolve, reject) => { window.testDecode.resume = () => original(...args).then(resolve, reject) })
       }
     })
     await page.evaluate(base64 => {
       const dt = new DataTransfer()
       dt.items.add(new File([Uint8Array.from(atob(base64), c => c.charCodeAt(0))], 'late-paste.png', { type: 'image/png' }))
       document.dispatchEvent(new ClipboardEvent('paste', { clipboardData: dt, bubbles: true, cancelable: true }))
-    }, png)
+    }, action === 'clear-error' ? Buffer.from('broken image').toString('base64') : png)
     if (action === 'replace') {
       await page.locator('#file').setInputFiles({ name: 'newer.png', mimeType: 'image/png', buffer: Buffer.from(png, 'base64') })
       await page.waitForFunction(() => document.querySelector('#source').getAttribute('aria-label') === 'newer.png')
-    }
+    } else await page.locator('#clear').click()
     const before = await page.locator('#source').getAttribute('aria-label')
     await page.evaluate(async () => {
       await window.testDecode.resume()
@@ -309,8 +401,22 @@ try {
       delete window.testDecode
     })
     assert.equal(await page.locator('#source').getAttribute('aria-label'), before)
-
+    if (action !== 'replace') await assertCleared(page)
   }
+  // Close clears invalid preview state and reduced resolution; a sample can be selected again.
+  await chooseSample(page, 'lora'); await saveResult(page)
+  await page.locator('#resolution').selectOption('50'); await saveResult(page)
+  await page.locator('#preview-text').fill('你好')
+  await page.locator('#clear').click()
+  await assertCleared(page)
+  assert.equal(await page.evaluate(() => document.activeElement.id), 'open-image')
+  const reopen = page.waitForEvent('filechooser')
+  await page.locator('#open-image').press('Enter')
+  await (await reopen).setFiles({ name: 'reopened.png', mimeType: 'image/png', buffer: Buffer.from(png, 'base64') })
+  assert.equal((await saveResult(page)).source.name, 'reopened.png')
+  await page.locator('#clear').click()
+  await chooseSample(page, 'lora')
+  assert.equal((await saveResult(page)).source.known, 'lora')
   await page.locator('#file').setInputFiles({ name: 'broken.png', mimeType: 'image/png', buffer: Buffer.from('broken image') })
   await page.waitForFunction(() => document.querySelector('#message').textContent.includes('Could not read'))
   const blank = await page.evaluate(() => { const c = document.createElement('canvas'); c.width = 64; c.height = 32; const x = c.getContext('2d'); x.fillStyle = 'white'; x.fillRect(0, 0, 64, 32); return c.toDataURL().split(',')[1] })
@@ -322,24 +428,30 @@ try {
   assert.equal(await page.locator('#normalized canvas').count(), 0)
   await page.locator('#sample').click()
   assert.equal(await page.locator('#sample-list button').count(), model.fonts.length)
-  assert.equal(await page.evaluate(() => document.activeElement.id), 'sample-search')
-  await page.keyboard.press('ArrowUp')
+  await page.waitForFunction(() => document.activeElement.dataset.font === 'inter')
+  assert.equal(await page.locator('#sample-search').count(), 0)
+  await page.keyboard.press('ArrowLeft')
   assert.equal(await page.evaluate(() => document.activeElement.dataset.font), model.fonts.at(-1))
   await page.keyboard.press('ArrowRight')
   assert.equal(await page.evaluate(() => document.activeElement.dataset.font), 'inter')
-  await page.locator('#sample-search').fill('not a font')
-  assert.ok(await page.locator('#sample-empty').isVisible())
-  await page.keyboard.press('Enter')
-  assert.equal(await page.locator('#source').getAttribute('aria-label'), 'blank.png')
+  await page.keyboard.press('End')
+  assert.equal(await page.evaluate(() => document.activeElement.dataset.font), model.fonts.at(-1))
+  await page.keyboard.press('Home')
+  assert.equal(await page.evaluate(() => document.activeElement.dataset.font), 'inter')
+  await page.keyboard.press('ArrowDown')
+  assert.equal(await page.evaluate(() => document.activeElement.dataset.font), model.fonts[2])
+  await page.keyboard.press('ArrowUp')
+  assert.equal(await page.evaluate(() => document.activeElement.dataset.font), 'inter')
   await page.keyboard.press('Escape')
   assert.equal(await page.evaluate(() => document.activeElement.id), 'sample')
+  assert.equal(await page.locator('#source').getAttribute('aria-label'), 'blank.png', 'Browsing and dismissing do not select a font')
   await page.locator('#sample').click()
-  await page.locator('#sample-search').fill('Merri')
-  assert.equal(await page.locator('#sample-list button').count(), 1)
+  await page.locator('[data-font="merriweather"]').focus()
   await page.keyboard.press('Enter')
   await page.waitForFunction(() => document.querySelector('#source').getAttribute('aria-label') === 'Merriweather sample' && !document.querySelector('#save').disabled)
   await page.locator('#sample').click()
   assert.equal(await page.locator('[data-font="merriweather"]').getAttribute('aria-pressed'), 'true')
+  await page.waitForFunction(() => document.activeElement.dataset.font === 'merriweather')
   await page.screenshot({ path: '.data/demo-checks/popover.png', fullPage: true })
   await page.locator('.wordmark').focus(); await page.keyboard.press('Escape')
   assert.equal(await page.locator('#sample-menu').evaluate(el => el.matches(':popover-open')), false)
@@ -350,6 +462,7 @@ try {
       width: Math.round(parseFloat(el.style.width) / 100 * canvas.width), height: Math.round(parseFloat(el.style.height) / 100 * canvas.height) }
   })
   const full = await readCrop(), frame = page.locator('#image-frame')
+  await frame.scrollIntoViewIfNeeded()
   const box = await page.locator('#source').boundingBox()
   async function resize(handle, x, y) {
     const h = await page.locator(`[data-handle="${handle}"]`).boundingBox()
@@ -361,7 +474,7 @@ try {
   await page.mouse.up()
   await resize('se', .9, .9); await page.mouse.up()
   const dragged = await readCrop()
-  assert.ok(dragged.x > 0 && dragged.width < full.width && dragged.height < full.height)
+  assert.ok(dragged.x > 0 && dragged.width < full.width && dragged.height < full.height, `Handle resize: ${JSON.stringify({ full, dragged })}`)
   await assertInput(page, await saveResult(page))
   await page.mouse.move(box.x + box.width * .5, box.y + box.height * .5); await page.mouse.down()
   await page.mouse.move(box.x + box.width * .55, box.y + box.height * .55); await page.mouse.up()
@@ -369,6 +482,24 @@ try {
   assert.equal(moved.width, dragged.width); assert.equal(moved.height, dragged.height)
   assert.ok(moved.x > dragged.x && moved.y > dragged.y, 'Interior drag translates rather than replaces the crop')
   await frame.press('Home'); assert.deepEqual(await readCrop(), full)
+  // Every edge is draggable away from its old center grip; the two hidden corners also resize.
+  const edges = [
+    ['n', .25, 0, 0, 6, { ...full, y: 6, height: full.height - 6 }],
+    ['e', 1, .65, -6, 0, { ...full, width: full.width - 6 }],
+    ['s', .7, 1, 0, -6, { ...full, height: full.height - 6 }],
+    ['w', 0, .35, 6, 0, { ...full, x: 6, width: full.width - 6 }],
+    ['ne', 1, 0, -6, 6, { ...full, y: 6, width: full.width - 6, height: full.height - 6 }],
+    ['sw', 0, 1, 6, -6, { ...full, x: 6, width: full.width - 6, height: full.height - 6 }],
+  ]
+  for (const [edge, x, y, dx, dy, expected] of edges) {
+    const start = { x: box.x + box.width * x, y: box.y + box.height * y }
+    await page.mouse.move(start.x, start.y); await page.mouse.down()
+    await page.mouse.move(start.x + dx * box.width / full.width, start.y + dy * box.height / full.height)
+    await page.mouse.up()
+    assert.deepEqual(await readCrop(), expected, `${edge} resizes from anywhere along the edge`)
+    assert.deepEqual((await saveResult(page)).crop, expected)
+    await frame.press('Home')
+  }
   // Click a handle and its destination is the non-drag pointer alternative.
   await page.locator('[data-handle="nw"]').click()
   await page.mouse.click(box.x + box.width * .1, box.y + box.height * .1)
@@ -410,17 +541,19 @@ try {
   assert.deepEqual(await readCrop(), { x: full.width - 1, y: full.height - 1, width: 1, height: 1 })
   await frame.press('Home')
   const originalResolution = await saveResult(page)
-  for (const scale of [50, 10, 100]) {
-    await page.locator('#resolution').evaluate((el, scale) => { el.value = scale; el.dispatchEvent(new Event('input', { bubbles: true })) }, scale)
+  for (const scale of [50, 25, 10, 100]) {
+    await page.locator('#resolution').selectOption(String(scale))
     const result = await saveResult(page)
     assert.equal(result.resolution.width, Math.max(1, Math.round(full.width * scale / 100)))
     assert.equal(result.resolution.height, Math.max(1, Math.round(full.height * scale / 100)))
     await assertInput(page, result)
-    if (scale === 100) assert.deepEqual(result.inputs, originalResolution.inputs, '100 → 50 → 10 → 100 restores the exact original tensors')
+    if (scale === 100) assert.deepEqual(result.inputs, originalResolution.inputs, '100 → 50 → 25 → 10 → 100 restores the exact original tensors')
     else assert.notDeepEqual(result.inputs, originalResolution.inputs, 'Resolution must change the actual inference input')
   }
-  assert.equal(await page.locator('#method, #paste, #clear, #full-crop, .crop-details, .crop-hint, #analyze, #matte, #source-meta').count(), 0)
-  assert.equal(await page.locator('#sample-menu #upload').count(), 1)
+  assert.equal(await page.locator('#method, #paste, #upload, #full-crop, .crop-details, .crop-hint, #analyze, #matte, #source-meta').count(), 0)
+  assert.equal(await page.locator('#stage select#resolution').count(), 1)
+  assert.equal(await page.locator('input[type=range]').count(), 0)
+  assert.equal(await page.locator('.results-panel .panel-heading #detection-time').count(), 1)
   assert.equal(await page.locator('.scope, .score-label, .result-foot, .result-preview-control').count(), 0)
   assert.ok(!await page.locator('footer').textContent().then(text => text.includes('Images stay')))
   assert.match(await page.locator('#detection-time').textContent(), /^\d+\.\d ms$/)
@@ -474,17 +607,37 @@ try {
   assert.deepEqual(replaced.inputs, initialResult.inputs)
   assert.deepEqual(replaced.matches, initialResult.matches)
   assert.equal((await page.evaluate(() => window.testLive.reads)).length, 4, 'Only the active crop and replacement image may prepare input after replacement')
+  await assertInput(page, replaced)
+  // Closing cancels both the held inference and its pending crop.
+  await page.evaluate(() => { window.testLive.holdNext = true; delete window.testLive.release })
+  await frame.press('Shift+ArrowLeft')
+  await page.waitForFunction(() => !!window.testLive.release)
+  await frame.press('Shift+ArrowLeft')
+  await page.locator('#clear').click()
+  await assertCleared(page)
+  await page.evaluate(async () => {
+    window.testLive.release()
+    await new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)))
+  })
+  await assertCleared(page)
   await page.evaluate(() => {
     GPUBuffer.prototype.mapAsync = window.testLive.map; CanvasRenderingContext2D.prototype.getImageData = window.testLive.read
     delete window.testLive
   })
 
-  await assertInput(page, replaced)
+  await page.evaluate(base64 => {
+    const dt = new DataTransfer()
+    dt.items.add(new File([Uint8Array.from(atob(base64), c => c.charCodeAt(0))], 'paste-after-close.png', { type: 'image/png' }))
+    document.dispatchEvent(new ClipboardEvent('paste', { clipboardData: dt, bubbles: true, cancelable: true }))
+  }, png)
+  const pastedAfterClose = await saveResult(page)
+  assert.equal(pastedAfterClose.source.name, 'paste-after-close.png')
+  assert.deepEqual(pastedAfterClose.inputs, initialResult.inputs)
   const responsive = []
   for (const width of [320, 375, 414, 768, 1440]) {
     await page.setViewportSize({ width, height: 1000 })
     if (width < 640) {
-      const sizes = await page.locator('#preview-text, #sample-search').evaluateAll(elements =>
+      const sizes = await page.locator('#preview-text').evaluateAll(elements =>
         elements.map(e => ({ id: e.id, size: parseFloat(getComputedStyle(e).fontSize) })))
       assert.ok(sizes.every(e => e.size >= 16), `Mobile form text at ${width}px: ${JSON.stringify(sizes)}`)
     }
@@ -496,10 +649,22 @@ try {
     await page.locator('#sample').click()
     const menu = await page.locator('#sample-menu').boundingBox()
     assert.ok(menu.x >= 0 && menu.x + menu.width <= width && menu.y >= 0 && menu.y + menu.height <= 1000, `Popover clipped at ${width}px: ${JSON.stringify(menu)}`)
+    if (width === 1440) {
+      const tabs = await page.locator('#sample').boundingBox()
+      assert.ok(Math.abs(menu.x - tabs.x) < 1, 'The desktop dropdown aligns with the source controls')
+    }
     await page.screenshot({ path: `.data/demo-checks/popover-${width}.png`, fullPage: true })
     await page.keyboard.press('Escape')
     responsive.push(layout)
   }
+  await page.locator('#sample').click()
+  await page.setViewportSize({ width: 320, height: 480 })
+  await page.waitForFunction(() => {
+    const menu = document.querySelector('#sample-menu').getBoundingClientRect()
+    return menu.x >= 0 && menu.right <= innerWidth && menu.y >= 0 && menu.bottom <= innerHeight
+  })
+  assert.equal(await page.evaluate(() => document.activeElement.dataset.font), 'inter', 'Resizing an open dropdown preserves font focus')
+  await page.keyboard.press('Escape')
   await page.setViewportSize({ width: 375, height: 850 })
   const contrast = await page.evaluate(() => {
     const c = document.createElement('canvas').getContext('2d', { willReadFrequently: true })
@@ -555,10 +720,39 @@ try {
     }
   }
 
+  // Opening before the catalog loads stays empty; a failed response replaces loading with an error.
+  const catalogFailure = await browser.newPage()
+  catalogFailure.on('pageerror', error => errors.push(error.message))
+  let releaseCatalog
+  const delayedCatalog = new Promise(resolve => { releaseCatalog = resolve })
+  await catalogFailure.route('**/assets/catalog.json', async route => {
+    await delayedCatalog
+    await route.fulfill({ status: 503, body: 'Unavailable' })
+  })
+  await catalogFailure.goto(base)
+  await catalogFailure.locator('#sample').click()
+  assert.equal(await catalogFailure.locator('#sample-empty').textContent(), 'Loading fonts…')
+  assert.equal(await catalogFailure.locator('#sample-list button').count(), 0)
+  assert.ok(await catalogFailure.locator('#empty').isVisible())
+  releaseCatalog()
+  await catalogFailure.waitForFunction(() => document.querySelector('#backend').textContent === 'Model unavailable')
+  assert.equal(await catalogFailure.locator('#sample-empty').textContent(), 'Fonts unavailable.')
+  assert.equal(await catalogFailure.locator('#sample-list button').count(), 0)
+  assert.equal(await catalogFailure.locator('.result').count(), 0)
+  assert.ok(await catalogFailure.locator('#save').isDisabled())
+  await catalogFailure.keyboard.press('Escape')
+  assert.equal(await catalogFailure.locator('#sample-menu').evaluate(el => el.matches(':popover-open')), false)
+  await catalogFailure.unroute('**/assets/catalog.json')
+  await catalogFailure.reload()
+  assert.deepEqual((await saveResult(catalogFailure)).inputs, initialResult.inputs, 'Reload recovers after an unavailable catalog')
+  await catalogFailure.close()
+
   const failure = await browser.newPage()
   failure.on('pageerror', error => errors.push(error.message))
   await failure.goto(base)
   await failure.waitForFunction(() => !document.querySelector('#save').disabled)
+  await failure.locator('#file').setInputFiles({ name: 'retained.png', mimeType: 'image/png', buffer: Buffer.from(png, 'base64') })
+  await saveResult(failure)
   const loaded = await failure.evaluate(() => [...document.fonts].map(f => f.family))
   const missing = model.fonts.find(f => !loaded.includes(`specimen-${f}`))
   assert.ok(missing)
@@ -569,11 +763,28 @@ try {
   await failure.waitForFunction(() => document.querySelector('#message').hasAttribute('data-error'))
   assert.equal(await failure.locator('#source').getAttribute('aria-label'), beforeFailure)
   assert.equal(await failure.locator('#sample-label').textContent(), beforeLabel)
+  assert.equal(await failure.locator('#sample-label').textContent(), 'retained.png', 'A failed sample load retains the uploaded image')
   assert.ok(await failure.locator('#save').isDisabled())
   await failure.unroute(`**/assets/fonts/${missing}.ttf`)
   await chooseSample(failure, missing)
   const recoveredSample = await saveResult(failure)
   assert.equal(recoveredSample.source.known, missing)
+  assert.equal(await failure.locator('#sample-label').textContent(), catalog.fonts.find(f => f.id === missing).name, 'A successful retry names the selected sample')
+  // A font finishing its download after Close must not restore its sample.
+  const loadedAfterRetry = await failure.evaluate(() => [...document.fonts].map(f => f.family))
+  const lateFont = model.fonts.find(f => !loadedAfterRetry.includes(`specimen-${f}`))
+  let releaseFont
+  const heldFont = new Promise(resolve => { releaseFont = resolve })
+  await failure.route(`**/assets/fonts/${lateFont}.ttf`, async route => { await heldFont; await route.continue() })
+  await chooseSample(failure, lateFont)
+  await failure.waitForFunction(() => document.querySelector('#message').textContent === 'Loading sample…')
+  await failure.locator('#clear').click()
+  await assertCleared(failure)
+  releaseFont()
+  await failure.waitForFunction(id => [...document.fonts].some(f => f.family === `specimen-${id}`), lateFont)
+  await assertCleared(failure)
+  await chooseSample(failure, lateFont)
+  assert.equal((await saveResult(failure)).source.known, lateFont, 'The same sample works after a cancelled load')
   await failure.close()
 
   const fallback = await browser.newPage({ viewport: { width: 1100, height: 900 } })
@@ -587,8 +798,11 @@ try {
   await fallback.route('**/assets/model.json', async route => { await delayedModel; await route.continue() })
   await fallback.reload()
   assert.ok(await fallback.locator('#empty').isVisible())
+  assert.equal(await fallback.locator('#sample-label').textContent(), 'Choose font')
+  assert.ok(await fallback.locator('#clear').isHidden())
+  assert.ok(await fallback.locator('#resolution-control').isHidden())
   const chooser = fallback.waitForEvent('filechooser')
-  await fallback.locator('#empty').click()
+  await fallback.locator('#open-image').click()
   await (await chooser).setFiles({ name: 'empty-open.png', mimeType: 'image/png', buffer: Buffer.from(png, 'base64') })
   await fallback.waitForFunction(() => document.querySelector('#source').getAttribute('aria-label') === 'empty-open.png')
   await fallback.locator('#file').setInputFiles({ name: 'retained-before-model.png', mimeType: 'image/png', buffer: Buffer.from(png, 'base64') })
@@ -597,6 +811,18 @@ try {
   const retained = await saveResult(fallback)
   assert.equal(retained.source.name, 'retained-before-model.png')
   assert.deepEqual(retained.inputs, initialResult.inputs)
+  // Clearing before initialization prevents the default sample from reopening.
+  delayedModel = new Promise(resolve => { resumeModel = resolve })
+  await fallback.reload()
+  await fallback.locator('#file').setInputFiles({ name: 'closed-before-model.png', mimeType: 'image/png', buffer: Buffer.from(png, 'base64') })
+  await fallback.waitForFunction(() => document.querySelector('#source').getAttribute('aria-label') === 'closed-before-model.png')
+  await fallback.locator('#clear').click()
+  resumeModel()
+  await fallback.waitForSelector('body[data-ready="true"]')
+  await assertCleared(fallback)
+  await chooseSample(fallback, 'lora')
+  assert.deepEqual((await saveResult(fallback)).inputs, initialResult.inputs)
+  await fallback.close()
   // Exercise browser/device failure independently of deliberate runtime.destroy().
   const loss = await browser.newPage()
   loss.on('pageerror', error => errors.push(error.message))

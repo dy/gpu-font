@@ -63,11 +63,11 @@ export async function createNetworkGPU(model, gpu = globalThis.navigator?.gpu) {
   const destroy = () => { stopped = true; owned.forEach(b => b.destroy()); device.destroy() }
   try {
     const input = buffer(128 * 48 * 4, GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_DST)
-    const readback = buffer(model.fonts.length * 4, GPUBufferUsage.MAP_READ | GPUBufferUsage.COPY_DST)
+    const readback = buffer(model.outputs * 4, GPUBufferUsage.MAP_READ | GPUBufferUsage.COPY_DST)
     const stages = []
     let previous = input, width = 128, height = 48
     for (let i = 0; i <= depth + 1; i++) {
-      const w = i === depth ? channels.at(-1) : i > depth ? model.fonts.length : Math.ceil(width / strides[i])
+      const w = i === depth ? channels.at(-1) : i > depth ? model.outputs : Math.ceil(width / strides[i])
       const h = i >= depth ? 1 : Math.ceil(height / strides[i])
       const output = buffer(w * h * (i >= depth ? 1 : channels[i + 1]) * 4, GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_SRC)
       const layer = model.layers[i > depth ? depth : i]
@@ -85,14 +85,14 @@ export async function createNetworkGPU(model, gpu = globalThis.navigator?.gpu) {
       let { width, height } = window
       const commands = device.createCommandEncoder()
       for (const [i, stage] of stages.entries()) {
-        const w = i === depth ? channels.at(-1) : i > depth ? model.fonts.length : Math.ceil(width / strides[i]), h = i >= depth ? 1 : Math.ceil(height / strides[i])
+        const w = i === depth ? channels.at(-1) : i > depth ? model.outputs : Math.ceil(width / strides[i]), h = i >= depth ? 1 : Math.ceil(height / strides[i])
         device.queue.writeBuffer(stage.shape, 0, new Uint32Array([width, height, w, h]))
         const pass = commands.beginComputePass()
         pass.setPipeline(stage.pipeline); pass.setBindGroup(0, stage.group)
         pass.dispatchWorkgroups(Math.ceil(w * h * (i >= depth ? 1 : channels[i + 1]) / 64)); pass.end()
         width = w; height = h
       }
-      commands.copyBufferToBuffer(previous, 0, readback, 0, model.fonts.length * 4)
+      commands.copyBufferToBuffer(previous, 0, readback, 0, model.outputs * 4)
       device.queue.submit([commands.finish()])
       try {
         await readback.mapAsync(GPUMapMode.READ)

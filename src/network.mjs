@@ -7,18 +7,21 @@ export const strides = [1, 2, 2, 2]
 export function readNetwork(artifact) {
   if (artifact?.version !== 1 || ![architecture, contextArchitecture, corpusArchitecture].includes(artifact.architecture)) throw new Error('Unsupported font classifier')
   const fonts = artifact.fonts, p = artifact.preparation
+  const encoder = artifact.kind === 'font-encoder'
+  if (encoder && (artifact.dimensions !== 128 || artifact.normalization !== 'l2' || fonts !== undefined)) throw new Error('Invalid encoder output')
   const context = artifact.architecture !== architecture
   const shapeChannels = artifact.architecture === corpusArchitecture ? [1, 32, 64, 96, 128, 128] : context ? [...channels, 64] : channels, shapeStrides = context ? [...strides, 1] : strides
   const depth = shapeStrides.length
   const dilations = artifact.dilations ?? Array(depth).fill(1)
   if (!Array.isArray(dilations) || dilations.length !== depth || dilations.some(d => d !== 1 && d !== 2)) throw new Error('Invalid filter dilations')
-  if (!Array.isArray(fonts) || !fonts.length || fonts.length > 10000 || fonts.some(f => typeof f !== 'string' || !f) || new Set(fonts).size !== fonts.length) throw new Error('Invalid font labels')
+  if (!encoder && (!Array.isArray(fonts) || !fonts.length || fonts.length > 10000 || fonts.some(f => typeof f !== 'string' || !f) || new Set(fonts).size !== fonts.length)) throw new Error('Invalid font labels')
+  const outputs = encoder ? artifact.dimensions : fonts.length
   if (p?.width !== 128 || p.height !== 48 || p.windows !== 3) throw new Error('Unsupported input preparation')
   const method = p.method ?? 'windows'
   if (!['windows', 'deskew-windows'].includes(method)) throw new Error('Unsupported input preparation method')
   if (!Array.isArray(artifact.layers) || artifact.layers.length !== depth + 1) throw new Error('Invalid network layers')
   const layers = artifact.layers.map((layer, i) => {
-    const shape = i === depth ? [fonts.length, shapeChannels.at(-1)] : [shapeChannels[i + 1], shapeChannels[i], 3, 3]
+    const shape = i === depth ? [outputs, shapeChannels.at(-1)] : [shapeChannels[i + 1], shapeChannels[i], 3, 3]
     if (JSON.stringify(layer.shape) !== JSON.stringify(shape)) throw new Error('Invalid layer shape')
     const [rows] = shape, count = shape.reduce((a, b) => a * b, 1)
     if (!Array.isArray(layer.scale) || layer.scale.length !== rows || layer.scale.some(s => !Number.isFinite(s) || s <= 0) || !Array.isArray(layer.bias) || layer.bias.length !== rows || !layer.bias.every(Number.isFinite)) throw new Error('Invalid layer values')
@@ -30,7 +33,7 @@ export function readNetwork(artifact) {
     if (!weights.every(Number.isFinite) || !bias.every(Number.isFinite)) throw new Error('Weight overflow')
     return { shape, weights, bias }
   })
-  return { fonts: [...fonts], layers, channels: [...shapeChannels], strides: [...shapeStrides], dilations: [...dilations], preparation: { width: p.width, height: p.height, windows: p.windows, method } }
+  return { fonts: encoder ? null : [...fonts], outputs, kind: encoder ? 'font-encoder' : 'font-classifier', layers, channels: [...shapeChannels], strides: [...shapeStrides], dilations: [...dilations], preparation: { width: p.width, height: p.height, windows: p.windows, method } }
 }
 
 export function checkInput(input) {
@@ -62,7 +65,7 @@ export function inferCPU(model, window) {
     pooled[c] = sum / count
   }
   const { weights, bias } = model.layers.at(-1)
-  return Float32Array.from(model.fonts, (_, d) => {
+  return Float32Array.from({ length: model.outputs }, (_, d) => {
     let sum = bias[d]
     for (let c = 0; c < features; c++) sum += weights[d * features + c] * pooled[c]
     return sum

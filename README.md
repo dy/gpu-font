@@ -1,31 +1,33 @@
 # gpu-font
 
-A small neural font classifier running locally in the browser. The current experiment classifies **100 regular font families**, including the original ten. See [the 100-font report](bench/hundred.md) for the training comparison, measured accuracy by text length, and remaining limits.
+A small neural font encoder running in the browser. The demo searches **2,004 Google Fonts families** or a compatible image-reference catalog using the same frozen 128-dimensional encoder. Adding a font requires indexing its specimens, not retraining the model.
 
-This is experimental closed-set classification. Short fragments, low resolution, rotation, and fonts outside the collection remain difficult. Synthetic accuracy does not establish accuracy on arbitrary screenshots. The descriptor path is archived.
+**Recognition quality is still experimental.** On synthetic crops of 300 unseen families, top-1/top-5 is 26.78%/47.31%; useful rejection coverage remains unproven. See [the encoder experiment](bench/encoder.md). Catalog switching demonstrates the architecture, not reliable recognition of arbitrary screenshots.
 
-The [scaling plan](bench/scaling.md) explains the current sampling cuts, model scores, a 10 MB deployment budget, and the preparation/training experiments before expanding to the Google Fonts corpus.
-
-Completed follow-ups: [deskew and repeated training](bench/preparation.md) improved a new synthetic verification set from 57.5% to 62.6%; a [132 KB weight/italic pilot](bench/faces.md) reached 97.4% weight and 97.0% italic accuracy for ten families. [Retrieval continuations](bench/retrieval.md) did not beat the starting encoder. These candidates and their checkpoints are preserved under `models/`; the demo still uses the 100-family regular-only baseline. Independent screenshot accuracy and useful rejection coverage remain unproven.
+The [preview audit and catalog workflow](bench/preview-catalogs.md) cover two collected archives, raster-only compilation, genuine face metadata, and current limits. Earlier [100-family classification](bench/hundred.md), [deskew](bench/preparation.md), and [weight/italic](bench/faces.md) experiments remain available; their calibration is not applied to encoder similarity scores.
 
 ## Open the demo
 
-With trained artifacts in `.data/`:
+With the pinned Google Fonts preview instances and original sample assets in `.data/` (see the [encoder reproduction steps](bench/encoder.md)):
 
 ```sh
 npm run demo:build
 npm run demo
 ```
 
-Open **http://localhost:4179**. The Image menu combines Open image and a searchable font specimen grid. You can also click the empty image area, paste or drop a file. Drag the crop to move it; drag its handles to resize. Clicking a handle then its destination also works. Arrow keys move the crop or focused handle; Shift + arrows resize the crop, and Home/Escape selects the full image. Matches update while adjusting the crop. Edit any match preview directly to change the comparison text; this leaves the source image intact. Detection time appears beside the compute backend.
+Open **http://localhost:4179**. Click the image area to choose a file, or paste or drop one. With an image loaded, click the surrounding area to replace it or the × to close it. The source control shows Aa and the selected font, or an image icon and the uploaded filename. It opens a font picker with each name rendered in its typeface. Use arrow keys to browse, Home/End to jump, Enter to choose, and Escape to close. Cancelling a file choice keeps the current image. Drag the crop interior to move it; drag any edge or corner to resize. Two diagonal corner grips remain visible. Clicking an edge or corner then its destination also works. Arrow keys move the crop or focused handle; Shift + arrows resize the crop, and Home/Escape selects the full image. Matches update while adjusting the crop. Edit any match preview directly to change the comparison text; this leaves the source image intact. Detection time appears beside Font matches and measures image preparation, inference and ranking. Catalog face labels describe the nearest reference; weight/style accuracy is unmeasured.
 
-The Input previews show the complete arrays actually sent to inference, with their actual aspect ratios. Blank borders are removed from the tensors themselves. A long line produces up to three local windows; these are not detected words and can cut letters. Their predicted class probabilities are averaged. The five displayed percentages use the full 100-class distribution, with accessible model-score labels. Under Model & results, Download diagnostic JSON exports these exact arrays, their dimensions, source regions, crop, source resolution, model hash and scores. Scores are temperature-scaled on validation data; they are not a real-world accuracy guarantee or visual-similarity measure. Model & results reports whether the top score passes the validation-selected acceptance threshold. Exports also include that decision and the calibration parameters.
+The landing page introduces image-to-font matching and explains local inference and the model's limits. The demo is preloaded with a Lora sample. Model & results holds the loaded catalog's actual family count, measured synthetic accuracy and diagnostic export; no accuracy on real screenshots is claimed.
 
-WebGPU performs the convolutions and classifier. Image preparation and score aggregation run in JavaScript. The same model has a CPU fallback for missing/lost GPU devices. Images remain in the browser. The static build is in `dist/`; use localhost or HTTPS for WebGPU. Font preview files are demo assets, separate from the classifier's weights.
+Choose a search catalog below Font matches. The Google Fonts catalog is included by default; compiled preview catalogs appear when available locally. “Open catalog JSON…” accepts version 1/2 catalogs bound to this encoder and preparation. Names alone are insufficient. Changing catalogs reuses the current image embedding; its timing then measures ranking only. A failed import retains the current catalog and result.
 
-The demo combines rapid crop updates into the current job and the newest pending crop. Image replacement and resolution changes invalidate older results. Transparent light text receives a black matte; transparent dark text receives white. The supported input is a crop containing one font on a substantially plain background.
+The Model input previews show the complete arrays actually sent to inference, with their actual aspect ratios. Blank borders are removed from the tensors. A long line produces up to three local windows; these are not recognized words and may cut letters. Normalized window embeddings are averaged and normalized again. The displayed values are cosine similarities, not certainty percentages. Download diagnostic JSON under Model & results exports the actual arrays, dimensions, crop, resolution, model/catalog hashes, embedding and ranked faces. Rejection is explicitly uncalibrated.
 
-The Resolution slider downsamples the selected source crop from 100% to 10% before normalization. It leaves the original image intact. Returning to 100% restores the original inference pixels. Input outlines are mapped back to the original image coordinates.
+WebGPU performs convolution and projection; image preparation and exact cosine ranking run in JavaScript. The same encoder has a CPU fallback for unavailable/lost GPU devices. The static build is in `dist/`; use localhost or HTTPS for WebGPU. Font files load on demand for editable Google specimens. Image-only catalogs display their captured specimens; imported catalogs without local specimens show identity and score without a substitute font. Optional preview assets are separate from the recognition payload.
+
+The demo combines rapid crop updates into the current job and the newest pending crop. Closing or replacing an image and changing resolution invalidate older results. Closing also cancels pending image and sample loads. Transparent light text receives a black matte; transparent dark text receives white. The supported input is a crop containing one font on a substantially plain background.
+
+The percentage dropdown in the image’s bottom-right corner downsamples the selected crop to 100%, 50%, 25% or 10% before normalization. It leaves the original image intact. Returning to 100% restores the original inference pixels. Dashed input outlines are mapped back to the original image coordinates. Font licenses and attribution are available under Model & results.
 
 ## Reproduce training
 
@@ -48,7 +50,7 @@ The import pins existing local font files and creates regular weight-400 instanc
 
 ```sh
 node scripts/hundred.mjs evaluate
-npm run demo:build
+npm run demo:build -- --hundred
 ```
 
 The experiment report records any additional refinement commands needed to reproduce the selected model. A compatible external Python environment can be selected with `GPU_FONT_PYTHON=/absolute/path/to/python`.
@@ -61,14 +63,14 @@ npm test
 npm run test:demo
 ```
 
-The browser check requires a working GPU adapter and uses Chromium's test flag `--enable-unsafe-webgpu`. It compares PyTorch, JavaScript and actual WebGPU logits, including the smallest and largest input sizes, odd dimensions, repeated/concurrent calls and device loss. It also checks exact input-preview pixels, the preview grid, upload/paste/drop, move/resize/cancel crop gestures, resolution round trips, crop races, transparency, blank/corrupt images and responsive layouts. Reports are in [bench/demo.json](bench/demo.json); screenshots are under ignored `.data/demo-checks/`. These are desktop Chromium tests, including mobile viewport widths, not physical-phone measurements.
+The browser check requires a working GPU adapter and uses Chromium’s test flag `--enable-unsafe-webgpu`. For the shared encoder it verifies independent PyTorch/CPU/WebGPU projections, exact input-preview pixels, compatible and invalid catalog imports, repeated switching, stale responses, crop/resolution round trips, clear/replacement, CPU fallback and responsive keyboard navigation. See [bench/catalog-demo.json](bench/catalog-demo.json); screenshots are under `.data/catalog-demo-checks/`. The earlier classifier UI suite remains available after `npm run demo:build -- --hundred`. These are desktop Chromium tests, including mobile viewport widths, not physical-phone measurements.
 
 ## Input preparation
 
 ```js
-import { prepareInput } from './src/input.mjs'
+import { prepareLine } from './src/line.mjs'
 
-const input = prepareInput(imageData)
+const input = prepareLine(imageData, { deskew: true, sampler: 'windows' })
 // input.status: 'ok', 'blank', or 'low-contrast'
 // input.windows: up to 3 { width, height, pixels, rect } objects
 // pixels: Float32Array, dark ink = 0, white = 1
@@ -76,7 +78,7 @@ const input = prepareInput(imageData)
 
 The caller supplies an RGBA crop. Preparation composites alpha, normalizes contrast and polarity, trims outer background, and samples proportionally scaled local windows. Each window is at most 128 × 48, with no all-white outer border. Grayscale antialiasing remains; the pixels are quantized once to byte precision for training, display and inference. Blank/low-contrast crops return no windows.
 
-This does not recognize characters, reconstruct outlines, re-render text or estimate named typography parameters. This 100-way classifier must be retrained to add classes; an extensible embedding remains a later research goal.
+This does not recognize characters, reconstruct outlines, re-render text or estimate named typography parameters. The encoder maps pixels to vectors; a separate catalog supplies candidate identities. Changing encoder weights requires regenerating catalog vectors.
 
 ## Earlier experiments
 
