@@ -158,6 +158,31 @@ export function padRegion(box, margin, { width, height }) {
   }
 }
 
+/**
+ * Rank specimen lines found on a source page. A readable phrase beats a single
+ * word, and a line that only repeats a style label or the family name is kept
+ * apart as a last resort rather than passed off as a specimen phrase.
+ */
+export function rankSpecimenCandidates(candidates, { excludeTexts = [], labels = [] } = {}) {
+  if (!Array.isArray(candidates)) throw new TypeError('Expected specimen candidates')
+  if ([excludeTexts, labels].some(list => !Array.isArray(list) || list.some(text => text != null && typeof text !== 'string'))) throw new TypeError('Expected specimen text lists')
+  const key = value => value.normalize('NFC').toLowerCase().replace(/\s+/gu, ' ').trim()
+  const excluded = new Set(excludeTexts.filter(text => text != null).map(key))
+  const labelled = new Set(labels.filter(text => text != null).map(key))
+  const size = candidate => Number.isFinite(candidate.fontSize) ? Math.min(200, Math.max(0, candidate.fontSize)) : 0
+  const score = candidate => {
+    const words = candidate.text.trim().split(/\s+/).length
+    return (words >= 3 ? 2000 : words === 2 ? 1200 : 0) +
+      Math.min(candidate.text.trim().length, 60) * 4 + size(candidate)
+  }
+  const ordered = candidates
+    .filter(candidate => typeof candidate?.text === 'string' && candidate.text.trim() && !excluded.has(key(candidate.text)))
+    .map(candidate => ({ ...candidate, score: score(candidate) }))
+    .sort((a, b) => b.score - a.score || size(b) - size(a))
+  const isLabel = candidate => labelled.has(key(candidate.text))
+  return { preferred: ordered.filter(candidate => !isLabel(candidate)), fallback: ordered.filter(isLabel) }
+}
+
 export const isSafeRelativePath = value => typeof value === 'string' && value.length > 0 &&
   !path.isAbsolute(value) && !value.startsWith('/') && !/(^|\/)\.\.(\/|$)/.test(value) && !value.includes('\\')
 
