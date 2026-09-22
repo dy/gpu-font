@@ -1,0 +1,26 @@
+{
+  "name": "gpu-font",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "node --test && node scripts/python.mjs -m unittest discover -s tests -p 'test_*.py'",
+    "data:import": "node scripts/python.mjs scripts/fixtures.py import",
+    "data:render": "node scripts/python.mjs scripts/fixtures.py render",
+    "data:browser": "node scripts/browser.mjs",
+    "data:prepare": "node scripts/prepare.mjs",
+    "data:preview": "node scripts/python.mjs scripts/fixtures.py preview",
+    "baseline": "node scripts/baseline.mjs",
+    "train": "node scripts/python.mjs train/train.py",
+    "train:robustness": "node scripts/robustness.mjs",
+    "train:focus": "node scripts/focus.mjs",
+    "train:ten": "node scripts/ten.mjs",
+    "demo:build": "node scripts/demo-build.mjs",
+    "demo": "node scripts/demo-serve.mjs",
+    "test:demo": "node scripts/python.mjs -m scripts.demo_reference && node checks/demo.mjs",
+    "train:hundred": "node scripts/hundred.mjs"
+  },
+  "devDependencies": {
+    "playwright": "1.62.1"
+  }
+}

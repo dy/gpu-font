@@ -1,0 +1,13 @@
+{
+  "seed": 31415,
+  "target": "inter",
+  "texts": { "train": 512, "calibration": 64, "query": 64 },
+  "steps": 2400,
+  "batchPairs": 24,
+  "learningRate": 0.001,
+  "threads": 4,
+  "calibrationFpr": 0.05,
+  "input": { "width": 128, "height": 32, "padding": 2 },
+  "policies": ["line", "patch"],
+  "conditions": ["clean", "small", "short", "rotate-left", "rotate-right", "blur", "jpeg"]
+}

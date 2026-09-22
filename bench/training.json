@@ -1,0 +1,279 @@
+{
+  "description": "One fixed-seed synthetic development run. Unseen-dev families enter only through prototypes; no final-test or real-screenshot claim.",
+  "seed": 1729,
+  "steps": 400,
+  "trainingFamilies": [
+    "crimson-text",
+    "geist-mono",
+    "ibm-plex-sans",
+    "ibm-plex-serif",
+    "inter",
+    "libre-baskerville",
+    "montserrat",
+    "open-sans",
+    "oswald",
+    "poppins",
+    "roboto",
+    "source-sans-3",
+    "source-serif-4",
+    "work-sans"
+  ],
+  "unseenFamilies": [
+    "bebas-neue",
+    "lora",
+    "merriweather",
+    "nunito",
+    "nunito-sans",
+    "playfair-display"
+  ],
+  "trainingSamples": 2240,
+  "parameters": 25120,
+  "embeddingDimensions": 32,
+  "seconds": 9.657091583125293,
+  "device": "cpu",
+  "threads": 4,
+  "environment": {
+    "python": "3.14.6",
+    "torch": "2.11.0",
+    "machine": "arm64",
+    "platform": "macOS-26.5-arm64-arm-64bit-Mach-O"
+  },
+  "lossFirst20": 3.8466442584991456,
+  "lossLast20": 2.6368242621421816,
+  "firstGradientNorm": 0.0034877853302146215,
+  "exportMaxAbsoluteError": 0.0,
+  "exportJsonBytes": 538252,
+  "manifestSha256": "8016ef5237b39da9352e8a306ff5a1ee33b56286aca336be1881520164caf9fc",
+  "modelSha256": "035937b52b0ef4bab008b0200376592a20d9d0134faf65b4752a23c6a0e87ded",
+  "tensorSha256": "8aac6b99cabe655a2538d40a6b3f0fc1a11f83fd8008d5cb7929c03f0c9d4b95",
+  "groups": {
+    "pillow/train": {
+      "queries": 224,
+      "top1": 0.1875,
+      "top5": 0.6696428571428571,
+      "families": {
+        "inter": {
+          "queries": 16,
+          "top1": 0.0,
+          "top5": 0.375
+        },
+        "roboto": {
+          "queries": 16,
+          "top1": 0.0,
+          "top5": 0.625
+        },
+        "open-sans": {
+          "queries": 16,
+          "top1": 0.0,
+          "top5": 0.875
+        },
+        "source-sans-3": {
+          "queries": 16,
+          "top1": 0.0,
+          "top5": 0.625
+        },
+        "montserrat": {
+          "queries": 16,
+          "top1": 0.0,
+          "top5": 1.0
+        },
+        "poppins": {
+          "queries": 16,
+          "top1": 0.125,
+          "top5": 0.875
+        },
+        "ibm-plex-sans": {
+          "queries": 16,
+          "top1": 0.0,
+          "top5": 0.125
+        },
+        "work-sans": {
+          "queries": 16,
+          "top1": 0.125,
+          "top5": 0.875
+        },
+        "libre-baskerville": {
+          "queries": 16,
+          "top1": 0.0,
+          "top5": 0.125
+        },
+        "crimson-text": {
+          "queries": 16,
+          "top1": 0.75,
+          "top5": 0.75
+        },
+        "source-serif-4": {
+          "queries": 16,
+          "top1": 0.0,
+          "top5": 0.25
+        },
+        "ibm-plex-serif": {
+          "queries": 16,
+          "top1": 0.375,
+          "top5": 0.875
+        },
+        "geist-mono": {
+          "queries": 16,
+          "top1": 0.5,
+          "top5": 1.0
+        },
+        "oswald": {
+          "queries": 16,
+          "top1": 0.75,
+          "top5": 1.0
+        }
+      }
+    },
+    "pillow/unseen-dev": {
+      "queries": 96,
+      "top1": 0.20833333333333334,
+      "top5": 0.5416666666666666,
+      "families": {
+        "nunito": {
+          "queries": 16,
+          "top1": 0.375,
+          "top5": 0.625
+        },
+        "nunito-sans": {
+          "queries": 16,
+          "top1": 0.0,
+          "top5": 0.875
+        },
+        "lora": {
+          "queries": 16,
+          "top1": 0.0,
+          "top5": 0.0
+        },
+        "merriweather": {
+          "queries": 16,
+          "top1": 0.375,
+          "top5": 0.75
+        },
+        "bebas-neue": {
+          "queries": 16,
+          "top1": 0.5,
+          "top5": 1.0
+        },
+        "playfair-display": {
+          "queries": 16,
+          "top1": 0.0,
+          "top5": 0.0
+        }
+      }
+    },
+    "chromium/train": {
+      "queries": 224,
+      "top1": 0.13392857142857142,
+      "top5": 0.33482142857142855,
+      "families": {
+        "inter": {
+          "queries": 16,
+          "top1": 0.0,
+          "top5": 0.125
+        },
+        "roboto": {
+          "queries": 16,
+          "top1": 0.0,
+          "top5": 0.0
+        },
+        "open-sans": {
+          "queries": 16,
+          "top1": 0.0,
+          "top5": 0.0
+        },
+        "source-sans-3": {
+          "queries": 16,
+          "top1": 0.0,
+          "top5": 0.0625
+        },
+        "montserrat": {
+          "queries": 16,
+          "top1": 0.0,
+          "top5": 0.0
+        },
+        "poppins": {
+          "queries": 16,
+          "top1": 0.0,
+          "top5": 0.3125
+        },
+        "ibm-plex-sans": {
+          "queries": 16,
+          "top1": 0.0,
+          "top5": 0.0
+        },
+        "work-sans": {
+          "queries": 16,
+          "top1": 0.0,
+          "top5": 0.0625
+        },
+        "libre-baskerville": {
+          "queries": 16,
+          "top1": 0.0625,
+          "top5": 0.625
+        },
+        "crimson-text": {
+          "queries": 16,
+          "top1": 0.3125,
+          "top5": 0.5625
+        },
+        "source-serif-4": {
+          "queries": 16,
+          "top1": 0.3125,
+          "top5": 1.0
+        },
+        "ibm-plex-serif": {
+          "queries": 16,
+          "top1": 0.0625,
+          "top5": 0.4375
+        },
+        "geist-mono": {
+          "queries": 16,
+          "top1": 0.5,
+          "top5": 0.5
+        },
+        "oswald": {
+          "queries": 16,
+          "top1": 0.625,
+          "top5": 1.0
+        }
+      }
+    },
+    "chromium/unseen-dev": {
+      "queries": 96,
+      "top1": 0.3541666666666667,
+      "top5": 0.65625,
+      "families": {
+        "nunito": {
+          "queries": 16,
+          "top1": 0.0625,
+          "top5": 0.1875
+        },
+        "nunito-sans": {
+          "queries": 16,
+          "top1": 0.0,
+          "top5": 0.1875
+        },
+        "lora": {
+          "queries": 16,
+          "top1": 0.1875,
+          "top5": 0.8125
+        },
+        "merriweather": {
+          "queries": 16,
+          "top1": 0.5,
+          "top5": 1.0
+        },
+        "bebas-neue": {
+          "queries": 16,
+          "top1": 0.9375,
+          "top5": 1.0
+        },
+        "playfair-display": {
+          "queries": 16,
+          "top1": 0.4375,
+          "top5": 0.75
+        }
+      }
+    }
+  }
+}

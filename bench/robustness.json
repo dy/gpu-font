@@ -1,0 +1,45 @@
+{
+  "version": 1,
+  "seed": 2718,
+  "target": "inter",
+  "samplesPerFamily": 256,
+  "calibrationPerFamily": 64,
+  "calibrationTexts": [
+    "Silver mountain",
+    "Read each page",
+    "Garden visitors",
+    "Paper lanterns",
+    "Beyond the hill",
+    "Gentle footsteps",
+    "Copper vessels",
+    "Welcome home"
+  ],
+  "steps": 1200,
+  "batchPairs": 24,
+  "learningRate": 0.001,
+  "threads": 4,
+  "calibrationFpr": 0.05,
+  "conditions": [
+    "clean",
+    "tight",
+    "short",
+    "small",
+    "rotate-left",
+    "rotate-right",
+    "blur",
+    "jpeg",
+    "mixed"
+  ],
+  "inputs": {
+    "pilot": {
+      "width": 128,
+      "height": 32,
+      "padding": 2
+    },
+    "detail": {
+      "width": 256,
+      "height": 64,
+      "padding": 2
+    }
+  }
+}

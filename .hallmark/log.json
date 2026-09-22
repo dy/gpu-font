@@ -1,0 +1,37 @@
+[
+  {
+    "date": "2026-09-22",
+    "component": "specimen grid and crop controls",
+    "theme": "Graphite",
+    "brief": "Restore actual font preview grid; image opening icon and clickable empty state; movable/resizable crop with source-resolution control."
+  },
+  {
+    "date": "2026-09-22",
+    "component": "sample picker and actual model inputs",
+    "theme": "Graphite",
+    "brief": "Restore searchable popover; render complete variable-size inference tensors without display-only padding."
+  },
+  {
+    "date": "2026-09-21",
+    "genre": "modern-minimal",
+    "macrostructure": "Workbench",
+    "theme": "Graphite",
+    "nav": "N9",
+    "footer": "Ft2",
+    "enrichment": "actual font specimens",
+    "brief": "Neutral gray, open columns, larger specimens; user supplied typography references",
+    "references": [
+      "https://gpu-lexer.vercel.app/",
+      "https://wakamaifondue.com/"
+    ]
+  },
+  {
+    "date": "2026-09-21",
+    "macrostructure": "Workbench",
+    "theme": "Studio",
+    "nav": "N9",
+    "footer": "Ft2",
+    "enrichment": "actual font specimens",
+    "brief": "gpu-font \u00b7 local image-to-font experiment"
+  }
+]

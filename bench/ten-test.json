@@ -1,0 +1,267 @@
+{
+  "groups": {
+    "all": {
+      "count": 3840,
+      "correct": 3574,
+      "top3": 3800,
+      "accuracy": 0.9307291666666667,
+      "top3Accuracy": 0.9895833333333334
+    },
+    "chromium": {
+      "count": 3840,
+      "correct": 3574,
+      "top3": 3800,
+      "accuracy": 0.9307291666666667,
+      "top3Accuracy": 0.9895833333333334
+    },
+    "chromium/clean": {
+      "count": 640,
+      "correct": 633,
+      "top3": 640,
+      "accuracy": 0.9890625,
+      "top3Accuracy": 1.0
+    },
+    "inter": {
+      "count": 384,
+      "correct": 329,
+      "top3": 378,
+      "accuracy": 0.8567708333333334,
+      "top3Accuracy": 0.984375
+    },
+    "chromium/crop": {
+      "count": 640,
+      "correct": 578,
+      "top3": 628,
+      "accuracy": 0.903125,
+      "top3Accuracy": 0.98125
+    },
+    "chromium/small": {
+      "count": 640,
+      "correct": 585,
+      "top3": 629,
+      "accuracy": 0.9140625,
+      "top3Accuracy": 0.9828125
+    },
+    "chromium/rotate": {
+      "count": 640,
+      "correct": 554,
+      "top3": 625,
+      "accuracy": 0.865625,
+      "top3Accuracy": 0.9765625
+    },
+    "chromium/blur": {
+      "count": 640,
+      "correct": 614,
+      "top3": 639,
+      "accuracy": 0.959375,
+      "top3Accuracy": 0.9984375
+    },
+    "chromium/jpeg": {
+      "count": 640,
+      "correct": 610,
+      "top3": 639,
+      "accuracy": 0.953125,
+      "top3Accuracy": 0.9984375
+    },
+    "roboto": {
+      "count": 384,
+      "correct": 353,
+      "top3": 384,
+      "accuracy": 0.9192708333333334,
+      "top3Accuracy": 1.0
+    },
+    "open-sans": {
+      "count": 384,
+      "correct": 326,
+      "top3": 373,
+      "accuracy": 0.8489583333333334,
+      "top3Accuracy": 0.9713541666666666
+    },
+    "source-sans-3": {
+      "count": 384,
+      "correct": 343,
+      "top3": 380,
+      "accuracy": 0.8932291666666666,
+      "top3Accuracy": 0.9895833333333334
+    },
+    "montserrat": {
+      "count": 384,
+      "correct": 369,
+      "top3": 383,
+      "accuracy": 0.9609375,
+      "top3Accuracy": 0.9973958333333334
+    },
+    "poppins": {
+      "count": 384,
+      "correct": 360,
+      "top3": 381,
+      "accuracy": 0.9375,
+      "top3Accuracy": 0.9921875
+    },
+    "nunito": {
+      "count": 384,
+      "correct": 354,
+      "top3": 371,
+      "accuracy": 0.921875,
+      "top3Accuracy": 0.9661458333333334
+    },
+    "lora": {
+      "count": 384,
+      "correct": 377,
+      "top3": 384,
+      "accuracy": 0.9817708333333334,
+      "top3Accuracy": 1.0
+    },
+    "merriweather": {
+      "count": 384,
+      "correct": 381,
+      "top3": 382,
+      "accuracy": 0.9921875,
+      "top3Accuracy": 0.9947916666666666
+    },
+    "playfair-display": {
+      "count": 384,
+      "correct": 382,
+      "top3": 384,
+      "accuracy": 0.9947916666666666,
+      "top3Accuracy": 1.0
+    }
+  },
+  "confusion": [
+    [
+      329,
+      32,
+      1,
+      6,
+      0,
+      14,
+      2,
+      0,
+      0,
+      0
+    ],
+    [
+      17,
+      353,
+      3,
+      4,
+      0,
+      7,
+      0,
+      0,
+      0,
+      0
+    ],
+    [
+      10,
+      7,
+      326,
+      29,
+      2,
+      2,
+      8,
+      0,
+      0,
+      0
+    ],
+    [
+      9,
+      19,
+      11,
+      343,
+      0,
+      2,
+      0,
+      0,
+      0,
+      0
+    ],
+    [
+      2,
+      0,
+      2,
+      0,
+      369,
+      1,
+      10,
+      0,
+      0,
+      0
+    ],
+    [
+      9,
+      11,
+      0,
+      3,
+      0,
+      360,
+      1,
+      0,
+      0,
+      0
+    ],
+    [
+      7,
+      2,
+      6,
+      6,
+      5,
+      4,
+      354,
+      0,
+      0,
+      0
+    ],
+    [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      377,
+      5,
+      2
+    ],
+    [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      3,
+      381,
+      0
+    ],
+    [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      2,
+      0,
+      382
+    ]
+  ],
+  "fonts": [
+    "inter",
+    "roboto",
+    "open-sans",
+    "source-sans-3",
+    "montserrat",
+    "poppins",
+    "nunito",
+    "lora",
+    "merriweather",
+    "playfair-display"
+  ],
+  "modelSha256": "e10a2ecd979a3dc51189a9c5b6a5069411dccfa90c0bf6ee5fccf23f34e71fe9",
+  "manifestSha256": "7ca0653bc3c65be98779c53e86257f4ce0808a6f1a23c783344b11ea5df240dd",
+  "description": "Frozen Chromium word-disjoint synthetic test. No real-image accuracy claim."
+}

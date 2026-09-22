@@ -1,0 +1,32 @@
+/* Hallmark · genre: modern-minimal · macrostructure: Workbench · theme: Graphite
+ * Audience: designers and project contributors · use: inspect font matches
+ * Nav: N9 · footer: Ft2 · enrichment: actual specimens · motion: press
+ * Neutral chrome and open columns leave the actual specimens prominent.
+ */
+@font-face { font-family: 'Inter UI'; src: url('./assets/fonts/inter.ttf'); font-display: swap; font-weight: 400; }
+@font-face { font-family: 'Serif UI'; src: url('./assets/fonts/source-serif-4.ttf'); font-display: swap; font-weight: 400; }
+:root {
+  --color-paper: oklch(98.2% 0 0);
+  --color-surface: oklch(100% 0 0);
+  --color-well: oklch(95.5% 0 0);
+  --color-rule: oklch(86% 0 0);
+  --color-muted: oklch(47% 0 0);
+  --color-ink: oklch(23% 0 0);
+  --color-accent: var(--color-ink);
+  --color-accent-ink: var(--color-surface);
+  --color-tint: oklch(92% 0 0);
+  --color-focus: var(--color-ink);
+  --color-error: oklch(44% .14 30);
+  --color-mask: oklch(20% 0 0 / .26);
+  --color-transparent: transparent;
+  --color-shadow: oklch(20% 0 0 / .12);
+  --font-body: 'Inter UI', ui-sans-serif, system-ui, sans-serif;
+  --font-display: 'Serif UI', ui-serif, Georgia, serif;
+  --font-specimen: var(--font-display);
+  --text-small: .8125rem;
+  --text-body: 1rem;
+  --text-title: .875rem;
+  --text-preview: clamp(1.875rem, 3vw, 2.625rem);
+  --radius-control: 0;
+  --radius-panel: 2px;
+}

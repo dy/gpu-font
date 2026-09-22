@@ -1,0 +1,160 @@
+{
+  "policy": "patch",
+  "seconds": 37.81831020954996,
+  "steps": 2400,
+  "seed": 31415,
+  "parameters": 25186,
+  "threshold": 0.22617635130882263,
+  "lossFirst100": 0.6180606612563133,
+  "lossLast100": 0.06100684120319784,
+  "calibration": {
+    "positives": 64,
+    "negatives": 832,
+    "truePositives": 48,
+    "falsePositives": 41,
+    "recall": 0.75,
+    "falsePositiveRate": 0.04927884615384615,
+    "precision": 0.5393258426966292
+  },
+  "conditions": {
+    "pillow/clean": {
+      "positives": 64,
+      "negatives": 1216,
+      "truePositives": 48,
+      "falsePositives": 75,
+      "recall": 0.75,
+      "falsePositiveRate": 0.061677631578947366,
+      "precision": 0.3902439024390244
+    },
+    "pillow/small": {
+      "positives": 64,
+      "negatives": 1216,
+      "truePositives": 26,
+      "falsePositives": 91,
+      "recall": 0.40625,
+      "falsePositiveRate": 0.07483552631578948,
+      "precision": 0.2222222222222222
+    },
+    "pillow/short": {
+      "positives": 64,
+      "negatives": 1216,
+      "truePositives": 19,
+      "falsePositives": 67,
+      "recall": 0.296875,
+      "falsePositiveRate": 0.055098684210526314,
+      "precision": 0.22093023255813954
+    },
+    "pillow/rotate-left": {
+      "positives": 64,
+      "negatives": 1216,
+      "truePositives": 2,
+      "falsePositives": 2,
+      "recall": 0.03125,
+      "falsePositiveRate": 0.001644736842105263,
+      "precision": 0.5
+    },
+    "pillow/rotate-right": {
+      "positives": 64,
+      "negatives": 1216,
+      "truePositives": 0,
+      "falsePositives": 4,
+      "recall": 0.0,
+      "falsePositiveRate": 0.003289473684210526,
+      "precision": 0.0
+    },
+    "pillow/blur": {
+      "positives": 64,
+      "negatives": 1216,
+      "truePositives": 31,
+      "falsePositives": 125,
+      "recall": 0.484375,
+      "falsePositiveRate": 0.10279605263157894,
+      "precision": 0.1987179487179487
+    },
+    "pillow/jpeg": {
+      "positives": 64,
+      "negatives": 1216,
+      "truePositives": 31,
+      "falsePositives": 106,
+      "recall": 0.484375,
+      "falsePositiveRate": 0.08717105263157894,
+      "precision": 0.22627737226277372
+    },
+    "chromium/clean": {
+      "positives": 64,
+      "negatives": 1216,
+      "truePositives": 38,
+      "falsePositives": 100,
+      "recall": 0.59375,
+      "falsePositiveRate": 0.08223684210526316,
+      "precision": 0.2753623188405797
+    },
+    "chromium/small": {
+      "positives": 64,
+      "negatives": 1216,
+      "truePositives": 28,
+      "falsePositives": 77,
+      "recall": 0.4375,
+      "falsePositiveRate": 0.06332236842105263,
+      "precision": 0.26666666666666666
+    },
+    "chromium/short": {
+      "positives": 64,
+      "negatives": 1216,
+      "truePositives": 29,
+      "falsePositives": 118,
+      "recall": 0.453125,
+      "falsePositiveRate": 0.09703947368421052,
+      "precision": 0.19727891156462585
+    },
+    "chromium/rotate-left": {
+      "positives": 64,
+      "negatives": 1216,
+      "truePositives": 3,
+      "falsePositives": 5,
+      "recall": 0.046875,
+      "falsePositiveRate": 0.004111842105263158,
+      "precision": 0.375
+    },
+    "chromium/rotate-right": {
+      "positives": 64,
+      "negatives": 1216,
+      "truePositives": 3,
+      "falsePositives": 9,
+      "recall": 0.046875,
+      "falsePositiveRate": 0.007401315789473684,
+      "precision": 0.25
+    },
+    "chromium/blur": {
+      "positives": 64,
+      "negatives": 1216,
+      "truePositives": 40,
+      "falsePositives": 116,
+      "recall": 0.625,
+      "falsePositiveRate": 0.09539473684210527,
+      "precision": 0.2564102564102564
+    },
+    "chromium/jpeg": {
+      "positives": 64,
+      "negatives": 1216,
+      "truePositives": 46,
+      "falsePositives": 104,
+      "recall": 0.71875,
+      "falsePositiveRate": 0.08552631578947369,
+      "precision": 0.30666666666666664
+    }
+  },
+  "training": {
+    "positives": 512,
+    "negatives": 6656,
+    "truePositives": 511,
+    "falsePositives": 289,
+    "recall": 0.998046875,
+    "falsePositiveRate": 0.04341947115384615,
+    "precision": 0.63875
+  },
+  "manifestSha256": "deee70c71eb9346d2b0d2d4e269cffc6058248fb9a3a6a9bff131d045be36c75",
+  "modelSha256": "f1b1ad94fd5b2748785b6f1e825b96dff5c62f2ab24401a9e613f12e2d157d25",
+  "exportMaxAbsoluteError": 0.0,
+  "torch": "2.11.0"
+}

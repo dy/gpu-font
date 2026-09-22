@@ -1,0 +1,419 @@
+{
+  "description": "Inter versus 13 training negatives, with 6 additional unseen negative families at development evaluation. Synthetic only; not a 20-family retrieval model.",
+  "target": "inter",
+  "seed": 2718,
+  "steps": 1200,
+  "seconds": 52.17716525029391,
+  "parameters": 25186,
+  "input": {
+    "width": 256,
+    "height": 64,
+    "padding": 2
+  },
+  "samples": {
+    "train": 3584,
+    "calibration": 896,
+    "query": 5760
+  },
+  "lossFirst50": 0.6948107600212097,
+  "lossLast50": 0.2193379220366478,
+  "calibrationFprBudget": 0.05,
+  "threshold": 0.8116493225097656,
+  "calibration": {
+    "positives": 64,
+    "negatives": 832,
+    "truePositives": 17,
+    "falsePositives": 41,
+    "recall": 0.265625,
+    "falsePositiveRate": 0.04927884615384615,
+    "precision": 0.29310344827586204
+  },
+  "training": {
+    "positives": 256,
+    "negatives": 3328,
+    "truePositives": 213,
+    "falsePositives": 124,
+    "recall": 0.83203125,
+    "falsePositiveRate": 0.037259615384615384,
+    "precision": 0.6320474777448071
+  },
+  "development": {
+    "positives": 288,
+    "negatives": 5472,
+    "truePositives": 98,
+    "falsePositives": 352,
+    "recall": 0.3402777777777778,
+    "falsePositiveRate": 0.06432748538011696,
+    "precision": 0.21777777777777776
+  },
+  "renderers": {
+    "pillow": {
+      "positives": 144,
+      "negatives": 2736,
+      "truePositives": 36,
+      "falsePositives": 84,
+      "recall": 0.25,
+      "falsePositiveRate": 0.03070175438596491,
+      "precision": 0.3
+    },
+    "chromium": {
+      "positives": 144,
+      "negatives": 2736,
+      "truePositives": 62,
+      "falsePositives": 268,
+      "recall": 0.4305555555555556,
+      "falsePositiveRate": 0.097953216374269,
+      "precision": 0.18787878787878787
+    }
+  },
+  "conditions": {
+    "pillow/clean": {
+      "positives": 16,
+      "negatives": 304,
+      "truePositives": 6,
+      "falsePositives": 8,
+      "recall": 0.375,
+      "falsePositiveRate": 0.02631578947368421,
+      "precision": 0.42857142857142855
+    },
+    "pillow/tight": {
+      "positives": 16,
+      "negatives": 304,
+      "truePositives": 6,
+      "falsePositives": 8,
+      "recall": 0.375,
+      "falsePositiveRate": 0.02631578947368421,
+      "precision": 0.42857142857142855
+    },
+    "pillow/short": {
+      "positives": 16,
+      "negatives": 304,
+      "truePositives": 2,
+      "falsePositives": 8,
+      "recall": 0.125,
+      "falsePositiveRate": 0.02631578947368421,
+      "precision": 0.2
+    },
+    "pillow/small": {
+      "positives": 16,
+      "negatives": 304,
+      "truePositives": 6,
+      "falsePositives": 20,
+      "recall": 0.375,
+      "falsePositiveRate": 0.06578947368421052,
+      "precision": 0.23076923076923078
+    },
+    "pillow/rotate-left": {
+      "positives": 16,
+      "negatives": 304,
+      "truePositives": 0,
+      "falsePositives": 0,
+      "recall": 0.0,
+      "falsePositiveRate": 0.0,
+      "precision": null
+    },
+    "pillow/rotate-right": {
+      "positives": 16,
+      "negatives": 304,
+      "truePositives": 2,
+      "falsePositives": 6,
+      "recall": 0.125,
+      "falsePositiveRate": 0.019736842105263157,
+      "precision": 0.25
+    },
+    "pillow/blur": {
+      "positives": 16,
+      "negatives": 304,
+      "truePositives": 8,
+      "falsePositives": 18,
+      "recall": 0.5,
+      "falsePositiveRate": 0.05921052631578947,
+      "precision": 0.3076923076923077
+    },
+    "pillow/jpeg": {
+      "positives": 16,
+      "negatives": 304,
+      "truePositives": 6,
+      "falsePositives": 4,
+      "recall": 0.375,
+      "falsePositiveRate": 0.013157894736842105,
+      "precision": 0.6
+    },
+    "pillow/mixed": {
+      "positives": 16,
+      "negatives": 304,
+      "truePositives": 0,
+      "falsePositives": 12,
+      "recall": 0.0,
+      "falsePositiveRate": 0.039473684210526314,
+      "precision": 0.0
+    },
+    "chromium/clean": {
+      "positives": 16,
+      "negatives": 304,
+      "truePositives": 8,
+      "falsePositives": 32,
+      "recall": 0.5,
+      "falsePositiveRate": 0.10526315789473684,
+      "precision": 0.2
+    },
+    "chromium/tight": {
+      "positives": 16,
+      "negatives": 304,
+      "truePositives": 11,
+      "falsePositives": 31,
+      "recall": 0.6875,
+      "falsePositiveRate": 0.10197368421052631,
+      "precision": 0.2619047619047619
+    },
+    "chromium/short": {
+      "positives": 16,
+      "negatives": 304,
+      "truePositives": 0,
+      "falsePositives": 11,
+      "recall": 0.0,
+      "falsePositiveRate": 0.03618421052631579,
+      "precision": 0.0
+    },
+    "chromium/small": {
+      "positives": 16,
+      "negatives": 304,
+      "truePositives": 10,
+      "falsePositives": 30,
+      "recall": 0.625,
+      "falsePositiveRate": 0.09868421052631579,
+      "precision": 0.25
+    },
+    "chromium/rotate-left": {
+      "positives": 16,
+      "negatives": 304,
+      "truePositives": 0,
+      "falsePositives": 11,
+      "recall": 0.0,
+      "falsePositiveRate": 0.03618421052631579,
+      "precision": 0.0
+    },
+    "chromium/rotate-right": {
+      "positives": 16,
+      "negatives": 304,
+      "truePositives": 7,
+      "falsePositives": 57,
+      "recall": 0.4375,
+      "falsePositiveRate": 0.1875,
+      "precision": 0.109375
+    },
+    "chromium/blur": {
+      "positives": 16,
+      "negatives": 304,
+      "truePositives": 10,
+      "falsePositives": 36,
+      "recall": 0.625,
+      "falsePositiveRate": 0.11842105263157894,
+      "precision": 0.21739130434782608
+    },
+    "chromium/jpeg": {
+      "positives": 16,
+      "negatives": 304,
+      "truePositives": 11,
+      "falsePositives": 28,
+      "recall": 0.6875,
+      "falsePositiveRate": 0.09210526315789473,
+      "precision": 0.28205128205128205
+    },
+    "chromium/mixed": {
+      "positives": 16,
+      "negatives": 304,
+      "truePositives": 5,
+      "falsePositives": 32,
+      "recall": 0.3125,
+      "falsePositiveRate": 0.10526315789473684,
+      "precision": 0.13513513513513514
+    }
+  },
+  "families": {
+    "bebas-neue": {
+      "positives": 0,
+      "negatives": 288,
+      "truePositives": 0,
+      "falsePositives": 0,
+      "recall": null,
+      "falsePositiveRate": 0.0,
+      "precision": null
+    },
+    "crimson-text": {
+      "positives": 0,
+      "negatives": 288,
+      "truePositives": 0,
+      "falsePositives": 1,
+      "recall": null,
+      "falsePositiveRate": 0.003472222222222222,
+      "precision": 0.0
+    },
+    "geist-mono": {
+      "positives": 0,
+      "negatives": 288,
+      "truePositives": 0,
+      "falsePositives": 3,
+      "recall": null,
+      "falsePositiveRate": 0.010416666666666666,
+      "precision": 0.0
+    },
+    "ibm-plex-sans": {
+      "positives": 0,
+      "negatives": 288,
+      "truePositives": 0,
+      "falsePositives": 13,
+      "recall": null,
+      "falsePositiveRate": 0.04513888888888889,
+      "precision": 0.0
+    },
+    "ibm-plex-serif": {
+      "positives": 0,
+      "negatives": 288,
+      "truePositives": 0,
+      "falsePositives": 0,
+      "recall": null,
+      "falsePositiveRate": 0.0,
+      "precision": null
+    },
+    "inter": {
+      "positives": 288,
+      "negatives": 0,
+      "truePositives": 98,
+      "falsePositives": 0,
+      "recall": 0.3402777777777778,
+      "falsePositiveRate": null,
+      "precision": 1.0
+    },
+    "libre-baskerville": {
+      "positives": 0,
+      "negatives": 288,
+      "truePositives": 0,
+      "falsePositives": 0,
+      "recall": null,
+      "falsePositiveRate": 0.0,
+      "precision": null
+    },
+    "lora": {
+      "positives": 0,
+      "negatives": 288,
+      "truePositives": 0,
+      "falsePositives": 3,
+      "recall": null,
+      "falsePositiveRate": 0.010416666666666666,
+      "precision": 0.0
+    },
+    "merriweather": {
+      "positives": 0,
+      "negatives": 288,
+      "truePositives": 0,
+      "falsePositives": 1,
+      "recall": null,
+      "falsePositiveRate": 0.003472222222222222,
+      "precision": 0.0
+    },
+    "montserrat": {
+      "positives": 0,
+      "negatives": 288,
+      "truePositives": 0,
+      "falsePositives": 21,
+      "recall": null,
+      "falsePositiveRate": 0.07291666666666667,
+      "precision": 0.0
+    },
+    "nunito": {
+      "positives": 0,
+      "negatives": 288,
+      "truePositives": 0,
+      "falsePositives": 18,
+      "recall": null,
+      "falsePositiveRate": 0.0625,
+      "precision": 0.0
+    },
+    "nunito-sans": {
+      "positives": 0,
+      "negatives": 288,
+      "truePositives": 0,
+      "falsePositives": 24,
+      "recall": null,
+      "falsePositiveRate": 0.08333333333333333,
+      "precision": 0.0
+    },
+    "open-sans": {
+      "positives": 0,
+      "negatives": 288,
+      "truePositives": 0,
+      "falsePositives": 13,
+      "recall": null,
+      "falsePositiveRate": 0.04513888888888889,
+      "precision": 0.0
+    },
+    "oswald": {
+      "positives": 0,
+      "negatives": 288,
+      "truePositives": 0,
+      "falsePositives": 0,
+      "recall": null,
+      "falsePositiveRate": 0.0,
+      "precision": null
+    },
+    "playfair-display": {
+      "positives": 0,
+      "negatives": 288,
+      "truePositives": 0,
+      "falsePositives": 9,
+      "recall": null,
+      "falsePositiveRate": 0.03125,
+      "precision": 0.0
+    },
+    "poppins": {
+      "positives": 0,
+      "negatives": 288,
+      "truePositives": 0,
+      "falsePositives": 93,
+      "recall": null,
+      "falsePositiveRate": 0.3229166666666667,
+      "precision": 0.0
+    },
+    "roboto": {
+      "positives": 0,
+      "negatives": 288,
+      "truePositives": 0,
+      "falsePositives": 89,
+      "recall": null,
+      "falsePositiveRate": 0.3090277777777778,
+      "precision": 0.0
+    },
+    "source-sans-3": {
+      "positives": 0,
+      "negatives": 288,
+      "truePositives": 0,
+      "falsePositives": 22,
+      "recall": null,
+      "falsePositiveRate": 0.0763888888888889,
+      "precision": 0.0
+    },
+    "source-serif-4": {
+      "positives": 0,
+      "negatives": 288,
+      "truePositives": 0,
+      "falsePositives": 10,
+      "recall": null,
+      "falsePositiveRate": 0.034722222222222224,
+      "precision": 0.0
+    },
+    "work-sans": {
+      "positives": 0,
+      "negatives": 288,
+      "truePositives": 0,
+      "falsePositives": 32,
+      "recall": null,
+      "falsePositiveRate": 0.1111111111111111,
+      "precision": 0.0
+    }
+  },
+  "manifestSha256": "2f5d4829f2356b2c243f7a61f921c29d079d60f6c396e597f34220e64367c026",
+  "modelSha256": "f9d92dd50ab39904d2f673d8cf46e16c7fe389294bb2ce434f3124c7a4cb28cb",
+  "exportMaxAbsoluteError": 0.0,
+  "torch": "2.11.0"
+}

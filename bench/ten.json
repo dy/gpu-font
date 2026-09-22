@@ -1,0 +1,12 @@
+{
+  "data": {
+    "seed": 20260922,
+    "fonts": ["inter", "roboto", "open-sans", "source-sans-3", "montserrat", "poppins", "nunito", "lora", "merriweather", "playfair-display"],
+    "input": { "width": 128, "height": 48, "windows": 3 },
+    "texts": { "train": 512, "validation": 32, "test": 64 },
+    "browserTrain": 512,
+    "trainViews": ["clean", "train", "rotate"],
+    "conditions": ["clean", "crop", "small", "rotate", "blur", "jpeg"]
+  },
+  "training": { "seed": 20260922, "steps": 12000, "batch": 48, "learningRate": 0.002, "threads": 4, "device": "mps", "dilations": [1, 1, 2, 2] }
+}

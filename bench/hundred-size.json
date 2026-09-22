@@ -1,0 +1,36 @@
+{
+  "files": [
+    {
+      "path": ".data/hundred/model.json",
+      "bytes": 141458,
+      "brotliBytes": 87172,
+      "sha256": "66b98a49d1bebe9b2e56bc896f1fbe9b8e76ece52e74608aeae58ef3dd4cefbb"
+    },
+    {
+      "path": "src/prepare.mjs",
+      "bytes": 5811,
+      "brotliBytes": 1897,
+      "sha256": "c48ce58778ad111f611ed96ad73a41b0c5821c2d1733cc3368931c4abafd7a13"
+    },
+    {
+      "path": "src/input.mjs",
+      "bytes": 2150,
+      "brotliBytes": 799,
+      "sha256": "6499378ce15d196937fab2e76c87c4b3bdd802981a01e363a0fbcddeb5b6d853"
+    },
+    {
+      "path": "src/network.mjs",
+      "bytes": 5498,
+      "brotliBytes": 1709,
+      "sha256": "b3d6207f692b3a4c46a566bcca8fd35856cfe8c9024431439f7f660784c49d54"
+    },
+    {
+      "path": "src/network-gpu.mjs",
+      "bytes": 5600,
+      "brotliBytes": 1840,
+      "sha256": "4d6136099d8440d25bcb8c76a68973f23f7e26dc020a8517e6bb4e37ffb17e20"
+    }
+  ],
+  "coreBrotliBytes": 93417,
+  "scope": "Sum of independently Brotli-compressed int8 JSON model and four unminified core modules. Excludes demo UI and optional TTF previews; not an npm release bundle."
+}

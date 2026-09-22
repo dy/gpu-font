@@ -1,0 +1,176 @@
+{
+  "modelSha256": "e10a2ecd979a3dc51189a9c5b6a5069411dccfa90c0bf6ee5fccf23f34e71fe9",
+  "timings": {
+    "gpu": {
+      "median": 2.90000057220459,
+      "p95": 3.3999996185302734,
+      "count": 20
+    },
+    "cpu": {
+      "median": 135.19999980926514,
+      "p95": 138.39999961853027,
+      "count": 20
+    },
+    "windows": [
+      [
+        122,
+        48
+      ],
+      [
+        128,
+        36
+      ],
+      [
+        128,
+        38
+      ]
+    ],
+    "scope": "Warm inference + rank, excludes image preparation and font loading; desktop Chromium only."
+  },
+  "sampleResults": [
+    {
+      "family": "inter",
+      "predicted": "inter",
+      "correct": true
+    },
+    {
+      "family": "roboto",
+      "predicted": "roboto",
+      "correct": true
+    },
+    {
+      "family": "open-sans",
+      "predicted": "source-sans-3",
+      "correct": false
+    },
+    {
+      "family": "source-sans-3",
+      "predicted": "source-sans-3",
+      "correct": true
+    },
+    {
+      "family": "montserrat",
+      "predicted": "montserrat",
+      "correct": true
+    },
+    {
+      "family": "poppins",
+      "predicted": "poppins",
+      "correct": true
+    },
+    {
+      "family": "nunito",
+      "predicted": "nunito",
+      "correct": true
+    },
+    {
+      "family": "lora",
+      "predicted": "lora",
+      "correct": true
+    },
+    {
+      "family": "merriweather",
+      "predicted": "merriweather",
+      "correct": true
+    },
+    {
+      "family": "playfair-display",
+      "predicted": "playfair-display",
+      "correct": true
+    }
+  ],
+  "cpuMaxError": 0.00002288818359375,
+  "gpuMaxError": 0.00002288818359375,
+  "adapter": "metal-3",
+  "browser": "151.0.7922.34",
+  "cases": [
+    "white-min",
+    "black-max",
+    "ramp-odd",
+    "stripes-small",
+    "pillow",
+    "chromium"
+  ],
+  "responsive": [
+    {
+      "width": 320,
+      "scroll": 320,
+      "clipped": []
+    },
+    {
+      "width": 375,
+      "scroll": 375,
+      "clipped": []
+    },
+    {
+      "width": 414,
+      "scroll": 414,
+      "clipped": []
+    },
+    {
+      "width": 768,
+      "scroll": 768,
+      "clipped": []
+    },
+    {
+      "width": 1440,
+      "scroll": 1440,
+      "clipped": []
+    }
+  ],
+  "contrast": [
+    {
+      "pair": [
+        "--color-ink",
+        "--color-paper"
+      ],
+      "ratio": 16.011603207077666
+    },
+    {
+      "pair": [
+        "--color-muted",
+        "--color-paper"
+      ],
+      "ratio": 6.450195414775827
+    },
+    {
+      "pair": [
+        "--color-muted",
+        "--color-well"
+      ],
+      "ratio": 5.959048445674803
+    },
+    {
+      "pair": [
+        "--color-accent",
+        "--color-paper"
+      ],
+      "ratio": 16.011603207077666
+    },
+    {
+      "pair": [
+        "--color-accent-ink",
+        "--color-accent"
+      ],
+      "ratio": 16.857588663262874
+    }
+  ],
+  "liveCrop": {
+    "rapidUpdates": 50,
+    "inferences": 6,
+    "lastInferenceMs": 8.5
+  },
+  "automaticBackground": [
+    "opaque-dark",
+    "opaque-light",
+    "transparent-dark",
+    "transparent-light",
+    "half-dark",
+    "half-light",
+    "boundary-127",
+    "boundary-128",
+    "transparent-empty"
+  ],
+  "deviceLossRecovery": true,
+  "interactionErrors": []
+}

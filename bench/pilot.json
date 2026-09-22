@@ -1,0 +1,48 @@
+{
+  "version": 1,
+  "seed": 1729,
+  "input": { "width": 128, "height": 32, "padding": 2 },
+  "evaluation": {
+    "texts": ["Hamburgefonts 0123", "Quiet rivers flow", "Typography & ideas"],
+    "sizes": [14, 28],
+    "dprs": [1, 2],
+    "polarities": ["dark", "light"]
+  },
+  "training": {
+    "samplesPerFamily": 160,
+    "steps": 400,
+    "batchPerFamily": 4,
+    "learningRate": 0.002,
+    "threads": 4,
+    "texts": [
+      "Morning light", "Open the window", "A gentle breeze", "Bright blue sky",
+      "Careful reading", "Soft golden sand", "Walking together", "Simple daily work",
+      "Fresh green leaves", "Above the clouds", "Making things clear", "Deep quiet water",
+      "Round bowls 2468", "Letters and words", "Music in the room", "A small beginning",
+      "Kindness matters", "The path ahead", "Shapes in motion", "Honest useful work",
+      "Ocean waves", "Draw a fine line", "Small details", "Thought and action"
+    ]
+  },
+  "fonts": [
+    {"id":"inter","file":"Inter[opsz,wght].ttf","split":"train"},
+    {"id":"roboto","file":"Roboto[wdth,wght].ttf","split":"train"},
+    {"id":"open-sans","file":"OpenSans[wdth,wght].ttf","split":"train"},
+    {"id":"source-sans-3","file":"SourceSans3[wght].ttf","split":"train"},
+    {"id":"montserrat","file":"Montserrat[wght].ttf","split":"train"},
+    {"id":"poppins","file":"Poppins-Regular.ttf","split":"train"},
+    {"id":"nunito","file":"Nunito[wght].ttf","split":"unseen-dev"},
+    {"id":"nunito-sans","file":"NunitoSans[YTLC,opsz,wdth,wght].ttf","split":"unseen-dev"},
+    {"id":"ibm-plex-sans","file":"IBMPlexSans[wdth,wght].ttf","split":"train"},
+    {"id":"work-sans","file":"WorkSans[wght].ttf","split":"train"},
+    {"id":"lora","file":"Lora[wght].ttf","split":"unseen-dev"},
+    {"id":"merriweather","file":"Merriweather[opsz,wdth,wght].ttf","split":"unseen-dev"},
+    {"id":"libre-baskerville","file":"LibreBaskerville[wght].ttf","split":"train"},
+    {"id":"crimson-text","file":"CrimsonText-Regular.ttf","split":"train"},
+    {"id":"source-serif-4","file":"SourceSerif4[opsz,wght].ttf","split":"train"},
+    {"id":"ibm-plex-serif","file":"IBMPlexSerif-Regular.ttf","split":"train"},
+    {"id":"geist-mono","file":"GeistMono[wght].ttf","split":"train"},
+    {"id":"oswald","file":"Oswald[wght].ttf","split":"train"},
+    {"id":"bebas-neue","file":"BebasNeue-Regular.ttf","split":"unseen-dev"},
+    {"id":"playfair-display","file":"PlayfairDisplay[wght].ttf","split":"unseen-dev"}
+  ]
+}

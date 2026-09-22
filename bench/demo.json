@@ -1,0 +1,926 @@
+{
+  "modelSha256": "66b98a49d1bebe9b2e56bc896f1fbe9b8e76ece52e74608aeae58ef3dd4cefbb",
+  "timings": {
+    "gpu": {
+      "median": 3.1999998092651367,
+      "p95": 4,
+      "count": 20
+    },
+    "cpu": {
+      "median": 164.4000005722046,
+      "p95": 167.10000038146973,
+      "count": 20
+    },
+    "windows": [
+      [
+        122,
+        48
+      ],
+      [
+        128,
+        36
+      ],
+      [
+        128,
+        38
+      ]
+    ],
+    "scope": "Warm inference + rank, excludes image preparation and font loading; desktop Chromium only."
+  },
+  "sampleResults": [
+    {
+      "family": "inter",
+      "predicted": "inter",
+      "correct": true
+    },
+    {
+      "family": "roboto",
+      "predicted": "roboto-flex",
+      "correct": false
+    },
+    {
+      "family": "open-sans",
+      "predicted": "open-sans",
+      "correct": true
+    },
+    {
+      "family": "source-sans-3",
+      "predicted": "source-sans-3",
+      "correct": true
+    },
+    {
+      "family": "montserrat",
+      "predicted": "montserrat",
+      "correct": true
+    },
+    {
+      "family": "poppins",
+      "predicted": "poppins",
+      "correct": true
+    },
+    {
+      "family": "nunito",
+      "predicted": "nunito",
+      "correct": true
+    },
+    {
+      "family": "nunito-sans",
+      "predicted": "nunito-sans",
+      "correct": true
+    },
+    {
+      "family": "ibm-plex-sans",
+      "predicted": "ibm-plex-sans",
+      "correct": true
+    },
+    {
+      "family": "work-sans",
+      "predicted": "work-sans",
+      "correct": true
+    },
+    {
+      "family": "lora",
+      "predicted": "lora",
+      "correct": true
+    },
+    {
+      "family": "merriweather",
+      "predicted": "merriweather",
+      "correct": true
+    },
+    {
+      "family": "libre-baskerville",
+      "predicted": "libre-baskerville",
+      "correct": true
+    },
+    {
+      "family": "crimson-text",
+      "predicted": "crimson-text",
+      "correct": true
+    },
+    {
+      "family": "source-serif-4",
+      "predicted": "source-serif-4",
+      "correct": true
+    },
+    {
+      "family": "ibm-plex-serif",
+      "predicted": "ibm-plex-serif",
+      "correct": true
+    },
+    {
+      "family": "geist-mono",
+      "predicted": "geist-mono",
+      "correct": true
+    },
+    {
+      "family": "oswald",
+      "predicted": "oswald",
+      "correct": true
+    },
+    {
+      "family": "bebas-neue",
+      "predicted": "bebas-neue",
+      "correct": true
+    },
+    {
+      "family": "playfair-display",
+      "predicted": "playfair-display",
+      "correct": true
+    },
+    {
+      "family": "adamina",
+      "predicted": "adamina",
+      "correct": true
+    },
+    {
+      "family": "urbanist",
+      "predicted": "urbanist",
+      "correct": true
+    },
+    {
+      "family": "mulish",
+      "predicted": "nunito-sans",
+      "correct": false
+    },
+    {
+      "family": "gravitas-one",
+      "predicted": "gravitas-one",
+      "correct": true
+    },
+    {
+      "family": "lexend",
+      "predicted": "lexend",
+      "correct": true
+    },
+    {
+      "family": "mate",
+      "predicted": "mate",
+      "correct": true
+    },
+    {
+      "family": "cookie",
+      "predicted": "cookie",
+      "correct": true
+    },
+    {
+      "family": "great-vibes",
+      "predicted": "great-vibes",
+      "correct": true
+    },
+    {
+      "family": "italianno",
+      "predicted": "italianno",
+      "correct": true
+    },
+    {
+      "family": "bitter",
+      "predicted": "bitter",
+      "correct": true
+    },
+    {
+      "family": "figtree",
+      "predicted": "figtree",
+      "correct": true
+    },
+    {
+      "family": "exo-2",
+      "predicted": "exo-2",
+      "correct": true
+    },
+    {
+      "family": "noto-serif",
+      "predicted": "noto-serif",
+      "correct": true
+    },
+    {
+      "family": "comfortaa",
+      "predicted": "comfortaa",
+      "correct": true
+    },
+    {
+      "family": "vollkorn",
+      "predicted": "vollkorn",
+      "correct": true
+    },
+    {
+      "family": "pacifico",
+      "predicted": "pacifico",
+      "correct": true
+    },
+    {
+      "family": "parisienne",
+      "predicted": "parisienne",
+      "correct": true
+    },
+    {
+      "family": "lemon",
+      "predicted": "lemon",
+      "correct": true
+    },
+    {
+      "family": "prompt",
+      "predicted": "prompt",
+      "correct": true
+    },
+    {
+      "family": "cinzel",
+      "predicted": "cinzel-decorative",
+      "correct": false
+    },
+    {
+      "family": "red-hat-display",
+      "predicted": "red-hat-display",
+      "correct": true
+    },
+    {
+      "family": "public-sans",
+      "predicted": "public-sans",
+      "correct": true
+    },
+    {
+      "family": "amiri",
+      "predicted": "amiri",
+      "correct": true
+    },
+    {
+      "family": "bodoni-moda",
+      "predicted": "bodoni-moda",
+      "correct": true
+    },
+    {
+      "family": "encode-sans",
+      "predicted": "encode-sans",
+      "correct": true
+    },
+    {
+      "family": "cormorant",
+      "predicted": "cormorant",
+      "correct": true
+    },
+    {
+      "family": "noto-sans",
+      "predicted": "noto-sans",
+      "correct": true
+    },
+    {
+      "family": "instrument-sans",
+      "predicted": "poppins",
+      "correct": false
+    },
+    {
+      "family": "alegreya",
+      "predicted": "alegreya",
+      "correct": true
+    },
+    {
+      "family": "raleway",
+      "predicted": "raleway",
+      "correct": true
+    },
+    {
+      "family": "schibsted-grotesk",
+      "predicted": "schibsted-grotesk",
+      "correct": true
+    },
+    {
+      "family": "alex-brush",
+      "predicted": "alex-brush",
+      "correct": true
+    },
+    {
+      "family": "sacramento",
+      "predicted": "sacramento",
+      "correct": true
+    },
+    {
+      "family": "dm-sans",
+      "predicted": "instrument-sans",
+      "correct": false
+    },
+    {
+      "family": "hepta-slab",
+      "predicted": "hepta-slab",
+      "correct": true
+    },
+    {
+      "family": "paytone-one",
+      "predicted": "paytone-one",
+      "correct": true
+    },
+    {
+      "family": "bricolage-grotesque",
+      "predicted": "bricolage-grotesque",
+      "correct": true
+    },
+    {
+      "family": "bangers",
+      "predicted": "bangers",
+      "correct": true
+    },
+    {
+      "family": "sorts-mill-goudy",
+      "predicted": "sorts-mill-goudy",
+      "correct": true
+    },
+    {
+      "family": "stix-two-text",
+      "predicted": "stix-two-text",
+      "correct": true
+    },
+    {
+      "family": "hanken-grotesk",
+      "predicted": "hanken-grotesk",
+      "correct": true
+    },
+    {
+      "family": "zilla-slab",
+      "predicted": "zilla-slab",
+      "correct": true
+    },
+    {
+      "family": "onest",
+      "predicted": "poppins",
+      "correct": false
+    },
+    {
+      "family": "josefin-slab",
+      "predicted": "josefin-slab",
+      "correct": true
+    },
+    {
+      "family": "rounded-mplus-1c",
+      "predicted": "rounded-mplus-1c",
+      "correct": true
+    },
+    {
+      "family": "josefin-sans",
+      "predicted": "josefin-sans",
+      "correct": true
+    },
+    {
+      "family": "asap",
+      "predicted": "asap",
+      "correct": true
+    },
+    {
+      "family": "righteous",
+      "predicted": "righteous",
+      "correct": true
+    },
+    {
+      "family": "literata",
+      "predicted": "literata",
+      "correct": true
+    },
+    {
+      "family": "anton",
+      "predicted": "anton",
+      "correct": true
+    },
+    {
+      "family": "caveat",
+      "predicted": "caveat",
+      "correct": true
+    },
+    {
+      "family": "rokkitt",
+      "predicted": "rokkitt",
+      "correct": true
+    },
+    {
+      "family": "sanchez",
+      "predicted": "sanchez",
+      "correct": true
+    },
+    {
+      "family": "sora",
+      "predicted": "sora",
+      "correct": true
+    },
+    {
+      "family": "manrope",
+      "predicted": "manrope",
+      "correct": true
+    },
+    {
+      "family": "commissioner",
+      "predicted": "commissioner",
+      "correct": true
+    },
+    {
+      "family": "oranienbaum",
+      "predicted": "oranienbaum",
+      "correct": true
+    },
+    {
+      "family": "geist",
+      "predicted": "geist",
+      "correct": true
+    },
+    {
+      "family": "titan-one",
+      "predicted": "titan-one",
+      "correct": true
+    },
+    {
+      "family": "alfa-slab-one",
+      "predicted": "alfa-slab-one",
+      "correct": true
+    },
+    {
+      "family": "outfit",
+      "predicted": "outfit",
+      "correct": true
+    },
+    {
+      "family": "cabin",
+      "predicted": "cabin",
+      "correct": true
+    },
+    {
+      "family": "roboto-flex",
+      "predicted": "roboto-flex",
+      "correct": true
+    },
+    {
+      "family": "cinzel-decorative",
+      "predicted": "cinzel-decorative",
+      "correct": true
+    },
+    {
+      "family": "unna",
+      "predicted": "unna",
+      "correct": true
+    },
+    {
+      "family": "rubik-mono-one",
+      "predicted": "rubik-mono-one",
+      "correct": true
+    },
+    {
+      "family": "lustria",
+      "predicted": "lustria",
+      "correct": true
+    },
+    {
+      "family": "cormorant-garamond",
+      "predicted": "cormorant",
+      "correct": false
+    },
+    {
+      "family": "abril-fatface",
+      "predicted": "abril-fatface",
+      "correct": true
+    },
+    {
+      "family": "karma",
+      "predicted": "karma",
+      "correct": true
+    },
+    {
+      "family": "varela-round",
+      "predicted": "varela-round",
+      "correct": true
+    },
+    {
+      "family": "sura",
+      "predicted": "sura",
+      "correct": true
+    },
+    {
+      "family": "exo",
+      "predicted": "exo",
+      "correct": true
+    },
+    {
+      "family": "kanit",
+      "predicted": "kanit",
+      "correct": true
+    },
+    {
+      "family": "sarpanch",
+      "predicted": "sarpanch",
+      "correct": true
+    },
+    {
+      "family": "archivo-black",
+      "predicted": "archivo-black",
+      "correct": true
+    },
+    {
+      "family": "pinyon-script",
+      "predicted": "pinyon-script",
+      "correct": true
+    },
+    {
+      "family": "allura",
+      "predicted": "allura",
+      "correct": true
+    },
+    {
+      "family": "rye",
+      "predicted": "rye",
+      "correct": true
+    },
+    {
+      "family": "space-grotesk",
+      "predicted": "sora",
+      "correct": false
+    }
+  ],
+  "screenshotExample": {
+    "family": "geist-mono",
+    "accepted": false,
+    "matches": [
+      {
+        "family": "geist-mono",
+        "score": 0.9752595541815978
+      },
+      {
+        "family": "geist",
+        "score": 0.009301831748879096
+      },
+      {
+        "family": "ibm-plex-sans",
+        "score": 0.00248474534465005
+      },
+      {
+        "family": "bebas-neue",
+        "score": 0.0014051603295739275
+      },
+      {
+        "family": "sora",
+        "score": 0.0012896819375292203
+      }
+    ],
+    "windows": [
+      {
+        "width": 124,
+        "height": 48,
+        "rect": {
+          "x": 26,
+          "y": 26,
+          "width": 133,
+          "height": 51
+        }
+      },
+      {
+        "width": 128,
+        "height": 40,
+        "rect": {
+          "x": 244,
+          "y": 27,
+          "width": 136,
+          "height": 44
+        }
+      },
+      {
+        "width": 128,
+        "height": 42,
+        "rect": {
+          "x": 465,
+          "y": 27,
+          "width": 133,
+          "height": 44
+        }
+      }
+    ]
+  },
+  "fragments": [
+    {
+      "family": "inter",
+      "text": "ri",
+      "predicted": "sora",
+      "score": 0.314552764210314,
+      "accepted": false,
+      "correct": false
+    },
+    {
+      "family": "inter",
+      "text": "ri+sliver",
+      "predicted": "sora",
+      "score": 0.363579139285038,
+      "accepted": false,
+      "correct": false
+    },
+    {
+      "family": "inter",
+      "text": "rivers",
+      "predicted": "inter",
+      "score": 0.5171157642278978,
+      "accepted": false,
+      "correct": true
+    },
+    {
+      "family": "roboto",
+      "text": "ri",
+      "predicted": "roboto-flex",
+      "score": 0.33603532065206704,
+      "accepted": false,
+      "correct": false
+    },
+    {
+      "family": "roboto",
+      "text": "ri+sliver",
+      "predicted": "roboto-flex",
+      "score": 0.3430467974901398,
+      "accepted": false,
+      "correct": false
+    },
+    {
+      "family": "roboto",
+      "text": "rivers",
+      "predicted": "roboto",
+      "score": 0.5207681727688047,
+      "accepted": false,
+      "correct": true
+    },
+    {
+      "family": "open-sans",
+      "text": "ri",
+      "predicted": "sora",
+      "score": 0.5331440586505963,
+      "accepted": false,
+      "correct": false
+    },
+    {
+      "family": "open-sans",
+      "text": "ri+sliver",
+      "predicted": "sora",
+      "score": 0.1929252132483412,
+      "accepted": false,
+      "correct": false
+    },
+    {
+      "family": "open-sans",
+      "text": "rivers",
+      "predicted": "noto-sans",
+      "score": 0.7611140472699762,
+      "accepted": false,
+      "correct": false
+    },
+    {
+      "family": "source-sans-3",
+      "text": "ri",
+      "predicted": "schibsted-grotesk",
+      "score": 0.5937513310743511,
+      "accepted": false,
+      "correct": false
+    },
+    {
+      "family": "source-sans-3",
+      "text": "ri+sliver",
+      "predicted": "schibsted-grotesk",
+      "score": 0.37661234476984307,
+      "accepted": false,
+      "correct": false
+    },
+    {
+      "family": "source-sans-3",
+      "text": "rivers",
+      "predicted": "source-sans-3",
+      "score": 0.6408541626193345,
+      "accepted": false,
+      "correct": true
+    },
+    {
+      "family": "montserrat",
+      "text": "ri",
+      "predicted": "instrument-sans",
+      "score": 0.37824002337863494,
+      "accepted": false,
+      "correct": false
+    },
+    {
+      "family": "montserrat",
+      "text": "ri+sliver",
+      "predicted": "instrument-sans",
+      "score": 0.32604919425500917,
+      "accepted": false,
+      "correct": false
+    },
+    {
+      "family": "montserrat",
+      "text": "rivers",
+      "predicted": "montserrat",
+      "score": 0.953167491062384,
+      "accepted": false,
+      "correct": true
+    },
+    {
+      "family": "poppins",
+      "text": "ri",
+      "predicted": "public-sans",
+      "score": 0.3286122735960612,
+      "accepted": false,
+      "correct": false
+    },
+    {
+      "family": "poppins",
+      "text": "ri+sliver",
+      "predicted": "schibsted-grotesk",
+      "score": 0.5729924712610234,
+      "accepted": false,
+      "correct": false
+    },
+    {
+      "family": "poppins",
+      "text": "rivers",
+      "predicted": "poppins",
+      "score": 0.4676016203203469,
+      "accepted": false,
+      "correct": true
+    },
+    {
+      "family": "nunito",
+      "text": "ri",
+      "predicted": "nunito",
+      "score": 0.7887101841799654,
+      "accepted": false,
+      "correct": true
+    },
+    {
+      "family": "nunito",
+      "text": "ri+sliver",
+      "predicted": "nunito",
+      "score": 0.6313414791129366,
+      "accepted": false,
+      "correct": true
+    },
+    {
+      "family": "nunito",
+      "text": "rivers",
+      "predicted": "nunito",
+      "score": 0.9502246776920409,
+      "accepted": false,
+      "correct": true
+    },
+    {
+      "family": "lora",
+      "text": "ri",
+      "predicted": "libre-baskerville",
+      "score": 0.6504636448687764,
+      "accepted": false,
+      "correct": false
+    },
+    {
+      "family": "lora",
+      "text": "ri+sliver",
+      "predicted": "libre-baskerville",
+      "score": 0.5581539415258802,
+      "accepted": false,
+      "correct": false
+    },
+    {
+      "family": "lora",
+      "text": "rivers",
+      "predicted": "lora",
+      "score": 0.4842994262855233,
+      "accepted": false,
+      "correct": true
+    },
+    {
+      "family": "merriweather",
+      "text": "ri",
+      "predicted": "rokkitt",
+      "score": 0.4809708033021071,
+      "accepted": false,
+      "correct": false
+    },
+    {
+      "family": "merriweather",
+      "text": "ri+sliver",
+      "predicted": "rokkitt",
+      "score": 0.571890246203688,
+      "accepted": false,
+      "correct": false
+    },
+    {
+      "family": "merriweather",
+      "text": "rivers",
+      "predicted": "merriweather",
+      "score": 0.9834089469306189,
+      "accepted": false,
+      "correct": true
+    },
+    {
+      "family": "playfair-display",
+      "text": "ri",
+      "predicted": "playfair-display",
+      "score": 0.9599165786846061,
+      "accepted": false,
+      "correct": true
+    },
+    {
+      "family": "playfair-display",
+      "text": "ri+sliver",
+      "predicted": "playfair-display",
+      "score": 0.9705078004301041,
+      "accepted": false,
+      "correct": true
+    },
+    {
+      "family": "playfair-display",
+      "text": "rivers",
+      "predicted": "playfair-display",
+      "score": 0.9731318984559086,
+      "accepted": false,
+      "correct": true
+    }
+  ],
+  "cpuMaxError": 0.000020742416381835938,
+  "gpuMaxError": 0.000030517578125,
+  "adapter": "metal-3",
+  "browser": "151.0.7922.34",
+  "cases": [
+    "white-min",
+    "black-max",
+    "ramp-odd",
+    "stripes-small",
+    "pillow",
+    "chromium"
+  ],
+  "responsive": [
+    {
+      "width": 320,
+      "scroll": 320,
+      "clipped": []
+    },
+    {
+      "width": 375,
+      "scroll": 375,
+      "clipped": []
+    },
+    {
+      "width": 414,
+      "scroll": 414,
+      "clipped": []
+    },
+    {
+      "width": 768,
+      "scroll": 768,
+      "clipped": []
+    },
+    {
+      "width": 1440,
+      "scroll": 1440,
+      "clipped": []
+    }
+  ],
+  "contrast": [
+    {
+      "pair": [
+        "--color-ink",
+        "--color-paper"
+      ],
+      "ratio": 16.011603207077666
+    },
+    {
+      "pair": [
+        "--color-muted",
+        "--color-paper"
+      ],
+      "ratio": 6.450195414775827
+    },
+    {
+      "pair": [
+        "--color-muted",
+        "--color-well"
+      ],
+      "ratio": 5.959048445674803
+    },
+    {
+      "pair": [
+        "--color-accent",
+        "--color-paper"
+      ],
+      "ratio": 16.011603207077666
+    },
+    {
+      "pair": [
+        "--color-accent-ink",
+        "--color-accent"
+      ],
+      "ratio": 16.857588663262874
+    }
+  ],
+  "liveCrop": {
+    "rapidUpdates": 50,
+    "inferences": 6,
+    "lastInferenceMs": 5
+  },
+  "automaticBackground": [
+    "opaque-dark",
+    "opaque-light",
+    "transparent-dark",
+    "transparent-light",
+    "half-dark",
+    "half-light",
+    "boundary-127",
+    "boundary-128",
+    "transparent-empty"
+  ],
+  "deviceLossRecovery": true,
+  "interactionErrors": []
+}

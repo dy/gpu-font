@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#f9f9f9">
+  <meta name="description" content="A local font recognition experiment. Paste an image, select a line, and compare candidate typefaces with WebGPU.">
+  <title>gpu-font — a font recognition workbench</title>
+  <link rel="stylesheet" href="./style.css">
+</head>
+<body>
+  <a class="skip" href="#workbench">Skip to workbench</a>
+  <header class="masthead">
+    <h1><a href="./" class="wordmark" aria-label="gpu-font home">gpu-font</a></h1>
+    <div class="runtime"><span class="status-dot" aria-hidden="true"></span><span id="backend" role="status">Loading…</span></div>
+  </header>
+  <main>
+    <div id="workbench" class="workbench">
+      <section class="source-panel" aria-labelledby="source-title">
+        <div class="panel-heading"><div class="image-heading"><h2 id="source-title">Image</h2><button id="upload" class="icon-button" aria-label="Open image" title="Open image"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M3 7a2 2 0 0 1 2-2h5l2 3h7a2 2 0 0 1 2 2v1M3 7v11a1 1 0 0 0 1 1h15l3-8H6l-3 7" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/></svg></button></div><div class="sample-picker">
+          <button id="sample" class="text-button" popovertarget="sample-menu" aria-haspopup="dialog" aria-expanded="false" disabled><span id="sample-label">Samples</span><svg width="14" height="14" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="m4 6 4 4 4-4" stroke="currentColor" stroke-width="1.2"/></svg></button>
+          <div id="sample-menu" class="sample-menu" popover="auto" role="dialog" aria-label="Sample fonts"><label class="sr-only" for="sample-search">Search fonts</label><input id="sample-search" type="search" autofocus placeholder="Search fonts" autocomplete="off" spellcheck="false"><div id="sample-list" class="sample-list"></div><p id="sample-empty" hidden>No fonts found.</p></div>
+        </div></div>
+        <div id="stage" class="stage" aria-label="Image drop area">
+          <div class="image-viewport">
+            <button id="empty" aria-label="Choose an image"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="2" stroke="currentColor" stroke-width="1.3"/><circle cx="8" cy="8" r="1.5" fill="currentColor"/><path d="m3 17 5-5 4 4 4-6 5 7" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"/></svg><span>Choose image</span></button>
+            <div id="image-frame" tabindex="0" role="group" aria-label="Image crop" aria-description="Drag inside to move, or drag a handle to resize. You can also click a handle then click its destination. Arrow keys move; Shift resizes. Home selects the whole image." hidden>
+              <canvas id="source" role="img" aria-label="Source image"></canvas>
+              <div class="crop-mask" aria-hidden="true"><div id="crop-shade"></div></div><div id="selection"><button type="button" class="crop-handle" data-handle="nw" aria-label="Resize top left"></button><button type="button" class="crop-handle" data-handle="n" aria-label="Resize top"></button><button type="button" class="crop-handle" data-handle="ne" aria-label="Resize top right"></button><button type="button" class="crop-handle" data-handle="e" aria-label="Resize right"></button><button type="button" class="crop-handle" data-handle="se" aria-label="Resize bottom right"></button><button type="button" class="crop-handle" data-handle="s" aria-label="Resize bottom"></button><button type="button" class="crop-handle" data-handle="sw" aria-label="Resize bottom left"></button><button type="button" class="crop-handle" data-handle="w" aria-label="Resize left"></button></div>
+              <div id="input-regions" aria-hidden="true"></div>
+            </div>
+          </div>
+
+          <input id="file" type="file" accept="image/*" hidden>
+        </div>
+        <div id="resolution-control" class="resolution-control" hidden><label for="resolution">Resolution</label><input id="resolution" type="range" min="10" max="100" step="10" value="100"><output id="resolution-value" for="resolution"></output></div>
+        <p id="message" class="message" role="status" aria-live="polite"></p>
+        <figure id="model-input" class="model-input" hidden><figcaption>Input</figcaption><div id="normalized" class="input-windows"></div></figure>
+      </section>
+
+      <section class="results-panel" aria-labelledby="results-title">
+        <div class="panel-heading"><h2 id="results-title">Matches</h2><span class="score-label">Model score</span></div>
+        <p class="scope">100 fonts</p>
+        <div class="result-preview-control"><label for="preview-text">Preview text</label><input id="preview-text" maxlength="80" value="Quiet rivers flow" autocomplete="off" spellcheck="false" aria-describedby="preview-error"></div>
+        <p id="preview-error" class="message" data-error role="status" hidden>These font previews don’t support this character.</p>
+        <p id="results-empty" class="results-empty">No matches yet.</p>
+        <ol id="results" class="results" aria-label="Ranked font matches" aria-describedby="score-note" aria-live="polite"></ol>
+        <div class="result-foot"><span id="result-summary"></span><button id="save" class="text-button" disabled>Save result <span aria-hidden="true">↓</span></button></div>
+      </section>
+    </div>
+
+    <details id="about" class="about"><summary><span>Model & results</span></summary><div class="about-content"><div><p id="metrics"></p><p id="score-note">Model scores compare the fonts in this collection. They are not measured certainty or visual similarity.</p><table id="accuracy" class="accuracy" hidden><caption>Top-1 by source text length</caption><thead><tr><th scope="col">Characters</th><th scope="col">Clean</th><th scope="col">All views</th></tr></thead><tbody></tbody></table><p>Regular Latin text on a plain background. Select one font at a time. Fonts outside this collection are not reliably rejected.</p></div><div><dl><div><dt>Classifier</dt><dd id="parameters">—</dd></div><div><dt>Input</dt><dd>Up to 3 tight text windows</dd></div><div><dt>Weights</dt><dd>Int8</dd></div><div><dt>Last inference</dt><dd id="timing">—</dd></div><div><dt>Compute</dt><dd id="device">Initializing…</dd></div></dl></div></div></details>
+  </main>
+  <footer><span>Images stay in your browser.</span><a href="./assets/font-notices.json" target="_blank" rel="noopener">Font notices</a></footer>
+
+
+  <script type="module" src="./app.mjs"></script>
+</body>
+</html>

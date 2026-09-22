@@ -1,0 +1,18 @@
+{
+  "selected": "context",
+  "criterion": "At least 2 absolute validation points over the same-budget smaller continuation",
+  "gain": 0.02840909090909094,
+  "context": "66b98a49d1bebe9b2e56bc896f1fbe9b8e76ece52e74608aeae58ef3dd4cefbb",
+  "control": "a47e6bab033da8c3e8d5c5ffede90b627a206a4a7a9dd7e0598258a45624dc1f",
+  "energyProbe": {
+    "model": "context",
+    "candidate": {
+      "score": 0.9881374003977712,
+      "energy": -2.093709945678711,
+      "accuracy": 1,
+      "coverage": 0.05409090909090909,
+      "fpr": 0.044372294372294376
+    }
+  },
+  "testUsedForSelection": false
+}

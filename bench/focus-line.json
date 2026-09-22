@@ -1,0 +1,160 @@
+{
+  "policy": "line",
+  "seconds": 36.42264612484723,
+  "steps": 2400,
+  "seed": 31415,
+  "parameters": 25186,
+  "threshold": 0.9167183637619019,
+  "lossFirst100": 0.6847345358133317,
+  "lossLast100": 0.1573728690482676,
+  "calibration": {
+    "positives": 64,
+    "negatives": 832,
+    "truePositives": 14,
+    "falsePositives": 41,
+    "recall": 0.21875,
+    "falsePositiveRate": 0.04927884615384615,
+    "precision": 0.2545454545454545
+  },
+  "conditions": {
+    "pillow/clean": {
+      "positives": 64,
+      "negatives": 1216,
+      "truePositives": 15,
+      "falsePositives": 71,
+      "recall": 0.234375,
+      "falsePositiveRate": 0.05838815789473684,
+      "precision": 0.1744186046511628
+    },
+    "pillow/small": {
+      "positives": 64,
+      "negatives": 1216,
+      "truePositives": 13,
+      "falsePositives": 53,
+      "recall": 0.203125,
+      "falsePositiveRate": 0.04358552631578947,
+      "precision": 0.19696969696969696
+    },
+    "pillow/short": {
+      "positives": 64,
+      "negatives": 1216,
+      "truePositives": 6,
+      "falsePositives": 16,
+      "recall": 0.09375,
+      "falsePositiveRate": 0.013157894736842105,
+      "precision": 0.2727272727272727
+    },
+    "pillow/rotate-left": {
+      "positives": 64,
+      "negatives": 1216,
+      "truePositives": 0,
+      "falsePositives": 8,
+      "recall": 0.0,
+      "falsePositiveRate": 0.006578947368421052,
+      "precision": 0.0
+    },
+    "pillow/rotate-right": {
+      "positives": 64,
+      "negatives": 1216,
+      "truePositives": 0,
+      "falsePositives": 1,
+      "recall": 0.0,
+      "falsePositiveRate": 0.0008223684210526315,
+      "precision": 0.0
+    },
+    "pillow/blur": {
+      "positives": 64,
+      "negatives": 1216,
+      "truePositives": 18,
+      "falsePositives": 75,
+      "recall": 0.28125,
+      "falsePositiveRate": 0.061677631578947366,
+      "precision": 0.1935483870967742
+    },
+    "pillow/jpeg": {
+      "positives": 64,
+      "negatives": 1216,
+      "truePositives": 17,
+      "falsePositives": 72,
+      "recall": 0.265625,
+      "falsePositiveRate": 0.05921052631578947,
+      "precision": 0.19101123595505617
+    },
+    "chromium/clean": {
+      "positives": 64,
+      "negatives": 1216,
+      "truePositives": 18,
+      "falsePositives": 119,
+      "recall": 0.28125,
+      "falsePositiveRate": 0.09786184210526316,
+      "precision": 0.13138686131386862
+    },
+    "chromium/small": {
+      "positives": 64,
+      "negatives": 1216,
+      "truePositives": 18,
+      "falsePositives": 89,
+      "recall": 0.28125,
+      "falsePositiveRate": 0.07319078947368421,
+      "precision": 0.16822429906542055
+    },
+    "chromium/short": {
+      "positives": 64,
+      "negatives": 1216,
+      "truePositives": 2,
+      "falsePositives": 15,
+      "recall": 0.03125,
+      "falsePositiveRate": 0.012335526315789474,
+      "precision": 0.11764705882352941
+    },
+    "chromium/rotate-left": {
+      "positives": 64,
+      "negatives": 1216,
+      "truePositives": 1,
+      "falsePositives": 10,
+      "recall": 0.015625,
+      "falsePositiveRate": 0.008223684210526315,
+      "precision": 0.09090909090909091
+    },
+    "chromium/rotate-right": {
+      "positives": 64,
+      "negatives": 1216,
+      "truePositives": 0,
+      "falsePositives": 1,
+      "recall": 0.0,
+      "falsePositiveRate": 0.0008223684210526315,
+      "precision": 0.0
+    },
+    "chromium/blur": {
+      "positives": 64,
+      "negatives": 1216,
+      "truePositives": 19,
+      "falsePositives": 113,
+      "recall": 0.296875,
+      "falsePositiveRate": 0.09292763157894737,
+      "precision": 0.14393939393939395
+    },
+    "chromium/jpeg": {
+      "positives": 64,
+      "negatives": 1216,
+      "truePositives": 18,
+      "falsePositives": 108,
+      "recall": 0.28125,
+      "falsePositiveRate": 0.08881578947368421,
+      "precision": 0.14285714285714285
+    }
+  },
+  "training": {
+    "positives": 512,
+    "negatives": 6656,
+    "truePositives": 340,
+    "falsePositives": 240,
+    "recall": 0.6640625,
+    "falsePositiveRate": 0.036057692307692304,
+    "precision": 0.5862068965517241
+  },
+  "manifestSha256": "deee70c71eb9346d2b0d2d4e269cffc6058248fb9a3a6a9bff131d045be36c75",
+  "modelSha256": "1dd0d921b14f7ed9c8fa89812421bb6a9ef4fe3d9fce4e631464bbc45ac53f4b",
+  "exportMaxAbsoluteError": 0.0,
+  "torch": "2.11.0"
+}

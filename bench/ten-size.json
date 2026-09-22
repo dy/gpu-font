@@ -1,0 +1,41 @@
+{
+  "modelSha256": "e10a2ecd979a3dc51189a9c5b6a5069411dccfa90c0bf6ee5fccf23f34e71fe9",
+  "files": [
+    {
+      "path": ".data/ten/model.json",
+      "raw": 73819,
+      "gzip": 51965,
+      "brotli": 49416
+    },
+    {
+      "path": "src/prepare.mjs",
+      "raw": 5811,
+      "gzip": 2127,
+      "brotli": 1897
+    },
+    {
+      "path": "src/input.mjs",
+      "raw": 2150,
+      "gzip": 916,
+      "brotli": 799
+    },
+    {
+      "path": "src/network.mjs",
+      "raw": 4912,
+      "gzip": 1756,
+      "brotli": 1585
+    },
+    {
+      "path": "src/network-gpu.mjs",
+      "raw": 5452,
+      "gzip": 2026,
+      "brotli": 1825
+    }
+  ],
+  "total": {
+    "raw": 92144,
+    "gzip": 58790,
+    "brotli": 55522
+  },
+  "scope": "Sum of separately compressed model JSON and four unminified inference/preparation modules. Excludes demo UI and optional font preview TTFs; not a published npm bundle."
+}

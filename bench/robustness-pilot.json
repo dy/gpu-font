@@ -1,0 +1,419 @@
+{
+  "description": "Inter versus 13 training negatives, with 6 additional unseen negative families at development evaluation. Synthetic only; not a 20-family retrieval model.",
+  "target": "inter",
+  "seed": 2718,
+  "steps": 1200,
+  "seconds": 21.157685708254576,
+  "parameters": 25186,
+  "input": {
+    "width": 128,
+    "height": 32,
+    "padding": 2
+  },
+  "samples": {
+    "train": 3584,
+    "calibration": 896,
+    "query": 5760
+  },
+  "lossFirst50": 0.6945481050014496,
+  "lossLast50": 0.12107959102839232,
+  "calibrationFprBudget": 0.05,
+  "threshold": 0.9393600821495056,
+  "calibration": {
+    "positives": 64,
+    "negatives": 832,
+    "truePositives": 17,
+    "falsePositives": 41,
+    "recall": 0.265625,
+    "falsePositiveRate": 0.04927884615384615,
+    "precision": 0.29310344827586204
+  },
+  "training": {
+    "positives": 256,
+    "negatives": 3328,
+    "truePositives": 232,
+    "falsePositives": 73,
+    "recall": 0.90625,
+    "falsePositiveRate": 0.021935096153846152,
+    "precision": 0.760655737704918
+  },
+  "development": {
+    "positives": 288,
+    "negatives": 5472,
+    "truePositives": 6,
+    "falsePositives": 57,
+    "recall": 0.020833333333333332,
+    "falsePositiveRate": 0.010416666666666666,
+    "precision": 0.09523809523809523
+  },
+  "renderers": {
+    "pillow": {
+      "positives": 144,
+      "negatives": 2736,
+      "truePositives": 4,
+      "falsePositives": 28,
+      "recall": 0.027777777777777776,
+      "falsePositiveRate": 0.01023391812865497,
+      "precision": 0.125
+    },
+    "chromium": {
+      "positives": 144,
+      "negatives": 2736,
+      "truePositives": 2,
+      "falsePositives": 29,
+      "recall": 0.013888888888888888,
+      "falsePositiveRate": 0.010599415204678362,
+      "precision": 0.06451612903225806
+    }
+  },
+  "conditions": {
+    "pillow/clean": {
+      "positives": 16,
+      "negatives": 304,
+      "truePositives": 0,
+      "falsePositives": 2,
+      "recall": 0.0,
+      "falsePositiveRate": 0.006578947368421052,
+      "precision": 0.0
+    },
+    "pillow/tight": {
+      "positives": 16,
+      "negatives": 304,
+      "truePositives": 0,
+      "falsePositives": 2,
+      "recall": 0.0,
+      "falsePositiveRate": 0.006578947368421052,
+      "precision": 0.0
+    },
+    "pillow/short": {
+      "positives": 16,
+      "negatives": 304,
+      "truePositives": 4,
+      "falsePositives": 14,
+      "recall": 0.25,
+      "falsePositiveRate": 0.046052631578947366,
+      "precision": 0.2222222222222222
+    },
+    "pillow/small": {
+      "positives": 16,
+      "negatives": 304,
+      "truePositives": 0,
+      "falsePositives": 0,
+      "recall": 0.0,
+      "falsePositiveRate": 0.0,
+      "precision": null
+    },
+    "pillow/rotate-left": {
+      "positives": 16,
+      "negatives": 304,
+      "truePositives": 0,
+      "falsePositives": 0,
+      "recall": 0.0,
+      "falsePositiveRate": 0.0,
+      "precision": null
+    },
+    "pillow/rotate-right": {
+      "positives": 16,
+      "negatives": 304,
+      "truePositives": 0,
+      "falsePositives": 8,
+      "recall": 0.0,
+      "falsePositiveRate": 0.02631578947368421,
+      "precision": 0.0
+    },
+    "pillow/blur": {
+      "positives": 16,
+      "negatives": 304,
+      "truePositives": 0,
+      "falsePositives": 0,
+      "recall": 0.0,
+      "falsePositiveRate": 0.0,
+      "precision": null
+    },
+    "pillow/jpeg": {
+      "positives": 16,
+      "negatives": 304,
+      "truePositives": 0,
+      "falsePositives": 2,
+      "recall": 0.0,
+      "falsePositiveRate": 0.006578947368421052,
+      "precision": 0.0
+    },
+    "pillow/mixed": {
+      "positives": 16,
+      "negatives": 304,
+      "truePositives": 0,
+      "falsePositives": 0,
+      "recall": 0.0,
+      "falsePositiveRate": 0.0,
+      "precision": null
+    },
+    "chromium/clean": {
+      "positives": 16,
+      "negatives": 304,
+      "truePositives": 0,
+      "falsePositives": 2,
+      "recall": 0.0,
+      "falsePositiveRate": 0.006578947368421052,
+      "precision": 0.0
+    },
+    "chromium/tight": {
+      "positives": 16,
+      "negatives": 304,
+      "truePositives": 0,
+      "falsePositives": 0,
+      "recall": 0.0,
+      "falsePositiveRate": 0.0,
+      "precision": null
+    },
+    "chromium/short": {
+      "positives": 16,
+      "negatives": 304,
+      "truePositives": 2,
+      "falsePositives": 19,
+      "recall": 0.125,
+      "falsePositiveRate": 0.0625,
+      "precision": 0.09523809523809523
+    },
+    "chromium/small": {
+      "positives": 16,
+      "negatives": 304,
+      "truePositives": 0,
+      "falsePositives": 0,
+      "recall": 0.0,
+      "falsePositiveRate": 0.0,
+      "precision": null
+    },
+    "chromium/rotate-left": {
+      "positives": 16,
+      "negatives": 304,
+      "truePositives": 0,
+      "falsePositives": 0,
+      "recall": 0.0,
+      "falsePositiveRate": 0.0,
+      "precision": null
+    },
+    "chromium/rotate-right": {
+      "positives": 16,
+      "negatives": 304,
+      "truePositives": 0,
+      "falsePositives": 8,
+      "recall": 0.0,
+      "falsePositiveRate": 0.02631578947368421,
+      "precision": 0.0
+    },
+    "chromium/blur": {
+      "positives": 16,
+      "negatives": 304,
+      "truePositives": 0,
+      "falsePositives": 0,
+      "recall": 0.0,
+      "falsePositiveRate": 0.0,
+      "precision": null
+    },
+    "chromium/jpeg": {
+      "positives": 16,
+      "negatives": 304,
+      "truePositives": 0,
+      "falsePositives": 0,
+      "recall": 0.0,
+      "falsePositiveRate": 0.0,
+      "precision": null
+    },
+    "chromium/mixed": {
+      "positives": 16,
+      "negatives": 304,
+      "truePositives": 0,
+      "falsePositives": 0,
+      "recall": 0.0,
+      "falsePositiveRate": 0.0,
+      "precision": null
+    }
+  },
+  "families": {
+    "bebas-neue": {
+      "positives": 0,
+      "negatives": 288,
+      "truePositives": 0,
+      "falsePositives": 0,
+      "recall": null,
+      "falsePositiveRate": 0.0,
+      "precision": null
+    },
+    "crimson-text": {
+      "positives": 0,
+      "negatives": 288,
+      "truePositives": 0,
+      "falsePositives": 1,
+      "recall": null,
+      "falsePositiveRate": 0.003472222222222222,
+      "precision": 0.0
+    },
+    "geist-mono": {
+      "positives": 0,
+      "negatives": 288,
+      "truePositives": 0,
+      "falsePositives": 1,
+      "recall": null,
+      "falsePositiveRate": 0.003472222222222222,
+      "precision": 0.0
+    },
+    "ibm-plex-sans": {
+      "positives": 0,
+      "negatives": 288,
+      "truePositives": 0,
+      "falsePositives": 5,
+      "recall": null,
+      "falsePositiveRate": 0.017361111111111112,
+      "precision": 0.0
+    },
+    "ibm-plex-serif": {
+      "positives": 0,
+      "negatives": 288,
+      "truePositives": 0,
+      "falsePositives": 0,
+      "recall": null,
+      "falsePositiveRate": 0.0,
+      "precision": null
+    },
+    "inter": {
+      "positives": 288,
+      "negatives": 0,
+      "truePositives": 6,
+      "falsePositives": 0,
+      "recall": 0.020833333333333332,
+      "falsePositiveRate": null,
+      "precision": 1.0
+    },
+    "libre-baskerville": {
+      "positives": 0,
+      "negatives": 288,
+      "truePositives": 0,
+      "falsePositives": 4,
+      "recall": null,
+      "falsePositiveRate": 0.013888888888888888,
+      "precision": 0.0
+    },
+    "lora": {
+      "positives": 0,
+      "negatives": 288,
+      "truePositives": 0,
+      "falsePositives": 2,
+      "recall": null,
+      "falsePositiveRate": 0.006944444444444444,
+      "precision": 0.0
+    },
+    "merriweather": {
+      "positives": 0,
+      "negatives": 288,
+      "truePositives": 0,
+      "falsePositives": 0,
+      "recall": null,
+      "falsePositiveRate": 0.0,
+      "precision": null
+    },
+    "montserrat": {
+      "positives": 0,
+      "negatives": 288,
+      "truePositives": 0,
+      "falsePositives": 13,
+      "recall": null,
+      "falsePositiveRate": 0.04513888888888889,
+      "precision": 0.0
+    },
+    "nunito": {
+      "positives": 0,
+      "negatives": 288,
+      "truePositives": 0,
+      "falsePositives": 0,
+      "recall": null,
+      "falsePositiveRate": 0.0,
+      "precision": null
+    },
+    "nunito-sans": {
+      "positives": 0,
+      "negatives": 288,
+      "truePositives": 0,
+      "falsePositives": 0,
+      "recall": null,
+      "falsePositiveRate": 0.0,
+      "precision": null
+    },
+    "open-sans": {
+      "positives": 0,
+      "negatives": 288,
+      "truePositives": 0,
+      "falsePositives": 4,
+      "recall": null,
+      "falsePositiveRate": 0.013888888888888888,
+      "precision": 0.0
+    },
+    "oswald": {
+      "positives": 0,
+      "negatives": 288,
+      "truePositives": 0,
+      "falsePositives": 16,
+      "recall": null,
+      "falsePositiveRate": 0.05555555555555555,
+      "precision": 0.0
+    },
+    "playfair-display": {
+      "positives": 0,
+      "negatives": 288,
+      "truePositives": 0,
+      "falsePositives": 0,
+      "recall": null,
+      "falsePositiveRate": 0.0,
+      "precision": null
+    },
+    "poppins": {
+      "positives": 0,
+      "negatives": 288,
+      "truePositives": 0,
+      "falsePositives": 2,
+      "recall": null,
+      "falsePositiveRate": 0.006944444444444444,
+      "precision": 0.0
+    },
+    "roboto": {
+      "positives": 0,
+      "negatives": 288,
+      "truePositives": 0,
+      "falsePositives": 5,
+      "recall": null,
+      "falsePositiveRate": 0.017361111111111112,
+      "precision": 0.0
+    },
+    "source-sans-3": {
+      "positives": 0,
+      "negatives": 288,
+      "truePositives": 0,
+      "falsePositives": 2,
+      "recall": null,
+      "falsePositiveRate": 0.006944444444444444,
+      "precision": 0.0
+    },
+    "source-serif-4": {
+      "positives": 0,
+      "negatives": 288,
+      "truePositives": 0,
+      "falsePositives": 2,
+      "recall": null,
+      "falsePositiveRate": 0.006944444444444444,
+      "precision": 0.0
+    },
+    "work-sans": {
+      "positives": 0,
+      "negatives": 288,
+      "truePositives": 0,
+      "falsePositives": 0,
+      "recall": null,
+      "falsePositiveRate": 0.0,
+      "precision": null
+    }
+  },
+  "manifestSha256": "501f58efbc4a45429fa949fd84063fc372f1c97699cf10a79bb9e8432708c26f",
+  "modelSha256": "077077dea88db113be126a5e6dde1813eaeee75671d82e50908af41258a2274b",
+  "exportMaxAbsoluteError": 0.0,
+  "torch": "2.11.0"
+}

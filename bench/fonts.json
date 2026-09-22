@@ -1,0 +1,328 @@
+{
+  "version": 1,
+  "source": "fontr/data/fonts_collected/google (local collection; upstream revisions unknown)",
+  "fonts": [
+    {
+      "id": "inter",
+      "file": "Inter[opsz,wght].ttf",
+      "split": "train",
+      "family": "Inter",
+      "sourceSha256": "29160a80ff49ddcab2c97711247e08b1fab27a484a329ce8b813d820dc559031",
+      "sourceVersion": "Version 4.001;git-66647c0bb",
+      "sourceRevision": null,
+      "license": "This Font Software is licensed under the SIL Open Font License, Version 1.1. This license is available with a FAQ at: https://openfontlicense.org",
+      "licenseUrl": "https://openfontlicense.org",
+      "copyright": "Copyright 2016 The Inter Project Authors (https://github.com/rsms/inter)",
+      "axes": {
+        "opsz": 14.0,
+        "wght": 400
+      },
+      "instanceSha256": "0b59f6b6fc9e8a9ad8032802d1797c4237d9288a3e7b7661517070627b577060"
+    },
+    {
+      "id": "roboto",
+      "file": "Roboto[wdth,wght].ttf",
+      "split": "train",
+      "family": "Roboto",
+      "sourceSha256": "d7598e12c5dbef095ff8272cfc55da0250bd07fbdecbac8a530b9b277872a134",
+      "sourceVersion": "Version 3.015; 2026",
+      "sourceRevision": null,
+      "license": "This Font Software is licensed under the SIL Open Font License, Version 1.1. This license is available with a FAQ at: https://openfontlicense.org",
+      "licenseUrl": "https://openfontlicense.org",
+      "copyright": "Copyright 2011 The Roboto Project Authors (https://github.com/googlefonts/roboto-classic)",
+      "axes": {
+        "wght": 400,
+        "wdth": 100
+      },
+      "instanceSha256": "c76bbfa0c89791a8f3c6c25c5676ff3cc4a65833e521898127396c9c1ffe850a"
+    },
+    {
+      "id": "open-sans",
+      "file": "OpenSans[wdth,wght].ttf",
+      "split": "train",
+      "family": "Open Sans",
+      "sourceSha256": "36643644f318a812aab2d2ed3bb98f8cf0872527f835fe9398d95fe6b9adb878",
+      "sourceVersion": "Version 3.003",
+      "sourceRevision": null,
+      "license": "This Font Software is licensed under the SIL Open Font License, Version 1.1. This license is available with a FAQ at: https://scripts.sil.org/OFL",
+      "licenseUrl": "http://scripts.sil.org/OFL",
+      "copyright": "Copyright 2020 The Open Sans Project Authors (https://github.com/googlefonts/opensans)",
+      "axes": {
+        "wght": 400,
+        "wdth": 100
+      },
+      "instanceSha256": "93bf1fd8aaccd19e2be3a5ef4e4ac729909af49979fd88fad2d996ca50c2ef6a"
+    },
+    {
+      "id": "source-sans-3",
+      "file": "SourceSans3[wght].ttf",
+      "split": "train",
+      "family": "Source Sans 3",
+      "sourceSha256": "042fe2cc0b933e328410d7acbd0aa6a1873dca5aef81875f4bc214b08825c7b9",
+      "sourceVersion": "Version 3.052;hotconv 1.1.0;makeotfexe 2.6.0",
+      "sourceRevision": null,
+      "license": "This Font Software is licensed under the SIL Open Font License, Version 1.1. This license is available with a FAQ at: http://scripts.sil.org/OFL. This Font Software is distributed on an ‘AS IS’ BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the SIL Open Font License for the specific language, permissions and limitations governing your use of this Font Software.",
+      "licenseUrl": "http://scripts.sil.org/OFL",
+      "copyright": "© 2023 Adobe (http://www.adobe.com/), with Reserved Font Name ‘Source’",
+      "axes": {
+        "wght": 400
+      },
+      "instanceSha256": "9837d47bcb09da3849e0f5c6c1b6dd2a449bff86b4e831e9acbee99ff8daba82"
+    },
+    {
+      "id": "montserrat",
+      "file": "Montserrat[wght].ttf",
+      "split": "train",
+      "family": "Montserrat",
+      "sourceSha256": "0f7b311b2f3279e4eef9b2f968bcdbab6e28f4daeb1f049f4f278a902bcd82f7",
+      "sourceVersion": "Version 9.000",
+      "sourceRevision": null,
+      "license": "This Font Software is licensed under the SIL Open Font License, Version 1.1. This license is available with a FAQ at: https://openfontlicense.org",
+      "licenseUrl": "https://openfontlicense.org",
+      "copyright": "Copyright 2011 The Montserrat Project Authors (https://github.com/JulietaUla/Montserrat)",
+      "axes": {
+        "wght": 400
+      },
+      "instanceSha256": "8c8566beaae2a83b87117807c6b67c4b0beab184cc8bbdb130540359dc319412"
+    },
+    {
+      "id": "poppins",
+      "file": "Poppins-Regular.ttf",
+      "split": "train",
+      "family": "Poppins",
+      "sourceSha256": "7e65201e9b79159e2300267cc885e16c8dcef2424cdfa09a29bfb0980a94a7ba",
+      "sourceVersion": "4.004",
+      "sourceRevision": null,
+      "license": "This Font Software is licensed under the SIL Open Font License, Version 1.1. This license is available with a FAQ at: https://scripts.sil.org/OFL",
+      "licenseUrl": "https://scripts.sil.org/OFL",
+      "copyright": "Copyright 2020 The Poppins Project Authors (https://github.com/itfoundry/Poppins)",
+      "axes": {},
+      "instanceSha256": "6fd6b3f2d005a4882a45e7442855dd4b2c02d1e41fba4683ec55c8b029a51be0"
+    },
+    {
+      "id": "nunito",
+      "file": "Nunito[wght].ttf",
+      "split": "unseen-dev",
+      "family": "Nunito",
+      "sourceSha256": "bb55a5ca5c2042335b3991af27c4d0705d0ef41cac6164ac737fd8f2a1e85207",
+      "sourceVersion": "Version 3.602",
+      "sourceRevision": null,
+      "license": "This Font Software is licensed under the SIL Open Font License, Version 1.1. This license is available with a FAQ at: https://scripts.sil.org/OFL",
+      "licenseUrl": "https://scripts.sil.org/OFL",
+      "copyright": "Copyright 2014 The Nunito Project Authors (https://github.com/googlefonts/nunito)",
+      "axes": {
+        "wght": 400
+      },
+      "instanceSha256": "ae9e01f75a43cacd9872de43a2feb6146ba43210dac5bb4413b49d6bf976b022"
+    },
+    {
+      "id": "nunito-sans",
+      "file": "NunitoSans[YTLC,opsz,wdth,wght].ttf",
+      "split": "unseen-dev",
+      "family": "Nunito Sans",
+      "sourceSha256": "f934d7142fb4784bf828da485b7dcbd90c0c80d514e9d49a5da0ed3a1ae2491d",
+      "sourceVersion": "Version 3.101;gftools[0.9.27]",
+      "sourceRevision": null,
+      "license": "This Font Software is licensed under the SIL Open Font License, Version 1.1. This license is available with a FAQ at: https://scripts.sil.org/OFL",
+      "licenseUrl": "https://scripts.sil.org/OFL",
+      "copyright": "Copyright 2016 The Nunito Sans Project Authors (https://github.com/Fonthausen/NunitoSans)",
+      "axes": {
+        "wght": 400,
+        "wdth": 100,
+        "opsz": 12.0,
+        "YTLC": 500.0
+      },
+      "instanceSha256": "5cb15f7f73e688ea449fb9e71e678e85bf16ce7e47308c30c18e9d1321482fc0"
+    },
+    {
+      "id": "ibm-plex-sans",
+      "file": "IBMPlexSans[wdth,wght].ttf",
+      "split": "train",
+      "family": "IBM Plex Sans",
+      "sourceSha256": "3b031aa4216174205bd8471f88a49b91f093169e9e87bd5262242bc5967fe2e3",
+      "sourceVersion": "Version 3.201",
+      "sourceRevision": null,
+      "license": "This Font Software is licensed under the SIL Open Font License, Version 1.1. This license is available with a FAQ at: http://scripts.sil.org/OFL",
+      "licenseUrl": "http://scripts.sil.org/OFL",
+      "copyright": "Copyright 2019 IBM Corp. All rights reserved.",
+      "axes": {
+        "wght": 400,
+        "wdth": 100
+      },
+      "instanceSha256": "0e01631490c9ff9dadcb08631ba17410d87aa89cc0bd406cbaff271660863553"
+    },
+    {
+      "id": "work-sans",
+      "file": "WorkSans[wght].ttf",
+      "split": "train",
+      "family": "Work Sans",
+      "sourceSha256": "f50f61f2ba738e239442d40bf1069adb195c224b6a5a73a581fc2f3ed62a9f63",
+      "sourceVersion": "Version 2.012",
+      "sourceRevision": null,
+      "license": "This Font Software is licensed under the SIL Open Font License, Version 1.1. This license is available with a FAQ at: http://scripts.sil.org/OFL",
+      "licenseUrl": "http://scripts.sil.org/OFL",
+      "copyright": "Copyright 2019 The Work Sans Project Authors (https://github.com/weiweihuanghuang/Work-Sans)",
+      "axes": {
+        "wght": 400
+      },
+      "instanceSha256": "be2cff2b1493f1858fdf34c1964547ecf3ff1496a820e267c93dc5118ab7e0ca"
+    },
+    {
+      "id": "lora",
+      "file": "Lora[wght].ttf",
+      "split": "unseen-dev",
+      "family": "Lora",
+      "sourceSha256": "822a6621ccbe8d97d20ac88c1c41f5615c9c2c202eaa75f272cd452aac6475a7",
+      "sourceVersion": "Version 3.008",
+      "sourceRevision": null,
+      "license": "This Font Software is licensed under the SIL Open Font License, Version 1.1. This license is available with a FAQ at: https://scripts.sil.org/OFL",
+      "licenseUrl": "https://scripts.sil.org/OFL",
+      "copyright": "Copyright 2011 The Lora Project Authors (https://github.com/cyrealtype/Lora-Cyrillic), with Reserved Font Name \"Lora\".",
+      "axes": {
+        "wght": 400
+      },
+      "instanceSha256": "8ec88f00a8150cec94bc9873f25cf913fecc93508bde7c07effb26711c1e57ce"
+    },
+    {
+      "id": "merriweather",
+      "file": "Merriweather[opsz,wdth,wght].ttf",
+      "split": "unseen-dev",
+      "family": "Merriweather",
+      "sourceSha256": "d0ed0e359e396af7ad05e73dffd11a3a4c326ea0d0283c56bd9361cb2cc86a96",
+      "sourceVersion": "Version 2.100",
+      "sourceRevision": null,
+      "license": "This Font Software is licensed under the SIL Open Font License, Version 1.1. This license is available with a FAQ at: https://openfontlicense.org",
+      "licenseUrl": "https://openfontlicense.org",
+      "copyright": "Copyright 2024 The Merriweather Project Authors (https://github.com/EbenSorkin/Merriweather4) with Reserved Font Name \"Merriweather\".",
+      "axes": {
+        "wght": 400,
+        "wdth": 100,
+        "opsz": 18.0
+      },
+      "instanceSha256": "944afa75af888036f052ef665e52b9e1e576168040b87a6fcf1edf509e2e0136"
+    },
+    {
+      "id": "libre-baskerville",
+      "file": "LibreBaskerville[wght].ttf",
+      "split": "train",
+      "family": "Libre Baskerville",
+      "sourceSha256": "05a95421961341c5b2556285e8415df9db27dab4f4abe22b446b3c6a8b916c5d",
+      "sourceVersion": "Version 2.005",
+      "sourceRevision": null,
+      "license": "This Font Software is licensed under the SIL Open Font License, Version 1.1. This license is available with a FAQ at: https://openfontlicense.org",
+      "licenseUrl": "https://openfontlicense.org",
+      "copyright": "Copyright 2012 The Libre Baskerville Project Authors (https://github.com/impallari/Libre-Baskerville)",
+      "axes": {
+        "wght": 400
+      },
+      "instanceSha256": "7fe7753dcf044d8f508fb76c30b3f15c8a40a9297543b56de8df3a170cf3eef5"
+    },
+    {
+      "id": "crimson-text",
+      "file": "CrimsonText-Regular.ttf",
+      "split": "train",
+      "family": "Crimson Text",
+      "sourceSha256": "48e6c5d5ad1d01599d374ecb817e15890d1feb3b8a3a88e527d44c90389e1f06",
+      "sourceVersion": "Version 1.100; ttfautohint (v1.8.4)",
+      "sourceRevision": null,
+      "license": "This Font Software is licensed under the SIL Open Font License, Version 1.1. This license is available with a FAQ at: https://scripts.sil.org/OFL",
+      "licenseUrl": "https://scripts.sil.org/OFL",
+      "copyright": "Copyright 2010 The Crimson Text Project Authors (https://github.com/googlefonts/Crimson)",
+      "axes": {},
+      "instanceSha256": "905101804c21cc75a60734002721d0c03ae5b4001bab0d09ab11b01612ae43c4"
+    },
+    {
+      "id": "source-serif-4",
+      "file": "SourceSerif4[opsz,wght].ttf",
+      "split": "train",
+      "family": "Source Serif 4",
+      "sourceSha256": "97b2d4da6e3cb494b5a1e66ae176914d852ccabef49e0c02c0df25f3e39aca0b",
+      "sourceVersion": "Version 4.004;hotconv 1.0.116;makeotfexe 2.5.65601",
+      "sourceRevision": null,
+      "license": "This Font Software is licensed under the SIL Open Font License, Version 1.1. This license is available with a FAQ at: http://scripts.sil.org/OFL. This Font Software is distributed on an ‘AS IS’ BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the SIL Open Font License for the specific language, permissions and limitations governing your use of this Font Software.",
+      "licenseUrl": "http://scripts.sil.org/OFL",
+      "copyright": "© 2014 - 2021 Adobe Systems Incorporated (http://www.adobe.com/), with Reserved Font Name ‘Source’.",
+      "axes": {
+        "wght": 400,
+        "opsz": 20.0
+      },
+      "instanceSha256": "856ed41f3ec44a9032910b3c17c7dc1cc762da6c6a0f58c791b38c67a70c2aec"
+    },
+    {
+      "id": "ibm-plex-serif",
+      "file": "IBMPlexSerif-Regular.ttf",
+      "split": "train",
+      "family": "IBM Plex Serif",
+      "sourceSha256": "e882efa9c41949a528ac2369079ec5ef050c1c996bbd0bacce3c3326d44cf80d",
+      "sourceVersion": "Version 2.6",
+      "sourceRevision": null,
+      "license": "This Font Software is licensed under the SIL Open Font License, Version 1.1. This license is available with a FAQ at: http://scripts.sil.org/OFL",
+      "licenseUrl": "http://scripts.sil.org/OFL",
+      "copyright": "Copyright 2020 IBM Corp. All rights reserved.",
+      "axes": {},
+      "instanceSha256": "e882efa9c41949a528ac2369079ec5ef050c1c996bbd0bacce3c3326d44cf80d"
+    },
+    {
+      "id": "geist-mono",
+      "file": "GeistMono[wght].ttf",
+      "split": "train",
+      "family": "Geist Mono",
+      "sourceSha256": "87c2aff9723544a9adaea19d92e42a33705c9723624801b6e0224c2206a6af0d",
+      "sourceVersion": "Version 1.700",
+      "sourceRevision": null,
+      "license": "This Font Software is licensed under the SIL Open Font License, Version 1.1. This license is available with a FAQ at: https://openfontlicense.org",
+      "licenseUrl": "https://openfontlicense.org",
+      "copyright": "Copyright 2024 The Geist Project Authors (https://github.com/vercel/geist-font.git)",
+      "axes": {
+        "wght": 400
+      },
+      "instanceSha256": "3cd7dec667f60f4da4856343d8f7f867c0d898630b274384cf18d6a7d4faa599"
+    },
+    {
+      "id": "oswald",
+      "file": "Oswald[wght].ttf",
+      "split": "train",
+      "family": "Oswald",
+      "sourceSha256": "5b38c246e255a12f5712d640d56bcced0472466fc68983d2d0410ec0457c2817",
+      "sourceVersion": "Version 4.103;gftools[0.9.33.dev8+g029e19f]",
+      "sourceRevision": null,
+      "license": "This Font Software is licensed under the SIL Open Font License, Version 1.1. This license is available with a FAQ at: https://scripts.sil.org/OFL",
+      "licenseUrl": "https://scripts.sil.org/OFL",
+      "copyright": "Copyright 2016 The Oswald Project Authors (https://github.com/googlefonts/OswaldFont)",
+      "axes": {
+        "wght": 400
+      },
+      "instanceSha256": "d2327333d1d63b1c656938170a52c24963ebecb580d9e99204dbf4d060e3f03b"
+    },
+    {
+      "id": "bebas-neue",
+      "file": "BebasNeue-Regular.ttf",
+      "split": "unseen-dev",
+      "family": "Bebas Neue",
+      "sourceSha256": "08e4623805102d819f58601e46e345648846075e363b2ceb23313c2d1c83ec73",
+      "sourceVersion": "Version 2.000",
+      "sourceRevision": null,
+      "license": "This Font Software is licensed under the SIL Open Font License, Version 1.1. This license is available with a FAQ at: http://scripts.sil.org/OFL",
+      "licenseUrl": "http://scripts.sil.org/OFL",
+      "copyright": "Copyright 2019 The Bebas Neue Project Authors (https://github.com/dharmatype/Bebas-Neue)",
+      "axes": {},
+      "instanceSha256": "211d0f8e61fa5857bc4e9b67ccdf247e654eeb2a31c4d5bf2f6dd33ec78df312"
+    },
+    {
+      "id": "playfair-display",
+      "file": "PlayfairDisplay[wght].ttf",
+      "split": "unseen-dev",
+      "family": "Playfair Display",
+      "sourceSha256": "c40f2293766a503bc70cce9e512ef844a4ccb7cbcde792fe2ea31d191917d8d6",
+      "sourceVersion": "Version 1.203",
+      "sourceRevision": null,
+      "license": "This Font Software is licensed under the SIL Open Font License, Version 1.1. This license is available with a FAQ at: http://scripts.sil.org/OFL",
+      "licenseUrl": "http://scripts.sil.org/OFL",
+      "copyright": "Copyright 2017 The Playfair Display Project Authors (https://github.com/clauseggers/Playfair-Display), with Reserved Font Name \"Playfair Display\".",
+      "axes": {
+        "wght": 400
+      },
+      "instanceSha256": "0cb7c423bbdd183f8ec794a8a7acb7577f9e6c1eb1b17b85555a25da6434a045"
+    }
+  ]
+}

@@ -1,0 +1,4334 @@
+{
+  "task": "ten-font-classification",
+  "fonts": [
+    "inter",
+    "roboto",
+    "open-sans",
+    "source-sans-3",
+    "montserrat",
+    "poppins",
+    "nunito",
+    "lora",
+    "merriweather",
+    "playfair-display"
+  ],
+  "training": {
+    "seed": 20260922,
+    "steps": 12000,
+    "batch": 48,
+    "learningRate": 0.002,
+    "threads": 4,
+    "device": "mps",
+    "dilations": [
+      1,
+      1,
+      2,
+      2
+    ]
+  },
+  "steps": 12000,
+  "seconds": 172.90627104230225,
+  "selectedStep": 12000,
+  "parameters": 47034,
+  "validationFloat": {
+    "groups": {
+      "all": {
+        "count": 3840,
+        "correct": 3503,
+        "top3": 3778,
+        "accuracy": 0.9122395833333333,
+        "top3Accuracy": 0.9838541666666667
+      },
+      "pillow": {
+        "count": 1920,
+        "correct": 1766,
+        "top3": 1894,
+        "accuracy": 0.9197916666666667,
+        "top3Accuracy": 0.9864583333333333
+      },
+      "pillow/clean": {
+        "count": 320,
+        "correct": 314,
+        "top3": 319,
+        "accuracy": 0.98125,
+        "top3Accuracy": 0.996875
+      },
+      "inter": {
+        "count": 384,
+        "correct": 312,
+        "top3": 368,
+        "accuracy": 0.8125,
+        "top3Accuracy": 0.9583333333333334
+      },
+      "pillow/crop": {
+        "count": 320,
+        "correct": 286,
+        "top3": 310,
+        "accuracy": 0.89375,
+        "top3Accuracy": 0.96875
+      },
+      "pillow/small": {
+        "count": 320,
+        "correct": 289,
+        "top3": 313,
+        "accuracy": 0.903125,
+        "top3Accuracy": 0.978125
+      },
+      "pillow/rotate": {
+        "count": 320,
+        "correct": 278,
+        "top3": 315,
+        "accuracy": 0.86875,
+        "top3Accuracy": 0.984375
+      },
+      "pillow/blur": {
+        "count": 320,
+        "correct": 299,
+        "top3": 319,
+        "accuracy": 0.934375,
+        "top3Accuracy": 0.996875
+      },
+      "pillow/jpeg": {
+        "count": 320,
+        "correct": 300,
+        "top3": 318,
+        "accuracy": 0.9375,
+        "top3Accuracy": 0.99375
+      },
+      "roboto": {
+        "count": 384,
+        "correct": 328,
+        "top3": 377,
+        "accuracy": 0.8541666666666666,
+        "top3Accuracy": 0.9817708333333334
+      },
+      "open-sans": {
+        "count": 384,
+        "correct": 329,
+        "top3": 372,
+        "accuracy": 0.8567708333333334,
+        "top3Accuracy": 0.96875
+      },
+      "source-sans-3": {
+        "count": 384,
+        "correct": 326,
+        "top3": 368,
+        "accuracy": 0.8489583333333334,
+        "top3Accuracy": 0.9583333333333334
+      },
+      "montserrat": {
+        "count": 384,
+        "correct": 370,
+        "top3": 382,
+        "accuracy": 0.9635416666666666,
+        "top3Accuracy": 0.9947916666666666
+      },
+      "poppins": {
+        "count": 384,
+        "correct": 354,
+        "top3": 380,
+        "accuracy": 0.921875,
+        "top3Accuracy": 0.9895833333333334
+      },
+      "nunito": {
+        "count": 384,
+        "correct": 351,
+        "top3": 380,
+        "accuracy": 0.9140625,
+        "top3Accuracy": 0.9895833333333334
+      },
+      "lora": {
+        "count": 384,
+        "correct": 373,
+        "top3": 384,
+        "accuracy": 0.9713541666666666,
+        "top3Accuracy": 1.0
+      },
+      "merriweather": {
+        "count": 384,
+        "correct": 379,
+        "top3": 384,
+        "accuracy": 0.9869791666666666,
+        "top3Accuracy": 1.0
+      },
+      "playfair-display": {
+        "count": 384,
+        "correct": 381,
+        "top3": 383,
+        "accuracy": 0.9921875,
+        "top3Accuracy": 0.9973958333333334
+      },
+      "chromium": {
+        "count": 1920,
+        "correct": 1737,
+        "top3": 1884,
+        "accuracy": 0.9046875,
+        "top3Accuracy": 0.98125
+      },
+      "chromium/clean": {
+        "count": 320,
+        "correct": 307,
+        "top3": 317,
+        "accuracy": 0.959375,
+        "top3Accuracy": 0.990625
+      },
+      "chromium/crop": {
+        "count": 320,
+        "correct": 272,
+        "top3": 304,
+        "accuracy": 0.85,
+        "top3Accuracy": 0.95
+      },
+      "chromium/small": {
+        "count": 320,
+        "correct": 292,
+        "top3": 318,
+        "accuracy": 0.9125,
+        "top3Accuracy": 0.99375
+      },
+      "chromium/rotate": {
+        "count": 320,
+        "correct": 269,
+        "top3": 314,
+        "accuracy": 0.840625,
+        "top3Accuracy": 0.98125
+      },
+      "chromium/blur": {
+        "count": 320,
+        "correct": 299,
+        "top3": 317,
+        "accuracy": 0.934375,
+        "top3Accuracy": 0.990625
+      },
+      "chromium/jpeg": {
+        "count": 320,
+        "correct": 298,
+        "top3": 314,
+        "accuracy": 0.93125,
+        "top3Accuracy": 0.98125
+      }
+    },
+    "confusion": [
+      [
+        312,
+        33,
+        8,
+        4,
+        0,
+        24,
+        2,
+        0,
+        1,
+        0
+      ],
+      [
+        11,
+        328,
+        6,
+        12,
+        0,
+        19,
+        8,
+        0,
+        0,
+        0
+      ],
+      [
+        6,
+        9,
+        329,
+        24,
+        2,
+        6,
+        8,
+        0,
+        0,
+        0
+      ],
+      [
+        3,
+        20,
+        22,
+        326,
+        0,
+        11,
+        1,
+        0,
+        1,
+        0
+      ],
+      [
+        0,
+        0,
+        4,
+        0,
+        370,
+        3,
+        7,
+        0,
+        0,
+        0
+      ],
+      [
+        6,
+        19,
+        0,
+        4,
+        0,
+        354,
+        1,
+        0,
+        0,
+        0
+      ],
+      [
+        1,
+        4,
+        9,
+        5,
+        10,
+        4,
+        351,
+        0,
+        0,
+        0
+      ],
+      [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        1,
+        373,
+        9,
+        1
+      ],
+      [
+        0,
+        0,
+        1,
+        0,
+        0,
+        0,
+        1,
+        2,
+        379,
+        1
+      ],
+      [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        2,
+        1,
+        381
+      ]
+    ]
+  },
+  "validationInt8": {
+    "groups": {
+      "all": {
+        "count": 3840,
+        "correct": 3488,
+        "top3": 3778,
+        "accuracy": 0.9083333333333333,
+        "top3Accuracy": 0.9838541666666667
+      },
+      "pillow": {
+        "count": 1920,
+        "correct": 1757,
+        "top3": 1896,
+        "accuracy": 0.9151041666666667,
+        "top3Accuracy": 0.9875
+      },
+      "pillow/clean": {
+        "count": 320,
+        "correct": 313,
+        "top3": 319,
+        "accuracy": 0.978125,
+        "top3Accuracy": 0.996875
+      },
+      "inter": {
+        "count": 384,
+        "correct": 305,
+        "top3": 368,
+        "accuracy": 0.7942708333333334,
+        "top3Accuracy": 0.9583333333333334
+      },
+      "pillow/crop": {
+        "count": 320,
+        "correct": 285,
+        "top3": 311,
+        "accuracy": 0.890625,
+        "top3Accuracy": 0.971875
+      },
+      "pillow/small": {
+        "count": 320,
+        "correct": 287,
+        "top3": 314,
+        "accuracy": 0.896875,
+        "top3Accuracy": 0.98125
+      },
+      "pillow/rotate": {
+        "count": 320,
+        "correct": 277,
+        "top3": 316,
+        "accuracy": 0.865625,
+        "top3Accuracy": 0.9875
+      },
+      "pillow/blur": {
+        "count": 320,
+        "correct": 297,
+        "top3": 318,
+        "accuracy": 0.928125,
+        "top3Accuracy": 0.99375
+      },
+      "pillow/jpeg": {
+        "count": 320,
+        "correct": 298,
+        "top3": 318,
+        "accuracy": 0.93125,
+        "top3Accuracy": 0.99375
+      },
+      "roboto": {
+        "count": 384,
+        "correct": 332,
+        "top3": 378,
+        "accuracy": 0.8645833333333334,
+        "top3Accuracy": 0.984375
+      },
+      "open-sans": {
+        "count": 384,
+        "correct": 327,
+        "top3": 370,
+        "accuracy": 0.8515625,
+        "top3Accuracy": 0.9635416666666666
+      },
+      "source-sans-3": {
+        "count": 384,
+        "correct": 325,
+        "top3": 369,
+        "accuracy": 0.8463541666666666,
+        "top3Accuracy": 0.9609375
+      },
+      "montserrat": {
+        "count": 384,
+        "correct": 371,
+        "top3": 382,
+        "accuracy": 0.9661458333333334,
+        "top3Accuracy": 0.9947916666666666
+      },
+      "poppins": {
+        "count": 384,
+        "correct": 351,
+        "top3": 380,
+        "accuracy": 0.9140625,
+        "top3Accuracy": 0.9895833333333334
+      },
+      "nunito": {
+        "count": 384,
+        "correct": 345,
+        "top3": 380,
+        "accuracy": 0.8984375,
+        "top3Accuracy": 0.9895833333333334
+      },
+      "lora": {
+        "count": 384,
+        "correct": 372,
+        "top3": 384,
+        "accuracy": 0.96875,
+        "top3Accuracy": 1.0
+      },
+      "merriweather": {
+        "count": 384,
+        "correct": 379,
+        "top3": 384,
+        "accuracy": 0.9869791666666666,
+        "top3Accuracy": 1.0
+      },
+      "playfair-display": {
+        "count": 384,
+        "correct": 381,
+        "top3": 383,
+        "accuracy": 0.9921875,
+        "top3Accuracy": 0.9973958333333334
+      },
+      "chromium": {
+        "count": 1920,
+        "correct": 1731,
+        "top3": 1882,
+        "accuracy": 0.9015625,
+        "top3Accuracy": 0.9802083333333333
+      },
+      "chromium/clean": {
+        "count": 320,
+        "correct": 308,
+        "top3": 317,
+        "accuracy": 0.9625,
+        "top3Accuracy": 0.990625
+      },
+      "chromium/crop": {
+        "count": 320,
+        "correct": 275,
+        "top3": 302,
+        "accuracy": 0.859375,
+        "top3Accuracy": 0.94375
+      },
+      "chromium/small": {
+        "count": 320,
+        "correct": 290,
+        "top3": 318,
+        "accuracy": 0.90625,
+        "top3Accuracy": 0.99375
+      },
+      "chromium/rotate": {
+        "count": 320,
+        "correct": 264,
+        "top3": 314,
+        "accuracy": 0.825,
+        "top3Accuracy": 0.98125
+      },
+      "chromium/blur": {
+        "count": 320,
+        "correct": 297,
+        "top3": 316,
+        "accuracy": 0.928125,
+        "top3Accuracy": 0.9875
+      },
+      "chromium/jpeg": {
+        "count": 320,
+        "correct": 297,
+        "top3": 315,
+        "accuracy": 0.928125,
+        "top3Accuracy": 0.984375
+      }
+    },
+    "confusion": [
+      [
+        305,
+        39,
+        8,
+        5,
+        0,
+        24,
+        2,
+        0,
+        1,
+        0
+      ],
+      [
+        8,
+        332,
+        6,
+        15,
+        0,
+        18,
+        5,
+        0,
+        0,
+        0
+      ],
+      [
+        6,
+        13,
+        327,
+        26,
+        2,
+        5,
+        5,
+        0,
+        0,
+        0
+      ],
+      [
+        3,
+        22,
+        21,
+        325,
+        0,
+        11,
+        1,
+        0,
+        1,
+        0
+      ],
+      [
+        0,
+        0,
+        4,
+        0,
+        371,
+        3,
+        6,
+        0,
+        0,
+        0
+      ],
+      [
+        7,
+        21,
+        0,
+        4,
+        0,
+        351,
+        1,
+        0,
+        0,
+        0
+      ],
+      [
+        4,
+        4,
+        11,
+        7,
+        8,
+        5,
+        345,
+        0,
+        0,
+        0
+      ],
+      [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        1,
+        372,
+        9,
+        2
+      ],
+      [
+        0,
+        0,
+        1,
+        0,
+        0,
+        0,
+        1,
+        2,
+        379,
+        1
+      ],
+      [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        2,
+        1,
+        381
+      ]
+    ]
+  },
+  "history": [
+    {
+      "step": 1000,
+      "validation": {
+        "groups": {
+          "all": {
+            "count": 3840,
+            "correct": 2219,
+            "top3": 3445,
+            "accuracy": 0.5778645833333333,
+            "top3Accuracy": 0.8971354166666666
+          },
+          "pillow": {
+            "count": 1920,
+            "correct": 1012,
+            "top3": 1691,
+            "accuracy": 0.5270833333333333,
+            "top3Accuracy": 0.8807291666666667
+          },
+          "pillow/clean": {
+            "count": 320,
+            "correct": 179,
+            "top3": 292,
+            "accuracy": 0.559375,
+            "top3Accuracy": 0.9125
+          },
+          "inter": {
+            "count": 384,
+            "correct": 22,
+            "top3": 300,
+            "accuracy": 0.057291666666666664,
+            "top3Accuracy": 0.78125
+          },
+          "pillow/crop": {
+            "count": 320,
+            "correct": 157,
+            "top3": 279,
+            "accuracy": 0.490625,
+            "top3Accuracy": 0.871875
+          },
+          "pillow/small": {
+            "count": 320,
+            "correct": 155,
+            "top3": 280,
+            "accuracy": 0.484375,
+            "top3Accuracy": 0.875
+          },
+          "pillow/rotate": {
+            "count": 320,
+            "correct": 160,
+            "top3": 271,
+            "accuracy": 0.5,
+            "top3Accuracy": 0.846875
+          },
+          "pillow/blur": {
+            "count": 320,
+            "correct": 183,
+            "top3": 291,
+            "accuracy": 0.571875,
+            "top3Accuracy": 0.909375
+          },
+          "pillow/jpeg": {
+            "count": 320,
+            "correct": 178,
+            "top3": 278,
+            "accuracy": 0.55625,
+            "top3Accuracy": 0.86875
+          },
+          "roboto": {
+            "count": 384,
+            "correct": 125,
+            "top3": 316,
+            "accuracy": 0.3255208333333333,
+            "top3Accuracy": 0.8229166666666666
+          },
+          "open-sans": {
+            "count": 384,
+            "correct": 173,
+            "top3": 325,
+            "accuracy": 0.4505208333333333,
+            "top3Accuracy": 0.8463541666666666
+          },
+          "source-sans-3": {
+            "count": 384,
+            "correct": 86,
+            "top3": 275,
+            "accuracy": 0.22395833333333334,
+            "top3Accuracy": 0.7161458333333334
+          },
+          "montserrat": {
+            "count": 384,
+            "correct": 371,
+            "top3": 375,
+            "accuracy": 0.9661458333333334,
+            "top3Accuracy": 0.9765625
+          },
+          "poppins": {
+            "count": 384,
+            "correct": 374,
+            "top3": 384,
+            "accuracy": 0.9739583333333334,
+            "top3Accuracy": 1.0
+          },
+          "nunito": {
+            "count": 384,
+            "correct": 71,
+            "top3": 320,
+            "accuracy": 0.18489583333333334,
+            "top3Accuracy": 0.8333333333333334
+          },
+          "lora": {
+            "count": 384,
+            "correct": 366,
+            "top3": 384,
+            "accuracy": 0.953125,
+            "top3Accuracy": 1.0
+          },
+          "merriweather": {
+            "count": 384,
+            "correct": 318,
+            "top3": 382,
+            "accuracy": 0.828125,
+            "top3Accuracy": 0.9947916666666666
+          },
+          "playfair-display": {
+            "count": 384,
+            "correct": 313,
+            "top3": 384,
+            "accuracy": 0.8151041666666666,
+            "top3Accuracy": 1.0
+          },
+          "chromium": {
+            "count": 1920,
+            "correct": 1207,
+            "top3": 1754,
+            "accuracy": 0.6286458333333333,
+            "top3Accuracy": 0.9135416666666667
+          },
+          "chromium/clean": {
+            "count": 320,
+            "correct": 202,
+            "top3": 297,
+            "accuracy": 0.63125,
+            "top3Accuracy": 0.928125
+          },
+          "chromium/crop": {
+            "count": 320,
+            "correct": 196,
+            "top3": 287,
+            "accuracy": 0.6125,
+            "top3Accuracy": 0.896875
+          },
+          "chromium/small": {
+            "count": 320,
+            "correct": 215,
+            "top3": 300,
+            "accuracy": 0.671875,
+            "top3Accuracy": 0.9375
+          },
+          "chromium/rotate": {
+            "count": 320,
+            "correct": 157,
+            "top3": 268,
+            "accuracy": 0.490625,
+            "top3Accuracy": 0.8375
+          },
+          "chromium/blur": {
+            "count": 320,
+            "correct": 220,
+            "top3": 304,
+            "accuracy": 0.6875,
+            "top3Accuracy": 0.95
+          },
+          "chromium/jpeg": {
+            "count": 320,
+            "correct": 217,
+            "top3": 298,
+            "accuracy": 0.678125,
+            "top3Accuracy": 0.93125
+          }
+        },
+        "confusion": [
+          [
+            22,
+            39,
+            28,
+            4,
+            5,
+            282,
+            1,
+            1,
+            0,
+            2
+          ],
+          [
+            1,
+            125,
+            24,
+            5,
+            4,
+            213,
+            2,
+            0,
+            4,
+            6
+          ],
+          [
+            2,
+            6,
+            173,
+            13,
+            106,
+            76,
+            4,
+            0,
+            1,
+            3
+          ],
+          [
+            2,
+            38,
+            103,
+            86,
+            9,
+            140,
+            2,
+            0,
+            0,
+            4
+          ],
+          [
+            0,
+            0,
+            1,
+            0,
+            371,
+            10,
+            2,
+            0,
+            0,
+            0
+          ],
+          [
+            1,
+            2,
+            1,
+            3,
+            2,
+            374,
+            0,
+            0,
+            1,
+            0
+          ],
+          [
+            0,
+            0,
+            22,
+            4,
+            172,
+            112,
+            71,
+            0,
+            1,
+            2
+          ],
+          [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            366,
+            13,
+            5
+          ],
+          [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            64,
+            318,
+            2
+          ],
+          [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            61,
+            10,
+            313
+          ]
+        ]
+      }
+    },
+    {
+      "step": 2000,
+      "validation": {
+        "groups": {
+          "all": {
+            "count": 3840,
+            "correct": 2292,
+            "top3": 3389,
+            "accuracy": 0.596875,
+            "top3Accuracy": 0.8825520833333333
+          },
+          "pillow": {
+            "count": 1920,
+            "correct": 1132,
+            "top3": 1654,
+            "accuracy": 0.5895833333333333,
+            "top3Accuracy": 0.8614583333333333
+          },
+          "pillow/clean": {
+            "count": 320,
+            "correct": 197,
+            "top3": 280,
+            "accuracy": 0.615625,
+            "top3Accuracy": 0.875
+          },
+          "inter": {
+            "count": 384,
+            "correct": 180,
+            "top3": 354,
+            "accuracy": 0.46875,
+            "top3Accuracy": 0.921875
+          },
+          "pillow/crop": {
+            "count": 320,
+            "correct": 182,
+            "top3": 268,
+            "accuracy": 0.56875,
+            "top3Accuracy": 0.8375
+          },
+          "pillow/small": {
+            "count": 320,
+            "correct": 186,
+            "top3": 275,
+            "accuracy": 0.58125,
+            "top3Accuracy": 0.859375
+          },
+          "pillow/rotate": {
+            "count": 320,
+            "correct": 167,
+            "top3": 273,
+            "accuracy": 0.521875,
+            "top3Accuracy": 0.853125
+          },
+          "pillow/blur": {
+            "count": 320,
+            "correct": 200,
+            "top3": 279,
+            "accuracy": 0.625,
+            "top3Accuracy": 0.871875
+          },
+          "pillow/jpeg": {
+            "count": 320,
+            "correct": 200,
+            "top3": 279,
+            "accuracy": 0.625,
+            "top3Accuracy": 0.871875
+          },
+          "roboto": {
+            "count": 384,
+            "correct": 96,
+            "top3": 272,
+            "accuracy": 0.25,
+            "top3Accuracy": 0.7083333333333334
+          },
+          "open-sans": {
+            "count": 384,
+            "correct": 323,
+            "top3": 377,
+            "accuracy": 0.8411458333333334,
+            "top3Accuracy": 0.9817708333333334
+          },
+          "source-sans-3": {
+            "count": 384,
+            "correct": 256,
+            "top3": 376,
+            "accuracy": 0.6666666666666666,
+            "top3Accuracy": 0.9791666666666666
+          },
+          "montserrat": {
+            "count": 384,
+            "correct": 293,
+            "top3": 367,
+            "accuracy": 0.7630208333333334,
+            "top3Accuracy": 0.9557291666666666
+          },
+          "poppins": {
+            "count": 384,
+            "correct": 80,
+            "top3": 179,
+            "accuracy": 0.20833333333333334,
+            "top3Accuracy": 0.4661458333333333
+          },
+          "nunito": {
+            "count": 384,
+            "correct": 164,
+            "top3": 357,
+            "accuracy": 0.4270833333333333,
+            "top3Accuracy": 0.9296875
+          },
+          "lora": {
+            "count": 384,
+            "correct": 285,
+            "top3": 364,
+            "accuracy": 0.7421875,
+            "top3Accuracy": 0.9479166666666666
+          },
+          "merriweather": {
+            "count": 384,
+            "correct": 351,
+            "top3": 374,
+            "accuracy": 0.9140625,
+            "top3Accuracy": 0.9739583333333334
+          },
+          "playfair-display": {
+            "count": 384,
+            "correct": 264,
+            "top3": 369,
+            "accuracy": 0.6875,
+            "top3Accuracy": 0.9609375
+          },
+          "chromium": {
+            "count": 1920,
+            "correct": 1160,
+            "top3": 1735,
+            "accuracy": 0.6041666666666666,
+            "top3Accuracy": 0.9036458333333334
+          },
+          "chromium/clean": {
+            "count": 320,
+            "correct": 212,
+            "top3": 300,
+            "accuracy": 0.6625,
+            "top3Accuracy": 0.9375
+          },
+          "chromium/crop": {
+            "count": 320,
+            "correct": 179,
+            "top3": 279,
+            "accuracy": 0.559375,
+            "top3Accuracy": 0.871875
+          },
+          "chromium/small": {
+            "count": 320,
+            "correct": 198,
+            "top3": 291,
+            "accuracy": 0.61875,
+            "top3Accuracy": 0.909375
+          },
+          "chromium/rotate": {
+            "count": 320,
+            "correct": 164,
+            "top3": 280,
+            "accuracy": 0.5125,
+            "top3Accuracy": 0.875
+          },
+          "chromium/blur": {
+            "count": 320,
+            "correct": 199,
+            "top3": 291,
+            "accuracy": 0.621875,
+            "top3Accuracy": 0.909375
+          },
+          "chromium/jpeg": {
+            "count": 320,
+            "correct": 208,
+            "top3": 294,
+            "accuracy": 0.65,
+            "top3Accuracy": 0.91875
+          }
+        },
+        "confusion": [
+          [
+            180,
+            12,
+            101,
+            87,
+            0,
+            0,
+            4,
+            0,
+            0,
+            0
+          ],
+          [
+            30,
+            96,
+            72,
+            180,
+            0,
+            3,
+            3,
+            0,
+            0,
+            0
+          ],
+          [
+            3,
+            1,
+            323,
+            54,
+            0,
+            0,
+            3,
+            0,
+            0,
+            0
+          ],
+          [
+            8,
+            6,
+            114,
+            256,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          [
+            1,
+            0,
+            65,
+            4,
+            293,
+            0,
+            21,
+            0,
+            0,
+            0
+          ],
+          [
+            109,
+            19,
+            81,
+            77,
+            2,
+            80,
+            16,
+            0,
+            0,
+            0
+          ],
+          [
+            3,
+            1,
+            152,
+            51,
+            13,
+            0,
+            164,
+            0,
+            0,
+            0
+          ],
+          [
+            0,
+            0,
+            26,
+            16,
+            1,
+            0,
+            0,
+            285,
+            56,
+            0
+          ],
+          [
+            0,
+            0,
+            7,
+            24,
+            0,
+            0,
+            0,
+            2,
+            351,
+            0
+          ],
+          [
+            0,
+            0,
+            5,
+            6,
+            0,
+            0,
+            0,
+            89,
+            20,
+            264
+          ]
+        ]
+      }
+    },
+    {
+      "step": 3000,
+      "validation": {
+        "groups": {
+          "all": {
+            "count": 3840,
+            "correct": 3023,
+            "top3": 3655,
+            "accuracy": 0.7872395833333333,
+            "top3Accuracy": 0.9518229166666666
+          },
+          "pillow": {
+            "count": 1920,
+            "correct": 1454,
+            "top3": 1818,
+            "accuracy": 0.7572916666666667,
+            "top3Accuracy": 0.946875
+          },
+          "pillow/clean": {
+            "count": 320,
+            "correct": 253,
+            "top3": 314,
+            "accuracy": 0.790625,
+            "top3Accuracy": 0.98125
+          },
+          "inter": {
+            "count": 384,
+            "correct": 265,
+            "top3": 364,
+            "accuracy": 0.6901041666666666,
+            "top3Accuracy": 0.9479166666666666
+          },
+          "pillow/crop": {
+            "count": 320,
+            "correct": 236,
+            "top3": 300,
+            "accuracy": 0.7375,
+            "top3Accuracy": 0.9375
+          },
+          "pillow/small": {
+            "count": 320,
+            "correct": 245,
+            "top3": 303,
+            "accuracy": 0.765625,
+            "top3Accuracy": 0.946875
+          },
+          "pillow/rotate": {
+            "count": 320,
+            "correct": 186,
+            "top3": 279,
+            "accuracy": 0.58125,
+            "top3Accuracy": 0.871875
+          },
+          "pillow/blur": {
+            "count": 320,
+            "correct": 268,
+            "top3": 312,
+            "accuracy": 0.8375,
+            "top3Accuracy": 0.975
+          },
+          "pillow/jpeg": {
+            "count": 320,
+            "correct": 266,
+            "top3": 310,
+            "accuracy": 0.83125,
+            "top3Accuracy": 0.96875
+          },
+          "roboto": {
+            "count": 384,
+            "correct": 172,
+            "top3": 343,
+            "accuracy": 0.4479166666666667,
+            "top3Accuracy": 0.8932291666666666
+          },
+          "open-sans": {
+            "count": 384,
+            "correct": 308,
+            "top3": 363,
+            "accuracy": 0.8020833333333334,
+            "top3Accuracy": 0.9453125
+          },
+          "source-sans-3": {
+            "count": 384,
+            "correct": 201,
+            "top3": 325,
+            "accuracy": 0.5234375,
+            "top3Accuracy": 0.8463541666666666
+          },
+          "montserrat": {
+            "count": 384,
+            "correct": 356,
+            "top3": 376,
+            "accuracy": 0.9270833333333334,
+            "top3Accuracy": 0.9791666666666666
+          },
+          "poppins": {
+            "count": 384,
+            "correct": 349,
+            "top3": 375,
+            "accuracy": 0.9088541666666666,
+            "top3Accuracy": 0.9765625
+          },
+          "nunito": {
+            "count": 384,
+            "correct": 264,
+            "top3": 363,
+            "accuracy": 0.6875,
+            "top3Accuracy": 0.9453125
+          },
+          "lora": {
+            "count": 384,
+            "correct": 370,
+            "top3": 383,
+            "accuracy": 0.9635416666666666,
+            "top3Accuracy": 0.9973958333333334
+          },
+          "merriweather": {
+            "count": 384,
+            "correct": 360,
+            "top3": 379,
+            "accuracy": 0.9375,
+            "top3Accuracy": 0.9869791666666666
+          },
+          "playfair-display": {
+            "count": 384,
+            "correct": 378,
+            "top3": 384,
+            "accuracy": 0.984375,
+            "top3Accuracy": 1.0
+          },
+          "chromium": {
+            "count": 1920,
+            "correct": 1569,
+            "top3": 1837,
+            "accuracy": 0.8171875,
+            "top3Accuracy": 0.9567708333333333
+          },
+          "chromium/clean": {
+            "count": 320,
+            "correct": 280,
+            "top3": 311,
+            "accuracy": 0.875,
+            "top3Accuracy": 0.971875
+          },
+          "chromium/crop": {
+            "count": 320,
+            "correct": 246,
+            "top3": 294,
+            "accuracy": 0.76875,
+            "top3Accuracy": 0.91875
+          },
+          "chromium/small": {
+            "count": 320,
+            "correct": 272,
+            "top3": 311,
+            "accuracy": 0.85,
+            "top3Accuracy": 0.971875
+          },
+          "chromium/rotate": {
+            "count": 320,
+            "correct": 227,
+            "top3": 304,
+            "accuracy": 0.709375,
+            "top3Accuracy": 0.95
+          },
+          "chromium/blur": {
+            "count": 320,
+            "correct": 274,
+            "top3": 310,
+            "accuracy": 0.85625,
+            "top3Accuracy": 0.96875
+          },
+          "chromium/jpeg": {
+            "count": 320,
+            "correct": 270,
+            "top3": 307,
+            "accuracy": 0.84375,
+            "top3Accuracy": 0.959375
+          }
+        },
+        "confusion": [
+          [
+            265,
+            20,
+            40,
+            8,
+            0,
+            49,
+            2,
+            0,
+            0,
+            0
+          ],
+          [
+            70,
+            172,
+            43,
+            25,
+            0,
+            65,
+            8,
+            0,
+            1,
+            0
+          ],
+          [
+            25,
+            0,
+            308,
+            22,
+            8,
+            12,
+            8,
+            0,
+            0,
+            1
+          ],
+          [
+            25,
+            30,
+            103,
+            201,
+            0,
+            22,
+            1,
+            0,
+            0,
+            2
+          ],
+          [
+            2,
+            0,
+            11,
+            0,
+            356,
+            7,
+            8,
+            0,
+            0,
+            0
+          ],
+          [
+            9,
+            8,
+            9,
+            6,
+            0,
+            349,
+            3,
+            0,
+            0,
+            0
+          ],
+          [
+            6,
+            1,
+            58,
+            5,
+            26,
+            24,
+            264,
+            0,
+            0,
+            0
+          ],
+          [
+            0,
+            0,
+            0,
+            0,
+            0,
+            1,
+            0,
+            370,
+            9,
+            4
+          ],
+          [
+            1,
+            0,
+            1,
+            0,
+            0,
+            2,
+            0,
+            17,
+            360,
+            3
+          ],
+          [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            4,
+            2,
+            378
+          ]
+        ]
+      }
+    },
+    {
+      "step": 4000,
+      "validation": {
+        "groups": {
+          "all": {
+            "count": 3840,
+            "correct": 3104,
+            "top3": 3694,
+            "accuracy": 0.8083333333333333,
+            "top3Accuracy": 0.9619791666666667
+          },
+          "pillow": {
+            "count": 1920,
+            "correct": 1611,
+            "top3": 1853,
+            "accuracy": 0.8390625,
+            "top3Accuracy": 0.9651041666666667
+          },
+          "pillow/clean": {
+            "count": 320,
+            "correct": 291,
+            "top3": 316,
+            "accuracy": 0.909375,
+            "top3Accuracy": 0.9875
+          },
+          "inter": {
+            "count": 384,
+            "correct": 188,
+            "top3": 335,
+            "accuracy": 0.4895833333333333,
+            "top3Accuracy": 0.8723958333333334
+          },
+          "pillow/crop": {
+            "count": 320,
+            "correct": 260,
+            "top3": 304,
+            "accuracy": 0.8125,
+            "top3Accuracy": 0.95
+          },
+          "pillow/small": {
+            "count": 320,
+            "correct": 270,
+            "top3": 311,
+            "accuracy": 0.84375,
+            "top3Accuracy": 0.971875
+          },
+          "pillow/rotate": {
+            "count": 320,
+            "correct": 242,
+            "top3": 297,
+            "accuracy": 0.75625,
+            "top3Accuracy": 0.928125
+          },
+          "pillow/blur": {
+            "count": 320,
+            "correct": 276,
+            "top3": 311,
+            "accuracy": 0.8625,
+            "top3Accuracy": 0.971875
+          },
+          "pillow/jpeg": {
+            "count": 320,
+            "correct": 272,
+            "top3": 314,
+            "accuracy": 0.85,
+            "top3Accuracy": 0.98125
+          },
+          "roboto": {
+            "count": 384,
+            "correct": 294,
+            "top3": 377,
+            "accuracy": 0.765625,
+            "top3Accuracy": 0.9817708333333334
+          },
+          "open-sans": {
+            "count": 384,
+            "correct": 295,
+            "top3": 356,
+            "accuracy": 0.7682291666666666,
+            "top3Accuracy": 0.9270833333333334
+          },
+          "source-sans-3": {
+            "count": 384,
+            "correct": 251,
+            "top3": 355,
+            "accuracy": 0.6536458333333334,
+            "top3Accuracy": 0.9244791666666666
+          },
+          "montserrat": {
+            "count": 384,
+            "correct": 337,
+            "top3": 375,
+            "accuracy": 0.8776041666666666,
+            "top3Accuracy": 0.9765625
+          },
+          "poppins": {
+            "count": 384,
+            "correct": 346,
+            "top3": 377,
+            "accuracy": 0.9010416666666666,
+            "top3Accuracy": 0.9817708333333334
+          },
+          "nunito": {
+            "count": 384,
+            "correct": 298,
+            "top3": 367,
+            "accuracy": 0.7760416666666666,
+            "top3Accuracy": 0.9557291666666666
+          },
+          "lora": {
+            "count": 384,
+            "correct": 332,
+            "top3": 384,
+            "accuracy": 0.8645833333333334,
+            "top3Accuracy": 1.0
+          },
+          "merriweather": {
+            "count": 384,
+            "correct": 381,
+            "top3": 384,
+            "accuracy": 0.9921875,
+            "top3Accuracy": 1.0
+          },
+          "playfair-display": {
+            "count": 384,
+            "correct": 382,
+            "top3": 384,
+            "accuracy": 0.9947916666666666,
+            "top3Accuracy": 1.0
+          },
+          "chromium": {
+            "count": 1920,
+            "correct": 1493,
+            "top3": 1841,
+            "accuracy": 0.7776041666666667,
+            "top3Accuracy": 0.9588541666666667
+          },
+          "chromium/clean": {
+            "count": 320,
+            "correct": 275,
+            "top3": 312,
+            "accuracy": 0.859375,
+            "top3Accuracy": 0.975
+          },
+          "chromium/crop": {
+            "count": 320,
+            "correct": 231,
+            "top3": 302,
+            "accuracy": 0.721875,
+            "top3Accuracy": 0.94375
+          },
+          "chromium/small": {
+            "count": 320,
+            "correct": 261,
+            "top3": 311,
+            "accuracy": 0.815625,
+            "top3Accuracy": 0.971875
+          },
+          "chromium/rotate": {
+            "count": 320,
+            "correct": 212,
+            "top3": 295,
+            "accuracy": 0.6625,
+            "top3Accuracy": 0.921875
+          },
+          "chromium/blur": {
+            "count": 320,
+            "correct": 259,
+            "top3": 312,
+            "accuracy": 0.809375,
+            "top3Accuracy": 0.975
+          },
+          "chromium/jpeg": {
+            "count": 320,
+            "correct": 255,
+            "top3": 309,
+            "accuracy": 0.796875,
+            "top3Accuracy": 0.965625
+          }
+        },
+        "confusion": [
+          [
+            188,
+            110,
+            13,
+            13,
+            1,
+            56,
+            1,
+            0,
+            2,
+            0
+          ],
+          [
+            3,
+            294,
+            11,
+            19,
+            0,
+            51,
+            3,
+            0,
+            2,
+            1
+          ],
+          [
+            2,
+            18,
+            295,
+            46,
+            0,
+            7,
+            12,
+            0,
+            4,
+            0
+          ],
+          [
+            1,
+            64,
+            46,
+            251,
+            0,
+            16,
+            1,
+            0,
+            4,
+            1
+          ],
+          [
+            1,
+            0,
+            27,
+            0,
+            337,
+            2,
+            17,
+            0,
+            0,
+            0
+          ],
+          [
+            4,
+            15,
+            4,
+            7,
+            0,
+            346,
+            2,
+            0,
+            5,
+            1
+          ],
+          [
+            1,
+            9,
+            30,
+            18,
+            9,
+            17,
+            298,
+            0,
+            1,
+            1
+          ],
+          [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            332,
+            35,
+            17
+          ],
+          [
+            0,
+            0,
+            0,
+            1,
+            0,
+            0,
+            0,
+            1,
+            381,
+            1
+          ],
+          [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            2,
+            382
+          ]
+        ]
+      }
+    },
+    {
+      "step": 5000,
+      "validation": {
+        "groups": {
+          "all": {
+            "count": 3840,
+            "correct": 3075,
+            "top3": 3677,
+            "accuracy": 0.80078125,
+            "top3Accuracy": 0.9575520833333333
+          },
+          "pillow": {
+            "count": 1920,
+            "correct": 1487,
+            "top3": 1845,
+            "accuracy": 0.7744791666666667,
+            "top3Accuracy": 0.9609375
+          },
+          "pillow/clean": {
+            "count": 320,
+            "correct": 264,
+            "top3": 314,
+            "accuracy": 0.825,
+            "top3Accuracy": 0.98125
+          },
+          "inter": {
+            "count": 384,
+            "correct": 315,
+            "top3": 376,
+            "accuracy": 0.8203125,
+            "top3Accuracy": 0.9791666666666666
+          },
+          "pillow/crop": {
+            "count": 320,
+            "correct": 245,
+            "top3": 304,
+            "accuracy": 0.765625,
+            "top3Accuracy": 0.95
+          },
+          "pillow/small": {
+            "count": 320,
+            "correct": 239,
+            "top3": 303,
+            "accuracy": 0.746875,
+            "top3Accuracy": 0.946875
+          },
+          "pillow/rotate": {
+            "count": 320,
+            "correct": 215,
+            "top3": 302,
+            "accuracy": 0.671875,
+            "top3Accuracy": 0.94375
+          },
+          "pillow/blur": {
+            "count": 320,
+            "correct": 261,
+            "top3": 312,
+            "accuracy": 0.815625,
+            "top3Accuracy": 0.975
+          },
+          "pillow/jpeg": {
+            "count": 320,
+            "correct": 263,
+            "top3": 310,
+            "accuracy": 0.821875,
+            "top3Accuracy": 0.96875
+          },
+          "roboto": {
+            "count": 384,
+            "correct": 158,
+            "top3": 349,
+            "accuracy": 0.4114583333333333,
+            "top3Accuracy": 0.9088541666666666
+          },
+          "open-sans": {
+            "count": 384,
+            "correct": 329,
+            "top3": 363,
+            "accuracy": 0.8567708333333334,
+            "top3Accuracy": 0.9453125
+          },
+          "source-sans-3": {
+            "count": 384,
+            "correct": 189,
+            "top3": 332,
+            "accuracy": 0.4921875,
+            "top3Accuracy": 0.8645833333333334
+          },
+          "montserrat": {
+            "count": 384,
+            "correct": 359,
+            "top3": 370,
+            "accuracy": 0.9348958333333334,
+            "top3Accuracy": 0.9635416666666666
+          },
+          "poppins": {
+            "count": 384,
+            "correct": 360,
+            "top3": 382,
+            "accuracy": 0.9375,
+            "top3Accuracy": 0.9947916666666666
+          },
+          "nunito": {
+            "count": 384,
+            "correct": 278,
+            "top3": 359,
+            "accuracy": 0.7239583333333334,
+            "top3Accuracy": 0.9348958333333334
+          },
+          "lora": {
+            "count": 384,
+            "correct": 337,
+            "top3": 380,
+            "accuracy": 0.8776041666666666,
+            "top3Accuracy": 0.9895833333333334
+          },
+          "merriweather": {
+            "count": 384,
+            "correct": 374,
+            "top3": 383,
+            "accuracy": 0.9739583333333334,
+            "top3Accuracy": 0.9973958333333334
+          },
+          "playfair-display": {
+            "count": 384,
+            "correct": 376,
+            "top3": 383,
+            "accuracy": 0.9791666666666666,
+            "top3Accuracy": 0.9973958333333334
+          },
+          "chromium": {
+            "count": 1920,
+            "correct": 1588,
+            "top3": 1832,
+            "accuracy": 0.8270833333333333,
+            "top3Accuracy": 0.9541666666666667
+          },
+          "chromium/clean": {
+            "count": 320,
+            "correct": 283,
+            "top3": 311,
+            "accuracy": 0.884375,
+            "top3Accuracy": 0.971875
+          },
+          "chromium/crop": {
+            "count": 320,
+            "correct": 248,
+            "top3": 301,
+            "accuracy": 0.775,
+            "top3Accuracy": 0.940625
+          },
+          "chromium/small": {
+            "count": 320,
+            "correct": 279,
+            "top3": 312,
+            "accuracy": 0.871875,
+            "top3Accuracy": 0.975
+          },
+          "chromium/rotate": {
+            "count": 320,
+            "correct": 228,
+            "top3": 293,
+            "accuracy": 0.7125,
+            "top3Accuracy": 0.915625
+          },
+          "chromium/blur": {
+            "count": 320,
+            "correct": 279,
+            "top3": 307,
+            "accuracy": 0.871875,
+            "top3Accuracy": 0.959375
+          },
+          "chromium/jpeg": {
+            "count": 320,
+            "correct": 271,
+            "top3": 308,
+            "accuracy": 0.846875,
+            "top3Accuracy": 0.9625
+          }
+        },
+        "confusion": [
+          [
+            315,
+            13,
+            12,
+            1,
+            0,
+            43,
+            0,
+            0,
+            0,
+            0
+          ],
+          [
+            121,
+            158,
+            28,
+            7,
+            0,
+            64,
+            6,
+            0,
+            0,
+            0
+          ],
+          [
+            27,
+            3,
+            329,
+            3,
+            1,
+            14,
+            7,
+            0,
+            0,
+            0
+          ],
+          [
+            40,
+            22,
+            111,
+            189,
+            0,
+            20,
+            2,
+            0,
+            0,
+            0
+          ],
+          [
+            2,
+            0,
+            10,
+            0,
+            359,
+            7,
+            6,
+            0,
+            0,
+            0
+          ],
+          [
+            20,
+            1,
+            1,
+            1,
+            1,
+            360,
+            0,
+            0,
+            0,
+            0
+          ],
+          [
+            14,
+            1,
+            50,
+            4,
+            19,
+            18,
+            278,
+            0,
+            0,
+            0
+          ],
+          [
+            0,
+            1,
+            6,
+            0,
+            0,
+            1,
+            5,
+            337,
+            25,
+            9
+          ],
+          [
+            0,
+            2,
+            5,
+            1,
+            0,
+            0,
+            1,
+            0,
+            374,
+            1
+          ],
+          [
+            0,
+            0,
+            1,
+            0,
+            0,
+            0,
+            0,
+            1,
+            6,
+            376
+          ]
+        ]
+      }
+    },
+    {
+      "step": 6000,
+      "validation": {
+        "groups": {
+          "all": {
+            "count": 3840,
+            "correct": 3237,
+            "top3": 3710,
+            "accuracy": 0.84296875,
+            "top3Accuracy": 0.9661458333333334
+          },
+          "pillow": {
+            "count": 1920,
+            "correct": 1688,
+            "top3": 1878,
+            "accuracy": 0.8791666666666667,
+            "top3Accuracy": 0.978125
+          },
+          "pillow/clean": {
+            "count": 320,
+            "correct": 305,
+            "top3": 318,
+            "accuracy": 0.953125,
+            "top3Accuracy": 0.99375
+          },
+          "inter": {
+            "count": 384,
+            "correct": 285,
+            "top3": 353,
+            "accuracy": 0.7421875,
+            "top3Accuracy": 0.9192708333333334
+          },
+          "pillow/crop": {
+            "count": 320,
+            "correct": 264,
+            "top3": 306,
+            "accuracy": 0.825,
+            "top3Accuracy": 0.95625
+          },
+          "pillow/small": {
+            "count": 320,
+            "correct": 286,
+            "top3": 311,
+            "accuracy": 0.89375,
+            "top3Accuracy": 0.971875
+          },
+          "pillow/rotate": {
+            "count": 320,
+            "correct": 253,
+            "top3": 312,
+            "accuracy": 0.790625,
+            "top3Accuracy": 0.975
+          },
+          "pillow/blur": {
+            "count": 320,
+            "correct": 291,
+            "top3": 316,
+            "accuracy": 0.909375,
+            "top3Accuracy": 0.9875
+          },
+          "pillow/jpeg": {
+            "count": 320,
+            "correct": 289,
+            "top3": 315,
+            "accuracy": 0.903125,
+            "top3Accuracy": 0.984375
+          },
+          "roboto": {
+            "count": 384,
+            "correct": 301,
+            "top3": 379,
+            "accuracy": 0.7838541666666666,
+            "top3Accuracy": 0.9869791666666666
+          },
+          "open-sans": {
+            "count": 384,
+            "correct": 227,
+            "top3": 337,
+            "accuracy": 0.5911458333333334,
+            "top3Accuracy": 0.8776041666666666
+          },
+          "source-sans-3": {
+            "count": 384,
+            "correct": 326,
+            "top3": 368,
+            "accuracy": 0.8489583333333334,
+            "top3Accuracy": 0.9583333333333334
+          },
+          "montserrat": {
+            "count": 384,
+            "correct": 351,
+            "top3": 378,
+            "accuracy": 0.9140625,
+            "top3Accuracy": 0.984375
+          },
+          "poppins": {
+            "count": 384,
+            "correct": 349,
+            "top3": 378,
+            "accuracy": 0.9088541666666666,
+            "top3Accuracy": 0.984375
+          },
+          "nunito": {
+            "count": 384,
+            "correct": 298,
+            "top3": 366,
+            "accuracy": 0.7760416666666666,
+            "top3Accuracy": 0.953125
+          },
+          "lora": {
+            "count": 384,
+            "correct": 345,
+            "top3": 384,
+            "accuracy": 0.8984375,
+            "top3Accuracy": 1.0
+          },
+          "merriweather": {
+            "count": 384,
+            "correct": 372,
+            "top3": 384,
+            "accuracy": 0.96875,
+            "top3Accuracy": 1.0
+          },
+          "playfair-display": {
+            "count": 384,
+            "correct": 383,
+            "top3": 383,
+            "accuracy": 0.9973958333333334,
+            "top3Accuracy": 0.9973958333333334
+          },
+          "chromium": {
+            "count": 1920,
+            "correct": 1549,
+            "top3": 1832,
+            "accuracy": 0.8067708333333333,
+            "top3Accuracy": 0.9541666666666667
+          },
+          "chromium/clean": {
+            "count": 320,
+            "correct": 279,
+            "top3": 315,
+            "accuracy": 0.871875,
+            "top3Accuracy": 0.984375
+          },
+          "chromium/crop": {
+            "count": 320,
+            "correct": 237,
+            "top3": 295,
+            "accuracy": 0.740625,
+            "top3Accuracy": 0.921875
+          },
+          "chromium/small": {
+            "count": 320,
+            "correct": 273,
+            "top3": 310,
+            "accuracy": 0.853125,
+            "top3Accuracy": 0.96875
+          },
+          "chromium/rotate": {
+            "count": 320,
+            "correct": 218,
+            "top3": 296,
+            "accuracy": 0.68125,
+            "top3Accuracy": 0.925
+          },
+          "chromium/blur": {
+            "count": 320,
+            "correct": 272,
+            "top3": 309,
+            "accuracy": 0.85,
+            "top3Accuracy": 0.965625
+          },
+          "chromium/jpeg": {
+            "count": 320,
+            "correct": 270,
+            "top3": 307,
+            "accuracy": 0.84375,
+            "top3Accuracy": 0.959375
+          }
+        },
+        "confusion": [
+          [
+            285,
+            53,
+            3,
+            15,
+            0,
+            27,
+            0,
+            0,
+            1,
+            0
+          ],
+          [
+            17,
+            301,
+            1,
+            23,
+            0,
+            39,
+            1,
+            0,
+            1,
+            1
+          ],
+          [
+            8,
+            15,
+            227,
+            115,
+            0,
+            9,
+            8,
+            0,
+            2,
+            0
+          ],
+          [
+            4,
+            31,
+            6,
+            326,
+            0,
+            13,
+            0,
+            0,
+            0,
+            4
+          ],
+          [
+            0,
+            0,
+            5,
+            2,
+            351,
+            7,
+            19,
+            0,
+            0,
+            0
+          ],
+          [
+            14,
+            15,
+            0,
+            6,
+            0,
+            349,
+            0,
+            0,
+            0,
+            0
+          ],
+          [
+            9,
+            5,
+            15,
+            36,
+            7,
+            12,
+            298,
+            1,
+            1,
+            0
+          ],
+          [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            345,
+            25,
+            14
+          ],
+          [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            1,
+            4,
+            372,
+            7
+          ],
+          [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            1,
+            383
+          ]
+        ]
+      }
+    },
+    {
+      "step": 7000,
+      "validation": {
+        "groups": {
+          "all": {
+            "count": 3840,
+            "correct": 3323,
+            "top3": 3745,
+            "accuracy": 0.8653645833333333,
+            "top3Accuracy": 0.9752604166666666
+          },
+          "pillow": {
+            "count": 1920,
+            "correct": 1613,
+            "top3": 1864,
+            "accuracy": 0.8401041666666667,
+            "top3Accuracy": 0.9708333333333333
+          },
+          "pillow/clean": {
+            "count": 320,
+            "correct": 296,
+            "top3": 318,
+            "accuracy": 0.925,
+            "top3Accuracy": 0.99375
+          },
+          "inter": {
+            "count": 384,
+            "correct": 275,
+            "top3": 354,
+            "accuracy": 0.7161458333333334,
+            "top3Accuracy": 0.921875
+          },
+          "pillow/crop": {
+            "count": 320,
+            "correct": 267,
+            "top3": 309,
+            "accuracy": 0.834375,
+            "top3Accuracy": 0.965625
+          },
+          "pillow/small": {
+            "count": 320,
+            "correct": 258,
+            "top3": 307,
+            "accuracy": 0.80625,
+            "top3Accuracy": 0.959375
+          },
+          "pillow/rotate": {
+            "count": 320,
+            "correct": 234,
+            "top3": 299,
+            "accuracy": 0.73125,
+            "top3Accuracy": 0.934375
+          },
+          "pillow/blur": {
+            "count": 320,
+            "correct": 282,
+            "top3": 315,
+            "accuracy": 0.88125,
+            "top3Accuracy": 0.984375
+          },
+          "pillow/jpeg": {
+            "count": 320,
+            "correct": 276,
+            "top3": 316,
+            "accuracy": 0.8625,
+            "top3Accuracy": 0.9875
+          },
+          "roboto": {
+            "count": 384,
+            "correct": 254,
+            "top3": 354,
+            "accuracy": 0.6614583333333334,
+            "top3Accuracy": 0.921875
+          },
+          "open-sans": {
+            "count": 384,
+            "correct": 323,
+            "top3": 369,
+            "accuracy": 0.8411458333333334,
+            "top3Accuracy": 0.9609375
+          },
+          "source-sans-3": {
+            "count": 384,
+            "correct": 292,
+            "top3": 377,
+            "accuracy": 0.7604166666666666,
+            "top3Accuracy": 0.9817708333333334
+          },
+          "montserrat": {
+            "count": 384,
+            "correct": 372,
+            "top3": 383,
+            "accuracy": 0.96875,
+            "top3Accuracy": 0.9973958333333334
+          },
+          "poppins": {
+            "count": 384,
+            "correct": 353,
+            "top3": 379,
+            "accuracy": 0.9192708333333334,
+            "top3Accuracy": 0.9869791666666666
+          },
+          "nunito": {
+            "count": 384,
+            "correct": 339,
+            "top3": 378,
+            "accuracy": 0.8828125,
+            "top3Accuracy": 0.984375
+          },
+          "lora": {
+            "count": 384,
+            "correct": 375,
+            "top3": 384,
+            "accuracy": 0.9765625,
+            "top3Accuracy": 1.0
+          },
+          "merriweather": {
+            "count": 384,
+            "correct": 367,
+            "top3": 384,
+            "accuracy": 0.9557291666666666,
+            "top3Accuracy": 1.0
+          },
+          "playfair-display": {
+            "count": 384,
+            "correct": 373,
+            "top3": 383,
+            "accuracy": 0.9713541666666666,
+            "top3Accuracy": 0.9973958333333334
+          },
+          "chromium": {
+            "count": 1920,
+            "correct": 1710,
+            "top3": 1881,
+            "accuracy": 0.890625,
+            "top3Accuracy": 0.9796875
+          },
+          "chromium/clean": {
+            "count": 320,
+            "correct": 304,
+            "top3": 317,
+            "accuracy": 0.95,
+            "top3Accuracy": 0.990625
+          },
+          "chromium/crop": {
+            "count": 320,
+            "correct": 269,
+            "top3": 308,
+            "accuracy": 0.840625,
+            "top3Accuracy": 0.9625
+          },
+          "chromium/small": {
+            "count": 320,
+            "correct": 287,
+            "top3": 316,
+            "accuracy": 0.896875,
+            "top3Accuracy": 0.9875
+          },
+          "chromium/rotate": {
+            "count": 320,
+            "correct": 264,
+            "top3": 310,
+            "accuracy": 0.825,
+            "top3Accuracy": 0.96875
+          },
+          "chromium/blur": {
+            "count": 320,
+            "correct": 294,
+            "top3": 316,
+            "accuracy": 0.91875,
+            "top3Accuracy": 0.9875
+          },
+          "chromium/jpeg": {
+            "count": 320,
+            "correct": 292,
+            "top3": 314,
+            "accuracy": 0.9125,
+            "top3Accuracy": 0.98125
+          }
+        },
+        "confusion": [
+          [
+            275,
+            20,
+            17,
+            25,
+            7,
+            24,
+            15,
+            0,
+            1,
+            0
+          ],
+          [
+            14,
+            254,
+            22,
+            39,
+            0,
+            31,
+            24,
+            0,
+            0,
+            0
+          ],
+          [
+            2,
+            1,
+            323,
+            28,
+            9,
+            5,
+            16,
+            0,
+            0,
+            0
+          ],
+          [
+            2,
+            4,
+            62,
+            292,
+            0,
+            12,
+            11,
+            0,
+            1,
+            0
+          ],
+          [
+            0,
+            0,
+            1,
+            0,
+            372,
+            5,
+            6,
+            0,
+            0,
+            0
+          ],
+          [
+            2,
+            7,
+            0,
+            13,
+            2,
+            353,
+            7,
+            0,
+            0,
+            0
+          ],
+          [
+            0,
+            0,
+            6,
+            7,
+            22,
+            10,
+            339,
+            0,
+            0,
+            0
+          ],
+          [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            375,
+            8,
+            1
+          ],
+          [
+            0,
+            0,
+            0,
+            2,
+            0,
+            0,
+            1,
+            14,
+            367,
+            0
+          ],
+          [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            9,
+            2,
+            373
+          ]
+        ]
+      }
+    },
+    {
+      "step": 8000,
+      "validation": {
+        "groups": {
+          "all": {
+            "count": 3840,
+            "correct": 3367,
+            "top3": 3740,
+            "accuracy": 0.8768229166666667,
+            "top3Accuracy": 0.9739583333333334
+          },
+          "pillow": {
+            "count": 1920,
+            "correct": 1722,
+            "top3": 1885,
+            "accuracy": 0.896875,
+            "top3Accuracy": 0.9817708333333334
+          },
+          "pillow/clean": {
+            "count": 320,
+            "correct": 303,
+            "top3": 317,
+            "accuracy": 0.946875,
+            "top3Accuracy": 0.990625
+          },
+          "inter": {
+            "count": 384,
+            "correct": 296,
+            "top3": 377,
+            "accuracy": 0.7708333333333334,
+            "top3Accuracy": 0.9817708333333334
+          },
+          "pillow/crop": {
+            "count": 320,
+            "correct": 273,
+            "top3": 306,
+            "accuracy": 0.853125,
+            "top3Accuracy": 0.95625
+          },
+          "pillow/small": {
+            "count": 320,
+            "correct": 286,
+            "top3": 315,
+            "accuracy": 0.89375,
+            "top3Accuracy": 0.984375
+          },
+          "pillow/rotate": {
+            "count": 320,
+            "correct": 271,
+            "top3": 313,
+            "accuracy": 0.846875,
+            "top3Accuracy": 0.978125
+          },
+          "pillow/blur": {
+            "count": 320,
+            "correct": 297,
+            "top3": 317,
+            "accuracy": 0.928125,
+            "top3Accuracy": 0.990625
+          },
+          "pillow/jpeg": {
+            "count": 320,
+            "correct": 292,
+            "top3": 317,
+            "accuracy": 0.9125,
+            "top3Accuracy": 0.990625
+          },
+          "roboto": {
+            "count": 384,
+            "correct": 331,
+            "top3": 380,
+            "accuracy": 0.8619791666666666,
+            "top3Accuracy": 0.9895833333333334
+          },
+          "open-sans": {
+            "count": 384,
+            "correct": 277,
+            "top3": 351,
+            "accuracy": 0.7213541666666666,
+            "top3Accuracy": 0.9140625
+          },
+          "source-sans-3": {
+            "count": 384,
+            "correct": 272,
+            "top3": 343,
+            "accuracy": 0.7083333333333334,
+            "top3Accuracy": 0.8932291666666666
+          },
+          "montserrat": {
+            "count": 384,
+            "correct": 363,
+            "top3": 379,
+            "accuracy": 0.9453125,
+            "top3Accuracy": 0.9869791666666666
+          },
+          "poppins": {
+            "count": 384,
+            "correct": 366,
+            "top3": 382,
+            "accuracy": 0.953125,
+            "top3Accuracy": 0.9947916666666666
+          },
+          "nunito": {
+            "count": 384,
+            "correct": 343,
+            "top3": 378,
+            "accuracy": 0.8932291666666666,
+            "top3Accuracy": 0.984375
+          },
+          "lora": {
+            "count": 384,
+            "correct": 373,
+            "top3": 384,
+            "accuracy": 0.9713541666666666,
+            "top3Accuracy": 1.0
+          },
+          "merriweather": {
+            "count": 384,
+            "correct": 370,
+            "top3": 383,
+            "accuracy": 0.9635416666666666,
+            "top3Accuracy": 0.9973958333333334
+          },
+          "playfair-display": {
+            "count": 384,
+            "correct": 376,
+            "top3": 383,
+            "accuracy": 0.9791666666666666,
+            "top3Accuracy": 0.9973958333333334
+          },
+          "chromium": {
+            "count": 1920,
+            "correct": 1645,
+            "top3": 1855,
+            "accuracy": 0.8567708333333334,
+            "top3Accuracy": 0.9661458333333334
+          },
+          "chromium/clean": {
+            "count": 320,
+            "correct": 294,
+            "top3": 315,
+            "accuracy": 0.91875,
+            "top3Accuracy": 0.984375
+          },
+          "chromium/crop": {
+            "count": 320,
+            "correct": 256,
+            "top3": 299,
+            "accuracy": 0.8,
+            "top3Accuracy": 0.934375
+          },
+          "chromium/small": {
+            "count": 320,
+            "correct": 278,
+            "top3": 315,
+            "accuracy": 0.86875,
+            "top3Accuracy": 0.984375
+          },
+          "chromium/rotate": {
+            "count": 320,
+            "correct": 247,
+            "top3": 305,
+            "accuracy": 0.771875,
+            "top3Accuracy": 0.953125
+          },
+          "chromium/blur": {
+            "count": 320,
+            "correct": 286,
+            "top3": 310,
+            "accuracy": 0.89375,
+            "top3Accuracy": 0.96875
+          },
+          "chromium/jpeg": {
+            "count": 320,
+            "correct": 284,
+            "top3": 311,
+            "accuracy": 0.8875,
+            "top3Accuracy": 0.971875
+          }
+        },
+        "confusion": [
+          [
+            296,
+            42,
+            2,
+            4,
+            0,
+            39,
+            1,
+            0,
+            0,
+            0
+          ],
+          [
+            16,
+            331,
+            0,
+            3,
+            0,
+            29,
+            5,
+            0,
+            0,
+            0
+          ],
+          [
+            17,
+            26,
+            277,
+            32,
+            3,
+            10,
+            19,
+            0,
+            0,
+            0
+          ],
+          [
+            13,
+            76,
+            6,
+            272,
+            0,
+            14,
+            3,
+            0,
+            0,
+            0
+          ],
+          [
+            1,
+            0,
+            3,
+            0,
+            363,
+            10,
+            7,
+            0,
+            0,
+            0
+          ],
+          [
+            4,
+            12,
+            0,
+            2,
+            0,
+            366,
+            0,
+            0,
+            0,
+            0
+          ],
+          [
+            1,
+            6,
+            3,
+            3,
+            13,
+            15,
+            343,
+            0,
+            0,
+            0
+          ],
+          [
+            0,
+            1,
+            0,
+            0,
+            0,
+            0,
+            0,
+            373,
+            9,
+            1
+          ],
+          [
+            0,
+            5,
+            1,
+            0,
+            0,
+            1,
+            1,
+            6,
+            370,
+            0
+          ],
+          [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            7,
+            1,
+            376
+          ]
+        ]
+      }
+    },
+    {
+      "step": 9000,
+      "validation": {
+        "groups": {
+          "all": {
+            "count": 3840,
+            "correct": 3425,
+            "top3": 3765,
+            "accuracy": 0.8919270833333334,
+            "top3Accuracy": 0.98046875
+          },
+          "pillow": {
+            "count": 1920,
+            "correct": 1756,
+            "top3": 1897,
+            "accuracy": 0.9145833333333333,
+            "top3Accuracy": 0.9880208333333333
+          },
+          "pillow/clean": {
+            "count": 320,
+            "correct": 312,
+            "top3": 319,
+            "accuracy": 0.975,
+            "top3Accuracy": 0.996875
+          },
+          "inter": {
+            "count": 384,
+            "correct": 298,
+            "top3": 372,
+            "accuracy": 0.7760416666666666,
+            "top3Accuracy": 0.96875
+          },
+          "pillow/crop": {
+            "count": 320,
+            "correct": 281,
+            "top3": 309,
+            "accuracy": 0.878125,
+            "top3Accuracy": 0.965625
+          },
+          "pillow/small": {
+            "count": 320,
+            "correct": 286,
+            "top3": 316,
+            "accuracy": 0.89375,
+            "top3Accuracy": 0.9875
+          },
+          "pillow/rotate": {
+            "count": 320,
+            "correct": 280,
+            "top3": 315,
+            "accuracy": 0.875,
+            "top3Accuracy": 0.984375
+          },
+          "pillow/blur": {
+            "count": 320,
+            "correct": 299,
+            "top3": 319,
+            "accuracy": 0.934375,
+            "top3Accuracy": 0.996875
+          },
+          "pillow/jpeg": {
+            "count": 320,
+            "correct": 298,
+            "top3": 319,
+            "accuracy": 0.93125,
+            "top3Accuracy": 0.996875
+          },
+          "roboto": {
+            "count": 384,
+            "correct": 307,
+            "top3": 379,
+            "accuracy": 0.7994791666666666,
+            "top3Accuracy": 0.9869791666666666
+          },
+          "open-sans": {
+            "count": 384,
+            "correct": 284,
+            "top3": 356,
+            "accuracy": 0.7395833333333334,
+            "top3Accuracy": 0.9270833333333334
+          },
+          "source-sans-3": {
+            "count": 384,
+            "correct": 349,
+            "top3": 374,
+            "accuracy": 0.9088541666666666,
+            "top3Accuracy": 0.9739583333333334
+          },
+          "montserrat": {
+            "count": 384,
+            "correct": 358,
+            "top3": 379,
+            "accuracy": 0.9322916666666666,
+            "top3Accuracy": 0.9869791666666666
+          },
+          "poppins": {
+            "count": 384,
+            "correct": 365,
+            "top3": 380,
+            "accuracy": 0.9505208333333334,
+            "top3Accuracy": 0.9895833333333334
+          },
+          "nunito": {
+            "count": 384,
+            "correct": 334,
+            "top3": 374,
+            "accuracy": 0.8697916666666666,
+            "top3Accuracy": 0.9739583333333334
+          },
+          "lora": {
+            "count": 384,
+            "correct": 371,
+            "top3": 384,
+            "accuracy": 0.9661458333333334,
+            "top3Accuracy": 1.0
+          },
+          "merriweather": {
+            "count": 384,
+            "correct": 378,
+            "top3": 384,
+            "accuracy": 0.984375,
+            "top3Accuracy": 1.0
+          },
+          "playfair-display": {
+            "count": 384,
+            "correct": 381,
+            "top3": 383,
+            "accuracy": 0.9921875,
+            "top3Accuracy": 0.9973958333333334
+          },
+          "chromium": {
+            "count": 1920,
+            "correct": 1669,
+            "top3": 1868,
+            "accuracy": 0.8692708333333333,
+            "top3Accuracy": 0.9729166666666667
+          },
+          "chromium/clean": {
+            "count": 320,
+            "correct": 300,
+            "top3": 316,
+            "accuracy": 0.9375,
+            "top3Accuracy": 0.9875
+          },
+          "chromium/crop": {
+            "count": 320,
+            "correct": 259,
+            "top3": 300,
+            "accuracy": 0.809375,
+            "top3Accuracy": 0.9375
+          },
+          "chromium/small": {
+            "count": 320,
+            "correct": 280,
+            "top3": 317,
+            "accuracy": 0.875,
+            "top3Accuracy": 0.990625
+          },
+          "chromium/rotate": {
+            "count": 320,
+            "correct": 252,
+            "top3": 311,
+            "accuracy": 0.7875,
+            "top3Accuracy": 0.971875
+          },
+          "chromium/blur": {
+            "count": 320,
+            "correct": 290,
+            "top3": 313,
+            "accuracy": 0.90625,
+            "top3Accuracy": 0.978125
+          },
+          "chromium/jpeg": {
+            "count": 320,
+            "correct": 288,
+            "top3": 311,
+            "accuracy": 0.9,
+            "top3Accuracy": 0.971875
+          }
+        },
+        "confusion": [
+          [
+            298,
+            38,
+            3,
+            15,
+            0,
+            27,
+            2,
+            0,
+            1,
+            0
+          ],
+          [
+            9,
+            307,
+            3,
+            29,
+            0,
+            34,
+            2,
+            0,
+            0,
+            0
+          ],
+          [
+            13,
+            4,
+            284,
+            66,
+            1,
+            10,
+            6,
+            0,
+            0,
+            0
+          ],
+          [
+            6,
+            7,
+            9,
+            349,
+            0,
+            12,
+            0,
+            0,
+            1,
+            0
+          ],
+          [
+            0,
+            0,
+            4,
+            0,
+            358,
+            8,
+            14,
+            0,
+            0,
+            0
+          ],
+          [
+            3,
+            9,
+            0,
+            7,
+            0,
+            365,
+            0,
+            0,
+            0,
+            0
+          ],
+          [
+            1,
+            3,
+            8,
+            24,
+            4,
+            10,
+            334,
+            0,
+            0,
+            0
+          ],
+          [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            371,
+            10,
+            3
+          ],
+          [
+            0,
+            0,
+            0,
+            1,
+            0,
+            0,
+            0,
+            5,
+            378,
+            0
+          ],
+          [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            3,
+            0,
+            381
+          ]
+        ]
+      }
+    },
+    {
+      "step": 10000,
+      "validation": {
+        "groups": {
+          "all": {
+            "count": 3840,
+            "correct": 3494,
+            "top3": 3778,
+            "accuracy": 0.9098958333333333,
+            "top3Accuracy": 0.9838541666666667
+          },
+          "pillow": {
+            "count": 1920,
+            "correct": 1755,
+            "top3": 1896,
+            "accuracy": 0.9140625,
+            "top3Accuracy": 0.9875
+          },
+          "pillow/clean": {
+            "count": 320,
+            "correct": 311,
+            "top3": 319,
+            "accuracy": 0.971875,
+            "top3Accuracy": 0.996875
+          },
+          "inter": {
+            "count": 384,
+            "correct": 304,
+            "top3": 364,
+            "accuracy": 0.7916666666666666,
+            "top3Accuracy": 0.9479166666666666
+          },
+          "pillow/crop": {
+            "count": 320,
+            "correct": 286,
+            "top3": 309,
+            "accuracy": 0.89375,
+            "top3Accuracy": 0.965625
+          },
+          "pillow/small": {
+            "count": 320,
+            "correct": 289,
+            "top3": 315,
+            "accuracy": 0.903125,
+            "top3Accuracy": 0.984375
+          },
+          "pillow/rotate": {
+            "count": 320,
+            "correct": 275,
+            "top3": 317,
+            "accuracy": 0.859375,
+            "top3Accuracy": 0.990625
+          },
+          "pillow/blur": {
+            "count": 320,
+            "correct": 297,
+            "top3": 318,
+            "accuracy": 0.928125,
+            "top3Accuracy": 0.99375
+          },
+          "pillow/jpeg": {
+            "count": 320,
+            "correct": 297,
+            "top3": 318,
+            "accuracy": 0.928125,
+            "top3Accuracy": 0.99375
+          },
+          "roboto": {
+            "count": 384,
+            "correct": 329,
+            "top3": 378,
+            "accuracy": 0.8567708333333334,
+            "top3Accuracy": 0.984375
+          },
+          "open-sans": {
+            "count": 384,
+            "correct": 332,
+            "top3": 371,
+            "accuracy": 0.8645833333333334,
+            "top3Accuracy": 0.9661458333333334
+          },
+          "source-sans-3": {
+            "count": 384,
+            "correct": 331,
+            "top3": 371,
+            "accuracy": 0.8619791666666666,
+            "top3Accuracy": 0.9661458333333334
+          },
+          "montserrat": {
+            "count": 384,
+            "correct": 370,
+            "top3": 380,
+            "accuracy": 0.9635416666666666,
+            "top3Accuracy": 0.9895833333333334
+          },
+          "poppins": {
+            "count": 384,
+            "correct": 350,
+            "top3": 382,
+            "accuracy": 0.9114583333333334,
+            "top3Accuracy": 0.9947916666666666
+          },
+          "nunito": {
+            "count": 384,
+            "correct": 346,
+            "top3": 381,
+            "accuracy": 0.9010416666666666,
+            "top3Accuracy": 0.9921875
+          },
+          "lora": {
+            "count": 384,
+            "correct": 373,
+            "top3": 384,
+            "accuracy": 0.9713541666666666,
+            "top3Accuracy": 1.0
+          },
+          "merriweather": {
+            "count": 384,
+            "correct": 378,
+            "top3": 384,
+            "accuracy": 0.984375,
+            "top3Accuracy": 1.0
+          },
+          "playfair-display": {
+            "count": 384,
+            "correct": 381,
+            "top3": 383,
+            "accuracy": 0.9921875,
+            "top3Accuracy": 0.9973958333333334
+          },
+          "chromium": {
+            "count": 1920,
+            "correct": 1739,
+            "top3": 1882,
+            "accuracy": 0.9057291666666667,
+            "top3Accuracy": 0.9802083333333333
+          },
+          "chromium/clean": {
+            "count": 320,
+            "correct": 306,
+            "top3": 317,
+            "accuracy": 0.95625,
+            "top3Accuracy": 0.990625
+          },
+          "chromium/crop": {
+            "count": 320,
+            "correct": 278,
+            "top3": 309,
+            "accuracy": 0.86875,
+            "top3Accuracy": 0.965625
+          },
+          "chromium/small": {
+            "count": 320,
+            "correct": 293,
+            "top3": 318,
+            "accuracy": 0.915625,
+            "top3Accuracy": 0.99375
+          },
+          "chromium/rotate": {
+            "count": 320,
+            "correct": 260,
+            "top3": 311,
+            "accuracy": 0.8125,
+            "top3Accuracy": 0.971875
+          },
+          "chromium/blur": {
+            "count": 320,
+            "correct": 303,
+            "top3": 314,
+            "accuracy": 0.946875,
+            "top3Accuracy": 0.98125
+          },
+          "chromium/jpeg": {
+            "count": 320,
+            "correct": 299,
+            "top3": 313,
+            "accuracy": 0.934375,
+            "top3Accuracy": 0.978125
+          }
+        },
+        "confusion": [
+          [
+            304,
+            42,
+            9,
+            10,
+            0,
+            16,
+            1,
+            0,
+            2,
+            0
+          ],
+          [
+            7,
+            329,
+            11,
+            15,
+            0,
+            17,
+            5,
+            0,
+            0,
+            0
+          ],
+          [
+            5,
+            6,
+            332,
+            30,
+            1,
+            5,
+            5,
+            0,
+            0,
+            0
+          ],
+          [
+            2,
+            18,
+            24,
+            331,
+            0,
+            7,
+            1,
+            0,
+            1,
+            0
+          ],
+          [
+            0,
+            0,
+            5,
+            0,
+            370,
+            2,
+            7,
+            0,
+            0,
+            0
+          ],
+          [
+            4,
+            23,
+            1,
+            6,
+            0,
+            350,
+            0,
+            0,
+            0,
+            0
+          ],
+          [
+            1,
+            2,
+            12,
+            9,
+            10,
+            4,
+            346,
+            0,
+            0,
+            0
+          ],
+          [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            373,
+            10,
+            1
+          ],
+          [
+            0,
+            0,
+            2,
+            0,
+            0,
+            0,
+            1,
+            3,
+            378,
+            0
+          ],
+          [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            2,
+            1,
+            381
+          ]
+        ]
+      }
+    },
+    {
+      "step": 11000,
+      "validation": {
+        "groups": {
+          "all": {
+            "count": 3840,
+            "correct": 3485,
+            "top3": 3763,
+            "accuracy": 0.9075520833333334,
+            "top3Accuracy": 0.9799479166666667
+          },
+          "pillow": {
+            "count": 1920,
+            "correct": 1759,
+            "top3": 1895,
+            "accuracy": 0.9161458333333333,
+            "top3Accuracy": 0.9869791666666666
+          },
+          "pillow/clean": {
+            "count": 320,
+            "correct": 310,
+            "top3": 318,
+            "accuracy": 0.96875,
+            "top3Accuracy": 0.99375
+          },
+          "inter": {
+            "count": 384,
+            "correct": 330,
+            "top3": 373,
+            "accuracy": 0.859375,
+            "top3Accuracy": 0.9713541666666666
+          },
+          "pillow/crop": {
+            "count": 320,
+            "correct": 280,
+            "top3": 308,
+            "accuracy": 0.875,
+            "top3Accuracy": 0.9625
+          },
+          "pillow/small": {
+            "count": 320,
+            "correct": 289,
+            "top3": 315,
+            "accuracy": 0.903125,
+            "top3Accuracy": 0.984375
+          },
+          "pillow/rotate": {
+            "count": 320,
+            "correct": 277,
+            "top3": 316,
+            "accuracy": 0.865625,
+            "top3Accuracy": 0.9875
+          },
+          "pillow/blur": {
+            "count": 320,
+            "correct": 304,
+            "top3": 319,
+            "accuracy": 0.95,
+            "top3Accuracy": 0.996875
+          },
+          "pillow/jpeg": {
+            "count": 320,
+            "correct": 299,
+            "top3": 319,
+            "accuracy": 0.934375,
+            "top3Accuracy": 0.996875
+          },
+          "roboto": {
+            "count": 384,
+            "correct": 291,
+            "top3": 376,
+            "accuracy": 0.7578125,
+            "top3Accuracy": 0.9791666666666666
+          },
+          "open-sans": {
+            "count": 384,
+            "correct": 296,
+            "top3": 348,
+            "accuracy": 0.7708333333333334,
+            "top3Accuracy": 0.90625
+          },
+          "source-sans-3": {
+            "count": 384,
+            "correct": 348,
+            "top3": 371,
+            "accuracy": 0.90625,
+            "top3Accuracy": 0.9661458333333334
+          },
+          "montserrat": {
+            "count": 384,
+            "correct": 363,
+            "top3": 380,
+            "accuracy": 0.9453125,
+            "top3Accuracy": 0.9895833333333334
+          },
+          "poppins": {
+            "count": 384,
+            "correct": 367,
+            "top3": 383,
+            "accuracy": 0.9557291666666666,
+            "top3Accuracy": 0.9973958333333334
+          },
+          "nunito": {
+            "count": 384,
+            "correct": 358,
+            "top3": 381,
+            "accuracy": 0.9322916666666666,
+            "top3Accuracy": 0.9921875
+          },
+          "lora": {
+            "count": 384,
+            "correct": 374,
+            "top3": 384,
+            "accuracy": 0.9739583333333334,
+            "top3Accuracy": 1.0
+          },
+          "merriweather": {
+            "count": 384,
+            "correct": 377,
+            "top3": 384,
+            "accuracy": 0.9817708333333334,
+            "top3Accuracy": 1.0
+          },
+          "playfair-display": {
+            "count": 384,
+            "correct": 381,
+            "top3": 383,
+            "accuracy": 0.9921875,
+            "top3Accuracy": 0.9973958333333334
+          },
+          "chromium": {
+            "count": 1920,
+            "correct": 1726,
+            "top3": 1868,
+            "accuracy": 0.8989583333333333,
+            "top3Accuracy": 0.9729166666666667
+          },
+          "chromium/clean": {
+            "count": 320,
+            "correct": 306,
+            "top3": 317,
+            "accuracy": 0.95625,
+            "top3Accuracy": 0.990625
+          },
+          "chromium/crop": {
+            "count": 320,
+            "correct": 272,
+            "top3": 303,
+            "accuracy": 0.85,
+            "top3Accuracy": 0.946875
+          },
+          "chromium/small": {
+            "count": 320,
+            "correct": 291,
+            "top3": 317,
+            "accuracy": 0.909375,
+            "top3Accuracy": 0.990625
+          },
+          "chromium/rotate": {
+            "count": 320,
+            "correct": 261,
+            "top3": 307,
+            "accuracy": 0.815625,
+            "top3Accuracy": 0.959375
+          },
+          "chromium/blur": {
+            "count": 320,
+            "correct": 299,
+            "top3": 313,
+            "accuracy": 0.934375,
+            "top3Accuracy": 0.978125
+          },
+          "chromium/jpeg": {
+            "count": 320,
+            "correct": 297,
+            "top3": 311,
+            "accuracy": 0.928125,
+            "top3Accuracy": 0.971875
+          }
+        },
+        "confusion": [
+          [
+            330,
+            16,
+            2,
+            9,
+            0,
+            25,
+            2,
+            0,
+            0,
+            0
+          ],
+          [
+            22,
+            291,
+            3,
+            26,
+            0,
+            37,
+            5,
+            0,
+            0,
+            0
+          ],
+          [
+            17,
+            3,
+            296,
+            46,
+            2,
+            10,
+            10,
+            0,
+            0,
+            0
+          ],
+          [
+            8,
+            6,
+            8,
+            348,
+            0,
+            14,
+            0,
+            0,
+            0,
+            0
+          ],
+          [
+            0,
+            0,
+            4,
+            0,
+            363,
+            6,
+            11,
+            0,
+            0,
+            0
+          ],
+          [
+            7,
+            5,
+            0,
+            5,
+            0,
+            367,
+            0,
+            0,
+            0,
+            0
+          ],
+          [
+            2,
+            0,
+            4,
+            8,
+            4,
+            8,
+            358,
+            0,
+            0,
+            0
+          ],
+          [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            1,
+            374,
+            7,
+            2
+          ],
+          [
+            0,
+            0,
+            1,
+            2,
+            0,
+            0,
+            1,
+            2,
+            377,
+            1
+          ],
+          [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            2,
+            1,
+            381
+          ]
+        ]
+      }
+    },
+    {
+      "step": 12000,
+      "validation": {
+        "groups": {
+          "all": {
+            "count": 3840,
+            "correct": 3503,
+            "top3": 3778,
+            "accuracy": 0.9122395833333333,
+            "top3Accuracy": 0.9838541666666667
+          },
+          "pillow": {
+            "count": 1920,
+            "correct": 1766,
+            "top3": 1894,
+            "accuracy": 0.9197916666666667,
+            "top3Accuracy": 0.9864583333333333
+          },
+          "pillow/clean": {
+            "count": 320,
+            "correct": 314,
+            "top3": 319,
+            "accuracy": 0.98125,
+            "top3Accuracy": 0.996875
+          },
+          "inter": {
+            "count": 384,
+            "correct": 312,
+            "top3": 368,
+            "accuracy": 0.8125,
+            "top3Accuracy": 0.9583333333333334
+          },
+          "pillow/crop": {
+            "count": 320,
+            "correct": 286,
+            "top3": 310,
+            "accuracy": 0.89375,
+            "top3Accuracy": 0.96875
+          },
+          "pillow/small": {
+            "count": 320,
+            "correct": 289,
+            "top3": 313,
+            "accuracy": 0.903125,
+            "top3Accuracy": 0.978125
+          },
+          "pillow/rotate": {
+            "count": 320,
+            "correct": 278,
+            "top3": 315,
+            "accuracy": 0.86875,
+            "top3Accuracy": 0.984375
+          },
+          "pillow/blur": {
+            "count": 320,
+            "correct": 299,
+            "top3": 319,
+            "accuracy": 0.934375,
+            "top3Accuracy": 0.996875
+          },
+          "pillow/jpeg": {
+            "count": 320,
+            "correct": 300,
+            "top3": 318,
+            "accuracy": 0.9375,
+            "top3Accuracy": 0.99375
+          },
+          "roboto": {
+            "count": 384,
+            "correct": 328,
+            "top3": 377,
+            "accuracy": 0.8541666666666666,
+            "top3Accuracy": 0.9817708333333334
+          },
+          "open-sans": {
+            "count": 384,
+            "correct": 329,
+            "top3": 372,
+            "accuracy": 0.8567708333333334,
+            "top3Accuracy": 0.96875
+          },
+          "source-sans-3": {
+            "count": 384,
+            "correct": 326,
+            "top3": 368,
+            "accuracy": 0.8489583333333334,
+            "top3Accuracy": 0.9583333333333334
+          },
+          "montserrat": {
+            "count": 384,
+            "correct": 370,
+            "top3": 382,
+            "accuracy": 0.9635416666666666,
+            "top3Accuracy": 0.9947916666666666
+          },
+          "poppins": {
+            "count": 384,
+            "correct": 354,
+            "top3": 380,
+            "accuracy": 0.921875,
+            "top3Accuracy": 0.9895833333333334
+          },
+          "nunito": {
+            "count": 384,
+            "correct": 351,
+            "top3": 380,
+            "accuracy": 0.9140625,
+            "top3Accuracy": 0.9895833333333334
+          },
+          "lora": {
+            "count": 384,
+            "correct": 373,
+            "top3": 384,
+            "accuracy": 0.9713541666666666,
+            "top3Accuracy": 1.0
+          },
+          "merriweather": {
+            "count": 384,
+            "correct": 379,
+            "top3": 384,
+            "accuracy": 0.9869791666666666,
+            "top3Accuracy": 1.0
+          },
+          "playfair-display": {
+            "count": 384,
+            "correct": 381,
+            "top3": 383,
+            "accuracy": 0.9921875,
+            "top3Accuracy": 0.9973958333333334
+          },
+          "chromium": {
+            "count": 1920,
+            "correct": 1737,
+            "top3": 1884,
+            "accuracy": 0.9046875,
+            "top3Accuracy": 0.98125
+          },
+          "chromium/clean": {
+            "count": 320,
+            "correct": 307,
+            "top3": 317,
+            "accuracy": 0.959375,
+            "top3Accuracy": 0.990625
+          },
+          "chromium/crop": {
+            "count": 320,
+            "correct": 272,
+            "top3": 304,
+            "accuracy": 0.85,
+            "top3Accuracy": 0.95
+          },
+          "chromium/small": {
+            "count": 320,
+            "correct": 292,
+            "top3": 318,
+            "accuracy": 0.9125,
+            "top3Accuracy": 0.99375
+          },
+          "chromium/rotate": {
+            "count": 320,
+            "correct": 269,
+            "top3": 314,
+            "accuracy": 0.840625,
+            "top3Accuracy": 0.98125
+          },
+          "chromium/blur": {
+            "count": 320,
+            "correct": 299,
+            "top3": 317,
+            "accuracy": 0.934375,
+            "top3Accuracy": 0.990625
+          },
+          "chromium/jpeg": {
+            "count": 320,
+            "correct": 298,
+            "top3": 314,
+            "accuracy": 0.93125,
+            "top3Accuracy": 0.98125
+          }
+        },
+        "confusion": [
+          [
+            312,
+            33,
+            8,
+            4,
+            0,
+            24,
+            2,
+            0,
+            1,
+            0
+          ],
+          [
+            11,
+            328,
+            6,
+            12,
+            0,
+            19,
+            8,
+            0,
+            0,
+            0
+          ],
+          [
+            6,
+            9,
+            329,
+            24,
+            2,
+            6,
+            8,
+            0,
+            0,
+            0
+          ],
+          [
+            3,
+            20,
+            22,
+            326,
+            0,
+            11,
+            1,
+            0,
+            1,
+            0
+          ],
+          [
+            0,
+            0,
+            4,
+            0,
+            370,
+            3,
+            7,
+            0,
+            0,
+            0
+          ],
+          [
+            6,
+            19,
+            0,
+            4,
+            0,
+            354,
+            1,
+            0,
+            0,
+            0
+          ],
+          [
+            1,
+            4,
+            9,
+            5,
+            10,
+            4,
+            351,
+            0,
+            0,
+            0
+          ],
+          [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            1,
+            373,
+            9,
+            1
+          ],
+          [
+            0,
+            0,
+            1,
+            0,
+            0,
+            0,
+            1,
+            2,
+            379,
+            1
+          ],
+          [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            2,
+            1,
+            381
+          ]
+        ]
+      }
+    }
+  ],
+  "manifestSha256": "7ca0653bc3c65be98779c53e86257f4ce0808a6f1a23c783344b11ea5df240dd",
+  "modelSha256": "e10a2ecd979a3dc51189a9c5b6a5069411dccfa90c0bf6ee5fccf23f34e71fe9",
+  "trainerSha256": "3b5a5513e960fb4b0d7fcce33f5c69c0be6d3bebbfc0155af3fbd401f2397c64",
+  "architectureSha256": "4ddafc10518f2a21b59b12d4eafb22db200629201cb59e75891b0b263cb02aca",
+  "torch": "2.11.0",
+  "sampling": "uniform family and renderer",
+  "learningRate": 0.002,
+  "parentModelSha256": null,
+  "parentManifestSha256": null,
+  "dataConfig": {
+    "seed": 20260922,
+    "fonts": [
+      "inter",
+      "roboto",
+      "open-sans",
+      "source-sans-3",
+      "montserrat",
+      "poppins",
+      "nunito",
+      "lora",
+      "merriweather",
+      "playfair-display"
+    ],
+    "input": {
+      "width": 128,
+      "height": 48,
+      "windows": 3
+    },
+    "texts": {
+      "train": 512,
+      "validation": 32,
+      "test": 64
+    },
+    "browserTrain": 512,
+    "trainViews": [
+      "clean",
+      "train",
+      "rotate"
+    ],
+    "conditions": [
+      "clean",
+      "crop",
+      "small",
+      "rotate",
+      "blur",
+      "jpeg"
+    ]
+  },
+  "totalSeconds": 172.90627104230225
+}
