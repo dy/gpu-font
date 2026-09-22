@@ -1,6 +1,7 @@
 import copy
 import tempfile
 from pathlib import Path
+from unittest.mock import patch
 import unittest
 
 import numpy as np
@@ -11,6 +12,8 @@ from train.encoder import unit,episode,training_pools,alias_targets,episodic_los
 from train.encoder import load_encoder
 from train.encoder_data import save
 from train.ten_model import Classifier,export
+from train import encoder
+from train.robustness import sha
 
 
 class EncoderTests(unittest.TestCase):
@@ -51,6 +54,29 @@ class EncoderTests(unittest.TestCase):
         for key,value in [('source',True),('source',1),('offset',1),('width',0),('height',49)]:
             broken=copy.deepcopy(a);broken['windows'][0][key]=value;self.assertRaises(ValueError,validate_shard,broken,1)
         validate_shard(a,1)
+
+    def test_loader_binds_plan_bytes_roles_renderers_and_family_membership(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root=Path(tmp);split=root/'split.json';save(split,{'families':{'a':'train','b':'development','c':'test'}})
+            save(root/'development-plan.json',{'pins':{'split.json':sha(split)}})
+            samples=[]
+            for family,group,roles in [('a','train',['train','reference','validation']),('b','development',['reference','validation'])]:
+                for role in roles:
+                    for renderer in ['pillow','chromium']:samples.append({'family':family,'split':group,'role':role,'renderer':renderer,'text':role})
+            raw=bytes(range(len(samples)));path=root/'development.u8';path.write_bytes(raw)
+            manifest={'pins':{'split.json':sha(split)},'planSha256':sha(root/'development-plan.json'),'sha256':sha(path),'samples':samples,
+                      'windows':[{'source':i,'offset':i,'width':1,'height':1} for i in range(len(samples))]}
+            def load(value,pixels=raw):
+                path.write_bytes(pixels);value=copy.deepcopy(value);value['sha256']=sha(path);save(root/'development.json',value)
+                return encoder.load_data()
+            with patch.object(encoder,'DATA',root),patch.object(encoder,'ROOT',root),patch.object(encoder,'SPLIT',split):
+                for _ in range(2):
+                    actual,pixels,_=load(manifest);self.assertEqual(actual['samples'],samples);self.assertEqual(pixels.tolist(),list(raw));del pixels
+                for data in [b'',raw[:-1],raw+b'\0']:self.assertRaises(ValueError,load,manifest,data)
+                for key,value in [('pins',{}),('planSha256','wrong')]:self.assertRaisesRegex(ValueError,'plan',load,{**manifest,key:value})
+                for key,value in [('family','c'),('role','test'),('renderer','other'),('text','reference')]:
+                    bad=copy.deepcopy(manifest);bad['samples'][0][key]=value;self.assertRaises(ValueError,load,bad)
+                _,pixels,_=load(manifest);self.assertEqual(pixels.tolist(),list(raw));del pixels
 
     def fixture(self):
         samples=[];windows=[]

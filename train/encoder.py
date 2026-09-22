@@ -27,10 +27,12 @@ def unit(vectors):
 
 def load_data(phase='development'):
     manifest=read(DATA/f'{phase}.json');path=DATA/f'{phase}.u8';split=read(SPLIT)
+    plan_path=DATA/f'{phase}-plan.json';plan=read(plan_path)
+    if manifest.get('planSha256')!=sha(plan_path) or manifest.get('pins')!=plan.get('pins'):raise ValueError('Changed frozen rendering plan')
     for file,expected in manifest['pins'].items():
         if sha(ROOT/file)!=expected:raise ValueError('Changed data dependency: '+file)
     if manifest['sha256']!=sha(path):raise ValueError('Changed training pixels')
-    validate_shard(manifest,path.stat().st_size())
+    validate_shard(manifest,path.stat().st_size)
     texts=defaultdict(lambda:defaultdict(set));coverage=Counter()
     for s in manifest['samples']:
         if s.get('family') not in split['families'] or s.get('split')!=split['families'][s['family']] or s.get('renderer') not in ['pillow','chromium']:raise ValueError('Invalid sample identity')
