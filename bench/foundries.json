@@ -1,0 +1,1904 @@
+{
+  "version": 1,
+  "updated": "2026-09-23",
+  "purpose": "Every font source considered: what it offers, its licence, what its terms allow, and where work with it stands. Work never proceeds against a written ban without recorded permission.",
+  "sources": [
+    {
+      "id": "google-fonts",
+      "name": "Google Fonts",
+      "url": "https://fonts.google.com/",
+      "kind": "library",
+      "access": "files",
+      "licence": "OFL 1.1 / Apache 2.0 per family",
+      "terms": {
+        "status": "permitted",
+        "checked": "2026-09-23"
+      },
+      "work": {
+        "status": "indexed",
+        "route": "font files, trained and catalogued",
+        "familiesIndexed": 2004
+      },
+      "log": [
+        {
+          "date": "2026-09-22",
+          "event": "2,004 eligible families in the corpus; colour fonts and Noto Emoji excluded"
+        },
+        {
+          "date": "2026-09-23",
+          "event": "Every weight and italic indexed"
+        },
+        {
+          "date": "2026-09-23",
+          "event": "Complete at google/fonts e44c4b0 (2026-09-20): 2,055 folders, 2,004 eligible; 25 unpublished, 23 colour, 3 without usable letters"
+        }
+      ]
+    },
+    {
+      "id": "fontshare",
+      "name": "Fontshare (Indian Type Foundry)",
+      "url": "https://www.fontshare.com/",
+      "kind": "foundry",
+      "access": "files",
+      "licence": "ITF Free Font License",
+      "terms": {
+        "status": "none-found",
+        "checked": "2026-09-23",
+        "url": "https://www.fontshare.com/licenses/itf-ffl",
+        "note": "ITF Free Font License allows using the fonts to create images and forbids modification and redistribution of the files; no clause on machine learning. 36 families are OFL."
+      },
+      "work": {
+        "status": "inventoried",
+        "route": "files from the public catalogue API, kept local; catalogue compilation next",
+        "familiesInventoried": 65
+      },
+      "log": [
+        {
+          "date": "2026-09-22",
+          "event": "15 families captured as a controlled pilot"
+        },
+        {
+          "date": "2026-09-23",
+          "event": "39 families catalogued; full library planned from files"
+        },
+        {
+          "date": "2026-09-23",
+          "event": "Licence read: images permitted, no ML clause; 65 families not in Google Fonts pinned and inventoried (425 faces)"
+        },
+        {
+          "date": "2026-09-23",
+          "event": "Complete: all 100 catalogue families, 35 through Google Fonts and 65 inventoried from the public API"
+        }
+      ],
+      "familiesAvailable": 100,
+      "notes": "The licence allows free personal and commercial use but does not address machine learning."
+    },
+    {
+      "id": "velvetyne",
+      "name": "Velvetyne Type Foundry",
+      "url": "https://velvetyne.fr/",
+      "kind": "foundry",
+      "access": "files",
+      "licence": "OFL-1.1 (one family Bitstream Vera License)",
+      "terms": {
+        "status": "permitted",
+        "checked": "2026-09-23",
+        "note": "Each family's licence read from its own repository. velvetyne.fr's robots.txt, read on 2026-09-23, asks AI agents, Claude and Anthropic among them, not to crawl it. The 2026-09-22 pilot had already fetched Basteleur, Karrik and Sligoil from their specimen pages on the site; nothing has been taken from the site since, and every family now comes from the foundry's repositories."
+      },
+      "work": {
+        "status": "inventoried",
+        "route": "pinned commits of the foundry's GitLab and GitHub repositories and its designers' own; bench/open-releases.json lists each family and every one left out",
+        "familiesInventoried": 64
+      },
+      "log": [
+        {
+          "date": "2026-09-22",
+          "event": "3 families captured in the pilot"
+        },
+        {
+          "date": "2026-09-23",
+          "event": "Full library planned from files"
+        },
+        {
+          "date": "2026-09-23",
+          "event": "robots.txt read: AI agents asked not to crawl the site. The pilot's three families (fetched from the site on 2026-09-22) are to be rebuilt from the pinned repository files"
+        },
+        {
+          "date": "2026-09-23",
+          "event": "64 families enumerated from the foundry's GitLab group and GitHub organisation, checked against archived snapshots of its catalogue; 53 pinned, 11 left out (8 without a verifiable licence, 2 under CUTE-0.1, 1 without a repository)"
+        }
+      ]
+    },
+    {
+      "id": "league-of-moveable-type",
+      "name": "The League of Moveable Type",
+      "url": "https://www.theleagueofmoveabletype.com/",
+      "kind": "foundry",
+      "access": "files",
+      "licence": "OFL-1.1",
+      "terms": {
+        "status": "permitted",
+        "checked": "2026-09-23",
+        "url": "https://www.theleagueofmoveabletype.com/",
+        "quote": "All the fonts from The League of Moveable Type are free & open source, available to use commercially and subject to the Open Font License."
+      },
+      "work": {
+        "status": "inventoried",
+        "route": "pinned GitHub commits and releases; families Google Fonts carries are covered there",
+        "familiesInventoried": 13
+      },
+      "log": [
+        {
+          "date": "2026-09-23",
+          "event": "All 18 families enumerated from the GitHub organisation and the site map; every repository's OFL file read"
+        },
+        {
+          "date": "2026-09-23",
+          "event": "Complete: 11 families through Google Fonts (Fanwood Text among them), 7 inventoried from pinned files as 13 families (Blackout, ChunkFive and Ostrich Sans ship as separate families per style)"
+        }
+      ]
+    },
+    {
+      "id": "collletttivo",
+      "name": "Collletttivo",
+      "url": "https://www.collletttivo.it/",
+      "kind": "foundry",
+      "access": "files",
+      "licence": "OFL-1.1",
+      "terms": {
+        "status": "permitted",
+        "checked": "2026-09-23",
+        "note": "Every family's LICENSE.txt read in its repository. collletttivo.it asks AI agents not to crawl it; the site itself was not crawled."
+      },
+      "work": {
+        "status": "inventoried",
+        "route": "pinned commits of the collective's GitHub repositories",
+        "familiesInventoried": 17
+      },
+      "log": [
+        {
+          "date": "2026-09-23",
+          "event": "Surveyed; open licences"
+        },
+        {
+          "date": "2026-09-23",
+          "event": "Complete: all 16 families, matching the live catalogue, pinned from GitHub"
+        }
+      ]
+    },
+    {
+      "id": "uncut",
+      "name": "Uncut.wtf",
+      "url": "https://uncut.wtf/",
+      "kind": "aggregator",
+      "access": "files",
+      "licence": "per family: 130 OFL-1.1, others GPL, WTFPL, MPL, CC BY, public domain; 14 unspecified",
+      "terms": {
+        "status": "none-found",
+        "checked": "2026-09-23",
+        "url": "https://uncut.wtf/legal/",
+        "note": "robots.txt asks for a 10-second crawl delay. Files are taken from the designers' own repositories, not from Uncut."
+      },
+      "work": {
+        "status": "inventoried",
+        "route": "families resolved to their designers' repositories and pinned; bench/open-releases.json lists them",
+        "familiesInventoried": 46
+      },
+      "log": [
+        {
+          "date": "2026-09-23",
+          "event": "Surveyed; ~150 typefaces"
+        },
+        {
+          "date": "2026-09-23",
+          "event": "163 families listed. Covered through Google Fonts, Fontsource, Velvetyne and Collletttivo, or pinned from 37 designer repositories; about 70 live only on designers' own sites and wait for per-site resolution; 16 left out (14 without a licence, 1 CC BY-ND, 1 Fontspring EULA)"
+        }
+      ]
+    },
+    {
+      "id": "fontsource",
+      "name": "Fontsource",
+      "url": "https://fontsource.org/",
+      "kind": "aggregator",
+      "access": "files",
+      "licence": "per family: OFL-1.1 (116 of 120), Apache-2.0, MIT, CC0-1.0, Unlicense",
+      "terms": {
+        "status": "permitted",
+        "checked": "2026-09-23",
+        "url": "https://fontsource.org/robots.txt",
+        "quote": "Content-Signal: ai-train=yes, search=yes, ai-input=yes"
+      },
+      "work": {
+        "status": "inventoried",
+        "route": "its own (non-Google) fonts from the public API, pinned to each npm release; a family its foundry publishes is taken from the foundry",
+        "familiesInventoried": 90
+      },
+      "log": [
+        {
+          "date": "2026-09-23",
+          "event": "2,100 fonts listed: 1,980 are Google Fonts; the other 120 are open fonts from elsewhere"
+        },
+        {
+          "date": "2026-09-23",
+          "event": "Files are its default subset, usually Latin; full-script files remain upstream"
+        }
+      ]
+    },
+    {
+      "id": "open-foundry",
+      "name": "Open Foundry",
+      "url": "https://open-foundry.com/",
+      "kind": "aggregator",
+      "access": "files",
+      "licence": "per family; Open Foundry links to each designer's own release",
+      "terms": {
+        "status": "restricted",
+        "checked": "2026-09-23",
+        "url": "https://open-foundry.com/robots.txt",
+        "quote": "User-agent: ClaudeBot\nDisallow: /",
+        "note": "robots.txt shuts out ClaudeBot, GPTBot, CCBot, Google-Extended and PerplexityBot from the whole site. Not crawled. Its families live at their designers' own releases, which are reached there directly."
+      },
+      "work": {
+        "status": "excluded",
+        "reason": "robots.txt excludes AI crawlers by name; the same families are reachable at their original releases"
+      },
+      "log": [
+        {
+          "date": "2026-09-23",
+          "event": "Surveyed"
+        },
+        {
+          "date": "2026-09-23",
+          "event": "robots.txt read: AI crawlers, ClaudeBot among them, disallowed from the whole site; not crawled"
+        }
+      ]
+    },
+    {
+      "id": "fontlibrary",
+      "name": "Font Library",
+      "url": "https://fontlibrary.org/",
+      "kind": "aggregator",
+      "access": "files",
+      "licence": "OFL, GPL, MIT and other free licences",
+      "terms": {
+        "status": "not-verified",
+        "checked": "2026-09-23"
+      },
+      "work": {
+        "status": "planned",
+        "route": "render OFL/Apache/MIT/GPL-with-exception families from files"
+      },
+      "log": [
+        {
+          "date": "2026-09-23",
+          "event": "Surveyed; ~1,100 fonts"
+        }
+      ],
+      "familiesAvailable": 1100
+    },
+    {
+      "id": "font-squirrel",
+      "name": "Font Squirrel",
+      "url": "https://www.fontsquirrel.com/",
+      "kind": "aggregator",
+      "access": "files",
+      "licence": "per family, commercial-use free",
+      "terms": {
+        "status": "ban",
+        "quote": "Copying, distributing, or disclosing any part of the Services ... by any automated or non-automated \"scraping\"",
+        "url": "https://www.fontsquirrel.com/terms",
+        "checked": "2026-09-23"
+      },
+      "work": {
+        "status": "excluded",
+        "reason": "terms ban scraping; most families come from sources covered directly"
+      },
+      "log": [
+        {
+          "date": "2026-09-23",
+          "event": "Surveyed; terms ban automated collection"
+        }
+      ]
+    },
+    {
+      "id": "dafont",
+      "name": "Dafont",
+      "url": "https://www.dafont.com/",
+      "kind": "aggregator",
+      "access": "files",
+      "licence": "mixed per font, often personal use only",
+      "terms": {
+        "status": "not-verified",
+        "checked": "2026-09-23"
+      },
+      "work": {
+        "status": "excluded",
+        "reason": "licences vary per font"
+      },
+      "log": [
+        {
+          "date": "2026-09-23",
+          "event": "Surveyed; ~46,000 styles with mixed licences"
+        }
+      ]
+    },
+    {
+      "id": "dejavu",
+      "name": "DejaVu",
+      "url": "https://dejavu-fonts.github.io/",
+      "kind": "library",
+      "access": "files",
+      "licence": "Bitstream Vera licence, public domain changes",
+      "terms": {
+        "status": "permitted",
+        "checked": "2026-09-23"
+      },
+      "work": {
+        "status": "inventoried",
+        "route": "pinned official archive, inventoried like the Google corpus; catalogue compilation next",
+        "familiesInventoried": 4
+      },
+      "log": [
+        {
+          "date": "2026-09-23",
+          "event": "Missing from the corpus; planned"
+        },
+        {
+          "date": "2026-09-23",
+          "event": "Files pinned and inventoried in bench/open-fonts.json"
+        }
+      ]
+    },
+    {
+      "id": "liberation",
+      "name": "Liberation",
+      "url": "https://github.com/liberationfonts/liberation-fonts",
+      "kind": "library",
+      "access": "files",
+      "licence": "OFL 1.1",
+      "terms": {
+        "status": "permitted",
+        "checked": "2026-09-23"
+      },
+      "work": {
+        "status": "inventoried",
+        "route": "pinned official archive, inventoried like the Google corpus; catalogue compilation next",
+        "familiesInventoried": 3
+      },
+      "log": [
+        {
+          "date": "2026-09-23",
+          "event": "Missing from the corpus; planned"
+        },
+        {
+          "date": "2026-09-23",
+          "event": "Files pinned and inventoried in bench/open-fonts.json"
+        }
+      ]
+    },
+    {
+      "id": "gnu-freefont",
+      "name": "GNU FreeFont",
+      "url": "https://www.gnu.org/software/freefont/",
+      "kind": "library",
+      "access": "files",
+      "licence": "GPL 3 with font exception",
+      "terms": {
+        "status": "permitted",
+        "checked": "2026-09-23"
+      },
+      "work": {
+        "status": "inventoried",
+        "route": "pinned official archive, inventoried like the Google corpus; catalogue compilation next",
+        "familiesInventoried": 3
+      },
+      "log": [
+        {
+          "date": "2026-09-23",
+          "event": "Missing from the corpus; planned"
+        },
+        {
+          "date": "2026-09-23",
+          "event": "Files pinned and inventoried in bench/open-fonts.json"
+        }
+      ]
+    },
+    {
+      "id": "urw-base35",
+      "name": "URW base-35 (Nimbus)",
+      "url": "https://github.com/ArtifexSoftware/urw-base35-fonts",
+      "kind": "library",
+      "access": "files",
+      "licence": "AGPL 3 with font exception",
+      "terms": {
+        "status": "permitted",
+        "checked": "2026-09-23"
+      },
+      "work": {
+        "status": "inventoried",
+        "route": "pinned official archive, inventoried like the Google corpus; catalogue compilation next",
+        "familiesInventoried": 11
+      },
+      "log": [
+        {
+          "date": "2026-09-23",
+          "event": "Missing from the corpus; the PostScript core fonts found in PDFs and on Linux"
+        },
+        {
+          "date": "2026-09-23",
+          "event": "Files pinned and inventoried in bench/open-fonts.json"
+        }
+      ]
+    },
+    {
+      "id": "latin-modern",
+      "name": "Latin Modern",
+      "url": "https://www.gust.org.pl/projects/e-foundry/latin-modern",
+      "kind": "library",
+      "access": "files",
+      "licence": "GUST Font License",
+      "terms": {
+        "status": "permitted",
+        "checked": "2026-09-23"
+      },
+      "work": {
+        "status": "inventoried",
+        "route": "pinned official archive, inventoried like the Google corpus; catalogue compilation next",
+        "familiesInventoried": 17
+      },
+      "log": [
+        {
+          "date": "2026-09-23",
+          "event": "Missing from the corpus; the TeX default text and maths faces"
+        },
+        {
+          "date": "2026-09-23",
+          "event": "Files pinned and inventoried in bench/open-fonts.json"
+        }
+      ]
+    },
+    {
+      "id": "tex-gyre",
+      "name": "TeX Gyre",
+      "url": "https://www.gust.org.pl/projects/e-foundry/tex-gyre",
+      "kind": "library",
+      "access": "files",
+      "licence": "GUST Font License",
+      "terms": {
+        "status": "permitted",
+        "checked": "2026-09-23"
+      },
+      "work": {
+        "status": "inventoried",
+        "route": "pinned official archives (text and maths), inventoried like the Google corpus; catalogue compilation next",
+        "familiesInventoried": 13
+      },
+      "log": [
+        {
+          "date": "2026-09-23",
+          "event": "Extended open clones of the PostScript 35 (Helvetica, Times, Courier, Palatino, Bookman, Avant Garde, Century Schoolbook, Zapf Chancery) built from the URW fonts"
+        },
+        {
+          "date": "2026-09-23",
+          "event": "Release 2.609 and four maths fonts pinned and inventoried in bench/open-fonts.json"
+        }
+      ]
+    },
+    {
+      "id": "bitstream-vera",
+      "name": "Bitstream Vera",
+      "url": "https://download.gnome.org/sources/ttf-bitstream-vera/1.10/",
+      "kind": "library",
+      "access": "files",
+      "licence": "Bitstream Vera License",
+      "terms": {
+        "status": "permitted",
+        "checked": "2026-09-23"
+      },
+      "work": {
+        "status": "inventoried",
+        "route": "pinned release, inventoried like the Google corpus; catalogue compilation next",
+        "familiesInventoried": 3
+      },
+      "log": [
+        {
+          "date": "2026-09-23",
+          "event": "The 2003 GNOME release DejaVu grew from; Apple's Menlo is drawn from it"
+        },
+        {
+          "date": "2026-09-23",
+          "event": "Files pinned and inventoried in bench/open-fonts.json"
+        }
+      ]
+    },
+    {
+      "id": "droid",
+      "name": "Droid",
+      "url": "https://github.com/google/fonts/tree/5fb32282c5969930c4268483ffa5664680bf73c8/apache/droidsans",
+      "kind": "library",
+      "access": "files",
+      "licence": "Apache-2.0",
+      "terms": {
+        "status": "permitted",
+        "checked": "2026-09-23"
+      },
+      "work": {
+        "status": "inventoried",
+        "route": "pinned release, inventoried like the Google corpus; catalogue compilation next",
+        "familiesInventoried": 3
+      },
+      "log": [
+        {
+          "date": "2026-09-23",
+          "event": "Android's original faces, retired from Google Fonts in 2017; pinned from the last revision that carried them"
+        },
+        {
+          "date": "2026-09-23",
+          "event": "Files pinned and inventoried in bench/open-fonts.json"
+        }
+      ]
+    },
+    {
+      "id": "linux-libertine",
+      "name": "Linux Libertine and Biolinum",
+      "url": "https://sourceforge.net/projects/linuxlibertine/",
+      "kind": "library",
+      "access": "files",
+      "licence": "OFL-1.1 or GPL-2.0-or-later with font exception",
+      "terms": {
+        "status": "permitted",
+        "checked": "2026-09-23"
+      },
+      "work": {
+        "status": "inventoried",
+        "route": "pinned release, inventoried like the Google corpus; catalogue compilation next",
+        "familiesInventoried": 6
+      },
+      "log": [
+        {
+          "date": "2026-09-23",
+          "event": "Wikipedia's wordmark face; release 5.3.0"
+        },
+        {
+          "date": "2026-09-23",
+          "event": "Files pinned and inventoried in bench/open-fonts.json"
+        }
+      ]
+    },
+    {
+      "id": "junicode",
+      "name": "Junicode",
+      "url": "https://github.com/psb1558/Junicode-font",
+      "kind": "library",
+      "access": "files",
+      "licence": "OFL-1.1",
+      "terms": {
+        "status": "permitted",
+        "checked": "2026-09-23"
+      },
+      "work": {
+        "status": "inventoried",
+        "route": "pinned release, inventoried like the Google corpus; catalogue compilation next",
+        "familiesInventoried": 1
+      },
+      "log": [
+        {
+          "date": "2026-09-23",
+          "event": "Medievalists' face; variable release 2.226"
+        },
+        {
+          "date": "2026-09-23",
+          "event": "Files pinned and inventoried in bench/open-fonts.json"
+        }
+      ]
+    },
+    {
+      "id": "sil",
+      "name": "SIL Global",
+      "url": "https://software.sil.org/fonts/",
+      "kind": "foundry",
+      "access": "files",
+      "licence": "OFL-1.1",
+      "terms": {
+        "status": "permitted",
+        "checked": "2026-09-23"
+      },
+      "work": {
+        "status": "inventoried",
+        "route": "pinned releases of families Google Fonts lacks",
+        "familiesInventoried": 1
+      },
+      "log": [
+        {
+          "date": "2026-09-23",
+          "event": "Doulos SIL inventoried; Charis SIL and Gentium Plus come through Google Fonts"
+        },
+        {
+          "date": "2026-09-23",
+          "event": "Files pinned and inventoried in bench/open-fonts.json"
+        }
+      ]
+    },
+    {
+      "id": "gnu-unifont",
+      "name": "GNU Unifont",
+      "url": "https://unifoundry.com/unifont/",
+      "kind": "library",
+      "access": "files",
+      "licence": "OFL-1.1 or GPL-2.0-or-later with font exception",
+      "terms": {
+        "status": "permitted",
+        "checked": "2026-09-23"
+      },
+      "work": {
+        "status": "inventoried",
+        "route": "pinned release, inventoried like the Google corpus; catalogue compilation next",
+        "familiesInventoried": 1
+      },
+      "log": [
+        {
+          "date": "2026-09-23",
+          "event": "The pixel font covering all of Unicode's Basic Multilingual Plane; release 18.0.01"
+        },
+        {
+          "date": "2026-09-23",
+          "event": "Files pinned and inventoried in bench/open-fonts.json"
+        }
+      ]
+    },
+    {
+      "id": "hershey",
+      "name": "Hershey fonts (AVHershey)",
+      "url": "https://github.com/scruss/AVHershey-OTF",
+      "kind": "library",
+      "access": "files",
+      "licence": "WTFPL-2.0",
+      "terms": {
+        "status": "permitted",
+        "checked": "2026-09-23"
+      },
+      "work": {
+        "status": "inventoried",
+        "route": "pinned release, inventoried like the Google corpus; catalogue compilation next",
+        "familiesInventoried": 3
+      },
+      "log": [
+        {
+          "date": "2026-09-23",
+          "event": "OpenType conversion of the 1967 public-domain Hershey vector fonts"
+        },
+        {
+          "date": "2026-09-23",
+          "event": "Files pinned and inventoried in bench/open-fonts.json"
+        }
+      ]
+    },
+    {
+      "id": "opendyslexic",
+      "name": "OpenDyslexic",
+      "url": "https://opendyslexic.org/",
+      "kind": "library",
+      "access": "files",
+      "licence": "OFL-1.1",
+      "terms": {
+        "status": "permitted",
+        "checked": "2026-09-23"
+      },
+      "work": {
+        "status": "inventoried",
+        "route": "pinned release, inventoried like the Google corpus; catalogue compilation next",
+        "familiesInventoried": 1
+      },
+      "log": [
+        {
+          "date": "2026-09-23",
+          "event": "Release 0.91.12; colour layers cover only stylistic alternates, so its text is plain"
+        },
+        {
+          "date": "2026-09-23",
+          "event": "Files pinned and inventoried in bench/open-fonts.json"
+        }
+      ]
+    },
+    {
+      "id": "ctan",
+      "name": "CTAN font packages",
+      "url": "https://ctan.org/topic/font",
+      "kind": "library",
+      "access": "files",
+      "licence": "per package (OFL-1.1, LPPL)",
+      "terms": {
+        "status": "permitted",
+        "checked": "2026-09-23"
+      },
+      "work": {
+        "status": "inventoried",
+        "route": "pinned CTAN packages that carry OpenType or TrueType files",
+        "familiesInventoried": 4
+      },
+      "log": [
+        {
+          "date": "2026-09-23",
+          "event": "Euler Math, Erewhon (Utopia), Asana Math and Theano Didot inventoried"
+        },
+        {
+          "date": "2026-09-23",
+          "event": "Files pinned and inventoried in bench/open-fonts.json"
+        }
+      ]
+    },
+    {
+      "id": "ocr-skala",
+      "name": "OCR-A and OCR-B (Matthew Skala)",
+      "url": "https://tsukurimashou.org/ocr.php.en",
+      "kind": "library",
+      "access": "files",
+      "licence": "Free use including commercial; the converter's own work public domain",
+      "terms": {
+        "status": "permitted",
+        "checked": "2026-09-23",
+        "url": "https://tsukurimashou.org/ocr.php.en",
+        "quote": "They are available for free use, including in commercial applications; my own contributions are public domain, and others have licensed their copyright claims."
+      },
+      "work": {
+        "status": "inventoried",
+        "route": "pinned release, inventoried like the Google corpus; catalogue compilation next",
+        "familiesInventoried": 2
+      },
+      "log": [
+        {
+          "date": "2026-09-23",
+          "event": "Digitisations of the ANSI OCR-A and ISO OCR-B standards"
+        },
+        {
+          "date": "2026-09-23",
+          "event": "Files pinned and inventoried in bench/open-fonts.json"
+        }
+      ]
+    },
+    {
+      "id": "d-din",
+      "name": "D-DIN (Datto)",
+      "url": "https://fontlibrary.org/en/font/d-din",
+      "kind": "library",
+      "access": "files",
+      "licence": "OFL-1.1",
+      "terms": {
+        "status": "permitted",
+        "checked": "2026-09-23"
+      },
+      "work": {
+        "status": "inventoried",
+        "route": "pinned release, inventoried like the Google corpus; catalogue compilation next",
+        "familiesInventoried": 3
+      },
+      "log": [
+        {
+          "date": "2026-09-23",
+          "event": "Charles Nix's DIN 1451 interpretation for Datto; Datto's own page is gone, the OFL release is mirrored at Font Library"
+        },
+        {
+          "date": "2026-09-23",
+          "event": "Files pinned and inventoried in bench/open-fonts.json"
+        }
+      ]
+    },
+    {
+      "id": "railway-sans",
+      "name": "Railway Sans",
+      "url": "https://github.com/googlefonts/railway-sans",
+      "kind": "library",
+      "access": "files",
+      "licence": "OFL-1.1",
+      "terms": {
+        "status": "permitted",
+        "checked": "2026-09-23"
+      },
+      "work": {
+        "status": "inventoried",
+        "route": "pinned release, inventoried like the Google corpus; catalogue compilation next",
+        "familiesInventoried": 1
+      },
+      "log": [
+        {
+          "date": "2026-09-23",
+          "event": "Justin Howes's digitisation of Johnston's 1916 Underground type from Johnston's own proofs"
+        },
+        {
+          "date": "2026-09-23",
+          "event": "Files pinned and inventoried in bench/open-fonts.json"
+        }
+      ]
+    },
+    {
+      "id": "copperplate-cc",
+      "name": "Copperplate CC",
+      "url": "https://github.com/CowboyCollective/CopperplateCC",
+      "kind": "library",
+      "access": "files",
+      "licence": "OFL-1.1",
+      "terms": {
+        "status": "permitted",
+        "checked": "2026-09-23"
+      },
+      "work": {
+        "status": "inventoried",
+        "route": "pinned release, inventoried like the Google corpus; catalogue compilation next",
+        "familiesInventoried": 1
+      },
+      "log": [
+        {
+          "date": "2026-09-23",
+          "event": "Copperplate Gothic revival by indestructible type*"
+        },
+        {
+          "date": "2026-09-23",
+          "event": "Files pinned and inventoried in bench/open-fonts.json"
+        }
+      ]
+    },
+    {
+      "id": "cc-accidenz-commons",
+      "name": "CC Accidenz Commons",
+      "url": "https://github.com/creativecommons/cc-accidenz-commons",
+      "kind": "library",
+      "access": "files",
+      "licence": "CC-BY-SA-4.0",
+      "terms": {
+        "status": "permitted",
+        "checked": "2026-09-23"
+      },
+      "work": {
+        "status": "inventoried",
+        "route": "pinned release, inventoried like the Google corpus; catalogue compilation next",
+        "familiesInventoried": 1
+      },
+      "log": [
+        {
+          "date": "2026-09-23",
+          "event": "Akzidenz-Grotesk revival made for Creative Commons"
+        },
+        {
+          "date": "2026-09-23",
+          "event": "Files pinned and inventoried in bench/open-fonts.json"
+        }
+      ]
+    },
+    {
+      "id": "chicago-kare",
+      "name": "Chicago Kare",
+      "url": "https://github.com/KingDuane/Chicago-Kare",
+      "kind": "library",
+      "access": "files",
+      "licence": "MIT (repository licence; the font's name table says OFL)",
+      "terms": {
+        "status": "permitted",
+        "checked": "2026-09-23"
+      },
+      "work": {
+        "status": "inventoried",
+        "route": "pinned release, inventoried like the Google corpus; catalogue compilation next",
+        "familiesInventoried": 1
+      },
+      "log": [
+        {
+          "date": "2026-09-23",
+          "event": "Reproduction of Susan Kare's 1984 bitmap Chicago"
+        },
+        {
+          "date": "2026-09-23",
+          "event": "Files pinned and inventoried in bench/open-fonts.json"
+        }
+      ]
+    },
+    {
+      "id": "roadgeek",
+      "name": "Roadgeek 2014",
+      "url": "https://github.com/sammdot/roadgeek-fonts",
+      "kind": "library",
+      "access": "files",
+      "licence": "MIT",
+      "terms": {
+        "status": "permitted",
+        "checked": "2026-09-23"
+      },
+      "work": {
+        "status": "inventoried",
+        "route": "pinned release, inventoried like the Google corpus; catalogue compilation next",
+        "familiesInventoried": 7
+      },
+      "log": [
+        {
+          "date": "2026-09-23",
+          "event": "FHWA Series B to F (Highway Gothic); the earlier Roadgeek 2005 is non-commercial and not used"
+        },
+        {
+          "date": "2026-09-23",
+          "event": "Files pinned and inventoried in bench/open-fonts.json"
+        }
+      ]
+    },
+    {
+      "id": "fixedsys-excelsior",
+      "name": "Fixedsys Excelsior",
+      "url": "https://github.com/kika/fixedsys",
+      "kind": "library",
+      "access": "files",
+      "licence": "CC0-1.0",
+      "terms": {
+        "status": "permitted",
+        "checked": "2026-09-23"
+      },
+      "work": {
+        "status": "inventoried",
+        "route": "pinned release, inventoried like the Google corpus; catalogue compilation next",
+        "familiesInventoried": 1
+      },
+      "log": [
+        {
+          "date": "2026-09-23",
+          "event": "Unicode extension of the Windows Fixedsys bitmap face"
+        },
+        {
+          "date": "2026-09-23",
+          "event": "Files pinned and inventoried in bench/open-fonts.json"
+        }
+      ]
+    },
+    {
+      "id": "ubuntu-titling",
+      "name": "Ubuntu Titling",
+      "url": "https://packages.debian.org/sid/fonts-ubuntu-title",
+      "kind": "library",
+      "access": "files",
+      "licence": "OFL-1.1",
+      "terms": {
+        "status": "permitted",
+        "checked": "2026-09-23"
+      },
+      "work": {
+        "status": "inventoried",
+        "route": "pinned release, inventoried like the Google corpus; catalogue compilation next",
+        "familiesInventoried": 1
+      },
+      "log": [
+        {
+          "date": "2026-09-23",
+          "event": "The 2008 Ubuntu wordmark face; upstream pages are gone, Debian keeps the original tarball"
+        },
+        {
+          "date": "2026-09-23",
+          "event": "Files pinned and inventoried in bench/open-fonts.json"
+        }
+      ]
+    },
+    {
+      "id": "material-symbols",
+      "name": "Material Symbols",
+      "url": "https://fonts.google.com/icons",
+      "kind": "icons",
+      "access": "files",
+      "licence": "Apache 2.0",
+      "terms": {
+        "status": "permitted",
+        "checked": "2026-09-23"
+      },
+      "work": {
+        "status": "planned",
+        "route": "glyph catalogue"
+      },
+      "log": [
+        {
+          "date": "2026-09-23",
+          "event": "Icon probe: 75% exact top-1 with the text encoder; needs glyph mode"
+        }
+      ]
+    },
+    {
+      "id": "font-awesome",
+      "name": "Font Awesome Free",
+      "url": "https://fontawesome.com/",
+      "kind": "icons",
+      "access": "files",
+      "licence": "OFL 1.1 (fonts), CC BY 4.0 (icons)",
+      "terms": {
+        "status": "permitted",
+        "checked": "2026-09-23"
+      },
+      "work": {
+        "status": "planned",
+        "route": "glyph catalogue"
+      },
+      "log": [
+        {
+          "date": "2026-09-23",
+          "event": "Used in the icon probe"
+        }
+      ]
+    },
+    {
+      "id": "bootstrap-icons",
+      "name": "Bootstrap Icons",
+      "url": "https://icons.getbootstrap.com/",
+      "kind": "icons",
+      "access": "files",
+      "licence": "MIT",
+      "terms": {
+        "status": "permitted",
+        "checked": "2026-09-23"
+      },
+      "work": {
+        "status": "planned",
+        "route": "glyph catalogue"
+      },
+      "log": [
+        {
+          "date": "2026-09-23",
+          "event": "Used in the icon probe"
+        }
+      ]
+    },
+    {
+      "id": "phosphor",
+      "name": "Phosphor Icons",
+      "url": "https://phosphoricons.com/",
+      "kind": "icons",
+      "access": "files",
+      "licence": "MIT",
+      "terms": {
+        "status": "permitted",
+        "checked": "2026-09-23"
+      },
+      "work": {
+        "status": "planned",
+        "route": "glyph catalogue"
+      },
+      "log": [
+        {
+          "date": "2026-09-23",
+          "event": "Used in the icon probe"
+        }
+      ]
+    },
+    {
+      "id": "tabler-icons",
+      "name": "Tabler Icons",
+      "url": "https://tabler.io/icons",
+      "kind": "icons",
+      "access": "files",
+      "licence": "MIT",
+      "terms": {
+        "status": "permitted",
+        "checked": "2026-09-23"
+      },
+      "work": {
+        "status": "planned",
+        "route": "glyph catalogue"
+      },
+      "log": [
+        {
+          "date": "2026-09-23",
+          "event": "Surveyed; ~6,200 icons"
+        }
+      ]
+    },
+    {
+      "id": "remix-icon",
+      "name": "Remix Icon",
+      "url": "https://remixicon.com/",
+      "kind": "icons",
+      "access": "files",
+      "licence": "Apache 2.0 (brand marks separate)",
+      "terms": {
+        "status": "permitted",
+        "checked": "2026-09-23"
+      },
+      "work": {
+        "status": "planned",
+        "route": "glyph catalogue; check brand-mark licence"
+      },
+      "log": [
+        {
+          "date": "2026-09-23",
+          "event": "Surveyed"
+        }
+      ]
+    },
+    {
+      "id": "smufl",
+      "name": "SMuFL music fonts (Bravura, Petaluma, Leland, Gonville)",
+      "url": "https://www.smufl.org/fonts/",
+      "kind": "music",
+      "access": "files",
+      "licence": "OFL 1.1; Gonville public domain",
+      "terms": {
+        "status": "permitted",
+        "checked": "2026-09-23"
+      },
+      "work": {
+        "status": "planned",
+        "route": "glyph catalogue"
+      },
+      "log": [
+        {
+          "date": "2026-09-23",
+          "event": "Surveyed; notes and symbols never entered training"
+        }
+      ]
+    },
+    {
+      "id": "openmoji",
+      "name": "OpenMoji",
+      "url": "https://openmoji.org/",
+      "kind": "icons",
+      "access": "files",
+      "licence": "CC BY-SA 4.0",
+      "terms": {
+        "status": "permitted",
+        "checked": "2026-09-23"
+      },
+      "work": {
+        "status": "planned",
+        "route": "colour glyph catalogue"
+      },
+      "log": [
+        {
+          "date": "2026-09-23",
+          "event": "Surveyed; colour fonts need a colour branch"
+        }
+      ]
+    },
+    {
+      "id": "ms-corefonts",
+      "name": "Microsoft Core fonts for the web",
+      "url": "https://sourceforge.net/projects/corefonts/",
+      "kind": "platform",
+      "access": "files",
+      "licence": "Microsoft Core Fonts EULA: unlimited installation and use; non-profit redistribution of true copies only; no alteration",
+      "terms": {
+        "status": "permitted",
+        "checked": "2026-09-23",
+        "url": "https://sourceforge.net/projects/corefonts/",
+        "quote": "You may install and use an unlimited number of copies of the SOFTWARE PRODUCT.",
+        "note": "EULA read from inside the original installer. Rendering text is use; nothing is altered or redistributed. Late-1990s versions of the Windows core fonts."
+      },
+      "work": {
+        "status": "inventoried",
+        "route": "original cabinet installers, pinned; catalogue compilation next",
+        "familiesInventoried": 10
+      },
+      "log": [
+        {
+          "date": "2026-09-23",
+          "event": "EULA read; 10 families inventoried (Arial, Times New Roman, Courier New, Georgia, Verdana, Comic Sans MS, Impact, Trebuchet MS, Arial Black, Andale Mono); Webdings has no letters"
+        }
+      ]
+    },
+    {
+      "id": "apple-system",
+      "name": "Apple system fonts",
+      "url": "https://developer.apple.com/fonts/",
+      "kind": "platform",
+      "access": "files",
+      "licence": "Apple licences; SF Pro, SF Mono and New York limited to Apple-platform mockups",
+      "terms": {
+        "status": "not-verified",
+        "checked": "2026-09-23"
+      },
+      "work": {
+        "status": "excluded",
+        "reason": "not permissively licensed; licence text not yet read first-hand"
+      },
+      "log": [
+        {
+          "date": "2026-09-23",
+          "event": "About 4,000 faces on this Mac; excluded while focusing on permissive fonts"
+        }
+      ]
+    },
+    {
+      "id": "windows",
+      "name": "Windows fonts",
+      "url": "https://learn.microsoft.com/en-us/typography/font-list/",
+      "kind": "platform",
+      "access": "previews",
+      "licence": "Microsoft licences; no use off Windows",
+      "terms": {
+        "status": "not-verified",
+        "checked": "2026-09-23"
+      },
+      "work": {
+        "status": "excluded",
+        "reason": "no permissive files; Microsoft publishes specimen images only"
+      },
+      "log": [
+        {
+          "date": "2026-09-23",
+          "event": "Surveyed; Segoe UI, Calibri, Cascadia and others"
+        }
+      ]
+    },
+    {
+      "id": "myfonts",
+      "name": "MyFonts (Monotype)",
+      "url": "https://www.myfonts.com/",
+      "kind": "retailer",
+      "access": "previews",
+      "licence": "commercial",
+      "terms": {
+        "status": "ban",
+        "quote": "Use any robot, spider, site search/retrieval application or other manual or automatic device to retrieve, index, \"scrape,\" \"data mine\" or in any way reproduce or circumvent the navigational structure or presentation of a Service, without our express prior, written consent.",
+        "url": "https://www.myfonts.com/a/font/legal/terms-of-use",
+        "checked": "2026-09-23"
+      },
+      "work": {
+        "status": "permission-to-request"
+      },
+      "log": [
+        {
+          "date": "2026-09-23",
+          "event": "Surveyed: terms ban automated collection without written consent"
+        },
+        {
+          "date": "2026-09-23",
+          "event": "Permission request drafted"
+        }
+      ]
+    },
+    {
+      "id": "adobe-fonts",
+      "name": "Adobe Fonts",
+      "url": "https://fonts.adobe.com/",
+      "kind": "library",
+      "access": "previews",
+      "licence": "subscription",
+      "terms": {
+        "status": "not-verified",
+        "checked": "2026-09-23"
+      },
+      "work": {
+        "status": "permission-to-request"
+      },
+      "log": [
+        {
+          "date": "2026-09-23",
+          "event": "Surveyed: terms could not be read, adobe.com refuses automated clients"
+        },
+        {
+          "date": "2026-09-23",
+          "event": "Permission request drafted"
+        }
+      ],
+      "familiesAvailable": 5616
+    },
+    {
+      "id": "fontspring",
+      "name": "Fontspring",
+      "url": "https://www.fontspring.com/",
+      "kind": "retailer",
+      "access": "previews",
+      "licence": "commercial",
+      "terms": {
+        "status": "ban",
+        "quote": "distributing ... any part of the Website ... by any automated or non-automated \"scraping\". Using any automated system, including ... \"robots,\" \"spiders,\" \"offline readers,\" etc.",
+        "url": "https://www.fontspring.com/terms",
+        "checked": "2026-09-23"
+      },
+      "work": {
+        "status": "permission-to-request"
+      },
+      "log": [
+        {
+          "date": "2026-09-23",
+          "event": "Surveyed; permission request drafted"
+        }
+      ]
+    },
+    {
+      "id": "creative-market",
+      "name": "Creative Market",
+      "url": "https://creativemarket.com/",
+      "kind": "retailer",
+      "access": "previews",
+      "licence": "commercial",
+      "terms": {
+        "status": "ban",
+        "quote": "including without limitation by any automated or non-automated \"scraping\". Using any automated system, including ... \"robots,\" \"spiders,\" \"offline readers,\"",
+        "url": "https://creativemarket.com/terms",
+        "checked": "2026-09-23"
+      },
+      "work": {
+        "status": "excluded",
+        "reason": "terms ban scraping; robots.txt disallows product pages"
+      },
+      "log": [
+        {
+          "date": "2026-09-23",
+          "event": "Surveyed"
+        }
+      ]
+    },
+    {
+      "id": "youworkforthem",
+      "name": "YouWorkForThem",
+      "url": "https://www.youworkforthem.com/",
+      "kind": "retailer",
+      "access": "previews",
+      "licence": "commercial",
+      "terms": {
+        "status": "ban",
+        "quote": "to spam, phish, pharm, pretext, spider, crawl, or scrape",
+        "url": "https://www.youworkforthem.com/terms-of-service",
+        "checked": "2026-09-23"
+      },
+      "work": {
+        "status": "excluded",
+        "reason": "terms ban scraping"
+      },
+      "log": [
+        {
+          "date": "2026-09-23",
+          "event": "Surveyed; ~30,000 product pages"
+        }
+      ]
+    },
+    {
+      "id": "future-fonts",
+      "name": "Future Fonts",
+      "url": "https://www.futurefonts.xyz/",
+      "kind": "retailer",
+      "access": "previews",
+      "licence": "commercial",
+      "terms": {
+        "status": "restricted",
+        "quote": "you will not ... access to, copy, or distribute any part of the Service without our prior written consent",
+        "url": "https://www.futurefonts.com/terms",
+        "checked": "2026-09-23"
+      },
+      "work": {
+        "status": "excluded",
+        "reason": "no copying without written consent"
+      },
+      "log": [
+        {
+          "date": "2026-09-23",
+          "event": "Surveyed"
+        }
+      ]
+    },
+    {
+      "id": "ilt",
+      "name": "I Love Typography",
+      "url": "https://fonts.ilovetypography.com/",
+      "kind": "retailer",
+      "access": "previews",
+      "licence": "commercial",
+      "terms": {
+        "status": "restricted",
+        "quote": "Not to reproduce, duplicate, copy or re-sell any part of our Site",
+        "url": "https://fonts.ilovetypography.com/legal/website-acceptable-use-policy",
+        "checked": "2026-09-23"
+      },
+      "work": {
+        "status": "excluded",
+        "reason": "no reproducing any part of the site"
+      },
+      "log": [
+        {
+          "date": "2026-09-23",
+          "event": "Surveyed"
+        }
+      ]
+    },
+    {
+      "id": "fontstand",
+      "name": "Fontstand",
+      "url": "https://fontstand.com/",
+      "kind": "retailer",
+      "access": "previews",
+      "licence": "rental",
+      "terms": {
+        "status": "not-verified",
+        "checked": "2026-09-23"
+      },
+      "work": {
+        "status": "excluded",
+        "reason": "robots.txt disallows AI crawlers by name"
+      },
+      "log": [
+        {
+          "date": "2026-09-23",
+          "event": "Surveyed"
+        }
+      ]
+    },
+    {
+      "id": "type-network",
+      "name": "Type Network",
+      "url": "https://typenetwork.com/",
+      "kind": "retailer",
+      "access": "previews",
+      "licence": "commercial",
+      "terms": {
+        "status": "not-verified",
+        "checked": "2026-09-23"
+      },
+      "work": {
+        "status": "excluded",
+        "reason": "only a font EULA found; site terms not located"
+      },
+      "log": [
+        {
+          "date": "2026-09-23",
+          "event": "Surveyed"
+        }
+      ]
+    },
+    {
+      "id": "paratype",
+      "name": "ParaType",
+      "url": "https://www.paratype.com/",
+      "kind": "foundry",
+      "access": "previews",
+      "licence": "commercial",
+      "terms": {
+        "status": "none-found",
+        "checked": "2026-09-23"
+      },
+      "work": {
+        "status": "excluded",
+        "reason": "commercial; revisit with permission, key for Cyrillic"
+      },
+      "log": [
+        {
+          "date": "2026-09-23",
+          "event": "Surveyed; 1,359 families, no terms page located"
+        }
+      ],
+      "familiesAvailable": 1359
+    },
+    {
+      "id": "klim",
+      "name": "Klim Type Foundry",
+      "url": "https://klim.co.nz/",
+      "kind": "foundry",
+      "access": "previews",
+      "licence": "commercial",
+      "terms": {
+        "status": "none-found",
+        "checked": "2026-09-23"
+      },
+      "work": {
+        "status": "excluded",
+        "reason": "commercial; revisit with permission"
+      },
+      "log": [
+        {
+          "date": "2026-09-23",
+          "event": "Surveyed; ~50 families (Söhne, Tiempos)"
+        }
+      ],
+      "familiesAvailable": 50
+    },
+    {
+      "id": "grilli",
+      "name": "Grilli Type",
+      "url": "https://www.grillitype.com/",
+      "kind": "foundry",
+      "access": "previews",
+      "licence": "commercial",
+      "terms": {
+        "status": "none-found",
+        "checked": "2026-09-23"
+      },
+      "work": {
+        "status": "excluded",
+        "reason": "commercial; revisit with permission"
+      },
+      "log": [
+        {
+          "date": "2026-09-23",
+          "event": "Surveyed; 21 families (GT America, GT Walsheim)"
+        }
+      ],
+      "familiesAvailable": 21
+    },
+    {
+      "id": "swiss-typefaces",
+      "name": "Swiss Typefaces",
+      "url": "https://www.swisstypefaces.com/",
+      "kind": "foundry",
+      "access": "previews",
+      "licence": "commercial",
+      "terms": {
+        "status": "none-found",
+        "checked": "2026-09-23"
+      },
+      "work": {
+        "status": "excluded",
+        "reason": "commercial; revisit with permission"
+      },
+      "log": [
+        {
+          "date": "2026-09-23",
+          "event": "Surveyed; 18 families (Suisse)"
+        }
+      ],
+      "familiesAvailable": 18
+    },
+    {
+      "id": "oh-no-type",
+      "name": "OH no Type Co",
+      "url": "https://ohnotype.co/",
+      "kind": "foundry",
+      "access": "previews",
+      "licence": "commercial",
+      "terms": {
+        "status": "none-found",
+        "checked": "2026-09-23"
+      },
+      "work": {
+        "status": "excluded",
+        "reason": "commercial; revisit with permission"
+      },
+      "log": [
+        {
+          "date": "2026-09-23",
+          "event": "Surveyed"
+        }
+      ]
+    },
+    {
+      "id": "production-type",
+      "name": "Production Type",
+      "url": "https://productiontype.com/",
+      "kind": "foundry",
+      "access": "previews",
+      "licence": "commercial",
+      "terms": {
+        "status": "none-found",
+        "checked": "2026-09-23"
+      },
+      "work": {
+        "status": "excluded",
+        "reason": "commercial; revisit with permission"
+      },
+      "log": [
+        {
+          "date": "2026-09-23",
+          "event": "Surveyed"
+        }
+      ]
+    },
+    {
+      "id": "displaay",
+      "name": "Displaay",
+      "url": "https://displaay.net/",
+      "kind": "foundry",
+      "access": "previews",
+      "licence": "commercial",
+      "terms": {
+        "status": "none-found",
+        "checked": "2026-09-23"
+      },
+      "work": {
+        "status": "excluded",
+        "reason": "commercial; revisit with permission"
+      },
+      "log": [
+        {
+          "date": "2026-09-23",
+          "event": "Surveyed; ~29 families"
+        }
+      ],
+      "familiesAvailable": 29
+    },
+    {
+      "id": "cotype",
+      "name": "CoType Foundry",
+      "url": "https://cotypefoundry.com/",
+      "kind": "foundry",
+      "access": "previews",
+      "licence": "commercial",
+      "terms": {
+        "status": "not-verified",
+        "checked": "2026-09-23"
+      },
+      "work": {
+        "status": "excluded",
+        "reason": "commercial; no terms page found"
+      },
+      "log": [
+        {
+          "date": "2026-09-23",
+          "event": "Surveyed; Aeonik"
+        }
+      ]
+    },
+    {
+      "id": "house-industries",
+      "name": "House Industries",
+      "url": "https://housefonts.com/",
+      "kind": "foundry",
+      "access": "previews",
+      "licence": "commercial",
+      "terms": {
+        "status": "not-verified",
+        "checked": "2026-09-23"
+      },
+      "work": {
+        "status": "excluded",
+        "reason": "commercial; no terms page found"
+      },
+      "log": [
+        {
+          "date": "2026-09-23",
+          "event": "Surveyed"
+        }
+      ]
+    },
+    {
+      "id": "pangram-pangram",
+      "name": "Pangram Pangram",
+      "url": "https://pangrampangram.com/",
+      "kind": "foundry",
+      "access": "previews",
+      "licence": "commercial",
+      "terms": {
+        "status": "ban",
+        "quote": "to spam, phish, pharm, pretext, spider, crawl, or scrape",
+        "url": "https://pangrampangram.com/policies/terms-of-service",
+        "checked": "2026-09-23"
+      },
+      "work": {
+        "status": "permission-to-request"
+      },
+      "log": [
+        {
+          "date": "2026-09-23",
+          "event": "Surveyed; ~62 families (Neue Montreal); permission request drafted"
+        }
+      ],
+      "familiesAvailable": 62
+    },
+    {
+      "id": "sharp-type",
+      "name": "Sharp Type",
+      "url": "https://www.sharptype.co/",
+      "kind": "foundry",
+      "access": "previews",
+      "licence": "commercial",
+      "terms": {
+        "status": "ban",
+        "quote": "or use any robot, spider, site search/retrieval application, or other automated device, process or means to access, retrieve or index any portion of the Website",
+        "url": "https://www.sharptype.co/terms-of-use",
+        "checked": "2026-09-23"
+      },
+      "work": {
+        "status": "excluded",
+        "reason": "terms ban automated retrieval"
+      },
+      "log": [
+        {
+          "date": "2026-09-23",
+          "event": "Surveyed"
+        }
+      ]
+    },
+    {
+      "id": "lineto",
+      "name": "Lineto",
+      "url": "https://lineto.com/",
+      "kind": "foundry",
+      "access": "previews",
+      "licence": "commercial",
+      "terms": {
+        "status": "ban",
+        "quote": "Using Lineto fonts or any of the data contained within them to create new fonts or font-based services through artificial intelligence, machine learning, or any generative algorithms is strictly prohibited.",
+        "url": "https://lineto.com/legal-notice",
+        "checked": "2026-09-23"
+      },
+      "work": {
+        "status": "excluded",
+        "reason": "bans AI and machine-learning use"
+      },
+      "log": [
+        {
+          "date": "2026-09-23",
+          "event": "Surveyed (Circular, Akkurat)"
+        }
+      ]
+    },
+    {
+      "id": "commercial-type",
+      "name": "Commercial Type",
+      "url": "https://commercialtype.com/",
+      "kind": "foundry",
+      "access": "previews",
+      "licence": "commercial",
+      "terms": {
+        "status": "ban",
+        "quote": "Use of the Font Software with Generative or other Artificial Intelligence (\"AI\") services or in other AI programming is expressly prohibited.",
+        "url": "https://commercialtype.com/eula",
+        "checked": "2026-09-23"
+      },
+      "work": {
+        "status": "permission-to-request"
+      },
+      "log": [
+        {
+          "date": "2026-09-23",
+          "event": "Surveyed; 123 families (Graphik, Canela); permission request drafted"
+        }
+      ],
+      "familiesAvailable": 123
+    },
+    {
+      "id": "abc-dinamo",
+      "name": "ABC Dinamo",
+      "url": "https://abcdinamo.com/",
+      "kind": "foundry",
+      "access": "previews",
+      "licence": "commercial",
+      "terms": {
+        "status": "ban",
+        "quote": "Use the fonts or the designs embodied in the fonts to train artificial intelligence.",
+        "url": "https://abcdinamo.com/licenses",
+        "checked": "2026-09-23"
+      },
+      "work": {
+        "status": "permission-to-request"
+      },
+      "log": [
+        {
+          "date": "2026-09-23",
+          "event": "Surveyed; ~50 families (Favorit, Diatype); permission request drafted"
+        }
+      ],
+      "familiesAvailable": 50
+    },
+    {
+      "id": "frere-jones",
+      "name": "Frere-Jones Type",
+      "url": "https://frerejones.com/",
+      "kind": "foundry",
+      "access": "previews",
+      "licence": "commercial",
+      "terms": {
+        "status": "ban",
+        "quote": "You may not use any Website Content for any machine learning or artificial intelligence purposes, including but not limited to training a machine learning or artificial intelligence algorithm.",
+        "url": "https://frerejones.com/terms",
+        "checked": "2026-09-23"
+      },
+      "work": {
+        "status": "excluded",
+        "reason": "bans ML use of website content"
+      },
+      "log": [
+        {
+          "date": "2026-09-23",
+          "event": "Surveyed"
+        }
+      ]
+    },
+    {
+      "id": "typotheque",
+      "name": "Typotheque",
+      "url": "https://www.typotheque.com/",
+      "kind": "foundry",
+      "access": "previews",
+      "licence": "commercial",
+      "terms": {
+        "status": "not-verified",
+        "checked": "2026-09-23"
+      },
+      "work": {
+        "status": "excluded",
+        "reason": "robots.txt disallows ClaudeBot by name"
+      },
+      "log": [
+        {
+          "date": "2026-09-23",
+          "event": "Surveyed; stopped at robots.txt"
+        }
+      ]
+    },
+    {
+      "id": "p22",
+      "name": "P22 Type Foundry (incl. ATF, Hamilton Wood Type)",
+      "url": "https://p22.com/",
+      "kind": "foundry",
+      "access": "previews",
+      "licence": "commercial",
+      "terms": {
+        "status": "ban",
+        "quote": "to spam, phish, pharm, pretext, spider, crawl, or scrape",
+        "url": "https://p22.com/terms/",
+        "checked": "2026-09-23"
+      },
+      "work": {
+        "status": "excluded",
+        "reason": "terms ban scraping"
+      },
+      "log": [
+        {
+          "date": "2026-09-23",
+          "event": "Surveyed; 312 families"
+        }
+      ],
+      "familiesAvailable": 312
+    },
+    {
+      "id": "font-diner",
+      "name": "Font Diner",
+      "url": "https://fontdiner.com/",
+      "kind": "foundry",
+      "access": "previews",
+      "licence": "commercial",
+      "terms": {
+        "status": "ban",
+        "quote": "use any robot, spider, scraping, data gathering and extraction tools, automatic devices or processes, AI tools (such as agentic AI) or automated or manual means to access the Services",
+        "url": "https://fontdiner.com/policies/terms-of-service",
+        "checked": "2026-09-23"
+      },
+      "work": {
+        "status": "excluded",
+        "reason": "terms ban AI tools explicitly"
+      },
+      "log": [
+        {
+          "date": "2026-09-23",
+          "event": "Surveyed; 34 families"
+        }
+      ]
+    },
+    {
+      "id": "canada-type",
+      "name": "Canada Type",
+      "url": "https://canadatype.com/",
+      "kind": "foundry",
+      "access": "previews",
+      "licence": "commercial",
+      "terms": {
+        "status": "restricted",
+        "quote": "You may not transfer the materials to another person or \"mirror\" the materials on any other server",
+        "url": "https://canadatype.com/terms-and-conditions/",
+        "checked": "2026-09-23"
+      },
+      "work": {
+        "status": "excluded",
+        "reason": "personal, non-commercial viewing only"
+      },
+      "log": [
+        {
+          "date": "2026-09-23",
+          "event": "Surveyed"
+        }
+      ]
+    },
+    {
+      "id": "letterhead",
+      "name": "Letterhead Fonts",
+      "url": "https://letterheadfonts.com/",
+      "kind": "foundry",
+      "access": "previews",
+      "licence": "commercial",
+      "terms": {
+        "status": "restricted",
+        "quote": "Redistribution or republication of any software, images, text or video strictly prohibited",
+        "url": "https://letterheadfonts.com/",
+        "checked": "2026-09-23"
+      },
+      "work": {
+        "status": "excluded",
+        "reason": "no republication; previews are static images"
+      },
+      "log": [
+        {
+          "date": "2026-09-23",
+          "event": "Surveyed; vintage revivals"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,52 @@
+{
+  "encoderSha256": "e0d9d931e3ba9e80f081a17d3f5f4af3b977e73db60edc8cbae0a251ab8f119a",
+  "catalogs": [
+    {
+      "id": "google-fonts",
+      "sha256": "391c6ecb47067f759b2c5c9e318fcb52751e7fad71e60c25768cf14e397f0832",
+      "families": 2004,
+      "faces": 8132
+    },
+    {
+      "id": "fontshare",
+      "sha256": "b58581f0f587820e7aa2537bff5b8f9b68c452dde1c3670c6a859b58bb079e7f",
+      "families": 39,
+      "faces": 43
+    },
+    {
+      "id": "velvetyne",
+      "sha256": "394b83371ee87d40c4ace5cd7461fd5fe9e3ed6bfe0f5c72f0458c99c1b68668",
+      "families": 3,
+      "faces": 3
+    }
+  ],
+  "cpuError": 9.5367431640625e-7,
+  "gpuError": 0.000003814697265625,
+  "detectionMilliseconds": 80.09999942779541,
+  "checks": [
+    "native CPU/PyTorch/WebGPU projections",
+    "exact displayed tensors and input stats",
+    "catalog A → A → B → A",
+    "cached embedding reuse",
+    "one-face JSON import",
+    "invalid imports preserve result",
+    "stale catalog response",
+    "resolution and crop round trip",
+    "image button/switch/replacement",
+    "crop, pencil and eraser tools on any source, exact undo, brush size and cursor",
+    "twin tooltip and matches 06–99",
+    "token contrast, links, popovers, code, FAQ and goals layout, dropdowns follow scroll",
+    "no captured specimens shipped",
+    "only cleared sources shipped",
+    "no fonts or images served; fonts from Google",
+    "sources page",
+    "Aa returns to the last sample",
+    "narrow crop keeps layout",
+    "empty image/sample entry",
+    "corrupt image recovery",
+    "keyboard and responsive selectors",
+    "image before initial catalog",
+    "CPU fallback"
+  ],
+  "scope": "Runtime correctness and UI lifecycle only; not recognition accuracy."
+}
