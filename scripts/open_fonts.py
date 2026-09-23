@@ -33,6 +33,12 @@ SOURCES = [
     {'source': 'latin-modern', 'licence': 'GUST Font License',
      'url': 'https://www.gust.org.pl/projects/e-foundry/lm-math/download/latinmodern-math-1959.zip', 'include': r'\.otf$'},
 ]
+# Microsoft's "Core fonts for the web" (1996-2002). The EULA inside each installer
+# allows unlimited installation and use, and non-profit redistribution of true
+# copies, and forbids alteration. Only the original installers are used.
+COREFONTS = ['andale32', 'arial32', 'arialb32', 'comic32', 'courie32', 'georgi32', 'impact32', 'times32', 'trebuc32', 'verdan32', 'webdin32']
+SOURCES += [{'source': 'ms-corefonts', 'licence': 'Microsoft Core Fonts for the Web EULA (use unlimited; no alteration; non-profit redistribution of true copies only)',
+             'url': f'https://downloads.sourceforge.net/corefonts/{name}.exe', 'include': r'\.ttf$', 'format': 'cab'} for name in COREFONTS]
 # Fontshare publishes its whole catalogue through a public API. Its font files carry
 # "false" as their family name, so names come from the catalogue instead.
 FONTSHARE_API = 'https://api.fontshare.com/v2/fonts?limit=200'
@@ -57,8 +63,16 @@ def fetch(url, pinned):
     return data, digest
 
 
-def members(data, url):
-    """(path, bytes) for every file in a zip or tar archive."""
+def members(data, url, format=None):
+    """(path, bytes) for every file in a zip, tar or cabinet archive."""
+    if format == 'cab':  # self-extracting cabinet installers; libarchive's bsdtar reads them
+        import subprocess, tempfile
+        with tempfile.TemporaryDirectory() as folder:
+            archive = Path(folder) / 'installer.exe'; archive.write_bytes(data)
+            subprocess.run(['bsdtar', '-xf', str(archive), '-C', folder], check=True, capture_output=True)
+            for path in sorted(Path(folder).iterdir()):
+                if path.is_file() and path.name != 'installer.exe': yield path.name, path.read_bytes()
+        return
     if url.endswith('.zip'):
         with zipfile.ZipFile(io.BytesIO(data)) as archive:
             for info in archive.infolist():
@@ -117,7 +131,7 @@ def family_name(path):
 
 def main():
     previous = json.loads(MANIFEST.read_text()) if MANIFEST.exists() else {'archives': []}
-    pins = {entry['url']: entry['sha256'] for entry in previous.get('archives', [])}
+    pins = {entry['url']: entry['sha256'] for entry in previous.get('archives', []) if 'sha256' in entry}
     archives, groups = [], {}
     original_source_path = corpus.source_path
     corpus.source_path = lambda path: STORE / path  # face_info reads our store, not the Google cache
@@ -127,7 +141,7 @@ def main():
             archives.append({'source': spec['source'], 'url': spec['url'], 'sha256': digest, 'bytes': len(data), 'licence': spec['licence']})
             root = PurePosixPath(spec['source']) / Path(spec['url']).name.split('?')[0]
             licences = []
-            for name, content in members(data, spec['url']):
+            for name, content in members(data, spec['url'], spec.get('format')):
                 keep_font = re.search(spec['include'], name, re.I)
                 keep_licence = LICENCE_NAMES.search(name)
                 if not (keep_font or keep_licence): continue
