@@ -6,7 +6,6 @@
 //   node scripts/foundries.mjs           refresh counts and print the table
 //   node scripts/foundries.mjs --check   validate only
 import { readFile, writeFile } from 'node:fs/promises'
-import { heldFamilies } from './canon.mjs'
 
 const REGISTRY = 'bench/foundries.json'
 export const KINDS = ['library', 'foundry', 'retailer', 'aggregator', 'platform', 'icons', 'music', 'math']
@@ -52,7 +51,6 @@ async function indexedCounts() {
   for (const family of (await read('bench/corpus.json'))?.families ?? []) if (!family.excluded) add('google-fonts', `id:${family.id}`)
   for (const id of ['fontshare', 'velvetyne'])
     for (const face of (await read(`models/encoder/catalogs/${id}.json`))?.faces ?? []) add(id, face.family)
-  for (const held of await heldFamilies()) add(held.source, held.name)
   for (const family of (await read('bench/open-fonts.json'))?.families ?? []) if (!family.excluded) add(family.source, family.family)
   return new Map([...names].map(([id, set]) => [id, set.size]))
 }
@@ -63,19 +61,16 @@ async function main() {
   if (problems.length) { for (const problem of problems) console.error(`  ${problem}`); process.exit(1) }
   if (process.argv.includes('--check')) return console.log(`${registry.sources.length} sources valid`)
   const counts = await indexedCounts()
-  // Only indexed or partial sources count as coverage; anything else is held locally, pending a decision.
+  // Only indexed or partial sources count as coverage. Private captures never enter this public registry.
   for (const source of registry.sources) {
-    delete source.work.familiesIndexed; delete source.work.familiesHeldLocally
-    if (!counts.has(source.id)) continue
-    delete source.work.familiesInventoried
-    const field = ['indexed', 'partial'].includes(source.work.status) ? 'familiesIndexed'
-      : source.work.status === 'inventoried' ? 'familiesInventoried' : 'familiesHeldLocally'
-    source.work[field] = counts.get(source.id)
+    delete source.work.familiesIndexed; delete source.work.familiesInventoried; delete source.work.familiesHeldLocally
+    const field = ['indexed', 'partial'].includes(source.work.status) ? 'familiesIndexed' : source.work.status === 'inventoried' ? 'familiesInventoried' : null
+    if (field && counts.has(source.id)) source.work[field] = counts.get(source.id)
   }
   registry.updated = new Date().toISOString().slice(0, 10)
   await writeFile(REGISTRY, JSON.stringify(registry, null, 2) + '\n')
   for (const source of registry.sources)
-    console.log(`${source.name.slice(0, 30).padEnd(31)} ${source.access.padEnd(9)} ${source.terms.status.padEnd(13)} ${source.work.status.padEnd(22)} ${source.work.familiesIndexed ?? (source.work.familiesInventoried ? `${source.work.familiesInventoried} inventoried` : source.work.familiesHeldLocally ? `(${source.work.familiesHeldLocally} held)` : '-')}`)
+    console.log(`${source.name.slice(0, 30).padEnd(31)} ${source.access.padEnd(9)} ${source.terms.status.padEnd(13)} ${source.work.status.padEnd(22)} ${source.work.familiesIndexed ?? (source.work.familiesInventoried ? `${source.work.familiesInventoried} inventoried` : '-')}`)
 }
 
 if (import.meta.url === `file://${process.argv[1]}`) await main()

@@ -4,11 +4,15 @@
 // attention; Google Fonts' own popularity ranks for the open web. Naming
 // typefaces and stating facts about them needs no one's permission.
 //
-//   node scripts/canon.mjs [--size 1000] [--refresh]
+//   node scripts/canon.mjs [--size 1000] [--refresh] [--private]
+//
+// --private also counts the preview captures held for private experiments and writes
+// to .data/private/canon.json; the committed bench/canon.json never mentions them.
 import { mkdir, readFile, writeFile } from 'node:fs/promises'
 
 const CACHE = '.data/canon'
-const OUT = 'bench/canon.json'
+const PRIVATE = process.argv.includes('--private')
+const OUT = PRIVATE ? '.data/private/canon.json' : 'bench/canon.json'
 const UA = 'gpu-font/0.1 (typeface recognition research; https://github.com/dy/gpu-font)'
 const args = process.argv.slice(2)
 const size = Number(args[args.indexOf('--size') + 1] || 1000) || 1000
@@ -173,13 +177,14 @@ async function coverage() {
   for (const family of (await read('bench/corpus.json'))?.families ?? []) if (!family.excluded) known.push({ name: family.family, status: 'indexed', source: 'google-fonts' })
   for (const id of ['fontshare', 'velvetyne']) for (const face of (await read(`models/encoder/catalogs/${id}.json`))?.faces ?? []) known.push({ name: face.family, status: 'indexed', source: id })
   for (const family of (await read('bench/open-fonts.json'))?.families ?? []) if (!family.excluded) known.push({ name: family.family, status: 'inventoried', source: family.source })
-  // Preview captures held locally pending permission, read from the capture archives themselves.
-  for (const held of await heldFamilies()) known.push({ ...held, status: 'held-locally' })
+  // Preview captures held for private experiments, read from the capture archives themselves.
+  if (PRIVATE) for (const held of await heldFamilies()) known.push({ ...held, status: 'held-locally' })
   return matcher(known, (await read('bench/equivalents.json'))?.equivalents ?? [])
 }
 
 async function main() {
   await mkdir(CACHE, { recursive: true })
+  await mkdir(OUT.slice(0, OUT.lastIndexOf('/')), { recursive: true })
   const faces = await cached('wikidata-typefaces', typefaces)
   console.log(`Wikidata: ${faces.length} typefaces`)
   const links = await cached('wikidata-sitelinks', () => sitelinks(faces.map(face => face.id)))
