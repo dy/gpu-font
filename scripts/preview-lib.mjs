@@ -183,13 +183,29 @@ export function rankSpecimenCandidates(candidates, { excludeTexts = [], labels =
   return { preferred: ordered.filter(candidate => !isLabel(candidate)), fallback: ordered.filter(isLabel) }
 }
 
+const CAPS_FLAGS = ['lowercase-and-uppercase-render-alike', 'visible-text-not-verified', 'lowercase-renders-as-uppercase',
+  'caps-only-confirmed-by-inspection', 'lowercase-drawn-as-small-capitals']
+
 /**
- * Without the binary we cannot read a cmap, so compare each face's own lowercase
- * and uppercase lines: a design that maps lowercase onto capitals draws them the
- * same, and its lowercase record must not claim small letters. Sizes are
- * normalised first, because a source may render the two lines at different sizes.
+ * Case handling for faces whose lowercase is drawn as capitals. Recomputed from
+ * scratch on every write, so repeated runs neither stack flags nor lose text.
+ *
+ * - `capsOnly` names faces confirmed by looking at their crops: every record
+ *   whose requested text has lowercase letters records the capitals actually
+ *   drawn, and says so in its flags.
+ * - Otherwise, without a binary, compare the two alphabet lines' ink in ems of
+ *   the size each was drawn at. A match is strong evidence but not a reading,
+ *   so the lowercase record's text becomes null rather than capitals.
+ * Faces whose binary was read report their own case mapping and are skipped.
  */
-export function flagCapsOnlyFaces(records) {
+export function flagCapsOnlyFaces(records, { capsOnly = new Set() } = {}) {
+  for (const record of records) {
+    if (record.verification?.requestedText !== undefined) {
+      record.text = record.verification.requestedText
+      delete record.verification.requestedText
+    }
+    record.flags = record.flags.filter(flag => !CAPS_FLAGS.includes(flag) || record.verification?.fontSha256)
+  }
   const byFace = new Map()
   for (const record of records) {
     const group = byFace.get(record.faceId) ?? {}
@@ -197,22 +213,29 @@ export function flagCapsOnlyFaces(records) {
     byFace.set(record.faceId, group)
   }
   const add = (record, flag) => { if (!record.flags.includes(flag)) record.flags.push(flag) }
-  for (const group of byFace.values()) {
+  const ink = record => record.verification?.inkBounds ?? record.region
+  const scale = record => (record.render?.cssFontSize || 1) * (record.render?.deviceScaleFactor || 1)
+  const ems = (record, side) => ink(record)[side] / scale(record)
+  for (const [faceId, group] of byFace) {
     const lower = group['latin-lower-v1'], upper = group['latin-upper-v1']
     if (!lower || !upper) continue
-    // Faces whose binary was read report their own case mapping; only previews
-    // without a font file need this measurement.
     if (lower.verification?.fontSha256 || upper.verification?.fontSha256) continue
-    // Measure the ink itself where it was recorded, in ems of the rendered size:
-    // the stored region also carries a fixed margin that scales with nothing.
-    const ink = record => record.verification?.inkBounds ?? record.region
-    const scale = record => (record.render?.cssFontSize || 1) * (record.render?.deviceScaleFactor || 1)
-    const widthRatio = (ink(lower).width / scale(lower)) / (ink(upper).width / scale(upper))
-    const heightRatio = (ink(lower).height / scale(lower)) / (ink(upper).height / scale(upper))
-    if (widthRatio < 0.97 || widthRatio > 1.03 || heightRatio < 0.94 || heightRatio > 1.06) continue
-    for (const record of [lower, upper]) add(record, 'lowercase-and-uppercase-render-alike')
-    add(lower, 'visible-text-not-verified')
-    if (lower.text !== null) {
+    const widthRatio = ems(lower, 'width') / ems(upper, 'width')
+    const heightRatio = ems(lower, 'height') / ems(upper, 'height')
+    const measured = widthRatio >= 0.97 && widthRatio <= 1.03 && heightRatio >= 0.94 && heightRatio <= 1.06
+    if (capsOnly.has(faceId)) {
+      for (const record of Object.values(group)) {
+        if (typeof record.text !== 'string' || !/\p{Ll}/u.test(record.text)) continue
+        record.verification = { ...record.verification, requestedText: record.text }
+        record.text = record.text.toUpperCase()
+        add(record, 'lowercase-renders-as-uppercase')
+        add(record, 'caps-only-confirmed-by-inspection')
+        if (heightRatio < 0.9) add(record, 'lowercase-drawn-as-small-capitals')
+      }
+      if (measured) for (const record of [lower, upper]) add(record, 'lowercase-and-uppercase-render-alike')
+    } else if (measured) {
+      for (const record of [lower, upper]) add(record, 'lowercase-and-uppercase-render-alike')
+      add(lower, 'visible-text-not-verified')
       lower.verification = { ...lower.verification, requestedText: lower.text }
       lower.text = null // the small letters may never have been drawn
     }
