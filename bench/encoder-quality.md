@@ -75,3 +75,14 @@ node checks/encoder.mjs .data/encoder/large-refine/encoder.json .data/detection-
 ```
 
 Commit `3d553b9` preserves the second-bank generator and case-training implementation before adding the capacity experiment. Historical snapshots keep those hashes. The runtime check accepts explicit candidate paths so it can verify CPU/Metal parity and payload size before deployment.
+
+## Recovery selection
+
+Before opening the third phrase results, compare the three frozen refined encoders with script-only and script-plus-word references. All eight reported demo examples belong to training/development families. They now become explicit development-selection cases: every rank must improve or tie, and Lora/Montserrat must improve strictly over the deployed baseline. This is an improvement gate, not a claim that all eight become first-place matches. Full-development harmonic known/unseen macro top-five must also improve. Prefer the smallest encoder within one absolute percentage point of the best eligible development score.
+
+This stage changes the earlier protocol deliberately: reported examples are no longer independent confirmation. No final-family query or third phrase result selects the candidate; final-family reference images do supply catalog distractors. The chosen encoder, reference method, all candidate scores and source hashes are frozen in `bench/encoder-recovery-selection.json` before the third phrase confirmation. The script refuses to overwrite that selection.
+
+```sh
+node scripts/python.mjs -m train.encoder_recovery
+node scripts/python.mjs -m train.encoder_case_quality --recovery
+```

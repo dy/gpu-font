@@ -8,22 +8,26 @@ from train.encoder_data import save, validate_shard
 from train.encoder_quality import OUT, BASE, vectors, reference_vectors, catalog, summary
 from train.robustness import read, sha
 
-def confirm(large=False):
+def confirm(large=False,recovery=False):
     name='large' if large else 'case';candidate=ROOT/f'.data/encoder/{name}-refine/encoder.json'
-    selected=read(candidate.parent/'selection.json')
-    if selected['encoderSha256']!=sha(candidate):raise ValueError('Changed selected encoder')
+    if recovery:
+        name='recovery';selected=read(ROOT/'bench/encoder-recovery-selection.json');choice=selected['winner'];candidate=ROOT/choice['encoder']
+    else:
+        selected=read(candidate.parent/'selection.json');choice=selected
+    if choice['encoderSha256']!=sha(candidate):raise ValueError('Changed selected encoder')
+    method=choice.get('referenceMethod','script-words')
     rs,rv,qs,qv=vectors(candidate,'development');families=sorted({s['family'] for s in rs})
-    refs,owners,_,_=reference_vectors(candidate,'development',rs,rv,families,'script-words')
+    refs,owners,_,_=reference_vectors(candidate,'development',rs,rv,families,method)
     development=metrics(rank(qv,refs,owners,families),qs,families)
     save(OUT/f'{name}-development.json',development)
     print(name,'full development',development['groups']['split/development'],flush=True)
-    bank='large' if large else 'next';phrase_path=OUT/f'phrases-{bank}.json';phrase=read(phrase_path);pixel_path=OUT/f'phrases-{bank}.u8'
+    bank='large' if large or recovery else 'next';phrase_path=OUT/f'phrases-{bank}.json';phrase=read(phrase_path);pixel_path=OUT/f'phrases-{bank}.u8'
     if sha(pixel_path)!=phrase['sha256']:raise ValueError('Changed confirmation pixels')
     for file,expected in phrase['pins'].items():
         if sha(ROOT/file)!=expected:raise ValueError('Changed confirmation dependency')
     validate_shard(phrase,pixel_path.stat().st_size)
     pixels=np.memmap(pixel_path,dtype=np.uint8,mode='r');cases=read(OUT/'demo-before.json');reports={}
-    for stage,path,method in [('before',BASE,'mean'),('after',candidate,'script-words')]:
+    for stage,path,method in [('before',BASE,'mean'),('after',candidate,method)]:
         rs,rv,qs,qv=vectors(path,'final');data,refs,owners,families=catalog(path,rs,rv,method)
         historical=metrics(rank(qv,refs,owners,families),qs,families)
         model=load_encoder(path).to('mps');pv=embed(model,phrase,pixels,list(range(len(phrase['samples']))))
@@ -43,11 +47,11 @@ def confirm(large=False):
             save(OUT/f'{name}-google-fonts.json',data)
             reports[stage].update(catalogSha256=sha(OUT/f'{name}-google-fonts.json'),catalogBytes=(OUT/f'{name}-google-fonts.json').stat().st_size,encoderBytes=path.stat().st_size)
     save(ROOT/f'bench/encoder-{name}-quality.json',{'checkpointSelection':selected,'development':summary(development),'phraseManifestSha256':sha(phrase_path),'reports':reports,
-         'scope':('Third phrase bank frozen before capacity experiment results. ' if large else 'Second phrase bank frozen before case-training results. ')+'First phrase bank restricted to train/development families is now checkpoint-selection data. No final-family pixels enter optimization or selection. Historical final results and reported demo cases are regressions; synthetic evaluation is not real-image certainty.'})
+         'scope':('Third phrase bank frozen before capacity results, then held out from recovery selection. Reported cases are explicitly development-selection data. Final reference pixels supply catalog distractors; no final-family query enters optimization or selection. ' if recovery else ('Third phrase bank frozen before capacity experiment results. ' if large else 'Second phrase bank frozen before case-training results. ')+'First phrase bank restricted to train/development families is now checkpoint-selection data. No final-family pixels enter optimization or selection. ')+ 'Historical final results are regressions; synthetic evaluation is not real-image certainty.'})
 
 
 if __name__=='__main__':
-    parser=argparse.ArgumentParser();parser.add_argument('--large',action='store_true');args=parser.parse_args()
+    parser=argparse.ArgumentParser();group=parser.add_mutually_exclusive_group();group.add_argument('--large',action='store_true');group.add_argument('--recovery',action='store_true');args=parser.parse_args()
     torch.set_num_threads(4)
     if not torch.backends.mps.is_available():raise ValueError('MPS unavailable')
-    confirm(args.large)
+    confirm(args.large,args.recovery)
