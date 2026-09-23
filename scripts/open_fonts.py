@@ -1,6 +1,7 @@
 """Openly licensed font files beyond Google Fonts, inventoried exactly like bench/corpus.json.
 
-Each source is a pinned official archive. Faces are read with the corpus's own
+Each source is a pinned release: the rights holder's own where it still publishes
+one, otherwise a faithful copy named at the source. Faces are read with the corpus's own
 face_info, so scripts, alphabets, exclusions and the normal-face choice mean the
 same thing here as for Google Fonts, and the catalogue compiler reads both alike.
 Files stay local under .data/fonts-open; bench/open-fonts.json pins the archives.
@@ -19,7 +20,7 @@ ROOT = Path(__file__).resolve().parents[1]
 STORE = ROOT / '.data/fonts-open'
 MANIFEST = ROOT / 'bench/open-fonts.json'
 
-# Official release archives only. `include` picks the font files to inventory.
+# Pinned releases, from the rights holder where possible. `include` picks the font files to inventory.
 SOURCES = [
     {'source': 'dejavu', 'licence': 'Bitstream Vera License; DejaVu changes public domain',
      'url': 'https://github.com/dejavu-fonts/dejavu-fonts/releases/download/version_2_37/dejavu-fonts-ttf-2.37.zip', 'include': r'/ttf/[^/]+\.ttf$'},
@@ -84,6 +85,17 @@ SOURCES += [
      'files': ['https://github.com/kika/fixedsys/releases/download/v3.09.10/FSEX302.ttf']},
     {'source': 'ubuntu-titling', 'licence': 'OFL-1.1', 'url': 'https://deb.debian.org/debian/pool/main/f/fonts-ubuntu-title/fonts-ubuntu-title_0.3.orig.tar.gz', 'include': r'\.ttf$'},
 ]
+# The League of Moveable Type: all 18 families are OFL-1.1. Eleven reach us through Google
+# Fonts; these are the other seven, as the GitHub organisation holds them.
+LEAGUE_REPOS = {'junction': 'fb73260e86dd301b383cf6cc9ca8e726ef806535', 'chunk': '12a243f3fb7c7a68844901023f7d95d6eaf14104',
+                'blackout': '4864cfc1749590e9f78549c6e57116fe98480c0f', 'fanwood': 'cbaaed9704e7d37d3dcdbdf0b472e9efd0e39432',
+                'ostrich-sans': 'a949d40d0576d12ba26e2a45e19c91fd0228c964'}
+SOURCES += [{'source': 'league-of-moveable-type', 'licence': 'OFL-1.1', 'url': GITHUB.format(f'theleagueof/{repo}', sha),
+             # Blackout's "Two AM.ttf" is version 2.002 of "2 AM.ttf" (2.003): the stale copy is skipped.
+             'include': r'^(?!.*/webfonts/)(?!.*Two AM).*\.ttf$' if repo == 'blackout' else r'^(?!.*/webfonts/).*\.otf$'} for repo, sha in LEAGUE_REPOS.items()]
+SOURCES += [{'source': 'league-of-moveable-type', 'licence': 'OFL-1.1', 'include': r'/static/OTF/[^/]+\.otf$',
+             'url': f'https://github.com/theleagueof/{repo}/releases/download/{version}/{name}-{version}.zip'}
+            for repo, name, version in [('league-mono', 'LeagueMono', '2.300'), ('the-neue-black', 'TheNeueBlack', '1.007')]]
 # Fontshare publishes its whole catalogue through a public API. Its font files carry
 # "false" as their family name, so names come from the catalogue instead.
 FONTSHARE_API = 'https://api.fontshare.com/v2/fonts?limit=200'
@@ -93,6 +105,11 @@ LICENCE_NAMES = re.compile(r'(^|/)(LICEN[CS]E|COPYING|COPYRIGHT|OFL|GUST-FONT-LI
 
 def slug(value):
     return re.sub(r'[^a-z0-9]+', '-', value.lower()).strip('-')
+
+
+def name_key(value):
+    """Family names compared across sources: case, spaces and punctuation ignored."""
+    return re.sub(r'[^a-z0-9]', '', value.lower())
 
 
 def fetch(url, pinned):
@@ -176,9 +193,8 @@ def fontshare_groups(google_names):
     import time
     request = urllib.request.Request(FONTSHARE_API, headers={'User-Agent': 'gpu-font open-font inventory'})
     fonts = json.loads(urllib.request.urlopen(request, timeout=60).read())['fonts']
-    key = lambda value: re.sub(r'[^a-z0-9]', '', value.lower())
     for font in sorted(fonts, key=lambda f: f['slug']):
-        if key(font['name']) in google_names: continue
+        if name_key(font['name']) in google_names: continue
         items = []
         for style in font['styles']:
             if style['is_variable']: continue
@@ -228,11 +244,13 @@ def main():
                     item = {'path': relative, 'size': len(content), 'sha': corpus.blob(content)}
                     groups.setdefault((spec['source'], family_name(target)), {'spec': spec, 'items': [], 'licences': licences})['items'].append(item)
         google = json.loads((ROOT / 'bench/corpus.json').read_text())['families']
-        google_names = {re.sub(r'[^a-z0-9]', '', f['family'].lower()) for f in google}
+        google_names = {name_key(f['family']) for f in google}
         for name, group in fontshare_groups(google_names): groups[('fontshare', name)] = group
         archives.append({'source': 'fontshare', 'url': FONTSHARE_API, 'licence': 'per family (ITF Free Font License or OFL-1.1)'})
-        families = []
+        families, in_google = [], {}
         for (source, name), group in sorted(groups.items()):
+            if name_key(name) in google_names:
+                in_google.setdefault(source, []).append(name); continue
             faces = [corpus.face_info(item) for item in group['items']]
             selected, letters = min(faces, key=lambda pair: (pair[0]['italic'], abs(corpus.normal_axes(pair[0]).get('wght', pair[0]['weight']) - 400), pair[0]['path']))
             reason = 'color' if selected['color'] and colour_letters(STORE / selected['path']) else 'no-letter-glyphs' if not letters else None
@@ -255,6 +273,7 @@ def main():
     counts = {}
     for f in families: counts.setdefault(f['source'], [0, 0])[0 if not f['excluded'] else 1] += 1
     for source, (ok, excluded) in counts.items(): print(f'{source}: {ok} families{f", {excluded} excluded" if excluded else ""}')
+    for source, names in in_google.items(): print(f'{source}: left to Google Fonts: {", ".join(names)}')
 
 
 if __name__ == '__main__':

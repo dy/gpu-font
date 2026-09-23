@@ -1,3 +1,4 @@
+import json
 import tempfile
 import unittest
 from pathlib import Path
@@ -6,7 +7,7 @@ from fontTools.fontBuilder import FontBuilder
 from fontTools.pens.ttGlyphPen import TTGlyphPen
 from fontTools.ttLib.tables import otTables
 
-from scripts.open_fonts import colour_letters, symbol_encoded
+from scripts.open_fonts import MANIFEST, ROOT, colour_letters, members, name_key, symbol_encoded
 
 
 def build(folder, names, coloured=()):
@@ -56,6 +57,35 @@ class ColourLetters(unittest.TestCase):
         # OpenDyslexic colours stylistic-set alternates; the letters themselves render plain.
         with tempfile.TemporaryDirectory() as folder:
             self.assertFalse(colour_letters(build(folder, ['A', 'B'], coloured=['layer'])))
+
+
+class Members(unittest.TestCase):
+    def test_a_loose_file_is_its_own_member_named_without_query(self):
+        self.assertEqual(list(members(b'font', 'https://host/fonts/FSEX302.ttf?raw=1', 'file')), [('FSEX302.ttf', b'font')])
+
+
+class Inventory(unittest.TestCase):
+    """Invariants of the committed bench/open-fonts.json."""
+
+    @classmethod
+    def setUpClass(cls):
+        cls.inventory = json.loads(MANIFEST.read_text())
+        cls.google = {name_key(f['family']) for f in json.loads((ROOT / 'bench/corpus.json').read_text())['families']}
+
+    def test_no_family_duplicates_one_google_fonts_carries(self):
+        twice = [f['family'] for f in self.inventory['families'] if name_key(f['family']) in self.google]
+        self.assertEqual(twice, [])
+
+    def test_ids_are_unique_and_each_family_selects_one_of_its_faces(self):
+        ids = [f['id'] for f in self.inventory['families']]
+        self.assertEqual(len(ids), len(set(ids)))
+        for family in self.inventory['families']:
+            self.assertIn(family['selected'], [face['path'] for face in family['faces']], family['family'])
+
+    def test_every_archive_is_pinned_by_hash(self):
+        # The Fontshare API is a listing, not an archive; its files are pinned per face by blob.
+        unpinned = [a['url'] for a in self.inventory['archives'] if a['source'] != 'fontshare' and len(a.get('sha256', '')) != 64]
+        self.assertEqual(unpinned, [])
 
 
 if __name__ == '__main__':
