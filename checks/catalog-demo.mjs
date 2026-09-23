@@ -6,7 +6,8 @@ import { readCatalog, matchCatalog, foldTwins, embedWindows } from '../src/catal
 import { readNetwork, inferCPU } from '../src/network.mjs'
 
 const read = async p => JSON.parse(await readFile(p, 'utf8'))
-const data = await read('dist/assets/catalog.json'), artifact = await read('dist/assets/model.json'), model = readNetwork(artifact)
+// The site runs from the repository: site.json names the model and catalogs in place.
+const data = await read('site.json'), artifact = await read(data.model), model = readNetwork(artifact)
 // Shipped distinct families and catalogs, fixed at load; accuracy is not credited to a selected or imported catalog.
 const expectedIntro = [`Finds the closest of ${data.families.toLocaleString('en-US')} font families, from ${data.catalogs.length} catalogs, to any line of text.`,
   `Experimental: on rendered text in fonts it never saw, it names the right family first ${(data.metrics.top1 * 100).toFixed(1)}% of the time.`]
@@ -40,7 +41,7 @@ async function verify(page, value, option) {
   assert.deepEqual(await intro(page), expectedIntro, 'Shipped figures and measured accuracy stay fixed through catalog switches')
   assert.match(await page.locator('#faq').textContent(), /300 Google Fonts families it never saw/)
   assert.doesNotMatch(await page.locator('body').textContent(), /never leaves|nothing is uploaded|images stay/i)
-  const catalog = readCatalog(await read(`dist/${option.file}`), data), expected = matchCatalog(value.embedding, catalog, value.verdict)
+  const catalog = readCatalog(await read(option.file), data), expected = matchCatalog(value.embedding, catalog, value.verdict)
   assert.deepEqual(value.matches, expected)
   assert.equal(value.catalog.sha256, option.sha256); assert.equal(value.accepted, null); assert.equal(value.scoreType, 'cosine')
   // Only families that can draw the detected script are ranked; a catalog with none of them ranks every family by style.
@@ -65,10 +66,13 @@ try {
   const original = await result(page)
   assert.equal(original.backend, 'WebGPU'); await verify(page, original, data.catalogs[0])
   // Parastoo draws Lora's Latin letters identically (below the renderer noise); either is the correct first match.
-  const googleFaces = (await read(`dist/${data.catalogs[0].file}`)).faces, lora = googleFaces.find(f => f.familyId === 'lora' && f.default)
+  const googleFaces = (await read(data.catalogs[0].file)).faces, lora = googleFaces.find(f => f.familyId === 'lora' && f.default)
   assert.ok(['lora', ...(lora.twins?.Latn ?? [])].includes(original.matches[0].family), 'The reported full-resolution Lora crop must match Lora or an identical design first')
-  // Every Google face previews in its own file, so a bold or italic match never borrows its family's regular face.
-  assert.equal(new Set(googleFaces.map(f => data.previews[f.id]?.file)).size, googleFaces.length, 'One preview file per face')
+  // Every Google family has preview hints, and each preview asks Google Fonts for the matched face's own weight and style,
+  // so a bold or italic match never borrows its family's regular face.
+  assert.equal(Object.keys(data.previews).length, new Set(googleFaces.map(f => f.familyId)).size, 'Every Google family has a preview entry')
+  const firstFace = foldTwins(original.matches, readCatalog(await read(data.catalogs[0].file), data), { script: original.verdict?.script?.[0]?.label, limit: 1 })[0].face
+  assert.deepEqual(await page.locator('.result-preview').first().evaluate(i => [i.style.fontWeight, i.style.fontStyle]), [String(firstFace.weight ?? 400), firstFace.style ?? 'normal'])
   assert.equal(await page.locator('header .header-icon[aria-label="GitHub repository"]').count(), 1)
   assert.equal(await page.locator('header #backend').getAttribute('class'), 'sr-only')
   assert.equal(await page.locator('footer [aria-label="GitHub repository"]').count(), 0)
@@ -101,6 +105,11 @@ try {
   // Only sources whose recorded terms allow it ship; banned and unverified ones stay local.
   const terms = new Map((await read('bench/foundries.json')).sources.map(source => [source.id, source.terms?.status]))
   assert.deepEqual(data.catalogs.filter(option => !['permitted', 'none-found'].includes(terms.get(option.id))).map(option => option.id), [], 'Every shipped catalog has cleared terms')
+  // Nothing heavy ships: fonts come from Google Fonts, and the page asks its own origin for no font or image.
+  const own = new URL(base).host, fetched = await page.evaluate(() => performance.getEntriesByType('resource').map(r => r.name))
+  assert.deepEqual(fetched.filter(u => new URL(u).host === own && /\.(ttf|otf|woff2?|png|jpe?g|webp)(\?|$)/.test(u)), [], 'No font or image is served by the site')
+  assert.ok(fetched.some(u => u.startsWith('https://fonts.googleapis.com/css2?family=Lora')), 'Faces are requested from Google Fonts')
+  assert.ok(await page.evaluate(() => document.fonts.check('16px Inter') && [...document.fonts].some(f => f.family.replaceAll('"', '') === 'Lora' && f.status === 'loaded')), 'Google Fonts faces load')
   // Facts about the run sit under the model input; facts about the model sit with How it works; nothing is folded away.
   assert.equal(await page.locator('#model-input .input-meta').evaluate(row => ['detection-time', 'result-summary', 'save'].every(id => row.querySelector('#' + id))), true)
   assert.equal(await page.locator('#how-it-works .facts #parameters, #how-it-works .facts #device, #how-it-works .facts #catalog-size').count(), 3)
@@ -122,7 +131,7 @@ try {
   assert.equal(await gap(), opened, 'An open dropdown scrolls with its trigger')
   await page.keyboard.press('Escape'); await page.evaluate(() => scrollTo(0, 0))
   // More matches: ranks 06–99, numbered on from the five and under the same rank column, emptied again on close.
-  const all = foldTwins(original.matches, readCatalog(await read(`dist/${data.catalogs[0].file}`), data), { script: original.verdict?.script?.[0]?.label, limit: 99 }), rest = all.slice(5)
+  const all = foldTwins(original.matches, readCatalog(await read(data.catalogs[0].file), data), { script: original.verdict?.script?.[0]?.label, limit: 99 }), rest = all.slice(5)
   await page.locator('#more-matches').click()
   assert.equal(await page.locator('#more-list li').count(), rest.length)
   assert.deepEqual(await page.locator('#more-list .rank').evaluateAll(r => [r[0].textContent, r.at(-1).textContent]), ['06', String(5 + rest.length).padStart(2, '0')])
@@ -192,12 +201,12 @@ try {
   }
   assert.deepEqual((await result(page)).matches, original.matches)
   // Failed imports preserve the selected catalog and current answer.
-  for (const payload of ['{', '{}', JSON.stringify({ ...await read(`dist/${data.catalogs[0].file}`), encoderSha256: 'wrong' })]) {
+  for (const payload of ['{', '{}', JSON.stringify({ ...await read(data.catalogs[0].file), encoderSha256: 'wrong' })]) {
     await page.locator('#catalog-file').setInputFiles({ name: 'bad.json', mimeType: 'application/json', buffer: Buffer.from(payload) })
     await page.waitForFunction(() => !document.querySelector('#catalog-error').hidden)
     assert.deepEqual((await result(page)).matches, original.matches)
   }
-  const custom = await read(`dist/${data.catalogs[0].file}`)
+  const custom = await read(data.catalogs[0].file)
   // Smallest compatible catalog, retaining one real vector and exact owner.
   custom.faces = custom.faces.slice(0, 1)
   custom.vectors = { ...custom.vectors, shape: [1, 128], data: Buffer.from(custom.vectors.data, 'base64').subarray(0, 128).toString('base64'), scales: custom.vectors.scales.slice(0, 1), owners: [0] }
@@ -298,8 +307,9 @@ try {
   // Before a first source loads, the workbench offers both entries.
   const blank = await browser.newPage({ viewport: { width: 320, height: 900 } }); let releaseSample
   const sampleGate = new Promise(r => { releaseSample = r })
-  await blank.route('**/assets/fonts/lora.ttf', async route => { await sampleGate; await route.continue() })
-  await blank.goto(base); await blank.waitForSelector('body[data-ready="true"]')
+  await blank.route(/fonts\.googleapis\.com\/css2\?family=Lora&/, async route => { await sampleGate; await route.continue() })
+  // The held stylesheet would hold the load event too, so wait for the DOM instead.
+  await blank.goto(base, { waitUntil: 'domcontentloaded' }); await blank.waitForSelector('body[data-ready="true"]')
   assert.equal(await blank.locator('.result, #normalized canvas').count(), 0); assert.ok(await blank.locator('#save').isDisabled())
   assert.ok(await blank.locator('#model-input').isVisible(), 'Model input is always in place')
   assert.deepEqual(await blank.locator('#input-count, #detection-time').allTextContents(), ['', ''])
@@ -358,7 +368,7 @@ try {
   assert.equal(fallback.backend, 'CPU'); assert.ok(error(fallback.embedding, original.embedding) < 1e-4)
   await cpu.close(); assert.deepEqual(issues, [])
   const report = { encoderSha256: data.encoderSha256, catalogs: data.catalogs.map(o => ({ id: o.id, sha256: o.sha256, families: o.families, faces: o.faces })), cpuError, gpuError,
-    detectionMilliseconds: original.milliseconds, checks: ['native CPU/PyTorch/WebGPU projections', 'exact displayed tensors and input stats', 'catalog A → A → B → A', 'cached embedding reuse', 'one-face JSON import', 'invalid imports preserve result', 'stale catalog response', 'resolution and crop round trip', 'image button/switch/replacement', 'crop, pencil and eraser tools on any source, exact undo, brush size and cursor', 'twin tooltip and matches 06–99', 'token contrast, links, popovers, code, FAQ and goals layout, dropdowns follow scroll', 'no captured specimens shipped', 'only cleared sources shipped', 'sources page', 'Aa returns to the last sample', 'narrow crop keeps layout', 'empty image/sample entry', 'corrupt image recovery', 'keyboard and responsive selectors', 'image before initial catalog', 'CPU fallback'],
+    detectionMilliseconds: original.milliseconds, checks: ['native CPU/PyTorch/WebGPU projections', 'exact displayed tensors and input stats', 'catalog A → A → B → A', 'cached embedding reuse', 'one-face JSON import', 'invalid imports preserve result', 'stale catalog response', 'resolution and crop round trip', 'image button/switch/replacement', 'crop, pencil and eraser tools on any source, exact undo, brush size and cursor', 'twin tooltip and matches 06–99', 'token contrast, links, popovers, code, FAQ and goals layout, dropdowns follow scroll', 'no captured specimens shipped', 'only cleared sources shipped', 'no fonts or images served; fonts from Google', 'sources page', 'Aa returns to the last sample', 'narrow crop keeps layout', 'empty image/sample entry', 'corrupt image recovery', 'keyboard and responsive selectors', 'image before initial catalog', 'CPU fallback'],
     scope: 'Runtime correctness and UI lifecycle only; not recognition accuracy.' }
   await writeFile('bench/catalog-demo.json', JSON.stringify(report, null, 2) + '\n'); console.log(report)
 } finally { await browser.close() }

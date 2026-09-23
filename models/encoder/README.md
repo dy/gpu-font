@@ -8,3 +8,5 @@ The shared encoder the demo uses. How it was trained and measured: [bench/style.
 - `best.pt`: the selected PyTorch checkpoint with heads and face proxies; not part of the browser payload.
 
 Trained for 30,000 steps on 1,403 families; the 301 development families selected the checkpoint and the reference renderer, and the 300 test families never entered training or selection. On the frozen Chromium benchmark those held-out families reach 84.3% top-five and 62.5% top-one (identical designs counted). The preparation is unchanged (`deskew-windows`, 128×48, up to three windows). Adding fonts requires references only; changing the encoder requires regenerating every catalog. Reproduce with the commands in the report.
+
+The PyTorch checkpoint `best.pt` is not committed (the repository holds scripts and JSON only); training writes it locally.

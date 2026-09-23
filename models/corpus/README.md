@@ -11,3 +11,5 @@ Use `prepareLine(image, { deskew: true, sampler: 'windows' })` with the exact so
 `catalog[].trainingFace` is source metadata, **not inferred weight/style**. Scores are closed-set classifier outputs; the old 100-family confidence calibration does not apply. There is no calibrated unknown-font rejection for this candidate.
 
 Held-out Chromium results are **28.4% exact family / 48.7% top-five**, across short, rotated and reduced-resolution synthetic crops. This artifact establishes broad coverage and compact browser execution; it is not a reliable arbitrary-screenshot recognizer. The deployed website remains separately owned and requires coordinated preparation/catalog integration. See [results, limitations and reproduction](../../bench/corpus.md).
+
+The PyTorch checkpoint `best.pt` is not committed (the repository holds scripts and JSON only); training writes it locally.

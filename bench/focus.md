@@ -8,7 +8,7 @@ The demo's model-input preview displays the actual 128 × 32 grayscale tensor, e
 
 The fixed shape is valid. Fitting an arbitrarily long line into it is the problem: median prepared training ink height was **15.7 pixels** for the whole-line policy and **28 pixels** for the local-window policy. A fixed rectangle can contain much more useful information without increasing network size.
 
-![Actual whole-line and local-window tensors](focus-inputs.png)
+The whole-line and local-window tensors are drawn by `scripts/focus_preview.py` into `bench/focus-inputs.png`, kept locally (images are not committed).
 
 The figure uses checksummed raw source pixels and prepared tensors, with matching training-report hashes. It does not reconstruct the input from recognized characters.
 

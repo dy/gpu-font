@@ -1,4 +1,4 @@
-// The Sources table, rendered from bench/foundries.json (the build copies it to assets/foundries.json).
+// The Sources table, rendered from bench/foundries.json as committed.
 const TERMS = { permitted: 'Allowed', 'none-found': 'No restriction found', 'not-verified': 'Not verified', restricted: 'Restricted', ban: 'Forbidden' }
 const WORK = { indexed: 'Indexed', partial: 'Partly indexed', inventoried: 'Inventoried', planned: 'Planned', paused: 'Paused', 'permission-to-request': 'Permission to request', 'awaiting-permission': 'Awaiting permission', declined: 'Declined', excluded: 'Excluded' }
 const KINDS = { library: 'Library', foundry: 'Foundry', retailer: 'Retailer', aggregator: 'Aggregator', platform: 'Platform', icons: 'Icon fonts', music: 'Music fonts', math: 'Math fonts' }
@@ -33,7 +33,7 @@ function row(source) {
   return el('tr', { id: source.id }, el('th', { scope: 'row' }, link(source.url, source.name)), el('td', {}, source.licence ?? '–'), terms(source), status(source))
 }
 
-const data = await (await fetch('./assets/foundries.json')).json()
+const data = await (await fetch('./bench/foundries.json')).json()
 // Most progress first, then by name.
 const order = Object.keys(WORK), rank = source => { const i = order.indexOf(source.work.status); return i < 0 ? order.length : i }
 $('sources-rows').replaceChildren(...[...data.sources].sort((a, b) => rank(a) - rank(b) || a.name.localeCompare(b.name)).map(row))

@@ -15,18 +15,24 @@ Not yet: hand-drawn letters, icons, symbols and emoji, and matching capitals whe
 
 ## Run the demo
 
-Tested with Node 25.9.0 and Python 3.14.6:
+The page runs straight from the repository, as [GitHub Pages](https://dy.github.io/gpu-font/) serves it: no build and no font files. It reads the model and catalogs from `models/encoder/` and loads every font from Google Fonts.
+
+```sh
+npm run demo          # http://localhost:4179
+```
+
+`npm run demo:build` refreshes `site.json` (catalog list, checksums, measured figures) after the model or a catalog changes. WebGPU needs localhost or HTTPS.
+
+The repository holds scripts and JSON only. Fonts, images and PyTorch checkpoints stay in the ignored `.data/` and `*.pt` files; training and evaluation rebuild them ([corpus](bench/corpus.md), [style references](bench/style.md#reproduce), [sample fonts](bench/hundred.md)). Tested with Node 25.9.0 and Python 3.14.6:
 
 ```sh
 npm ci
 npx playwright install chromium
 uv venv --python 3.14 .venv
 uv pip install --python .venv/bin/python -r requirements.txt
-npm run demo:build
-npm run demo          # http://localhost:4179
 ```
 
-The build reads font data from `.data/`, which is not committed: the [Google Fonts corpus](bench/corpus.md), the [style references](bench/style.md#reproduce) and the [sample fonts](bench/hundred.md). WebGPU needs localhost or HTTPS. To use another Python, set `GPU_FONT_PYTHON=/absolute/path/to/python`.
+To use another Python, set `GPU_FONT_PYTHON=/absolute/path/to/python`.
 
 On the page:
 

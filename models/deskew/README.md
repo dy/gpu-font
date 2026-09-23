@@ -7,3 +7,5 @@ Use `prepareLine(image, { deskew: true, sampler: 'windows' })` from the exact `s
 `best.pt` contains the unfused training checkpoint; load its `state` into `Classifier(100, context=True, dilations=[1,1,2,2,1])`. `calibration.json` was fitted on development queries and unknown-validation families only. The raw classifier loader does not choose preprocessing on the caller's behalf.
 
 The normalizer and artifact must be integrated together. Do not point the current demo's unchanged `prepareInput` call at this candidate. Short/degraded text and absent-family rejection still fail the release gates.
+
+The PyTorch checkpoint `best.pt` is not committed (the repository holds scripts and JSON only); training writes it locally.

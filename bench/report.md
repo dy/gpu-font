@@ -12,7 +12,7 @@ The executable pipeline works. The first tiny encoder does **not** beat the untr
 - 2,240 Pillow training crops: 24 training strings, sizes 12–48, DPR 1/2, both polarities, moderate blur and JPEG compression. These are finite stored samples, not an unlimited augmentation stream.
 - 160 Pillow prototype crops: one separate string × eight rendering conditions × 20 fonts. Mean normalized vectors give one prototype per family.
 - 320 Pillow queries and 320 Chromium Canvas queries: two further strings, sizes 14/28, DPR 1/2, both polarities. No independent real screenshots yet.
-- Shared JS preparation → 128 × 32 grayscale float32 tensors, aspect ratio preserved. [Contact sheet](contact-sheet.png) was visually inspected across all 20 families and both renderers. Dots, counters, descenders, and serif/sans distinctions remain visible; fine serif detail is softened. Height-preserving windows remain untested.
+- Shared JS preparation → 128 × 32 grayscale float32 tensors, aspect ratio preserved. The contact sheet (`scripts/fixtures.py`, kept locally) was visually inspected across all 20 families and both renderers. Dots, counters, descenders, and serif/sans distinctions remain visible; fine serif detail is softened. Height-preserving windows remain untested.
 
 The [configuration](pilot.json) was fixed before training: one seed (1729), 400 steps, batches of four samples per training family, Adam at 0.002, four CPU threads. The encoder has 25,120 parameters, four strided 3 × 3 convolutions with ReLU, global average pooling, a 32-dimensional projection, and L2 normalization. Supervised contrastive learning supplies the objective.
 

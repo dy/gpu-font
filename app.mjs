@@ -168,14 +168,23 @@ document.addEventListener('keydown', event => {
   if (!(event.metaKey || event.ctrlKey) || event.shiftKey || event.key.toLowerCase() !== 'z' || event.target.closest('input[type="text"], textarea')) return
   if (edits.strokes.length) { event.preventDefault(); undo() }
 })
-async function loadFont(id, file = null) {
-  if (!fonts.has(id)) {
-    const font = catalog.fonts.find(f => f.id === id)
-    if (!file && !font) throw new Error('Font is absent from this catalog')
-    fonts.set(id, new FontFace(`specimen-${id}`, `url("${file || font.file}")`).load().then(face => { document.fonts.add(face); return face.family }).catch(error => { fonts.delete(id); throw error }))
-  }
-  return fonts.get(id)
+// Fonts load from Google Fonts when first shown; none are shipped. A face is { family, weight, style } and resolves to
+// the CSS family to render with. The legacy classifier build passes local files ({ file }) instead.
+function googleCss({ family, weight = 400, style = 'normal' }) {
+  const axes = style === 'italic' ? `:ital,wght@1,${weight}` : weight === 400 ? '' : `:wght@${weight}`
+  return `https://fonts.googleapis.com/css2?family=${encodeURIComponent(family).replaceAll('%20', '+')}${axes}&display=block`
 }
+async function loadFont(key, face) {
+  if (!face) throw new Error('Font is absent from this catalog')
+  if (!fonts.has(key)) fonts.set(key, (face.file
+    ? new FontFace(`specimen-${key}`, `url("${face.file}")`).load().then(loaded => { document.fonts.add(loaded); return loaded.family })
+    : new Promise((resolve, reject) => document.head.append(Object.assign(document.createElement('link'), { rel: 'stylesheet', href: googleCss(face), onload: resolve, onerror: () => reject(new Error(`Google Fonts does not serve ${face.family}`)) })))
+      .then(() => document.fonts.load(`${face.style ?? 'normal'} ${face.weight ?? 400} 16px "${face.family}"`))
+      .then(loaded => { if (!loaded.length) throw new Error(`Google Fonts does not serve ${face.family}`); return face.family })
+  ).catch(error => { fonts.delete(key); throw error }))
+  return fonts.get(key)
+}
+const sampleFont = id => { const font = catalog.fonts.find(f => f.id === id); return font && { ...font, family: font.family ?? font.name } }
 async function sample(id) {
   if (!catalog) return
   if (!previewValid) { $('results').querySelector('[aria-invalid="true"]')?.focus(); return }
@@ -183,7 +192,7 @@ async function sample(id) {
   const version = ++revision
   invalidate(); message('Loading sample…')
   try {
-    const family = await loadFont(id)
+    const family = await loadFont(id, sampleFont(id))
     if (version !== revision) return
     const font = catalog.fonts.find(f => f.id === id)
     const canvas = document.createElement('canvas'), c = canvas.getContext('2d')
@@ -265,7 +274,7 @@ async function analyze() {
     if (!logits) logits = prepared.windows.map(input => inferCPU(model, input))
     const embedding = isEncoder() ? embedWindows(logits) : null, judged = embedding && heads ? verdict(embedding, heads) : null
     const matches = embedding ? matchCatalog(embedding, searchCatalog, judged) : rankWindows(logits, model.fonts, catalog.calibration?.temperature ?? 1), elapsed = performance.now() - start
-    if (!embedding) await Promise.all(matches.slice(0, 5).map(m => loadFont(m.family)))
+    if (!embedding) await Promise.all(matches.slice(0, 5).map(m => loadFont(m.family, sampleFont(m.family))))
     if (run !== analysis) return
     last = { accepted: embedding ? null : matches[0].score >= (catalog.calibration?.threshold ?? 1.01), calibration: embedding ? null : catalog.calibration, mode: embedding ? 'encoder' : 'neural', backend: used, milliseconds: elapsed, model: catalog.modelSha256, source: specimen, crop: region, resolution: sampled, background: matte,
       ...(embedding ? { embedding: Array.from(embedding), verdict: judged, catalog: { id: searchCatalog.id, sha256: searchCatalog.sha256 }, scoreType: 'cosine', inferenceMilliseconds: elapsed } : {}),
@@ -349,21 +358,17 @@ function matchLine(match, index) {
 function encoderResult(match, index) {
   const { face } = match, item = document.createElement('li'); item.className = 'result'
   item.append(matchLine(match, index))
-  const preview = searchCatalog.builtin ? catalog.previews[face.id] : null
-  if (preview?.image) {
-    const image = document.createElement('img'); image.className = 'reference-preview'; image.src = preview.image
-    image.alt = `${face.family}: ${preview.text}`; image.width = preview.width; image.height = preview.height
-    item.append(image)
-  } else if (preview?.file) {
+  const preview = searchCatalog.builtin ? catalog.previews[face.familyId] : null
+  if (preview) {
     // Never display a fallback face as if it were a matching specimen.
     const input = document.createElement('input'); input.className = 'result-preview'; input.type = 'text'; input.maxLength = 80
     input.spellcheck = false; input.autocomplete = 'off'; input.style.visibility = 'hidden' // Keeps its row while the font loads.
     input.setAttribute('aria-label', `Preview ${face.family}`); input.setAttribute('aria-describedby', 'preview-error')
     input.readOnly = !preview.latin; input.value = preview.latin ? previewText : preview.sampleText
-    input.style.setProperty('--font-specimen', `"specimen-${face.id}"`)
+    input.style.fontWeight = face.weight ?? 400; input.style.fontStyle = face.style ?? 'normal'
     if (!index && preview.latin) input.id = 'preview-text'
     item.append(input)
-    loadFont(face.id, preview.file).then(() => { input.style.visibility = '' }).catch(() => { input.remove() })
+    loadFont(face.id, face).then(family => { input.style.setProperty('--font-specimen', `"${family}"`); input.style.visibility = '' }).catch(() => { input.remove() })
   }
   return item
 }
@@ -558,7 +563,7 @@ function sampleLabel() {
 const specimens = new IntersectionObserver(entries => {
   for (const entry of entries) if (entry.isIntersecting) {
     const button = entry.target; specimens.unobserve(button)
-    loadFont(button.dataset.font).catch(() => {})
+    loadFont(button.dataset.font, sampleFont(button.dataset.font)).then(family => button.style.setProperty('--font-specimen', `"${family}"`)).catch(() => {})
   }
 }, { root: $('sample-menu'), rootMargin: '100px' })
 function sampleList() {
@@ -569,7 +574,6 @@ function sampleList() {
     button.setAttribute('aria-pressed', String(current?.known === font.id))
     const name = document.createElement('span')
     name.className = 'sample-name'; name.textContent = font.name
-    button.style.setProperty('--font-specimen', `"specimen-${font.id}"`)
     button.append(name)
     specimens.observe(button)
     button.addEventListener('click', async () => {
@@ -632,11 +636,9 @@ window.addEventListener('pagehide', () => { invalidate(); gpu?.destroy() })
 
 async function initialize() {
   try {
-    const [modelBytes, data] = await Promise.all(['model', 'catalog'].map(async name => {
-      const response = await fetch(`./assets/${name}.json`)
-      if (!response.ok) throw new Error(`Could not load ${name}. Run npm run demo:build and reload.`)
-      return name === 'model' ? response.arrayBuffer() : response.json()
-    }))
+    // site.json names the model and catalogs in the repository; nothing is built or copied.
+    const load = async path => { const response = await fetch(path); if (!response.ok) throw new Error(`Could not load ${path}.`); return response }
+    const data = await (await load('./site.json')).json(), modelBytes = await (await load(data.model)).arrayBuffer()
     const artifact = JSON.parse(new TextDecoder().decode(modelBytes))
     if (await sha256(modelBytes) !== data.modelSha256) throw new Error('Model checksum failed.')
     model = readNetwork(artifact); heads = readHeads(artifact); catalog = data

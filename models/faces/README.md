@@ -5,3 +5,5 @@
 `best.pt` is the selected **folded** QAT checkpoint. Load it with `Classifier(40, training=False, context=True, dilations=[1,1,2,2,1])`, then load the `state` member. Batch-normalization statistics are already folded into the convolutions. Exporting it with the preparation metadata in `model.json` reproduces that artifact.
 
 This candidate is not selected by the demo build. It covers only weights 400/700 and upright/italic in the original ten families, without unknown-family rejection calibration.
+
+The PyTorch checkpoint `best.pt` is not committed (the repository holds scripts and JSON only); training writes it locally.

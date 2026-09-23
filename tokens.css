@@ -3,8 +3,7 @@
  * Nav: N9 · footer: Ft2 · enrichment: actual specimens · motion: press
  * Neutral chrome and open columns leave the actual specimens prominent.
  */
-@font-face { font-family: 'Inter UI'; src: url('./assets/fonts/inter.ttf'); font-display: swap; font-weight: 400; }
-@font-face { font-family: 'Serif UI'; src: url('./assets/fonts/source-serif-4.ttf'); font-display: swap; font-weight: 400; }
+/* Inter and Source Serif 4 load from Google Fonts (linked in each page's head); no font files are shipped. */
 :root {
   --color-paper: oklch(98.2% 0 0);
   --color-surface: oklch(100% 0 0);
@@ -20,8 +19,8 @@
   --color-mask: oklch(20% 0 0 / .26);
   --color-transparent: transparent;
   --color-shadow: oklch(20% 0 0 / .12);
-  --font-body: 'Inter UI', ui-sans-serif, system-ui, sans-serif;
-  --font-display: 'Serif UI', ui-serif, Georgia, serif;
+  --font-body: 'Inter', ui-sans-serif, system-ui, sans-serif;
+  --font-display: 'Source Serif 4', ui-serif, Georgia, serif;
   --font-specimen: var(--font-display);
   --text-small: .8125rem;
   --text-body: 1rem;

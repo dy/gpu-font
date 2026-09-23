@@ -8,3 +8,14 @@ dist/
 # Third-party page copies and browser-tool scratch stay local.
 raw/
 .playwright-mcp/
+/.hallmark
+# Only scripts and JSON are committed: fonts, images and checkpoints stay local.
+*.ttf
+*.otf
+*.woff
+*.woff2
+*.png
+*.jpg
+*.jpeg
+*.webp
+*.pt

@@ -5,16 +5,17 @@ import { execFileSync } from 'node:child_process'
 import { chromium } from 'playwright'
 import { readNetwork, inferCPU, rankWindows } from '../src/network.mjs'
 
-const bytes = await readFile('dist/assets/model.json'), artifact = JSON.parse(bytes)
-if (artifact.kind === 'font-encoder') {
+// The site runs from the repository root; the legacy classifier suite runs against dist/ (npm run test:demo -- --dist).
+if (!process.argv.includes('--dist')) {
   await import('./catalog-demo.mjs')
   process.exit(0)
 }
+const bytes = await readFile('dist/assets/model.json'), artifact = JSON.parse(bytes)
 execFileSync(process.execPath, ['scripts/python.mjs', '-m', 'scripts.demo_reference'], { stdio: 'inherit' })
 const reference = JSON.parse(await readFile('.data/demo-reference.json'))
 assert.equal(createHash('sha256').update(bytes).digest('hex'), reference.modelSha256)
 const model = readNetwork(artifact)
-const catalog = JSON.parse(await readFile('dist/assets/catalog.json'))
+const catalog = JSON.parse(await readFile('dist/site.json'))
 const temperature = catalog.calibration?.temperature ?? 1
 const base = `http://127.0.0.1:${process.env.PORT || 4179}`
 assert.equal((await fetch(base, { method: 'HEAD' })).status, 200)

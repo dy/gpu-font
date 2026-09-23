@@ -48,6 +48,6 @@ const shipped = new Set([...model.fonts, 'source-serif-4'])
 for (const name of await readdir('dist/assets/fonts')) {
   if (name.endsWith('.ttf') && !shipped.has(name.slice(0, -4))) await rm(`dist/assets/fonts/${name}`)
 }
-await writeFile('dist/assets/catalog.json', JSON.stringify({ fonts: catalog, modelSha256: hash(bytes), metrics: tested, parameters: trained.parameters, calibration: trained.calibration ? { temperature: trained.calibration.temperature, threshold: trained.calibration.threshold } : null }))
+await writeFile('dist/site.json', JSON.stringify({ model: 'assets/model.json', fonts: catalog, modelSha256: hash(bytes), metrics: tested, parameters: trained.parameters, calibration: trained.calibration ? { temperature: trained.calibration.temperature, threshold: trained.calibration.threshold } : null }))
 await writeFile('dist/assets/font-notices.json', JSON.stringify({ ...manifest, fonts: manifest.fonts.filter(f => shipped.has(f.id)) }, null, 2))
 console.log(`Built dist/: ${catalog.length} fonts, local model, CPU/WebGPU inference. Run npm run demo.`)

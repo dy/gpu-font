@@ -13,7 +13,7 @@ Run `npm run train:robustness` after the pilot font/renderer setup. Configuratio
 - Training randomizes horizontal window width/position, uniform scale, padding, small rotation, blur, JPEG compression, and polarity. It does not synthesize italics, change font axes, stretch proportions, or introduce textured backgrounds.
 - Both runs use the same 25,120-parameter encoder, a 66-parameter classification head, 1,200 Adam steps, seed 2718, learning rate 0.001 and four CPU threads. The ablation changes only input geometry from 128 × 32 to 256 × 64, retaining two pixels of padding. Export/reload logits match exactly.
 
-![Source crops and model inputs](robustness-inputs.png)
+The source crops and model inputs are drawn by `scripts/robustness_preview.py` into `bench/robustness-inputs.png`, kept locally (images are not committed).
 
 The comparison-sheet reader verifies source and tensor checksums, exact lengths, matching sample/configuration manifests, and each training report's manifest hash before drawing. Its regression tests use a one-pixel source and known grayscale tensors to check exact plotted pixels through A → A → B → A, and reject stale, truncated, trailing, and non-finite data. The test fixture uses Pillow's bundled font; no downloaded font data is required for the unit tests.
 
