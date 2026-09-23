@@ -177,12 +177,12 @@
         "status": "none-found",
         "checked": "2026-09-23",
         "url": "https://uncut.wtf/legal/",
-        "note": "robots.txt asks for a 10-second crawl delay. Files are taken from the designers' own repositories, not from Uncut."
+        "note": "robots.txt asks for a 10-second crawl delay. Files come from the designers' own repositories and sites, each site's robots.txt checked first; nothing more is taken from Uncut."
       },
       "work": {
         "status": "inventoried",
-        "route": "families resolved to their designers' repositories and pinned; bench/open-releases.json lists them",
-        "familiesInventoried": 46
+        "route": "families resolved to their designers' repositories or sites and pinned; bench/open-releases.json lists each one and every family left out",
+        "familiesInventoried": 63
       },
       "log": [
         {
@@ -191,7 +191,7 @@
         },
         {
           "date": "2026-09-23",
-          "event": "163 families listed. Covered through Google Fonts, Fontsource, Velvetyne and Collletttivo, or pinned from 37 designer repositories; about 70 live only on designers' own sites and wait for per-site resolution; 16 left out (14 without a licence, 1 CC BY-ND, 1 Fontspring EULA)"
+          "event": "163 families listed: the rest come through Google Fonts, Fontsource, Velvetyne and Collletttivo, or are pinned from designers' repositories and sites. 38 left out, each with its reason: no licence or a non-open one, a robots.txt that excludes AI agents, or no direct download"
         }
       ]
     },

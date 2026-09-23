@@ -85,9 +85,10 @@ SOURCES += [
      'files': ['https://github.com/kika/fixedsys/releases/download/v3.09.10/FSEX302.ttf']},
     {'source': 'ubuntu-titling', 'licence': 'OFL-1.1', 'url': 'https://deb.debian.org/debian/pool/main/f/fonts-ubuntu-title/fonts-ubuntu-title_0.3.orig.tar.gz', 'include': r'\.ttf$'},
 ]
-# Families from open catalogues (Velvetyne, Collletttivo, Uncut), pinned to their
-# designers' repositories by scripts/open_releases.py.
-SOURCES += [{'source': row['source'], 'licence': row['licence'], 'url': row['url'], 'include': row['include'], **({'commit': row['commit'], 'format': 'git'} if row.get('format') == 'git' else {})}
+# Families from open catalogues (Velvetyne, Collletttivo, Uncut): pinned to their designers'
+# repositories by scripts/open_releases.py, or a release file on the designer's own site.
+SOURCES += [{'source': row['source'], 'licence': row['licence'], 'url': row['url'], 'include': row['include'],
+             **({'format': row['format']} if row.get('format') else {}), **({'commit': row['commit']} if row.get('format') == 'git' else {})}
             for row in json.loads((ROOT / 'bench/open-releases.json').read_text())['releases'] if row.get('include')]
 # The League of Moveable Type: all 18 families are OFL-1.1. Eleven reach us through Google
 # Fonts; these are the other seven, as the GitHub organisation holds them.

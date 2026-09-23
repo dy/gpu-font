@@ -1164,6 +1164,150 @@
    "commit": "da85fe4d8691ad0011aec1a1ee26d5a623229205",
    "url": "https://gitlab.com/Alune/snap-it-mono-font/-/archive/da85fe4d8691ad0011aec1a1ee26d5a623229205/snap-it-mono-font-da85fe4d8691ad0011aec1a1ee26d5a623229205.zip",
    "include": "^[^/]+/font\\-files/[^/]+\\.otf$"
+  },
+  {
+   "source": "uncut",
+   "family": "Heal the Web",
+   "page": "https://healtheweb.site/",
+   "licence": "MPL-2.0",
+   "repo": "https://github.com/rainbowunicornstudio/healtheweb-typeface",
+   "commit": "3a5196728fbc5e1741a64cbf013c5c7eca469974",
+   "repoLicence": "MPL-2.0",
+   "url": "https://github.com/rainbowunicornstudio/healtheweb-typeface/archive/3a5196728fbc5e1741a64cbf013c5c7eca469974.zip",
+   "include": "^[^/]+/[^/]+\\.otf$"
+  },
+  {
+   "source": "uncut",
+   "family": "Hasköy",
+   "page": "https://haskoy.ertekinn.com/",
+   "licence": "OFL-1.1",
+   "repo": "https://github.com/ertekinno/haskoy",
+   "commit": "51e575511be4ec16ec933d811721f89d1029db07",
+   "repoLicence": "OFL-1.1",
+   "url": "https://github.com/ertekinno/haskoy/archive/51e575511be4ec16ec933d811721f89d1029db07.zip",
+   "include": "^[^/]+/fonts/otf/[^/]+\\.otf$"
+  },
+  {
+   "source": "uncut",
+   "family": "Tanklager",
+   "page": "https://www.tunera.xyz/fonts/tanklager/",
+   "licence": "OFL-1.1",
+   "repo": "https://codeberg.org/ArielMartinPerez/Tanklager",
+   "commit": "56a599108086a4c34eded6a5a14a1ca7b52b17e3",
+   "url": "https://codeberg.org/ArielMartinPerez/Tanklager.git",
+   "include": "^[^/]+/fonts/OTF/[^/]+\\.otf$",
+   "format": "git"
+  },
+  {
+   "source": "uncut",
+   "family": "Nyght Serif",
+   "page": "https://www.tunera.xyz/fonts/nyght-serif/",
+   "licence": "OFL-1.1",
+   "repo": "https://gitlab.com/mkobuzan/nyght-serif",
+   "commit": "989e09eb543da3ade3375b2cde97bface350467b",
+   "url": "https://gitlab.com/mkobuzan/nyght-serif.git",
+   "include": "^[^/]+/fonts/OTF/[^/]+\\.otf$",
+   "format": "git"
+  },
+  {
+   "source": "uncut",
+   "family": "Granturismo",
+   "page": "https://nathanlaurent.github.io/granturismo.html",
+   "licence": "OFL-1.1",
+   "licenceEvidence": "archives/granturismo.zip:OFL.txt — full standard SIL OFL 1.1 text; archives/granturismo.zip:Please-read-me.txt — \"Feel free to use/modify/distribute (see OFL License file)\"",
+   "url": "https://nathanlaurent.github.io/Granturismo.zip",
+   "include": "\\.(otf|ttf)$"
+  },
+  {
+   "source": "uncut",
+   "family": "Garamon(d/t)",
+   "page": "https://fonderie.download/garamondt.html",
+   "licence": "WTFPL",
+   "licenceEvidence": "Page text: \"All our fonts are released under the WTFPL license\"; archives/garamondt.zip:FD_Garamon(d-t)/LICENSE.txt — \"This Font Software is licensed under the DO WHAT THE FUCK YOU WANT TO PUBLIC LICENSE, Version 2\"",
+   "url": "https://fonderie.download/downloads/FD_Garamon(d-t).zip",
+   "include": "\\.otf$"
+  },
+  {
+   "source": "uncut",
+   "family": "LT Institute",
+   "page": "https://lyonstype4.wixsite.com/lyonstype-beta/fonts",
+   "licence": "OFL-1.1",
+   "licenceEvidence": "archives/ltinstitute.zip's LTInstitute-1.otf name table, License field: \"This Font Software is Copyright (c) 2023, LyonsType (lyonstype4.wixsite.com/lyonstype-beta). All Rights Reserved. ... LT Institute is a Reserved Font Name...\"; LicenseURL: https://scripts.sil.org/",
+   "url": "https://2d6ef404-3457-416f-9d11-f7188f68ac99.filesusr.com/archives/356ba5_6cbb8bc1fc79445190ae6b9ff9b05d69.zip?dn=LTInstitute.zip",
+   "include": "\\.otf$"
+  },
+  {
+   "source": "uncut",
+   "family": "LT Remark",
+   "page": "https://lyonstype4.wixsite.com/lyonstype-beta/fonts",
+   "licence": "OFL-1.1",
+   "licenceEvidence": "archives/ltremark.zip's LTRemark-Regular.otf name table, License field: \"This Font Software is Copyright (c) 2023, LyonsType (lyonstype4.wixsite.com/lyonstype-beta). ... LT Remark is a Reserved Font Name...\"",
+   "url": "https://2d6ef404-3457-416f-9d11-f7188f68ac99.filesusr.com/archives/356ba5_281d856130f8489595b72da78696c437.zip?dn=LTRemark-V2001-2.zip",
+   "include": "\\.otf$"
+  },
+  {
+   "source": "uncut",
+   "family": "LT Superior Mono",
+   "page": "https://lyonstype4.wixsite.com/lyonstype-beta/fonts",
+   "licence": "OFL-1.1",
+   "licenceEvidence": "archives/ltsuperiormono.zip:OFL.txt — \"Copyright (c) 2024, LyonsType (lyonstype4.wixsite.com/lyonstype-beta), with Reserved Font Name LT Superior Mono. This Font Software is licensed under the SIL Open Font License, Version 1.1.\"",
+   "url": "https://2d6ef404-3457-416f-9d11-f7188f68ac99.filesusr.com/archives/356ba5_88c97821914340459012341d1e83814d.zip?dn=LTSuperiorMono.zip",
+   "include": "\\.otf$"
+  },
+  {
+   "source": "uncut",
+   "family": "Barlaxent",
+   "page": "http://typotheque.le75.be/#barlaxent",
+   "licence": "OFL-1.1",
+   "licenceEvidence": "archives/barlaxent.zip's barlaxent.otf name table, License field: \"This Font Software is licensed under the SIL Open Font License, Version 1.1. ...\"; Copyright: \"Copyright 2017 The Barlow Project Authors (https://github.com/jpt/barlow)\"",
+   "url": "https://typotheque.le75.be/site/assets/files/1034/barlaxent.zip",
+   "include": "\\.otf$"
+  },
+  {
+   "source": "uncut",
+   "family": "Fudd",
+   "page": "https://squaregear.net/fonts/fudd.html",
+   "licence": "MIT",
+   "licenceEvidence": "archives/fudd.zip:license.txt — \"Copyright (C) 1998 by Matthew Welch. Permission is hereby granted, free of charge, to any person obtaining a copy of this font software... THE SOFTWARE IS PROVIDED \\\"AS IS\\\"...\" (verbatim MIT License text)",
+   "url": "https://squaregear.net/fonts/fudd.zip",
+   "include": "\\.ttf$"
+  },
+  {
+   "source": "uncut",
+   "family": "AUTHENTIC Sans",
+   "page": "https://authentic.website/sans",
+   "licence": "WTFPL",
+   "licenceEvidence": "Page text: \"Distributed freely under the WTFPL, AUTHENTIC Sans is a reflection of the studio praxis...\" (links to http://www.wtfpl.net/)",
+   "url": "https://authentic.website/fonts/authentic-sans-pro-vf.ttf",
+   "include": "\\.ttf$",
+   "format": "file"
+  },
+  {
+   "source": "uncut",
+   "family": "Times Newer Roman",
+   "page": "https://timesnewerroman.com/",
+   "licence": "GPL-2.0-only",
+   "licenceEvidence": "archives/timesnewerroman.zip:TimesNewerLicense.pdf — full text of \"GNU GENERAL PUBLIC LICENSE Version 2, June 1991\", with a page header reading \"Times Newer Roman license\"",
+   "url": "https://timesnewerroman.com/assets/TimesNewerRoman.zip",
+   "include": "\\.otf$"
+  },
+  {
+   "source": "uncut",
+   "family": "Basically A Mono",
+   "page": "https://experi.mentallydesigned.com/type/bam/",
+   "licence": "OFL-1.1",
+   "licenceEvidence": "archives/basicallyamono.zip:License.txt — \"Copyright 2020 Mental Design ..., with Reserved Font Name 'Basically A Mono'. ... This Font Software is licensed under the SIL Open Font License, Version 1.1.\"",
+   "url": "https://experi.mentallydesigned.com/type/bam/downloads/bam-vers1_301.zip",
+   "include": "otf/.*\\.otf$"
+  },
+  {
+   "source": "uncut",
+   "family": "Monor",
+   "page": "https://fonderiz.fr/monor/",
+   "licence": "OFL-1.1",
+   "licenceEvidence": "archives/monor.zip's monor-bold.otf name table, Copyright/License field: \"SIL OPEN FONT LICENSE, Cedric Rossignol-Brunet\"",
+   "url": "https://fonderiz.fr/site/assets/files/1017/monor.zip",
+   "include": "\\.otf$"
   }
  ],
  "excluded": [
@@ -1221,6 +1365,141 @@
    "source": "velvetyne",
    "family": "Fengardo Neue",
    "reason": "no repository found"
+  },
+  {
+   "source": "uncut",
+   "family": "Utara",
+   "reason": "files.cargocollective.com robots.txt disallows all crawling"
+  },
+  {
+   "source": "uncut",
+   "family": "LC Mogi",
+   "reason": "files.cargocollective.com robots.txt disallows all crawling"
+  },
+  {
+   "source": "uncut",
+   "family": "BDO Grotesk",
+   "reason": "files.cargocollective.com robots.txt disallows all crawling"
+  },
+  {
+   "source": "uncut",
+   "family": "Roberte",
+   "reason": "licence CUTE: conditions of use, not an open licence"
+  },
+  {
+   "source": "uncut",
+   "family": "Amiamie",
+   "reason": "licence CUTE: conditions of use, not an open licence"
+  },
+  {
+   "source": "uncut",
+   "family": "DINdong",
+   "reason": "licence CUTE: conditions of use, not an open licence"
+  },
+  {
+   "source": "uncut",
+   "family": "Vercetti",
+   "reason": "Licence Amicale V.0.2, not yet read"
+  },
+  {
+   "source": "uncut",
+   "family": "Honey",
+   "reason": "designer site robots.txt names AI agents"
+  },
+  {
+   "source": "uncut",
+   "family": "CAT Eckmann",
+   "reason": "peter-wiegel.de robots.txt disallows /Fonts/"
+  },
+  {
+   "source": "uncut",
+   "family": "Fibel Nord",
+   "reason": "peter-wiegel.de robots.txt disallows /Fonts/"
+  },
+  {
+   "source": "uncut",
+   "family": "CAT Neuzeit",
+   "reason": "peter-wiegel.de robots.txt disallows /Fonts/"
+  },
+  {
+   "source": "uncut",
+   "family": "Reglo",
+   "reason": "osp.kitchen robots.txt names AI agents"
+  },
+  {
+   "source": "uncut",
+   "family": "Alfphabet",
+   "reason": "osp.kitchen robots.txt names AI agents"
+  },
+  {
+   "source": "uncut",
+   "family": "Logisoso",
+   "reason": "osp.kitchen robots.txt names AI agents"
+  },
+  {
+   "source": "uncut",
+   "family": "Libertinage",
+   "reason": "osp.kitchen robots.txt names AI agents"
+  },
+  {
+   "source": "uncut",
+   "family": "Gemini",
+   "reason": "licence-unclear: Raw HTML has no links (Readymag SPA); rendered with a browser to find the real \"Download\" button, which opens a Google Drive folder (not a s"
+  },
+  {
+   "source": "uncut",
+   "family": "Slibinas",
+   "reason": "no-direct-download: Same behance.net platform-wide HTTP 429 bot/rate-limit wall as Boris and FUNGIS (both /robots.txt and the gallery page itself); retried once"
+  },
+  {
+   "source": "uncut",
+   "family": "Queering",
+   "reason": "no-direct-download: Licence is clearly OFL-1.1 and price is confirmed $0 (\"Queering Free\", Subtotal: $0 in the Squarespace cart), but the page's Download link ("
+  },
+  {
+   "source": "uncut",
+   "family": "Cakra",
+   "reason": "dead-link: cakra.oomtype.com serves an invalid, self-signed TLS certificate (curl error 60: \"SSL certificate problem: self signed certificate\"). Did no"
+  },
+  {
+   "source": "uncut",
+   "family": "Getai Grotesk Display",
+   "reason": "no-direct-download: Licence confirmed as OFL on the designer's own page, but the only download mechanism is an Easy Digital Downloads \"Pay As You Wish\" button t"
+  },
+  {
+   "source": "uncut",
+   "family": "Destra",
+   "reason": "licence-unclear: uncut.wtf claims OFL-1.1 but nothing on the designer's own page or inside the font files corroborates any licence. Direct download confirmed"
+  },
+  {
+   "source": "uncut",
+   "family": "Boris",
+   "reason": "no-direct-download: behance.net returned HTTP 429 \"The maximum number of requests has been exceeded\" for both /robots.txt and the gallery page itself, on first "
+  },
+  {
+   "source": "uncut",
+   "family": "FUNGIS",
+   "reason": "no-direct-download: Same behance.net platform-wide HTTP 429 bot/rate-limit wall as Slibinas and Boris; not retried further."
+  },
+  {
+   "source": "uncut",
+   "family": "Dauphine",
+   "reason": "licence-unclear: uncut.wtf's original download URL (esad-gv.fr/media/images/Identite/ÉSAD••_Dauphine_DEF.zip) now 404s; found live replacement TTFs (Dauphine"
+  },
+  {
+   "source": "uncut",
+   "family": "Paragon",
+   "reason": "licence-unclear: Same designer (Cédric Rossignol-Brunet) and site template as Destra (also licence-unclear) and Monor (resolved OFL via its Bold weight's met"
+  },
+  {
+   "source": "uncut",
+   "family": "Times Dot",
+   "reason": "no-direct-download: librarystack.org's post about Times Dot (a library/reading-list style site) has no download link, only a description and a link to the desig"
+  },
+  {
+   "source": "uncut",
+   "family": "Fairfax HD",
+   "reason": "licence-unclear: Direct download confirmed live via HEAD (200, application/zip) but the archive is 39158198 bytes (~39 MB), over the task's 20 MB verificatio"
   }
  ]
 }

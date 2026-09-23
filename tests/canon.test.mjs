@@ -7,7 +7,7 @@ const family = (name, status, source = 'test') => ({ name, status, source })
 const row = (classic, name, relation) => ({ classic, family: name, relation, evidence: 'https://example.invalid/' })
 
 test('an open clone on file outranks the original held from a preview-only source', () => {
-  const lookup = matcher([family('Palatino', 'held-locally', 'myfonts'), family('P052', 'inventoried', 'urw-base35')], [row('Palatino', 'P052', 'clone')])
+  const lookup = matcher([family('Palatino', 'held-locally', 'previews'), family('P052', 'inventoried', 'urw-base35')], [row('Palatino', 'P052', 'clone')])
   assert.deepEqual(lookup('Palatino'), { status: 'inventoried', source: 'urw-base35', via: 'P052', match: 'clone',
     equivalents: [{ family: 'P052', relation: 'clone', status: 'inventoried', evidence: 'https://example.invalid/' }] })
 })
@@ -34,6 +34,12 @@ test('a documented relation overrides the whole-word name heuristic', () => {
 test('collective names and suffixes resolve: "Croscore fonts" reaches Arimo', () => {
   const lookup = matcher([family('Arimo', 'indexed')], [row('Croscore fonts', 'Arimo', 'same-design')])
   assert.equal(lookup('Croscore fonts').via, 'Arimo')
+})
+
+test('the committed canon never counts private captures', async () => {
+  const canon = JSON.parse(await readFile('bench/canon.json', 'utf8'))
+  const held = canon.typefaces.filter(entry => entry.coverage.status === 'held-locally').map(entry => entry.name)
+  assert.deepEqual(held, [])
 })
 
 test('every committed equivalent names a known relation and cites a page', async () => {

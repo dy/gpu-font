@@ -6,7 +6,7 @@ its upstream repository. This fills in what the inventory needs to fetch it
 reproducibly: the current commit, its archive URL, and which font files to take.
 Rows already pinned are left alone; delete a row's `commit` to re-pin it.
 
-    python scripts/open_releases.py        pin unpinned rows (GitHub via gh, GitLab via git)
+    python scripts/open_releases.py        pin unpinned rows (GitHub via gh, other hosts via git)
 """
 import json, re, subprocess, sys, tempfile, urllib.parse
 from collections import defaultdict
@@ -28,9 +28,10 @@ def github(repo):
     return commit, [item['path'] for item in tree['tree'] if item['type'] == 'blob'], f'https://github.com/{repo}/archive/{commit}.zip', licence
 
 
-def gitlab(repo):
-    """Over git itself: GitLab challenges plain archive downloads and its robots.txt keeps bots off the API."""
-    url = f'https://gitlab.com/{repo}.git'
+def remote(host, repo):
+    """Over git itself, for GitLab, Codeberg or any other host: GitLab challenges plain archive
+    downloads and keeps bots off its API, and git is what every host serves to programs."""
+    url = f'https://{host}/{repo}.git'
     git = lambda *args, **kw: subprocess.run(['git', *args], check=True, capture_output=True, text=True, **kw).stdout
     commit = git('ls-remote', url, 'HEAD').split()[0]
     with tempfile.TemporaryDirectory() as folder:
@@ -56,8 +57,8 @@ def pin(row):
     parts = [part for part in link.path.split('/-/')[0].split('/') if part]
     # GitHub repositories are owner/name, whatever the link points to inside; GitLab allows groups.
     repo = '/'.join(parts[:2] if link.netloc == 'github.com' else parts).removesuffix('.git')
-    if link.netloc not in ('github.com', 'gitlab.com') or len(parts) < 2: raise ValueError(f'not a repository link: {row["repo"]}')
-    commit, paths, url, licence = (github if link.netloc == 'github.com' else gitlab)(repo)
+    if len(parts) < 2: raise ValueError(f'not a repository link: {row["repo"]}')
+    commit, paths, url, licence = github(repo) if link.netloc == 'github.com' else remote(link.netloc, repo)
     row = {**row, 'commit': commit, **({'repoLicence': licence} if licence else {})}
     choice = choose(paths)
     if not choice: return {**row, 'unusable': 'no OpenType or TrueType files outside web builds and sources'}
