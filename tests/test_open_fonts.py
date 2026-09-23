@@ -1,13 +1,13 @@
 import json
+import subprocess
 import tempfile
 import unittest
 from pathlib import Path
 
 from fontTools.fontBuilder import FontBuilder
 from fontTools.pens.ttGlyphPen import TTGlyphPen
-from fontTools.ttLib.tables import otTables
 
-from scripts.open_fonts import MANIFEST, ROOT, colour_letters, members, name_key, symbol_encoded
+from scripts.open_fonts import MANIFEST, ROOT, colour_letters, is_font, members, name_key, symbol_encoded
 
 
 def build(folder, names, coloured=()):
@@ -59,9 +59,60 @@ class ColourLetters(unittest.TestCase):
             self.assertFalse(colour_letters(build(folder, ['A', 'B'], coloured=['layer'])))
 
 
+class FontSignature(unittest.TestCase):
+    def test_fonts_are_known_by_signature_not_extension(self):
+        with tempfile.TemporaryDirectory() as folder:
+            self.assertTrue(is_font(build(folder, ['A', 'B']).read_bytes()))  # TrueType
+        self.assertTrue(is_font(b'OTTO\x00\x0b'))  # CFF OpenType
+        # What repositories commit under font names: a macOS "._" fork, a Git LFS pointer, an error page.
+        self.assertFalse(is_font(b'\x00\x05\x16\x07\x00\x02\x00\x00Mac OS X'))
+        self.assertFalse(is_font(b'version https://git-lfs.github.com/spec/v1\noid sha256:'))
+        self.assertFalse(is_font(b'<!DOCTYPE html>'))
+        self.assertFalse(is_font(b''))
+
+
+class StoredFont(unittest.TestCase):
+    def test_a_non_font_answer_is_refused_and_a_font_is_fetched_once(self):
+        import scripts.open_fonts as open_fonts
+        calls = []
+        answers = {'https://cdn/type1.ttf': b'\x80\x01%!PS-AdobeFont-1.0', 'https://cdn/real.ttf': b'OTTO font'}
+        fake = lambda url: calls.append(url) or answers[url]
+        with tempfile.TemporaryDirectory() as folder:
+            store, request = open_fonts.STORE, open_fonts.corpus.request
+            open_fonts.STORE, open_fonts.corpus.request = Path(folder), fake
+            try:
+                self.assertIsNone(open_fonts.stored_font('a/type1.ttf', 'https://cdn/type1.ttf'))
+                self.assertFalse((Path(folder) / 'a/type1.ttf').exists())
+                self.assertEqual(open_fonts.stored_font('a/real.ttf', 'https://cdn/real.ttf'), b'OTTO font')
+                self.assertEqual(open_fonts.stored_font('a/real.ttf', 'https://cdn/real.ttf'), b'OTTO font')
+                self.assertEqual(calls, ['https://cdn/type1.ttf', 'https://cdn/real.ttf'])
+            finally:
+                open_fonts.STORE, open_fonts.corpus.request = store, request
+
+
 class Members(unittest.TestCase):
     def test_a_loose_file_is_its_own_member_named_without_query(self):
         self.assertEqual(list(members(b'font', 'https://host/fonts/FSEX302.ttf?raw=1', 'file')), [('FSEX302.ttf', b'font')])
+
+
+class GitPin(unittest.TestCase):
+    def test_a_commit_is_archived_under_the_prefix_includes_expect_and_its_pin_holds(self):
+        import scripts.open_fonts as open_fonts
+        git = lambda *args, cwd: subprocess.run(['git', *args], cwd=cwd, check=True, capture_output=True, text=True).stdout.strip()
+        with tempfile.TemporaryDirectory() as folder:
+            repo = Path(folder) / 'karrik.git'
+            repo.mkdir(); (repo / 'fonts').mkdir(); (repo / 'fonts/Karrik.otf').write_bytes(b'OTTO')
+            git('init', '-q', cwd=repo); git('add', '.', cwd=repo)
+            git('-c', 'user.name=t', '-c', 'user.email=t@t', 'commit', '-qm', 'font', cwd=repo)
+            commit = git('rev-parse', 'HEAD', cwd=repo)
+            store, open_fonts.STORE = open_fonts.STORE, Path(folder) / 'store'
+            try:
+                data, digest = open_fonts.fetch(str(repo), None, commit)
+                self.assertEqual(list(members(data, str(repo), 'git')), [(f'karrik-{commit}/fonts/Karrik.otf', b'OTTO')])
+                self.assertEqual(open_fonts.fetch(str(repo), digest, commit)[1], digest)
+                with self.assertRaises(ValueError): open_fonts.fetch(str(repo), '0' * 64, commit)
+            finally:
+                open_fonts.STORE = store
 
 
 class Inventory(unittest.TestCase):
@@ -76,6 +127,10 @@ class Inventory(unittest.TestCase):
         twice = [f['family'] for f in self.inventory['families'] if name_key(f['family']) in self.google]
         self.assertEqual(twice, [])
 
+    def test_no_family_is_taken_from_two_sources(self):
+        names = [name_key(f['family']) for f in self.inventory['families']]
+        self.assertEqual(sorted({n for n in names if names.count(n) > 1}), [])
+
     def test_ids_are_unique_and_each_family_selects_one_of_its_faces(self):
         ids = [f['id'] for f in self.inventory['families']]
         self.assertEqual(len(ids), len(set(ids)))
@@ -83,8 +138,8 @@ class Inventory(unittest.TestCase):
             self.assertIn(family['selected'], [face['path'] for face in family['faces']], family['family'])
 
     def test_every_archive_is_pinned_by_hash(self):
-        # The Fontshare API is a listing, not an archive; its files are pinned per face by blob.
-        unpinned = [a['url'] for a in self.inventory['archives'] if a['source'] != 'fontshare' and len(a.get('sha256', '')) != 64]
+        # The Fontshare and Fontsource APIs are listings, not archives; their files are pinned per face by blob.
+        unpinned = [a['url'] for a in self.inventory['archives'] if a['source'] not in ('fontshare', 'fontsource') and len(a.get('sha256', '')) != 64]
         self.assertEqual(unpinned, [])
 
 

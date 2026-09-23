@@ -8,7 +8,7 @@ Files stay local under .data/fonts-open; bench/open-fonts.json pins the archives
 
     python scripts/open_fonts.py            download (verifying pins) and inventory
 """
-import hashlib, io, json, re, sys, tarfile, urllib.request, zipfile
+import hashlib, io, json, re, sys, tarfile, zipfile
 from pathlib import Path, PurePosixPath
 from fontTools.agl import toUnicode
 from fontTools.ttLib import TTFont
@@ -85,6 +85,10 @@ SOURCES += [
      'files': ['https://github.com/kika/fixedsys/releases/download/v3.09.10/FSEX302.ttf']},
     {'source': 'ubuntu-titling', 'licence': 'OFL-1.1', 'url': 'https://deb.debian.org/debian/pool/main/f/fonts-ubuntu-title/fonts-ubuntu-title_0.3.orig.tar.gz', 'include': r'\.ttf$'},
 ]
+# Families from open catalogues (Velvetyne, Collletttivo, Uncut), pinned to their
+# designers' repositories by scripts/open_releases.py.
+SOURCES += [{'source': row['source'], 'licence': row['licence'], 'url': row['url'], 'include': row['include'], **({'commit': row['commit'], 'format': 'git'} if row.get('format') == 'git' else {})}
+            for row in json.loads((ROOT / 'bench/open-releases.json').read_text())['releases'] if row.get('include')]
 # The League of Moveable Type: all 18 families are OFL-1.1. Eleven reach us through Google
 # Fonts; these are the other seven, as the GitHub organisation holds them.
 LEAGUE_REPOS = {'junction': 'fb73260e86dd301b383cf6cc9ca8e726ef806535', 'chunk': '12a243f3fb7c7a68844901023f7d95d6eaf14104',
@@ -100,6 +104,14 @@ SOURCES += [{'source': 'league-of-moveable-type', 'licence': 'OFL-1.1', 'include
 # "false" as their family name, so names come from the catalogue instead.
 FONTSHARE_API = 'https://api.fontshare.com/v2/fonts?limit=200'
 FONTSHARE_LICENCES = {'itf_ffl': 'ITF Free Font License (free for personal and commercial use; no redistribution or modification)', 'sil_ofl': 'OFL-1.1'}
+# Fontsource's own fonts (type "other"), each pinned to its npm release. Its robots.txt
+# signals ai-train=yes. Blackout Two AM is the League's stale copy of Blackout 2AM, held above.
+FONTSOURCE_API = 'https://api.fontsource.org/v1/fonts'
+FONTSOURCE_SKIP = {'blackout-two-am'}
+# A font is known by its signature, not its name: repositories also commit macOS "._" forks,
+# Git LFS pointers and HTML error pages under font extensions.
+SFNT = (b'OTTO', b'\x00\x01\x00\x00', b'true', b'ttcf')
+is_font = lambda content: content[:4] in SFNT
 LICENCE_NAMES = re.compile(r'(^|/)(LICEN[CS]E|COPYING|COPYRIGHT|OFL|GUST-FONT-LICENSE|README)[^/]*$', re.I)
 
 
@@ -112,13 +124,20 @@ def name_key(value):
     return re.sub(r'[^a-z0-9]', '', value.lower())
 
 
-def fetch(url, pinned):
-    """Download once; a pinned archive must match its recorded hash byte for byte."""
-    cache = STORE / '.archives' / hashlib.sha1(url.encode()).hexdigest()
+def fetch(url, pinned, commit=None):
+    """Download once; a pinned archive must match its recorded hash byte for byte.
+    With a commit, `url` is a git repository and the archive is that commit, made by git."""
+    cache = STORE / '.archives' / hashlib.sha1(f'{url}#{commit or ""}'.encode()).hexdigest()
     if not cache.exists():
         cache.parent.mkdir(parents=True, exist_ok=True)
-        request = urllib.request.Request(url, headers={'User-Agent': 'gpu-font open-font inventory'})
-        cache.write_bytes(urllib.request.urlopen(request, timeout=120).read())
+        if commit:
+            import subprocess, tempfile
+            with tempfile.TemporaryDirectory() as folder:
+                subprocess.run(['git', 'clone', '--quiet', '--filter=blob:none', '--no-checkout', url, folder], check=True, capture_output=True)
+                prefix = f"{PurePosixPath(url).stem}-{commit}/"
+                cache.write_bytes(subprocess.run(['git', '-C', folder, 'archive', '--format=zip', f'--prefix={prefix}', commit], check=True, capture_output=True).stdout)
+        else:
+            cache.write_bytes(corpus.request(url))
     data = cache.read_bytes(); digest = hashlib.sha256(data).hexdigest()
     if pinned and pinned != digest:
         raise ValueError(f'Archive changed since it was pinned: {url}')
@@ -138,7 +157,7 @@ def members(data, url, format=None):
             for path in sorted(Path(folder).iterdir()):
                 if path.is_file() and path.name != 'installer.exe': yield path.name, path.read_bytes()
         return
-    if url.endswith('.zip'):
+    if url.endswith('.zip') or format == 'git':
         with zipfile.ZipFile(io.BytesIO(data)) as archive:
             for info in archive.infolist():
                 if not info.is_dir(): yield info.filename, archive.read(info)
@@ -188,28 +207,63 @@ def colour_letters(path):
         return bool(letters & coloured)
 
 
+def stored_font(relative, url):
+    """One font file from an API, downloaded once into the store. None when the server's file is not
+    a font: Fontsource serves some Open Sauce Sans styles as Type 1 under a .ttf name."""
+    import time
+    target = STORE / relative
+    if target.exists(): return target.read_bytes()
+    if not is_font(content := corpus.request(url)): print(f'{relative}: not an OpenType or TrueType font; style skipped'); return None
+    target.parent.mkdir(parents=True, exist_ok=True); target.write_bytes(content); time.sleep(0.2)
+    return content
+
+
 def fontshare_groups(google_names):
     """Static styles of every Fontshare family that Google Fonts does not already carry."""
-    import time
-    request = urllib.request.Request(FONTSHARE_API, headers={'User-Agent': 'gpu-font open-font inventory'})
-    fonts = json.loads(urllib.request.urlopen(request, timeout=60).read())['fonts']
+    fonts = get_json(FONTSHARE_API)['fonts']
     for font in sorted(fonts, key=lambda f: f['slug']):
         if name_key(font['name']) in google_names: continue
         items = []
         for style in font['styles']:
             if style['is_variable']: continue
             relative = f"fontshare/{font['slug']}/{slug(style['weight']['name'])}.ttf"
-            target = STORE / relative
-            if not target.exists():
-                target.parent.mkdir(parents=True, exist_ok=True)
-                download = urllib.request.Request('https:' + style['file'] + '.ttf', headers={'User-Agent': 'gpu-font open-font inventory'})
-                target.write_bytes(urllib.request.urlopen(download, timeout=60).read())
-                time.sleep(0.3)
-            content = target.read_bytes()
+            if not (content := stored_font(relative, 'https:' + style['file'] + '.ttf')): continue
             items.append({'path': relative, 'size': len(content), 'sha': corpus.blob(content)})
         if items:
             yield font['name'], {'spec': {'licence': FONTSHARE_LICENCES.get(font['license_type'], font['license_type'])}, 'items': items, 'licences': [],
                                  'extra': {'sourceUrl': f"https://www.fontshare.com/fonts/{font['slug']}", 'sourceId': font['id']}}
+
+
+def get_json(url):
+    return json.loads(corpus.request(url))  # retried with backoff
+
+
+def fontsource_groups(held):
+    """Fontsource's own fonts that no source above already carries, under either the catalogue's
+    name or the one inside the file (its "DejaVu Mono" is DejaVu Sans Mono). Fontsource serves
+    these in one subset, usually Latin; `subset` records which."""
+    for entry in sorted(get_json(FONTSOURCE_API), key=lambda f: f['id']):
+        if entry['type'] == 'google' or entry['id'] in FONTSOURCE_SKIP or name_key(entry['family']) in held: continue
+        try: font = get_json(f"{FONTSOURCE_API}/{entry['id']}"); items = fontsource_files(font)
+        except OSError as error: print(f"fontsource: {entry['family']} skipped: {error}"); continue
+        if not items or name_key(family_name(STORE / items[0]['path'])) in held: continue
+        held.add(name_key(font['family']))
+        yield font['family'], {'spec': {'licence': font['license']}, 'items': items, 'licences': [],
+                               'extra': {'sourceUrl': f"https://fontsource.org/fonts/{font['id']}", 'sourceId': font['id'],
+                                         'upstream': font.get('source'), 'version': font['npmVersion'], 'subset': font['defSubset']}}
+
+
+def fontsource_files(font):
+    """Every style of one Fontsource font in its default subset, pinned to its npm release."""
+    items = []
+    for weight, styles in sorted(font['variants'].items()):
+        for style, subsets in sorted(styles.items()):
+            if not (files := subsets.get(font['defSubset'])): continue
+            url = files['url']['ttf'].replace('@latest/', f"@{font['npmVersion']}/")
+            relative = f"fontsource/{font['id']}/{PurePosixPath(url).name}"
+            if not (content := stored_font(relative, url)): continue
+            items.append({'path': relative, 'size': len(content), 'sha': corpus.blob(content)})
+    return items
 
 
 def family_name(path):
@@ -222,17 +276,19 @@ def main():
     previous = json.loads(MANIFEST.read_text()) if MANIFEST.exists() else {'archives': []}
     pins = {entry['url']: entry['sha256'] for entry in previous.get('archives', []) if 'sha256' in entry}
     archives, groups = [], {}
+    owners, elsewhere = {}, {}  # a family belongs to the first source that lists it: foundries before catalogues
     original_source_path = corpus.source_path
     corpus.source_path = lambda path: STORE / path  # face_info reads our store, not the Google cache
     try:
         for spec in SOURCES:
             licences = []
             for url in spec.get('files') or [spec['url']]:  # an archive, or loose files pinned one by one
-                data, digest = fetch(url, pins.get(url))
-                archives.append({'source': spec['source'], 'url': url, 'sha256': digest, 'bytes': len(data), 'licence': spec['licence']})
+                key = f"{url}#{spec['commit']}" if 'commit' in spec else url
+                data, digest = fetch(url, pins.get(key), spec.get('commit'))
+                archives.append({'source': spec['source'], 'url': key, 'sha256': digest, 'bytes': len(data), 'licence': spec['licence']})
                 root = PurePosixPath(spec['source']) / ('' if 'files' in spec else Path(url).name.split('?')[0])
                 for name, content in members(data, url, spec.get('format')):
-                    keep_font = re.search(spec['include'], name, re.I)
+                    keep_font = re.search(spec['include'], name, re.I) and is_font(content)
                     keep_licence = LICENCE_NAMES.search(name)
                     if not (keep_font or keep_licence): continue
                     relative = str(root / PurePosixPath(name))
@@ -242,16 +298,28 @@ def main():
                     if keep_licence and not keep_font:
                         licences.append({'path': relative, 'blob': corpus.blob(content)}); continue
                     item = {'path': relative, 'size': len(content), 'sha': corpus.blob(content)}
-                    groups.setdefault((spec['source'], family_name(target)), {'spec': spec, 'items': [], 'licences': licences})['items'].append(item)
+                    name = family_name(target)
+                    if (owner := owners.setdefault(name_key(name), spec['source'])) != spec['source']:
+                        elsewhere.setdefault(spec['source'], set()).add(f'{name} ({owner})'); continue
+                    groups.setdefault((spec['source'], name), {'spec': spec, 'items': [], 'licences': licences})['items'].append(item)
         google = json.loads((ROOT / 'bench/corpus.json').read_text())['families']
         google_names = {name_key(f['family']) for f in google}
         for name, group in fontshare_groups(google_names): groups[('fontshare', name)] = group
         archives.append({'source': 'fontshare', 'url': FONTSHARE_API, 'licence': 'per family (ITF Free Font License or OFL-1.1)'})
+        # Aggregators last: a family the rights holder's own release or Google Fonts carries is taken from there.
+        held = google_names | {name_key(name) for _, name in groups}
+        for name, group in fontsource_groups(held): groups[('fontsource', name)] = group
+        archives.append({'source': 'fontsource', 'url': FONTSOURCE_API, 'licence': 'per family (OFL-1.1, Apache-2.0, MIT, CC0-1.0, Unlicense)'})
         families, in_google = [], {}
         for (source, name), group in sorted(groups.items()):
             if name_key(name) in google_names:
                 in_google.setdefault(source, []).append(name); continue
-            faces = [corpus.face_info(item) for item in group['items']]
+            faces = []
+            for item in group['items']:
+                # Third-party files are sometimes malformed; fontTools raises all kinds on them.
+                try: faces.append(corpus.face_info(item))
+                except Exception as error: print(f"{item['path']}: unreadable, left out ({type(error).__name__}: {error})")
+            if not faces: continue
             selected, letters = min(faces, key=lambda pair: (pair[0]['italic'], abs(corpus.normal_axes(pair[0]).get('wght', pair[0]['weight']) - 400), pair[0]['path']))
             reason = 'color' if selected['color'] and colour_letters(STORE / selected['path']) else 'no-letter-glyphs' if not letters else None
             alphabets = {s: ''.join(map(chr, cps)) for s, cps in letters.items() if len(cps) >= 8 and s not in ('Zyyy', 'Zinh')}
@@ -274,6 +342,7 @@ def main():
     for f in families: counts.setdefault(f['source'], [0, 0])[0 if not f['excluded'] else 1] += 1
     for source, (ok, excluded) in counts.items(): print(f'{source}: {ok} families{f", {excluded} excluded" if excluded else ""}')
     for source, names in in_google.items(): print(f'{source}: left to Google Fonts: {", ".join(names)}')
+    for source, names in elsewhere.items(): print(f'{source}: left to an earlier source: {", ".join(sorted(names))}')
 
 
 if __name__ == '__main__':
