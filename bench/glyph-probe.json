@@ -1,0 +1,52 @@
+{
+  "what": "Icon retrieval with the deployed text-style encoder versus a raw-pixel floor. Chance: exact 1/120, set 1/6, concept 1/20.",
+  "sets": [
+    "material-outlined",
+    "material-rounded",
+    "material-sharp",
+    "font-awesome",
+    "bootstrap",
+    "phosphor"
+  ],
+  "concepts": 20,
+  "references": 120,
+  "queries": 120,
+  "blank": [],
+  "encoderSha256": "e0d9d931e3ba9e80f081a17d3f5f4af3b977e73db60edc8cbae0a251ab8f119a",
+  "encoder": {
+    "exactTop1": 75,
+    "exactTop5": 100,
+    "setTop1": 75,
+    "setTop5Majority": 15.8,
+    "conceptTop1": 100,
+    "confusions": {
+      "material-outlined → material-rounded": 4,
+      "material-outlined → material-sharp": 1,
+      "material-outlined → phosphor": 1,
+      "material-rounded → material-outlined": 6,
+      "material-rounded → bootstrap": 1,
+      "material-rounded → phosphor": 1,
+      "material-sharp → material-outlined": 10,
+      "material-sharp → material-rounded": 2,
+      "font-awesome → material-rounded": 2,
+      "bootstrap → phosphor": 1,
+      "phosphor → bootstrap": 1
+    }
+  },
+  "pixels": {
+    "exactTop1": 70.8,
+    "exactTop5": 100,
+    "setTop1": 70.8,
+    "setTop5Majority": 6.7,
+    "conceptTop1": 100,
+    "confusions": {
+      "material-outlined → material-rounded": 7,
+      "material-rounded → material-outlined": 8,
+      "material-rounded → font-awesome": 1,
+      "material-sharp → material-outlined": 11,
+      "material-sharp → material-rounded": 6,
+      "bootstrap → phosphor": 1,
+      "bootstrap → material-rounded": 1
+    }
+  }
+}
