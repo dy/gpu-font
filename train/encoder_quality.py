@@ -58,8 +58,12 @@ def reference_vectors(path,phase,rs,rv,families,method):
     else:
         vectors=embed(load_encoder(path).to('mps'),manifest,np.memmap(pixels_path,dtype=np.uint8,mode='r'),list(range(len(manifest['samples']))))
         np.save(cache,vectors,allow_pickle=False);save(meta,{'binding':binding,'sha256':sha(cache)})
+    return with_words(refs,owners,packed,scales,families,manifest['samples'],vectors)
+
+
+def with_words(refs,owners,packed,scales,families,samples,vectors):
     groups={};positions={f:i for i,f in enumerate(families)}
-    for i,s in enumerate(manifest['samples']):
+    for i,s in enumerate(samples):
         if s['family'] in positions:groups.setdefault((s['family'],s['referenceGroup']),[]).append(i)
     rows=unit(np.array([vectors[ids].mean(0) for _,ids in sorted(groups.items())]))
     ws=np.maximum(np.abs(rows).max(1)/127,1e-12);wp=np.round(rows/ws[:,None]).clip(-127,127).astype(np.int8)

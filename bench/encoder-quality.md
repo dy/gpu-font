@@ -22,6 +22,12 @@ The model is still experimental. Similarity is not calibrated certainty. Very sh
 
 ## Reproduce
 
+The case-diverse continuation adds 87,936 Pillow/Chromium training crops from 1,374 eligible training families. Half its batches use these lowercase/title-case/uppercase strings and half retain the original script-balanced data. It completes 20,000 updates in 1,361 seconds. Checkpoint selection uses the original clean development subset plus the opened first phrase bank, restricted to training/development families. Lora remains held out from optimization.
+
+The [second confirmation report](encoder-case-quality.json) uses another 1,356 crops, with new strings at 24/48 px. Their exact strings are disjoint from the original data, additional training data and references. Top-1/top-5 improves from **23.60%/40.56% to 37.76%/66.89%**. However, Lora ranks 9 and Montserrat 26 on the reported example, so this checkpoint is also held back. The first and second phrase percentages must not be compared directly: their text and size distributions differ.
+
+Additional diagnostics fit a training-only affine head and compare averaging reference recipes. They improve some aggregate scores but do not resolve the named failures. Their scripts and local reports are retained under `train/encoder_metric.py`, `train/encoder_reference_means.py` and `.data/detection-quality/`.
+
 After the original encoder experiment and datasets exist:
 
 ```sh
@@ -37,3 +43,17 @@ node scripts/python.mjs -m train.encoder_quality confirm
 The refinement and selection commands refuse to overwrite completed experiments. Embedding caches bind encoder and dataset hashes. Confirmation writes the selected Google catalog to `.data/detection-quality/google-fonts.json`; publishing requires copying the selected encoder/checkpoint and that catalog into `models/encoder/`, then recompiling image-reference catalogs with the new encoder. Existing catalogs from the previous encoder must not be mixed with it.
 
 The reference comparison also retains clustered-prototype results in `.data/detection-quality/reference-comparison.json`. Checkpoint history, prepared reference pixels and frozen query tensors stay under `.data/`. No font binaries or third-party preview captures are added by this iteration.
+
+For the case-diverse continuation:
+
+```sh
+node scripts/python.mjs -m train.encoder_words plan
+node scripts/python.mjs -m train.encoder_words render
+node scripts/encoder-words-browser.mjs
+node scripts/python.mjs -m train.encoder_words pack
+node scripts/encoder-quality.mjs --next
+node scripts/python.mjs -m train.encoder_refine --case-training --steps 20000
+node scripts/python.mjs -m train.encoder_case_quality
+```
+
+The first phrase generator is preserved in commit `c7789b2`; extending it for the second bank changes its code hash. Existing pixel snapshots retain their original provenance. Reproducing a historical confirmation requires the recorded generator version, not silently changing its pins.
