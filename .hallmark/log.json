@@ -1,5 +1,55 @@
 [
   {
+    "date": "2026-09-23",
+    "component": "IA pass",
+    "theme": "Graphite",
+    "brief": "Header menu (How to use, Questions, Sources). Model and diagnostics dissolved: run facts on the Model input line, model facts in How it works. Order: How it works, Questions, Goals, How to use, Licenses. Goals as a compact two-column list. FAQ answers cut to facts. Sources as a flat table with terms pills."
+  },
+  {
+    "date": "2026-09-23",
+    "component": "sources page",
+    "theme": "Graphite",
+    "brief": "Sources page rendered from bench/foundries.json: one row per source, grouped by work status, terms beside it with expandable quoted clauses for bans and restrictions, held-locally counts marked not shipped; linked from Licenses."
+  },
+  {
+    "date": "2026-09-23",
+    "component": "goals list, how-to-use columns, anchored dropdowns",
+    "theme": "Graphite",
+    "brief": "Goals as a one-column list with filled, half and hollow bullets; How to use with heading and text beside the code; dropdowns absolutely positioned in page coordinates, placed before focus; More matches and loading previews keep their space so results never move the page; only terms-cleared catalogs ship."
+  },
+  {
+    "date": "2026-09-23",
+    "component": "source line, stacked sections",
+    "theme": "Graphite",
+    "brief": "Current source kind and its name lead the source line, other kinds at its right; resolution moved to the Model input line; Goals and Questions as goal/answer pairs and How to use full-width under stacked headings; one shared two-column grid; More matches with a chevron; copy deduplicated."
+  },
+  {
+    "date": "2026-09-23",
+    "component": "design tokens pass",
+    "theme": "Graphite",
+    "brief": "Colour, type, radius, shadow, link and 4px spacing tokens; one link style and one popover surface; faint grey (53%, AA on every ground) for face labels, \u2248 twins and code comments; grey syntax highlighting for block and inline code; list-only twins tooltip; All matches list; FAQ as question-beside-answer rows; Model and diagnostics relabelled."
+  },
+  {
+    "date": "2026-09-22",
+    "component": "measured introduction and label-free workbench",
+    "theme": "Graphite",
+    "brief": "Title 'Font matching in WebGPU'. Source line: Aa/sheet/image switch left, name right. Crop/pencil/eraser tools, brush wedge and exact undo inside the preview. 'Detected in \u2026ms'. Twin notes open a full-list tooltip. Sections: How it works, How to use (verified code), Questions (FAQ, live figures), Licenses, Model & results. No captured specimens shipped."
+  },
+  {
+    "date": "2026-09-22",
+    "macrostructure": "Introduction + live workbench",
+    "theme": "Graphite",
+    "enrichment": "actual font specimens",
+    "nav": "N9",
+    "footer": "Ft2",
+    "brief": "Direct Image action and Sample dropdown, underline search focus, concise landing introduction, local inference and scope, compact input previews.",
+    "references": [
+      "https://gpu-lexer.vercel.app/",
+      "https://github.com/arikchakma/gpu-time",
+      "https://github.com/safzanpirani/gpu-query"
+    ]
+  },
+  {
     "date": "2026-09-22",
     "component": "image menu and editable matches",
     "theme": "Graphite",

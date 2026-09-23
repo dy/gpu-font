@@ -1,6 +1,7 @@
 import { readFile, writeFile, mkdir, cp, rm, readdir } from 'node:fs/promises'
 import { createHash } from 'node:crypto'
 import { readNetwork } from '../src/network.mjs'
+import { copySite } from './site.mjs'
 
 if (!process.argv.includes('--hundred') && !process.argv.includes('--ten')) {
   await import('./demo-catalog-build.mjs')
@@ -37,11 +38,10 @@ const display = await readFile('.data/fonts/source-serif-4.ttf')
 if (hash(display) !== manifest.fonts.find(f => f.id === 'source-serif-4').instanceSha256) throw new Error('Display font checksum failed')
 assets.push(['source-serif-4', display])
 await mkdir('dist/assets/fonts', { recursive: true })
-await cp('demo', 'dist', { recursive: true })
+await copySite()
 await mkdir('dist/src', { recursive: true })
 for (const name of ['prepare', 'input', 'line', 'catalog', 'network', 'network-gpu']) await cp(`src/${name}.mjs`, `dist/src/${name}.mjs`)
 for (const name of ['descriptor', 'rank', 'model', 'gpu']) await rm(`dist/src/${name}.mjs`, { force: true })
-await cp('tokens.css', 'dist/tokens.css')
 await writeFile('dist/assets/model.json', bytes)
 for (const [id, bytes] of assets) await writeFile(`dist/assets/fonts/${id}.ttf`, bytes)
 const shipped = new Set([...model.fonts, 'source-serif-4'])

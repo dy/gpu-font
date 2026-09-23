@@ -3,11 +3,13 @@ import { prepareInput } from './src/input.mjs'
 import { prepareLine } from './src/line.mjs'
 import { readNetwork, inferCPU, rankWindows } from './src/network.mjs'
 import { createNetworkGPU } from './src/network-gpu.mjs'
-import { readCatalog, rankCatalog, embedWindows, sha256, preparationHash } from './src/catalog.mjs'
+import { readCatalog, matchCatalog, foldTwins, embedWindows, sha256, preparationHash, readHeads, verdict } from './src/catalog.mjs'
 
 const $ = id => document.getElementById(id)
+// Dropdowns are absolutely positioned in page coordinates: they open inside the viewport, then scroll with their trigger.
+const place = (popover, left, top) => Object.assign(popover.style, { left: `${left + scrollX}px`, top: `${top + scrollY}px` })
 const source = $('source'), ctx = source.getContext('2d', { willReadFrequently: true })
-let model, catalog, gpu, gpuReason = '', current = null, crop = null, last = null
+let model, heads = null, catalog, gpu, gpuReason = '', current = null, crop = null, last = null
 let revision = 0, analysis = 0, dragging = null, armed = null
 let scheduled = 0, running = false, pending = false
 let previewText = 'Quiet rivers flow', previewValid = true
@@ -21,9 +23,11 @@ function message(text = '', error = false) {
 }
 function controls() {
   $('resolution-control').hidden = !current
-  $('clear').hidden = !current
+  for (const kind of document.querySelectorAll('.source-kind')) kind.hidden = !current
+  $('sample').hidden = !current
+  $('tools').hidden = !current
   $('empty').hidden = !!current
-  $('open-image').setAttribute('aria-label', current ? 'Replace image' : 'Choose an image')
+  $('replace-image').hidden = !current
 }
 function resolution() {
   const scale = Number($('resolution').value) / 100
@@ -34,20 +38,20 @@ function invalidate(retain = false) {
   analysis++; last = null; pending = false
   cancelAnimationFrame(scheduled); scheduled = 0
   if (!retain) {
-    $('results').replaceChildren(); $('results-empty').hidden = false
+    $('results').replaceChildren(); $('results-empty').hidden = false; hideTwins(); $('more-matches').inert = true
     previewValid = true; $('preview-error').hidden = true
   }
   $('save').disabled = true
-  $('model-input').hidden = true
-  $('normalized').replaceChildren(); $('input-regions').replaceChildren()
-  $('result-summary').textContent = ''; $('detection-time').textContent = ''
+  // A retained source keeps its last windows until new ones replace them, so the page does not jump.
+  if (!retain) $('normalized').replaceChildren()
+  $('input-regions').replaceChildren()
+  $('result-summary').textContent = ''; $('input-count').textContent = ''; $('detection-time').textContent = ''
   $('results-empty').textContent = 'No matches yet.'
-  $('timing').textContent = '—'
   $('results').removeAttribute('aria-busy')
   controls()
 }
 function schedule() {
-  pending = !!current && !!model && (!isEncoder() || !!searchCatalog)
+  pending = !!current && (!current.drawing || current.strokes > 0) && !!model && (!isEncoder() || !!searchCatalog)
   if (!pending) return
   $('results').setAttribute('aria-busy', 'true')
   if (!running && !scheduled) scheduled = requestAnimationFrame(() => { scheduled = 0; analyze() })
@@ -55,7 +59,7 @@ function schedule() {
 function backend() {
   $('backend').textContent = gpu ? 'WebGPU' : 'CPU'
   $('backend').dataset.backend = gpu ? 'webgpu' : 'cpu'
-  $('device').textContent = gpu ? gpu.info : gpuReason || 'JavaScript CPU'
+  $('device').textContent = gpu ? `WebGPU · ${gpu.info}` : gpuReason || 'CPU (JavaScript)'
 }
 function showInput(windows, region, sampled) {
   $('normalized').replaceChildren(); $('input-regions').replaceChildren()
@@ -72,7 +76,7 @@ function showInput(windows, region, sampled) {
     Object.assign(outline.style, { left: `${(region.x + r.x * sx) / source.width * 100}%`, top: `${(region.y + r.y * sy) / source.height * 100}%`, width: `${r.width * sx / source.width * 100}%`, height: `${r.height * sy / source.height * 100}%` })
     $('input-regions').append(outline)
   }
-  $('model-input').hidden = !windows.length
+  $('input-count').textContent = `${windows.length} window${windows.length === 1 ? '' : 's'}`
 }
 function updateCrop(next) {
   if (crop && ['x', 'y', 'width', 'height'].every(key => crop[key] === next[key])) return
@@ -87,27 +91,83 @@ function resetCrop() {
   armed = null; dragging = null
   updateCrop({ x: 0, y: 0, width: source.width, height: source.height })
 }
-function setImage(image, name, known = null) {
+function setImage(image, name, known = null, drawing = false) {
   source.width = image.width; source.height = image.height
   ctx.clearRect(0, 0, source.width, source.height); ctx.drawImage(image, 0, 0)
-  current = { name, known, width: source.width, height: source.height }
+  current = { name, known, width: source.width, height: source.height, ...(drawing ? { drawing } : {}), strokes: 0 }
+  const base = document.createElement('canvas'); base.width = source.width; base.height = source.height; base.getContext('2d').drawImage(source, 0, 0)
+  edits = { base, strokes: [] }; $('undo').disabled = true
+  if (known) lastFont = known
+  setTool(drawing ? 'pen' : 'crop')
   sampleLabel()
   crop = null; $('resolution').value = '100'
   $('image-frame').hidden = false
   source.setAttribute('aria-label', name)
   resetCrop()
 }
-function clearImage() {
-  revision++
-  current = null; crop = null; dragging = null; armed = null
-  invalidate(); message(); sampleLabel()
-  source.width = source.height = 0
-  source.setAttribute('aria-label', 'Source image')
-  $('image-frame').hidden = true
-  $('resolution').value = '100'
-  $('sample-menu').hidePopover()
-  $('open-image').focus({ preventScroll: true })
+// Pencil and eraser edit any source; strokes replay over an untouched copy, so undo is exact.
+const pen = { size: 12 }
+let lastFont = 'lora', tool = 'crop', edits = { base: null, strokes: [] }
+function penSize() {
+  const input = $('pen-size'); pen.size = Number(input.value)
+  input.parentElement.style.setProperty('--fill', `${(input.value - input.min) / (input.max - input.min) * 100}%`)
 }
+penSize()
+$('pen-size').addEventListener('input', () => { penSize(); brushCursor() })
+function setTool(next) {
+  tool = next
+  for (const [id, kind] of tools) $(id).setAttribute('aria-pressed', String(tool === kind))
+  $('image-frame').dataset.tool = $('tools').dataset.tool = tool
+  brushCursor()
+}
+const tools = [['crop-tool', 'crop'], ['pen-tool', 'pen'], ['erase', 'erase']]
+for (const [id, kind] of tools) $(id).addEventListener('click', () => setTool(kind))
+// While drawing, the cursor is the brush at its on-screen size; dashed while erasing.
+function brushCursor() {
+  const frame = $('image-frame')
+  if (tool === 'crop') { frame.style.cursor = ''; return }
+  const scale = source.getBoundingClientRect().width / source.width || 1
+  const d = Math.max(4, Math.min(124, Math.round(pen.size * scale))), s = d + 2, c = s / 2
+  const ring = `cx="${c}" cy="${c}" r="${d / 2}" fill="none"`
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${s}" height="${s}"><circle ${ring} stroke="#fff" stroke-width="2"/><circle ${ring} stroke="#000"${tool === 'erase' ? ' stroke-dasharray="3 2"' : ''}/></svg>`
+  frame.style.cursor = `url("data:image/svg+xml,${encodeURIComponent(svg)}") ${Math.round(c)} ${Math.round(c)}, crosshair`
+}
+window.addEventListener('resize', brushCursor)
+function startDrawing() {
+  revision++; invalidate()
+  const sheet = document.createElement('canvas'), c = sheet.getContext('2d')
+  sheet.width = 720; sheet.height = 240; c.fillStyle = '#ffffff'; c.fillRect(0, 0, sheet.width, sheet.height)
+  setImage(sheet, 'Drawing', null, true)
+  brushCursor()
+}
+// Paints a stroke's segments from point `from` on, one segment at a time, so replay after undo
+// reproduces live drawing pixel for pixel; a single point is a dot.
+function paint(stroke, from = 0) {
+  const p = stroke.points
+  Object.assign(ctx, { strokeStyle: stroke.erase ? '#ffffff' : '#000000', lineWidth: stroke.size, lineCap: 'round', lineJoin: 'round' })
+  for (let i = from; i < p.length; i++) {
+    const a = p[Math.max(0, i - 1)]
+    ctx.beginPath(); ctx.moveTo(a.x, a.y); ctx.lineTo(p[i].x, p[i].y); ctx.stroke()
+  }
+}
+function edited() {
+  current.strokes = edits.strokes.length; $('undo').disabled = !current.strokes
+  if (current.drawing && !current.strokes) { invalidate(); return }
+  message(); invalidate(true); schedule()
+}
+function addPoint(at) { const stroke = edits.strokes.at(-1); stroke.points.push(at); paint(stroke, stroke.points.length - 1); edited() }
+function undo() {
+  if (!current || !edits.strokes.length || dragging?.draw) return
+  edits.strokes.pop()
+  ctx.clearRect(0, 0, source.width, source.height); ctx.drawImage(edits.base, 0, 0)
+  for (const stroke of edits.strokes) paint(stroke)
+  edited()
+}
+$('undo').addEventListener('click', undo)
+document.addEventListener('keydown', event => {
+  if (!(event.metaKey || event.ctrlKey) || event.shiftKey || event.key.toLowerCase() !== 'z' || event.target.closest('input[type="text"], textarea')) return
+  if (edits.strokes.length) { event.preventDefault(); undo() }
+})
 async function loadFont(id, file = null) {
   if (!fonts.has(id)) {
     const font = catalog.fonts.find(f => f.id === id)
@@ -187,6 +247,7 @@ async function analyze() {
     const prepared = isEncoder() ? prepareLine(image, { ...model.preparation, background: matte, deskew: true, sampler: 'windows' }) : prepareInput(image, { ...model.preparation, background: matte })
     if (prepared.status !== 'ok') {
       invalidate()
+      if (specimen.drawing) return
       $('results-empty').textContent = 'No matches.'
       message(prepared.status === 'blank' ? 'No visible text in this crop.' : 'Not enough contrast in this crop.', true)
       return
@@ -202,19 +263,18 @@ async function analyze() {
     }
     if (run !== analysis) return
     if (!logits) logits = prepared.windows.map(input => inferCPU(model, input))
-    const embedding = isEncoder() ? embedWindows(logits) : null
-    const matches = embedding ? rankCatalog(embedding, searchCatalog) : rankWindows(logits, model.fonts, catalog.calibration?.temperature ?? 1), elapsed = performance.now() - start
+    const embedding = isEncoder() ? embedWindows(logits) : null, judged = embedding && heads ? verdict(embedding, heads) : null
+    const matches = embedding ? matchCatalog(embedding, searchCatalog, judged) : rankWindows(logits, model.fonts, catalog.calibration?.temperature ?? 1), elapsed = performance.now() - start
     if (!embedding) await Promise.all(matches.slice(0, 5).map(m => loadFont(m.family)))
     if (run !== analysis) return
     last = { accepted: embedding ? null : matches[0].score >= (catalog.calibration?.threshold ?? 1.01), calibration: embedding ? null : catalog.calibration, mode: embedding ? 'encoder' : 'neural', backend: used, milliseconds: elapsed, model: catalog.modelSha256, source: specimen, crop: region, resolution: sampled, background: matte,
-      ...(embedding ? { embedding: Array.from(embedding), catalog: { id: searchCatalog.id, sha256: searchCatalog.sha256 }, scoreType: 'cosine', inferenceMilliseconds: elapsed } : {}),
+      ...(embedding ? { embedding: Array.from(embedding), verdict: judged, catalog: { id: searchCatalog.id, sha256: searchCatalog.sha256 }, scoreType: 'cosine', inferenceMilliseconds: elapsed } : {}),
       inputs: prepared.windows.map(input => ({ ...input, pixels: Array.from(input.pixels) })), matches }
     showInput(prepared.windows, region, sampled)
     renderResults()
-    $('result-summary').textContent = embedding ? 'Uncalibrated' : last.accepted ? 'Above threshold' : 'Below threshold'
-    $('detection-time').textContent = `${elapsed.toFixed(1)} ms`
+    $('result-summary').textContent = embedding ? describe(judged) : last.accepted ? 'Above threshold' : 'Below threshold'
+    $('detection-time').textContent = `Detected in ${elapsed.toFixed(1)}ms`
     $('detection-time').title = 'Image preparation, inference and ranking'
-    $('timing').textContent = `${elapsed.toFixed(1)} ms (prepare + infer + rank)`
     $('save').disabled = false
   } catch (error) { if (run === analysis) { invalidate(); message(`Could not analyze this crop: ${error.message}`, true) } }
   finally {
@@ -224,11 +284,16 @@ async function analyze() {
   }
 }
 function renderResults() {
+  hideTwins() // Its note is about to be replaced.
+  $('more-matches').inert = true; if ($('more-menu').matches(':popover-open')) $('more-menu').hidePopover()
   if (!last) return
+  $('more-matches').inert = !isEncoder() || foldTwins(last.matches, searchCatalog, { script: last.verdict?.script?.[0]?.label, limit: 6 }).length <= 5
   previewValid = true; $('preview-error').hidden = true
   $('results-empty').hidden = true
   const fragment = document.createDocumentFragment()
-  for (const [i, match] of last.matches.slice(0, 5).entries()) {
+  // Identical designs in the crop's script (IBM Plex Sans and its KR, Arabic… families) fold into one row; the saved result keeps every family.
+  const shown = isEncoder() ? foldTwins(last.matches, searchCatalog, { script: last.verdict?.script?.[0]?.label, limit: 5 }) : last.matches.slice(0, 5)
+  for (const [i, match] of shown.entries()) {
     if (isEncoder()) { fragment.append(encoderResult(match, i)); continue }
     const font = catalog.fonts.find(f => f.id === match.family)
     const item = document.createElement('li'); item.className = 'result'
@@ -251,18 +316,39 @@ function renderResults() {
   $('results').replaceChildren(fragment)
 }
 
-function encoderResult(match, index) {
-  const { face, score } = match, item = document.createElement('li'); item.className = 'result'
-  item.innerHTML = '<div class="result-top"><span class="rank"></span><span class="font-name"><a target="_blank" rel="noopener"></a><span class="font-style"></span></span><span class="result-score"></span></div>'
-  item.querySelector('.rank').textContent = String(index + 1).padStart(2, '0')
-  const link = item.querySelector('a'); link.textContent = face.family
+const CATEGORY = { SANS_SERIF: 'Sans serif', SERIF: 'Serif', DISPLAY: 'Display', HANDWRITING: 'Handwriting', MONOSPACE: 'Monospace' }
+// The typed verdict for the crop itself: category, the likeliest fine class, upright or italic, script.
+function describe(judged) {
+  if (!judged) return 'Uncalibrated'
+  const fine = judged.fine[0].p >= .5 ? ` · ${judged.fine[0].label.split('/').at(-1)}` : ''
+  return `${CATEGORY[judged.category[0].label] ?? judged.category[0].label}${fine} · ${judged.italic >= .5 ? 'italic' : 'upright'} · ${judged.script[0].label}`
+}
+
+// One match on one line: rank, linked name, face, ≈ twins, score. Shared by the top five and the full list.
+function matchLine(match, index) {
+  const { face, score, siblings } = match, line = document.createElement('div'); line.className = 'result-top'
+  line.innerHTML = '<span class="rank"></span><span class="font-name"><a target="_blank" rel="noopener"></a><span class="font-style"></span></span><span class="result-score"></span>'
+  line.querySelector('.rank').textContent = String(index + 1).padStart(2, '0')
+  const link = line.querySelector('a'); link.textContent = face.family
   const url = face.sourceUrl || (searchCatalog.id === 'google-fonts' ? `https://fonts.google.com/specimen/${encodeURIComponent(face.family)}` : null)
   if (url && /^https?:\/\//i.test(url)) { link.href = url; link.textContent += ' ↗' }
-  const style = item.querySelector('.font-style')
+  const style = line.querySelector('.font-style')
   style.textContent = face.styleName || [face.style, face.weight].filter(v => v != null).join(', ')
-  style.title = 'Nearest reference face; weight and style accuracy are unmeasured'
-  const value = item.querySelector('.result-score')
+  style.title = `Matched face${face.weight ? `, weight ${face.weight}` : ''}`
+  if (siblings.length) {
+    // Folded families with identical letters: yields space first, so the matched name and face stay readable.
+    const note = document.createElement('span'); note.className = 'font-twins'
+    note.textContent = `≈ ${siblings[0]}${siblings.length > 1 ? ` +${siblings.length - 1}` : ''}`
+    note.tabIndex = 0; note.dataset.twins = JSON.stringify(siblings); note.setAttribute('aria-label', `Same letters as ${siblings.join(', ')}`)
+    style.after(note)
+  }
+  const value = line.querySelector('.result-score')
   value.textContent = score.toFixed(3); value.title = 'Cosine similarity, not certainty'; value.setAttribute('aria-label', `Cosine similarity: ${score.toFixed(3)}`)
+  return line
+}
+function encoderResult(match, index) {
+  const { face } = match, item = document.createElement('li'); item.className = 'result'
+  item.append(matchLine(match, index))
   const preview = searchCatalog.builtin ? catalog.previews[face.id] : null
   if (preview?.image) {
     const image = document.createElement('img'); image.className = 'reference-preview'; image.src = preview.image
@@ -271,13 +357,13 @@ function encoderResult(match, index) {
   } else if (preview?.file) {
     // Never display a fallback face as if it were a matching specimen.
     const input = document.createElement('input'); input.className = 'result-preview'; input.type = 'text'; input.maxLength = 80
-    input.spellcheck = false; input.autocomplete = 'off'; input.hidden = true
+    input.spellcheck = false; input.autocomplete = 'off'; input.style.visibility = 'hidden' // Keeps its row while the font loads.
     input.setAttribute('aria-label', `Preview ${face.family}`); input.setAttribute('aria-describedby', 'preview-error')
     input.readOnly = !preview.latin; input.value = preview.latin ? previewText : preview.sampleText
     input.style.setProperty('--font-specimen', `"specimen-${face.id}"`)
     if (!index && preview.latin) input.id = 'preview-text'
     item.append(input)
-    loadFont(face.id, preview.file).then(() => { input.hidden = false }).catch(() => { input.remove() })
+    loadFont(face.id, preview.file).then(() => { input.style.visibility = '' }).catch(() => { input.remove() })
   }
   return item
 }
@@ -304,22 +390,25 @@ async function selectCatalog(option, file = null) {
     searchCatalog = { ...option, ...data, sha256: hash, builtin: !file }
     invalidate(); updateCatalogLabel()
     if (cached?.embedding && current) {
-      const start = performance.now(), matches = rankCatalog(cached.embedding, searchCatalog)
+      const start = performance.now(), matches = matchCatalog(cached.embedding, searchCatalog, cached.verdict)
       const elapsed = performance.now() - start
       last = { ...cached, matches, catalog: { id: option.id, sha256: hash }, milliseconds: elapsed, cachedEmbedding: true }
       showInput(last.inputs, last.crop, last.resolution); renderResults()
-      $('detection-time').textContent = `${elapsed.toFixed(1)} ms`
+      $('detection-time').textContent = `Ranked in ${elapsed.toFixed(1)}ms`
       $('detection-time').title = 'Catalog ranking; image embedding reused'
-      $('timing').textContent = `${elapsed.toFixed(1)} ms (rank; embedding reused)`
-      $('result-summary').textContent = 'Uncalibrated'; $('save').disabled = false
+      $('result-summary').textContent = describe(last.verdict); $('save').disabled = false
     } else if (current) schedule()
   } catch (error) {
     if (version === catalogRevision) { $('catalog-error').textContent = error.message; $('catalog-error').hidden = false }
   } finally { if (version === catalogRevision) $('catalog-button').removeAttribute('aria-busy') }
 }
+function intro(lead, top1, scope) {
+  $('intro-lead').textContent = lead
+  $('intro-scope').textContent = `Experimental: on ${scope}, it names the right family first ${(top1 * 100).toFixed(1)}% of the time.`
+}
 function updateCatalogLabel() {
   $('catalog-label').textContent = searchCatalog.name
-  $('catalog-size').textContent = `${searchCatalog.families.toLocaleString()} families · ${searchCatalog.faces.length.toLocaleString()} faces`
+  $('catalog-size').textContent = `${searchCatalog.name}: ${searchCatalog.families.toLocaleString()} families, ${searchCatalog.faces.length.toLocaleString()} faces`
   for (const button of $('catalog-list').children) button.setAttribute('aria-pressed', String(button.dataset.catalog === searchCatalog.id))
 }
 $('catalog-file').addEventListener('change', event => {
@@ -329,21 +418,19 @@ $('catalog-file').addEventListener('change', event => {
 $('import-catalog').addEventListener('click', () => { $('catalog-menu').hidePopover(); $('catalog-file').click() })
 function positionCatalog() {
   const menu = $('catalog-menu'), rect = $('catalog-button').getBoundingClientRect()
-  menu.style.left = `${Math.max(12, Math.min(innerWidth - menu.offsetWidth - 12, rect.left))}px`
-  menu.style.top = `${Math.max(12, Math.min(innerHeight - menu.offsetHeight - 12, rect.bottom + 4))}px`
+  // The trigger ends its column; the menu hangs from the same edge.
+  place(menu, Math.max(12, Math.min(innerWidth - menu.offsetWidth - 12, rect.right - menu.offsetWidth)), Math.max(12, Math.min(innerHeight - menu.offsetHeight - 12, rect.bottom + 4)))
 }
 $('catalog-button').addEventListener('click', () => {
   const menu = $('catalog-menu')
   if (menu.matches(':popover-open')) menu.hidePopover()
-  else { menu.showPopover(); positionCatalog() }
-})
-$('catalog-menu').addEventListener('beforetoggle', event => {
-  const open = event.newState === 'open'; $('catalog-button').setAttribute('aria-expanded', String(open))
-  if (open) {
-    const selected = $('catalog-list').querySelector('[aria-pressed="true"]') || $('import-catalog')
-    for (const button of $('catalog-menu').querySelectorAll('button')) button.toggleAttribute('autofocus', button === selected)
+  else {
+    // Placed before focusing, so focusing the selected option never scrolls the page; synchronous, so the next key reaches the menu.
+    menu.showPopover(); positionCatalog()
+    ;($('catalog-list').querySelector('[aria-pressed="true"]') || $('import-catalog')).focus({ preventScroll: true })
   }
 })
+$('catalog-menu').addEventListener('beforetoggle', event => { $('catalog-button').setAttribute('aria-expanded', String(event.newState === 'open')) })
 $('catalog-menu').addEventListener('toggle', event => { if (event.newState === 'open') positionCatalog() })
 $('catalog-menu').addEventListener('keydown', event => {
   if (event.key === 'Escape') { event.preventDefault(); $('catalog-menu').hidePopover(); $('catalog-button').focus(); return }
@@ -353,6 +440,34 @@ $('catalog-menu').addEventListener('keydown', event => {
   buttons[event.key === 'Home' ? 0 : event.key === 'End' ? buttons.length - 1 : (at + (event.key === 'ArrowUp' ? -1 : 1) + buttons.length) % buttons.length].focus()
 })
 window.addEventListener('resize', () => { if ($('catalog-menu').matches(':popover-open')) positionCatalog() })
+// Twin notes open the shared tooltip on hover, focus or tap.
+function showTwins(note) {
+  const tip = $('twins-tip'), list = document.createElement('ul')
+  list.append(...JSON.parse(note.dataset.twins).map(name => Object.assign(document.createElement('li'), { textContent: name })))
+  tip.replaceChildren(list)
+  if (!tip.matches(':popover-open')) tip.showPopover()
+  const rect = note.getBoundingClientRect(), below = rect.bottom + 6 + tip.offsetHeight <= innerHeight - 12
+  place(tip, Math.max(12, Math.min(innerWidth - tip.offsetWidth - 12, rect.left)), below ? rect.bottom + 6 : Math.max(12, rect.top - 6 - tip.offsetHeight))
+}
+function hideTwins() { if ($('twins-tip').matches(':popover-open')) $('twins-tip').hidePopover() }
+for (const list of [$('results'), $('more-list')]) {
+  for (const type of ['pointerover', 'focusin']) list.addEventListener(type, event => { const note = event.target.closest('.font-twins'); if (note) showTwins(note) })
+  for (const type of ['pointerout', 'focusout']) list.addEventListener(type, event => { if (event.target.closest('.font-twins') && !event.relatedTarget?.closest?.('.font-twins')) hideTwins() })
+  list.addEventListener('keydown', event => { if (event.key === 'Escape' && $('twins-tip').matches(':popover-open')) { event.stopPropagation(); hideTwins() } })
+}
+// The full ranking, folded like the top five, built only when opened.
+function positionMore() {
+  const menu = $('more-menu'), rect = $('more-matches').getBoundingClientRect(), inset = menu.clientLeft + parseFloat(getComputedStyle(menu).paddingLeft)
+  place(menu, Math.max(12, Math.min(innerWidth - menu.offsetWidth - 12, rect.left - inset)), Math.max(12, Math.min(innerHeight - menu.offsetHeight - 12, rect.bottom + 4)))
+}
+$('more-menu').addEventListener('beforetoggle', event => {
+  const open = event.newState === 'open'; $('more-matches').setAttribute('aria-expanded', String(open))
+  if (!open) { hideTwins(); $('more-list').replaceChildren(); return }
+  const rest = foldTwins(last.matches, searchCatalog, { script: last.verdict?.script?.[0]?.label, limit: 99 }).slice(5)
+  $('more-list').replaceChildren(...rest.map((match, index) => { const item = document.createElement('li'); item.append(matchLine(match, index + 5)); return item }))
+})
+$('more-menu').addEventListener('toggle', event => { if (event.newState === 'open') { positionMore(); $('more-list').querySelector('a')?.focus({ preventScroll: true }) } })
+window.addEventListener('resize', () => { if ($('more-menu').matches(':popover-open')) positionMore() })
 function updatePreview(input) {
   const text = input.value.trim() || 'Quiet rivers flow'
   previewValid = /^[\x20-\x7e]+$/.test(text) && !/[~^]/.test(text)
@@ -376,6 +491,10 @@ function applyDrag(drag, end) {
 $('image-frame').addEventListener('pointerdown', event => {
   if (!current || dragging || !event.isPrimary || event.button !== 0) return
   const start = point(event), handle = event.target.closest('[data-handle]')?.dataset.handle
+  if (tool !== 'crop') {
+    edits.strokes.push({ erase: tool === 'erase', size: pen.size, points: [] }); dragging = { id: event.pointerId, draw: true }; addPoint(start)
+    $('image-frame').focus({ preventScroll: true }); $('image-frame').setPointerCapture(event.pointerId); event.preventDefault(); return
+  }
   if (armed) { applyDrag(armed, start); armed = null; event.preventDefault(); return }
   const inside = start.x >= crop.x && start.x <= crop.x + crop.width && start.y >= crop.y && start.y <= crop.y + crop.height
   dragging = { id: event.pointerId, before: { ...crop }, start, handle: handle || (inside ? 'move' : 'new'), x: event.clientX, y: event.clientY, moved: false }
@@ -383,11 +502,13 @@ $('image-frame').addEventListener('pointerdown', event => {
   $('image-frame').setPointerCapture(event.pointerId); event.preventDefault()
 })
 $('image-frame').addEventListener('pointermove', event => {
+  if (dragging?.draw && dragging.id === event.pointerId) { addPoint(point(event)); return }
   if (dragging?.id !== event.pointerId || Math.hypot(event.clientX - dragging.x, event.clientY - dragging.y) < 3) return
   dragging.moved = true; applyDrag(dragging, point(event))
 })
 $('image-frame').addEventListener('pointerup', event => {
   if (dragging?.id !== event.pointerId) return
+  if (dragging.draw) { dragging = null; return }
   if (dragging.moved) applyDrag(dragging, point(event))
   else if (!['new', 'move'].includes(dragging.handle)) armed = { ...dragging }
   dragging = null
@@ -406,8 +527,9 @@ $('image-frame').addEventListener('keydown', event => {
   updateCrop(editCrop(crop, handle, dx, dy, source))
 })
 $('resolution').addEventListener('change', () => { invalidate(true); message(); schedule() })
-$('open-image').addEventListener('click', () => { $('sample-menu').hidePopover(); $('file').click() })
-$('clear').addEventListener('click', clearImage)
+$('draw').addEventListener('click', () => { $('sample-menu').hidePopover(); startDrawing() })
+$('source-font').addEventListener('click', () => { if (current?.known) return; sample(lastFont) })
+for (const id of ['open-image', 'choose-image', 'replace-image']) $(id).addEventListener('click', () => { $('sample-menu').hidePopover(); $('file').click() })
 $('file').addEventListener('change', () => { const file = $('file').files[0]; if (file) openImage(file); $('file').value = '' })
 document.addEventListener('paste', event => {
   const file = [...(event.clipboardData?.items || [])].find(item => item.type.startsWith('image/'))?.getAsFile()
@@ -421,9 +543,16 @@ $('results').addEventListener('input', event => { if (event.target.matches('.res
 function sampleLabel() {
   const name = catalog?.fonts.find(f => f.id === current?.known)?.name || current?.name || 'Choose font'
   $('sample-label').textContent = name
-  $('sample').dataset.source = current && !current.known ? 'image' : 'font'
+  const kind = current?.drawing ? 'drawing' : current && !current.known ? 'image' : 'font'
+  $('sample').dataset.source = kind
+  const kinds = [['source-font', 'font'], ['draw', 'drawing'], ['choose-image', 'image']].map(([id, each]) => { $(id).setAttribute('aria-pressed', String(!!current && kind === each)); return [$(id), each] })
+  // The current kind leads its name; the others follow the spacer. DOM order is tab order; a moved button keeps focus.
+  const head = $('source-head'), focused = document.activeElement
+  head.insertBefore(kinds.find(([, each]) => each === kind)[0], $('sample'))
+  for (const [button, each] of kinds) if (each !== kind) head.append(button)
+  if (kinds.some(([button]) => button === focused)) focused.focus({ preventScroll: true })
   $('sample').title = name
-  $('sample').setAttribute('aria-label', current ? `Choose a font sample. Current ${current.known ? 'font' : 'image'}: ${name}` : 'Choose a font sample')
+  $('sample').setAttribute('aria-label', current ? `Choose a font sample. Current ${kind}: ${name}` : 'Choose a font sample')
   for (const button of $('sample-list').children) button.setAttribute('aria-pressed', String(button.dataset.font === current?.known))
 }
 const specimens = new IntersectionObserver(entries => {
@@ -443,7 +572,12 @@ function sampleList() {
     button.style.setProperty('--font-specimen', `"specimen-${font.id}"`)
     button.append(name)
     specimens.observe(button)
-    button.addEventListener('click', () => { $('sample-menu').hidePopover(); $('sample').focus({ preventScroll: true }); sample(font.id) })
+    button.addEventListener('click', async () => {
+      const trigger = sampleTrigger
+      $('sample-menu').hidePopover()
+      await sample(font.id)
+      ;(current ? $('sample') : trigger).focus({ preventScroll: true })
+    })
     return button
   }))
   $('sample-empty').textContent = 'No fonts available.'
@@ -455,14 +589,19 @@ function focusSample() {
   button?.scrollIntoView({ block: 'nearest' })
 }
 function positionSamples() {
-  const rect = $('sample').getBoundingClientRect(), menu = $('sample-menu')
+  const rect = sampleTrigger.getBoundingClientRect(), menu = $('sample-menu')
   const style = getComputedStyle(menu)
   const width = menu.offsetWidth || parseFloat(style.width), height = menu.offsetHeight || parseFloat(style.maxHeight)
-  menu.style.left = `${Math.max(20, Math.min(innerWidth - width - 20, rect.left))}px`
-  menu.style.top = `${Math.max(20, Math.min(rect.bottom + 6, innerHeight - height - 20))}px`
+  // The source name ends its line, so its menu hangs from that edge; the empty-state entry opens rightward.
+  const x = sampleTrigger === $('empty-sample') ? rect.left : rect.right - width
+  place(menu, Math.max(20, Math.min(innerWidth - width - 20, x)), Math.max(20, Math.min(rect.bottom + 6, innerHeight - height - 20)))
 }
+let sampleTrigger = $('sample')
+const sampleTriggers = [$('sample'), $('empty-sample')]
+for (const trigger of sampleTriggers) trigger.addEventListener('click', () => { sampleTrigger = trigger })
 $('sample-menu').addEventListener('beforetoggle', event => {
-  $('sample').setAttribute('aria-expanded', String(event.newState === 'open'))
+  const open = event.newState === 'open'
+  for (const trigger of sampleTriggers) trigger.setAttribute('aria-expanded', String(open && trigger === sampleTrigger))
   if (event.newState === 'open') { sampleList(); positionSamples() }
 })
 $('sample-menu').addEventListener('toggle', event => {
@@ -471,7 +610,7 @@ $('sample-menu').addEventListener('toggle', event => {
   positionSamples(); focusSample()
 })
 $('sample-menu').addEventListener('keydown', event => {
-  if (event.key === 'Escape') { event.preventDefault(); $('sample-menu').hidePopover(); $('sample').focus(); return }
+  if (event.key === 'Escape') { event.preventDefault(); $('sample-menu').hidePopover(); sampleTrigger.focus(); return }
   const buttons = [...$('sample-list').querySelectorAll('button')], index = buttons.indexOf(document.activeElement)
   if (event.key === 'Home' || event.key === 'End') { event.preventDefault(); buttons[event.key === 'Home' ? 0 : buttons.length - 1]?.focus(); return }
   if (['ArrowDown', 'ArrowUp', 'ArrowLeft', 'ArrowRight'].includes(event.key) && (index >= 0 || ['ArrowDown', 'ArrowUp'].includes(event.key))) {
@@ -500,7 +639,7 @@ async function initialize() {
     }))
     const artifact = JSON.parse(new TextDecoder().decode(modelBytes))
     if (await sha256(modelBytes) !== data.modelSha256) throw new Error('Model checksum failed.')
-    model = readNetwork(artifact); catalog = data
+    model = readNetwork(artifact); heads = readHeads(artifact); catalog = data
     if (isEncoder()) {
       if (await preparationHash(artifact.preparation) !== data.preparationSha256) throw new Error('Preparation checksum failed.')
       const option = data.catalogs[0], response = await fetch(option.file)
@@ -516,10 +655,14 @@ async function initialize() {
         button.append(label, count); button.addEventListener('click', () => selectCatalog(option)); return button
       }))
       updateCatalogLabel()
-      $('metrics').textContent = `Experimental encoder. On synthetic crops of 300 unseen families: ${(data.metrics.top1 * 100).toFixed(1)}% top-1, ${(data.metrics.top5Accuracy * 100).toFixed(1)}% top-5. Real-image accuracy is unmeasured.`
-      $('score-note').textContent = 'Cosine similarity compares the crop with catalog references. It is not calibrated certainty. Face labels describe references; weight and style accuracy are unmeasured.'
-      $('method-note').textContent = 'Up to three tight grayscale windows are deskewed and encoded on WebGPU or CPU. Their normalized vectors are averaged, then compared with the selected catalog. Catalog changes reuse the image embedding.'
-      $('scope-note').textContent = 'Crop one font on a plain background. Short crops and fonts outside the selected catalog can produce misleading matches.'
+      // Shipped catalogs, not the selected or imported one.
+      // Fractions read as percentages; data-format="number" figures (the weight error) as whole numbers.
+      for (const figure of document.querySelectorAll('[data-metric]')) {
+        const value = data.metrics[figure.dataset.metric]
+        figure.textContent = figure.dataset.format === 'number' ? String(Math.round(value)) : `${(value * 100).toFixed(1)}%`
+      }
+      intro(`Finds the closest of ${data.families.toLocaleString()} font families, from ${data.catalogs.length} catalogs, to any line of text.`, data.metrics.top1, 'rendered text in fonts it never saw')
+      $('method-note').textContent = `The crop is straightened and split into up to three small grayscale windows. A small neural network turns each window into 128 numbers that describe its style, and their average is compared with every font in the catalog${heads ? ' that can draw the detected script' : ''}. Switching catalogs re-ranks the same numbers without running the network again.`
       $('network-label').textContent = 'Encoder'
     }
     try { gpu = await createNetworkGPU(model) } catch (error) { gpuReason = `CPU fallback: ${error.message}` }
@@ -528,7 +671,7 @@ async function initialize() {
     if (!isEncoder()) {
       $('catalog-size').textContent = `${data.fonts.length} families`
       const measured = data.metrics.groups.all
-      $('metrics').textContent = `Top-1 on ${measured.count.toLocaleString()} synthetic ${data.metrics.split} crops: ${(measured.accuracy * 100).toFixed(1)}%. Real-image accuracy is unmeasured.`
+      intro(`Finds the closest of the ${data.fonts.length} font families it was trained on to any line of text.`, measured.accuracy, `rendered ${data.metrics.split} text`)
     }
     if (data.metrics.groups?.['length/1']) {
       $('accuracy').hidden = false
@@ -543,7 +686,7 @@ async function initialize() {
         $('accuracy').querySelector('tbody').append(row)
       }
     }
-    $('parameters').textContent = `${data.parameters.toLocaleString()} parameters`
+    $('parameters').textContent = `${data.parameters.toLocaleString()} parameters, int8 weights`
     document.body.dataset.ready = 'true'
     if (revision === 0) await sample('lora')
     else if (current) { invalidate(true); schedule() }

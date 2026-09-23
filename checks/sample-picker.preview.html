@@ -2,24 +2,25 @@
 <html lang="en">
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Sample picker states</title>
+<title>Font picker states</title>
 <link rel="stylesheet" href="../dist/style.css">
 <style>
 main { max-width: 480px; padding-block: 32px; }
 .state { display: grid; grid-template-columns: 100px minmax(0, 1fr); align-items: center; gap: 16px; margin-block: 16px; }
-.is-hover { color: var(--color-accent); text-decoration: underline; text-underline-offset: 4px; }
+.state > .sample-button { justify-self: start; }
+.is-hover { color: var(--color-ink); }
 .is-focus { outline: 2px solid var(--color-focus); outline-offset: 4px; }
 .is-active { transform: translateY(1px); color: var(--color-ink); }
 </style>
 <main>
-<h1>Sample picker</h1>
-<div class="state"><span>Default</span><button class="image-picker">Image ⌄</button></div>
-<div class="state"><span>Hover</span><button class="image-picker is-hover">Image ⌄</button></div>
-<div class="state"><span>Focus</span><button class="image-picker is-focus">Image ⌄</button></div>
-<div class="state"><span>Active</span><button class="image-picker is-active">Image ⌄</button></div>
-<div class="state"><span>Disabled</span><button class="image-picker" disabled>Image ⌄</button></div>
-<div class="state"><span>Loading</span><div><button class="image-picker">Image · Lora ⌄</button><p class="message">Loading sample…</p></div></div>
-<div class="state"><span>Error</span><div><button class="image-picker">Image · Lora ⌄</button><p class="message" data-error>Could not load font.</p></div></div>
-<div class="state"><span>Selected</span><button class="sample-option" aria-pressed="true" data-loaded="true"><span class="sample-specimen">AaBb</span><span class="sample-name">Lora</span></button></div>
+<h1>Font picker</h1>
+<div class="state"><span>Default</span><button class="sample-button"><span class="font-icon" aria-hidden="true">Aa</span> Lora ⌄</button></div>
+<div class="state"><span>Hover</span><button class="sample-button is-hover"><span class="font-icon" aria-hidden="true">Aa</span> Lora ⌄</button></div>
+<div class="state"><span>Focus</span><button class="sample-button is-focus"><span class="font-icon" aria-hidden="true">Aa</span> Lora ⌄</button></div>
+<div class="state"><span>Active</span><button class="sample-button is-active"><span class="font-icon" aria-hidden="true">Aa</span> Lora ⌄</button></div>
+<div class="state"><span>Disabled</span><button class="sample-button" disabled><span class="font-icon" aria-hidden="true">Aa</span> Lora ⌄</button></div>
+<div class="state"><span>Loading</span><div><button class="sample-button"><span class="font-icon" aria-hidden="true">Aa</span> Lora ⌄</button><p class="message">Loading fonts…</p></div></div>
+<div class="state"><span>Error</span><div><button class="sample-button"><span class="font-icon" aria-hidden="true">Aa</span> Lora ⌄</button><p class="message" data-error>Could not load font.</p></div></div>
+<div class="state"><span>Selected</span><button class="sample-option" aria-pressed="true"><span class="sample-name">Source Serif 4</span></button></div>
 </main>
 </html>

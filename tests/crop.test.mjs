@@ -1,6 +1,6 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
-import { editCrop, newCrop } from '../demo/crop.mjs'
+import { editCrop, newCrop } from '../crop.mjs'
 
 const bounds = { width: 100, height: 60 }, rect = { x: 20, y: 10, width: 40, height: 30 }
 test('each crop handle retains its opposite edge; moves retain size and clamp to the image', () => {

@@ -53,12 +53,13 @@ async function saveResult(page) {
     }
   }
   assert.equal(await page.locator('#result-summary').textContent() === 'Below threshold', !result.accepted)
-  assert.equal(await page.locator('#detection-time').textContent(), `${result.milliseconds.toFixed(1)} ms`)
+  assert.equal(await page.locator('#detection-time').textContent(), `Detected in ${result.milliseconds.toFixed(1)}ms`)
   return result
 }
-async function assertCleared(page) {
+async function assertEmpty(page) {
   assert.ok(await page.locator('#empty').isVisible())
-  for (const id of ['image-frame', 'clear', 'resolution-control', 'model-input', 'preview-error']) assert.ok(await page.locator(`#${id}`).isHidden(), id)
+  assert.ok(await page.locator('#model-input').isVisible())
+  for (const id of ['image-frame', 'draw', 'choose-image', 'sample', 'resolution-control', 'preview-error']) assert.ok(await page.locator(`#${id}`).isHidden(), id)
   assert.equal(await page.locator('#open-image').getAttribute('aria-label'), 'Choose an image')
   assert.equal(await page.locator('#resolution').inputValue(), '100')
   assert.equal(await page.locator('#sample-label').textContent(), 'Choose font')
@@ -67,8 +68,6 @@ async function assertCleared(page) {
   assert.equal(await page.locator('.result, #normalized canvas, #input-regions span').count(), 0)
   assert.ok(await page.locator('#save').isDisabled())
   assert.ok(await page.locator('#results-empty').isVisible())
-  assert.equal(await page.locator('#timing').textContent(), '—')
-  assert.deepEqual(await page.locator('#source').evaluate(c => [c.width, c.height]), [0, 0])
 }
 async function chooseSample(page, id) {
   await page.locator('#sample').click()
@@ -76,6 +75,7 @@ async function chooseSample(page, id) {
 }
 async function assertInput(page, result) {
   assert.ok(await page.locator('#model-input').isVisible())
+  assert.equal(await page.locator('#input-count').textContent(), `${result.inputs.length} window${result.inputs.length === 1 ? '' : 's'}`)
   const canvases = await page.locator('#normalized canvas').evaluateAll(elements => elements.map(canvas => ({ width: canvas.width, height: canvas.height,
     cssWidth: canvas.getBoundingClientRect().width, data: Array.from(canvas.getContext('2d').getImageData(0, 0, canvas.width, canvas.height).data) })))
   assert.equal(canvases.length, result.inputs.length)
@@ -117,8 +117,11 @@ try {
   await page.waitForFunction(() => document.querySelectorAll('.result').length === 5)
   assert.equal(await page.locator('#sample #sample-label').textContent(), 'Lora')
   assert.equal(await page.locator('#sample').getAttribute('data-source'), 'font')
-  assert.ok(await page.locator('#sample .font-icon').isVisible())
-  assert.ok(await page.locator('#sample .image-icon').isHidden())
+  assert.deepEqual(await page.evaluate(() => ['source-font', 'draw', 'choose-image'].map(id => document.getElementById(id).getAttribute('aria-pressed'))), ['true', 'false', 'false'])
+  assert.equal(await page.locator('header .header-icon[aria-label="GitHub repository"]').count(), 1)
+  assert.equal(await page.locator('header #backend').getAttribute('class'), 'sr-only')
+  assert.equal(await page.locator('footer [aria-label="GitHub repository"]').count(), 0)
+  assert.equal(await page.locator('footer .footer-license').textContent(), 'MIT')
   assert.deepEqual(await page.locator('.font-style').allTextContents(), Array(5).fill('Regular, 400'))
   assert.ok((await page.locator('.result-preview').evaluateAll(inputs => inputs.map(el => getComputedStyle(el).fontWeight === '400' && getComputedStyle(el).fontStyle === 'normal'))).every(Boolean))
   assert.equal(await page.locator('#catalog-size').textContent(), `${catalog.fonts.length} families`)
@@ -198,7 +201,7 @@ try {
     const result = await saveResult(scorePage)
     assert.deepEqual(result.matches.slice(0, 5).map(m => m.score), scores)
     assert.deepEqual(await scorePage.locator('.result-score').allTextContents(), labels)
-    assert.match(await scorePage.locator('#detection-time').textContent(), /^\d+\.\d ms$/)
+    assert.match(await scorePage.locator('#detection-time').textContent(), /^Detected in \d+\.\dms$/)
     assert.equal(result.accepted, scores[0] >= (catalog.calibration?.threshold ?? 1.01))
   }
   const whitePixel = await scorePage.evaluate(() => {
@@ -218,14 +221,13 @@ try {
   await scorePage.close()
 
   if (model.fonts.length === 100) {
-    await page.locator('#about summary').click()
+    assert.ok(await page.locator('#how-it-works #accuracy').isVisible(), 'The accuracy table sits with How it works')
     assert.equal(await page.locator('#accuracy tbody tr').count(), 4)
     assert.equal(await page.locator('#accuracy tbody tr').last().locator('td').first().textContent(), `${(catalog.metrics.groups['8+/clean'].accuracy * 100).toFixed(1)}%`)
     await page.screenshot({ path: '.data/demo-checks/metrics-desktop.png', fullPage: true })
     await page.setViewportSize({ width: 320, height: 1000 })
     assert.ok(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth))
     await page.screenshot({ path: '.data/demo-checks/metrics-mobile.png', fullPage: true })
-    await page.locator('#about summary').click()
     await page.setViewportSize({ width: 1440, height: 1100 })
   }
   const timings = await page.evaluate(async ({ artifact, inputs }) => {
@@ -311,20 +313,19 @@ try {
   await page.locator('#sample').click()
   await page.keyboard.press('Escape')
   const menuChooser = page.waitForEvent('filechooser')
-  await page.locator('#open-image').click({ position: { x: 10, y: 10 } })
+  await page.locator('#replace-image').click({ position: { x: 10, y: 10 } })
   assert.equal(await page.locator('#sample-menu').evaluate(el => el.matches(':popover-open')), false)
   await (await menuChooser).setFiles({ name: 'menu-open.png', mimeType: 'image/png', buffer: Buffer.from(png, 'base64') })
   await saveResult(page)
   assert.equal(await page.locator('#sample-label').textContent(), 'menu-open.png')
   assert.equal(await page.locator('#sample').getAttribute('data-source'), 'image')
-  assert.ok(await page.locator('#sample .image-icon').isVisible())
-  assert.ok(await page.locator('#sample .font-icon').isHidden())
+  assert.deepEqual(await page.evaluate(() => ['source-font', 'draw', 'choose-image'].map(id => document.getElementById(id).getAttribute('aria-pressed'))), ['false', 'false', 'true'])
   assert.ok(await page.locator('#sample .chevron').isHidden())
-  assert.equal(await page.locator('#open-image').getAttribute('aria-label'), 'Replace image')
+  assert.equal(await page.locator('#replace-image').getAttribute('aria-label'), 'Replace image')
   assert.ok(await page.locator('#preview-error').isHidden(), 'Replacing an image clears stale preview validation')
   await chooseSample(page, 'lora'); await saveResult(page)
   const cancelledChooser = page.waitForEvent('filechooser')
-  await page.locator('#open-image').click({ position: { x: 10, y: 10 } })
+  await page.locator('#replace-image').click({ position: { x: 10, y: 10 } })
   await (await cancelledChooser).setFiles([])
   assert.equal(await page.locator('#source').getAttribute('aria-label'), 'Lora sample', 'Cancelling an image choice retains the current source')
   assert.equal(await page.locator('#sample-label').textContent(), 'Lora')
@@ -371,12 +372,8 @@ try {
     document.querySelector('#stage').dispatchEvent(new DragEvent('drop', { dataTransfer: dt, bubbles: true, cancelable: true }))
   }, png)
   await page.waitForFunction(() => document.querySelector('#source').getAttribute('aria-label') === 'dropped.png')
-  // A delayed decode must neither overwrite a newer upload nor reopen or report errors on a closed image.
-  for (const action of ['replace', 'clear', 'clear-error']) {
-    if (action === 'clear-error') {
-      await page.locator('#file').setInputFiles({ name: 'before-error.png', mimeType: 'image/png', buffer: Buffer.from(png, 'base64') })
-      await saveResult(page)
-    }
+  // A delayed decode, valid or broken, must neither overwrite a newer upload nor report its own error.
+  for (const late of [png, Buffer.from('broken image').toString('base64')]) {
     await page.evaluate(() => {
       const original = window.createImageBitmap
       window.testDecode = { original }
@@ -389,32 +386,28 @@ try {
       const dt = new DataTransfer()
       dt.items.add(new File([Uint8Array.from(atob(base64), c => c.charCodeAt(0))], 'late-paste.png', { type: 'image/png' }))
       document.dispatchEvent(new ClipboardEvent('paste', { clipboardData: dt, bubbles: true, cancelable: true }))
-    }, action === 'clear-error' ? Buffer.from('broken image').toString('base64') : png)
-    if (action === 'replace') {
-      await page.locator('#file').setInputFiles({ name: 'newer.png', mimeType: 'image/png', buffer: Buffer.from(png, 'base64') })
-      await page.waitForFunction(() => document.querySelector('#source').getAttribute('aria-label') === 'newer.png')
-    } else await page.locator('#clear').click()
-    const before = await page.locator('#source').getAttribute('aria-label')
+    }, late)
+    await page.locator('#file').setInputFiles({ name: 'newer.png', mimeType: 'image/png', buffer: Buffer.from(png, 'base64') })
+    await page.waitForFunction(() => document.querySelector('#source').getAttribute('aria-label') === 'newer.png')
     await page.evaluate(async () => {
       await window.testDecode.resume()
       await new Promise(resolve => requestAnimationFrame(resolve))
       delete window.testDecode
     })
-    assert.equal(await page.locator('#source').getAttribute('aria-label'), before)
-    if (action !== 'replace') await assertCleared(page)
+    assert.equal(await page.locator('#source').getAttribute('aria-label'), 'newer.png')
+    assert.equal(await page.locator('#message').textContent(), '')
   }
-  // Close clears invalid preview state and reduced resolution; a sample can be selected again.
+  // The Source image button opens a file, resetting reduced resolution and invalid preview text.
   await chooseSample(page, 'lora'); await saveResult(page)
   await page.locator('#resolution').selectOption('50'); await saveResult(page)
   await page.locator('#preview-text').fill('你好')
-  await page.locator('#clear').click()
-  await assertCleared(page)
-  assert.equal(await page.evaluate(() => document.activeElement.id), 'open-image')
+  await page.locator('#choose-image').focus()
   const reopen = page.waitForEvent('filechooser')
-  await page.locator('#open-image').press('Enter')
+  await page.locator('#choose-image').press('Enter')
   await (await reopen).setFiles({ name: 'reopened.png', mimeType: 'image/png', buffer: Buffer.from(png, 'base64') })
   assert.equal((await saveResult(page)).source.name, 'reopened.png')
-  await page.locator('#clear').click()
+  assert.equal(await page.locator('#resolution').inputValue(), '100')
+  assert.ok(await page.locator('#preview-error').isHidden())
   await chooseSample(page, 'lora')
   assert.equal((await saveResult(page)).source.known, 'lora')
   await page.locator('#file').setInputFiles({ name: 'broken.png', mimeType: 'image/png', buffer: Buffer.from('broken image') })
@@ -424,7 +417,7 @@ try {
   await page.waitForFunction(() => document.querySelector('#source').getAttribute('aria-label') === 'blank.png')
   await page.waitForFunction(() => document.querySelector('#message').textContent.includes('No visible text'))
   assert.equal(await page.locator('.result').count(), 0)
-  assert.ok(await page.locator('#model-input').isHidden())
+  assert.ok(await page.locator('#model-input').isVisible())
   assert.equal(await page.locator('#normalized canvas').count(), 0)
   await page.locator('#sample').click()
   assert.equal(await page.locator('#sample-list button').count(), model.fonts.length)
@@ -551,12 +544,23 @@ try {
     else assert.notDeepEqual(result.inputs, originalResolution.inputs, 'Resolution must change the actual inference input')
   }
   assert.equal(await page.locator('#method, #paste, #upload, #full-crop, .crop-details, .crop-hint, #analyze, #matte, #source-meta').count(), 0)
-  assert.equal(await page.locator('#stage select#resolution').count(), 1)
-  assert.equal(await page.locator('input[type=range]').count(), 0)
-  assert.equal(await page.locator('.results-panel .panel-heading #detection-time').count(), 1)
+  assert.equal(await page.locator('#model-input > .panel-head select#resolution').count(), 1, 'Resolution belongs to the model input')
+  assert.deepEqual(await page.locator('input[type=range]').evaluateAll(inputs => inputs.map(i => i.id)), ['pen-size'], 'The only slider is the pen width')
+  assert.equal(await page.locator('.source-panel > .panel-head > #sample').count(), 1)
+  assert.equal(await page.locator('#clear').count(), 0)
+  assert.equal(await page.locator('.results-column > #catalog-control > .panel-head > #catalog-button').count(), 1)
+  assert.equal(await page.locator('#model-input > #normalized + .input-meta > #detection-time').count(), 1)
+  assert.deepEqual(await page.locator('#source-head').evaluate(h => [...h.children].filter(c => !c.matches('.sr-only')).map(c => c.id || c.className)), ['source-font', 'sample', 'source-spacer', 'draw', 'choose-image'], 'The current kind leads its name; the others follow')
+  assert.equal(await page.locator('#tools').getAttribute('data-tool'), 'crop'); assert.ok(await page.locator('#undo').isDisabled())
+  assert.ok(await page.locator('.pen-size').isHidden(), 'Brush size shows only with a drawing tool')
+  assert.equal(await page.locator('#results-title').getAttribute('class'), 'sr-only')
+  assert.deepEqual(await page.locator('.workbench .panel-head > :first-child').allTextContents(), ['Source', 'Model input', 'Catalog'])
+  assert.deepEqual(await page.locator('.workbench .panel-head').evaluateAll(heads => heads.map(h => getComputedStyle(h).borderBottomStyle)), ['none', 'none', 'none'], 'Workbench heads carry no rule')
+  assert.equal(await page.locator('.intro').evaluate(e => getComputedStyle(e).borderBottomStyle), 'solid', 'A rule separates the introduction from the workbench')
+  assert.deepEqual(await page.locator('.workbench .panel-head > h2').evaluateAll(hs => hs.map(h => h.className)), ['sr-only', 'sr-only'], 'Source and Catalog are named for assistive technology only')
   assert.equal(await page.locator('.scope, .score-label, .result-foot, .result-preview-control').count(), 0)
-  assert.ok(!await page.locator('footer').textContent().then(text => text.includes('Images stay')))
-  assert.match(await page.locator('#detection-time').textContent(), /^\d+\.\d ms$/)
+  assert.doesNotMatch(await page.locator('body').textContent(), /never leaves|nothing is uploaded|images stay/i)
+  assert.match(await page.locator('#detection-time').textContent(), /^Detected in \d+\.\dms$/)
 
   // Hold one real GPU readback while 50 new crop updates arrive.
   await page.evaluate(() => {
@@ -608,18 +612,6 @@ try {
   assert.deepEqual(replaced.matches, initialResult.matches)
   assert.equal((await page.evaluate(() => window.testLive.reads)).length, 4, 'Only the active crop and replacement image may prepare input after replacement')
   await assertInput(page, replaced)
-  // Closing cancels both the held inference and its pending crop.
-  await page.evaluate(() => { window.testLive.holdNext = true; delete window.testLive.release })
-  await frame.press('Shift+ArrowLeft')
-  await page.waitForFunction(() => !!window.testLive.release)
-  await frame.press('Shift+ArrowLeft')
-  await page.locator('#clear').click()
-  await assertCleared(page)
-  await page.evaluate(async () => {
-    window.testLive.release()
-    await new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)))
-  })
-  await assertCleared(page)
   await page.evaluate(() => {
     GPUBuffer.prototype.mapAsync = window.testLive.map; CanvasRenderingContext2D.prototype.getImageData = window.testLive.read
     delete window.testLive
@@ -651,7 +643,7 @@ try {
     assert.ok(menu.x >= 0 && menu.x + menu.width <= width && menu.y >= 0 && menu.y + menu.height <= 1000, `Popover clipped at ${width}px: ${JSON.stringify(menu)}`)
     if (width === 1440) {
       const tabs = await page.locator('#sample').boundingBox()
-      assert.ok(Math.abs(menu.x - tabs.x) < 1, 'The desktop dropdown aligns with the source controls')
+      assert.ok(Math.abs(menu.x - tabs.x) < 1, 'The desktop dropdown aligns with the source selector')
     }
     await page.screenshot({ path: `.data/demo-checks/popover-${width}.png`, fullPage: true })
     await page.keyboard.press('Escape')
@@ -674,7 +666,7 @@ try {
       const rgb = [...c.getImageData(0, 0, 1, 1).data].slice(0, 3).map(v => { v /= 255; return v <= .04045 ? v / 12.92 : ((v + .055) / 1.055) ** 2.4 })
       return rgb[0] * .2126 + rgb[1] * .7152 + rgb[2] * .0722
     }
-    return [['--color-ink', '--color-paper'], ['--color-muted', '--color-paper'], ['--color-muted', '--color-well'], ['--color-accent', '--color-paper'], ['--color-accent-ink', '--color-accent']].map(([a, b]) => {
+    return [['--color-ink', '--color-paper'], ['--color-muted', '--color-paper'], ['--color-muted', '--color-well'], ['--color-accent', '--color-paper'], ['--color-accent-ink', '--color-accent'], ['--color-faint', '--color-paper'], ['--color-faint', '--color-well'], ['--color-code', '--color-well']].map(([a, b]) => {
       const x = luminance(a), y = luminance(b)
       return { pair: [a, b], ratio: (Math.max(x, y) + .05) / (Math.min(x, y) + .05) }
     })
@@ -730,7 +722,7 @@ try {
     await route.fulfill({ status: 503, body: 'Unavailable' })
   })
   await catalogFailure.goto(base)
-  await catalogFailure.locator('#sample').click()
+  await catalogFailure.locator('#empty-sample').click()
   assert.equal(await catalogFailure.locator('#sample-empty').textContent(), 'Loading fonts…')
   assert.equal(await catalogFailure.locator('#sample-list button').count(), 0)
   assert.ok(await catalogFailure.locator('#empty').isVisible())
@@ -770,7 +762,7 @@ try {
   const recoveredSample = await saveResult(failure)
   assert.equal(recoveredSample.source.known, missing)
   assert.equal(await failure.locator('#sample-label').textContent(), catalog.fonts.find(f => f.id === missing).name, 'A successful retry names the selected sample')
-  // A font finishing its download after Close must not restore its sample.
+  // A font finishing its download after a newer image must not restore its sample.
   const loadedAfterRetry = await failure.evaluate(() => [...document.fonts].map(f => f.family))
   const lateFont = model.fonts.find(f => !loadedAfterRetry.includes(`specimen-${f}`))
   let releaseFont
@@ -778,11 +770,11 @@ try {
   await failure.route(`**/assets/fonts/${lateFont}.ttf`, async route => { await heldFont; await route.continue() })
   await chooseSample(failure, lateFont)
   await failure.waitForFunction(() => document.querySelector('#message').textContent === 'Loading sample…')
-  await failure.locator('#clear').click()
-  await assertCleared(failure)
+  await failure.locator('#file').setInputFiles({ name: 'newer-than-font.png', mimeType: 'image/png', buffer: Buffer.from(png, 'base64') })
+  await failure.waitForFunction(() => document.querySelector('#source').getAttribute('aria-label') === 'newer-than-font.png')
   releaseFont()
   await failure.waitForFunction(id => [...document.fonts].some(f => f.family === `specimen-${id}`), lateFont)
-  await assertCleared(failure)
+  assert.equal(await failure.locator('#sample-label').textContent(), 'newer-than-font.png')
   await chooseSample(failure, lateFont)
   assert.equal((await saveResult(failure)).source.known, lateFont, 'The same sample works after a cancelled load')
   await failure.close()
@@ -794,13 +786,15 @@ try {
   await fallback.waitForFunction(() => document.querySelectorAll('.result').length === 5)
   assert.equal(await fallback.locator('#backend').getAttribute('data-backend'), 'cpu')
   let resumeModel
-  let delayedModel = new Promise(resolve => { resumeModel = resolve })
+  const delayedModel = new Promise(resolve => { resumeModel = resolve })
   await fallback.route('**/assets/model.json', async route => { await delayedModel; await route.continue() })
   await fallback.reload()
-  assert.ok(await fallback.locator('#empty').isVisible())
-  assert.equal(await fallback.locator('#sample-label').textContent(), 'Choose font')
-  assert.ok(await fallback.locator('#clear').isHidden())
-  assert.ok(await fallback.locator('#resolution-control').isHidden())
+  await assertEmpty(fallback)
+  assert.equal(await fallback.locator('#empty').getByText('or', { exact: true }).count(), 1)
+  await fallback.locator('#empty-sample').click()
+  assert.equal(await fallback.locator('#sample-menu').evaluate(el => el.matches(':popover-open')), true)
+  await fallback.keyboard.press('Escape')
+  assert.equal(await fallback.evaluate(() => document.activeElement.id), 'empty-sample')
   const chooser = fallback.waitForEvent('filechooser')
   await fallback.locator('#open-image').click()
   await (await chooser).setFiles({ name: 'empty-open.png', mimeType: 'image/png', buffer: Buffer.from(png, 'base64') })
@@ -811,15 +805,6 @@ try {
   const retained = await saveResult(fallback)
   assert.equal(retained.source.name, 'retained-before-model.png')
   assert.deepEqual(retained.inputs, initialResult.inputs)
-  // Clearing before initialization prevents the default sample from reopening.
-  delayedModel = new Promise(resolve => { resumeModel = resolve })
-  await fallback.reload()
-  await fallback.locator('#file').setInputFiles({ name: 'closed-before-model.png', mimeType: 'image/png', buffer: Buffer.from(png, 'base64') })
-  await fallback.waitForFunction(() => document.querySelector('#source').getAttribute('aria-label') === 'closed-before-model.png')
-  await fallback.locator('#clear').click()
-  resumeModel()
-  await fallback.waitForSelector('body[data-ready="true"]')
-  await assertCleared(fallback)
   await chooseSample(fallback, 'lora')
   assert.deepEqual((await saveResult(fallback)).inputs, initialResult.inputs)
   await fallback.close()

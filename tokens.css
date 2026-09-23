@@ -32,4 +32,39 @@
   --text-section: clamp(1.75rem, 3vw, 2.25rem);
   --radius-control: 0;
   --radius-panel: 2px;
+  --radius-popover: 6px;
+  --radius-pill: 999px;
+
+  /* Tertiary text: face labels, twin notes, code comments. AA on every ground: 4.6:1 on the well, 5:1 on paper. */
+  --color-faint: oklch(53% 0 0);
+  --color-code: oklch(34% 0 0);
+  --shadow-popover: 0 10px 32px var(--color-shadow);
+
+  --font-mono: ui-monospace, 'SF Mono', SFMono-Regular, Menlo, Consolas, monospace;
+  --text-code: .75rem;
+  --text-subtitle: 1.125rem;
+  --text-wordmark: 2.125rem;
+  --text-glyph: 1.375rem;
+  --text-glyph-small: 1.125rem;
+  --text-glyph-large: 1.75rem;
+  --measure: 62ch;
+
+  /* Links underline in the rule colour and darken to the text colour on hover. */
+  --link-rule: var(--color-rule);
+  --link-offset: 4px;
+
+  /* A 4px grid; targets are at least 44px. */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-7: 28px;
+  --space-8: 32px;
+  --space-9: 36px;
+  --space-10: 40px;
+  --space-12: 48px;
+  --space-14: 56px;
+  --size-target: 44px;
 }

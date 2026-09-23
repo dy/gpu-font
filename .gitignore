@@ -5,3 +5,6 @@ __pycache__/
 *.pyc
 .DS_Store
 dist/
+# Third-party page copies and browser-tool scratch stay local.
+raw/
+.playwright-mcp/
