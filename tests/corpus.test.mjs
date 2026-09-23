@@ -2,7 +2,7 @@ import test from 'node:test'
 import assert from 'node:assert/strict'
 import { prepareBatch } from '../scripts/corpus-prepare.mjs'
 import { prepareLine } from '../src/line.mjs'
-import { readNetwork, inferCPU, corpusArchitecture } from '../src/network.mjs'
+import { readNetwork, inferCPU, corpusArchitecture, largeArchitecture } from '../src/network.mjs'
 
 test('corpus batch preparation is byte-identical to browser input, including blank and repeated batches', () => {
   const width = 35, height = 20, gray = Buffer.alloc(width * height, 255)
@@ -20,15 +20,15 @@ test('corpus batch preparation is byte-identical to browser input, including bla
   assert.deepEqual(prepareBatch([source]), [expected])
 })
 
-test('wide corpus encoder uses all 128 features and the last of 2,055 output rows', () => {
-  const channels=[1,32,64,96,128,128], fonts=Array.from({length:2055},(_,i)=>`f${i}`)
+for (const [architecture, channels] of [[corpusArchitecture,[1,32,64,96,128,128]], [largeArchitecture,[1,64,128,192,256,256]]]) test(`${architecture} uses every feature and the last of 2,055 output rows`, () => {
+  const features=channels.at(-1), fonts=Array.from({length:2055},(_,i)=>`f${i}`)
   const layers=Array.from({length:6},(_,i)=>{
-    const shape=i===5?[fonts.length,128]:[channels[i+1],channels[i],3,3]
+    const shape=i===5?[fonts.length,features]:[channels[i+1],channels[i],3,3]
     return {shape,scale:Array(shape[0]).fill(1),bias:Array(shape[0]).fill(0),weights:Buffer.alloc(shape.reduce((a,b)=>a*b)).toString('base64')}
   })
-  layers[4].bias[127]=3
+  layers[4].bias[features-1]=3
   const packed=Buffer.from(layers[5].weights,'base64'); packed[packed.length-1]=7; layers[5].weights=packed.toString('base64')
-  const model=readNetwork({version:1,architecture:corpusArchitecture,fonts,preparation:{width:128,height:48,windows:3},layers})
+  const model=readNetwork({version:1,architecture,fonts,preparation:{width:128,height:48,windows:3},layers})
   for (const [width,height] of [[1,1],[1,1],[7,3],[1,1]]) {
     const scores=inferCPU(model,{width,height,pixels:new Float32Array(width*height)})
     assert.equal(scores.length,2055); assert.equal(scores.at(-1),21); assert.ok(scores.slice(0,-1).every(v=>v===0))

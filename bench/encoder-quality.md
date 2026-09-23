@@ -57,3 +57,21 @@ node scripts/python.mjs -m train.encoder_case_quality
 ```
 
 The first phrase generator is preserved in commit `c7789b2`; extending it for the second bank changes its code hash. Existing pixel snapshots retain their original provenance. Reproducing a historical confirmation requires the recorded generator version, not silently changing its pins.
+
+## Text dependence and capacity
+
+The [text-dependence diagnostic](encoder-text-dependence.json) reuses opened development images as references. It searches the same 1,672 Latin families with one Pillow reference each and Chromium queries at 56 px. With the case-trained encoder, held-out-family top-1 is 75.0% for matching text and 43.0% for different text. The original encoder scores 70.3% and 37.8%. The two strings also differ in length and crop geometry, so this isolates neither glyph identity nor OCR benefit. It establishes that good matching of the same specimen does not establish text-independent recognition.
+
+The capacity experiment doubles convolution channels to 64/128/192/256/256 while retaining 128 output dimensions and the same preparation. It has 1,363,264 parameters. Widening duplicates existing filters and divides their incoming weights to preserve the initial function; a small training-only perturbation breaks symmetry. Tests check the preserved projections, batch padding, repeated inputs, gradients and int8 export. The run uses the same case-diverse data and checkpoint criterion, for 12,000 updates. It is a bounded capacity probe, not an equal-update comparison with the 20,000-step case run.
+
+The third phrase bank is frozen before capacity results: `Silver branches sway`, `Warm stone arches`, `Painted clay vessels`, `Fresh thyme and sage`, `wBNgkfea`, `es`, at 26/52 px. Its strings are disjoint from all earlier training, reference and phrase banks. It is confirmation data, not checkpoint-selection data. The original deployed encoder stays in place while this candidate is evaluated.
+
+```sh
+node scripts/encoder-quality.mjs --large
+node scripts/python.mjs -m train.encoder_refine --case-training --large --steps 12000
+node scripts/python.mjs -m train.encoder_case_quality --large
+node scripts/python.mjs -m train.encoder_text_diagnostic --large
+node checks/encoder.mjs .data/encoder/large-refine/encoder.json .data/detection-quality/large-google-fonts.json bench/encoder-large-runtime.json
+```
+
+Commit `3d553b9` preserves the second-bank generator and case-training implementation before adding the capacity experiment. Historical snapshots keep those hashes. The runtime check accepts explicit candidate paths so it can verify CPU/Metal parity and payload size before deployment.

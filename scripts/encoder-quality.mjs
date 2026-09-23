@@ -5,10 +5,12 @@ import { chromium } from 'playwright'
 import { prepareBatch } from './corpus-prepare.mjs'
 
 const next = process.argv.includes('--next')
-const out = `.data/detection-quality/phrases${next ? '-next' : ''}`, hash = bytes => createHash('sha256').update(bytes).digest('hex')
+const large = process.argv.includes('--large')
+if (next && large) throw new Error('Choose one confirmation bank')
+const out = `.data/detection-quality/phrases${large ? '-large' : next ? '-next' : ''}`, hash = bytes => createHash('sha256').update(bytes).digest('hex')
 const read = async path => JSON.parse(await readFile(path))
 const fonts = (await read('bench/fonts-100.json')).fonts, inventory = await read('bench/corpus.json'), split = await read('bench/encoder-split.json')
-const texts = next ? ['Velvet lanterns glow', 'Bright copper bells', 'Spiced pears simmer', 'Paper swans glide', 'mATdqshu', 'ov'] : ['Amber clouds drift', 'Hidden paths unfold', 'Crisp winter light', 'Baked figs and honey', 'aRneGQop', 'ri'], sizes = next ? [24, 48] : [32, 56]
+const texts = large ? ['Silver branches sway', 'Warm stone arches', 'Painted clay vessels', 'Fresh thyme and sage', 'wBNgkfea', 'es'] : next ? ['Velvet lanterns glow', 'Bright copper bells', 'Spiced pears simmer', 'Paper swans glide', 'mATdqshu', 'ov'] : ['Amber clouds drift', 'Hidden paths unfold', 'Crisp winter light', 'Baked figs and honey', 'aRneGQop', 'ri'], sizes = large ? [26, 52] : next ? [24, 48] : [32, 56]
 const pins = Object.fromEntries(await Promise.all(['scripts/encoder-quality.mjs', 'bench/fonts-100.json', 'bench/corpus.json', 'src/line.mjs', 'src/input.mjs', 'src/prepare.mjs'].map(async p => [p, hash(await readFile(p))])))
 let old
 try { old = await read(`${out}.json`) } catch (error) { if (error.code !== 'ENOENT') throw error }
@@ -57,7 +59,7 @@ if (old) {
     }
     const pixels = Buffer.concat(chunks)
     await mkdir('.data/detection-quality', { recursive: true }); await writeFile(`${out}.u8`, pixels)
-    await writeFile(`${out}.json`, JSON.stringify({ pins, sha256: hash(pixels), samples, windows, browser: browser.version(), scope: `Fresh phrases frozen before ${next ? 'case-training' : 'first refinement'} results; synthetic clean demo rendering, ${fonts.length} families, two sizes. Not independent real-world screenshots.` }) + '\n')
+    await writeFile(`${out}.json`, JSON.stringify({ pins, sha256: hash(pixels), samples, windows, browser: browser.version(), scope: `Fresh phrases frozen before ${large ? 'capacity experiment' : next ? 'case-training' : 'first refinement'} results; synthetic clean demo rendering, ${fonts.length} families, two sizes. Not independent real-world screenshots.` }) + '\n')
     console.log(`Frozen ${samples.length} phrase queries / ${windows.length} windows`)
   } finally { await browser.close() }
 }

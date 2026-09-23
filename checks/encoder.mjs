@@ -1,21 +1,26 @@
 // Exercise the frozen encoder with the existing convolution kernels, independently
 // of the demo and its catalog ranking. Projection dimensions are native outputs.
 import assert from 'node:assert/strict'
-import { readFile, writeFile } from 'node:fs/promises'
+import { readFile, writeFile, mkdir } from 'node:fs/promises'
+import { dirname } from 'node:path'
 import { createHash } from 'node:crypto'
 import { spawnSync } from 'node:child_process'
 import { cpus } from 'node:os'
 import { gzipSync, brotliCompressSync } from 'node:zlib'
 import { chromium } from 'playwright'
 import { readNetwork, inferCPU } from '../src/network.mjs'
+import { readCatalog, preparationHash } from '../src/catalog.mjs'
 
-const path = 'models/encoder/encoder.json', referencePath = '.data/encoder/runtime-reference.json'
+if (process.argv.length !== 2 && process.argv.length !== 5) throw new Error('Pass encoder, matching catalog, and report paths, or no arguments for the deployed model')
+const [path = 'models/encoder/encoder.json', catalogPath = 'models/encoder/google-fonts.json', reportPath = 'bench/encoder-runtime.json'] = process.argv.slice(2)
+const referencePath = process.argv.length === 2 ? '.data/encoder/runtime-reference.json' : `${dirname(path)}/runtime-reference.json`
 const child = spawnSync(process.execPath, ['scripts/python.mjs', '-m', 'scripts.encoder_reference', path, referencePath], { stdio: 'inherit' })
 if (child.error || child.status !== 0) throw child.error || new Error('Encoder reference failed')
 const bytes = await readFile(path), encoder = JSON.parse(bytes), reference = JSON.parse(await readFile(referencePath))
 const hash = bytes => createHash('sha256').update(bytes).digest('hex')
 assert.equal(hash(bytes), reference.encoderSha256)
 assert.equal(encoder.kind, 'font-encoder'); assert.equal(encoder.dimensions, 128); assert.equal(encoder.fonts, undefined)
+readCatalog(JSON.parse(await readFile(catalogPath)), { encoderSha256: hash(bytes), preparationSha256: await preparationHash(encoder.preparation) })
 const artifact = encoder
 const model = readNetwork(artifact), error = (a, b) => Math.max(...a.map((v, i) => Math.abs(v - b[i])))
 const unit = vector => { const norm = Math.hypot(...vector); assert.ok(norm > 0); return Array.from(vector, v => v / norm) }
@@ -58,13 +63,14 @@ assert.ok(cpuError < 1e-4, `CPU projection error ${cpuError}`)
 assert.ok(gpuError < 1e-4, `GPU projection error ${gpuError}`)
 assert.ok(embeddingError < 1e-4, `Normalized embedding error ${embeddingError}`)
 const payload = []
-for (const path of ['models/encoder/encoder.json', 'models/encoder/google-fonts.json',
+for (const file of [path, catalogPath,
   'src/network.mjs', 'src/network-gpu.mjs', 'src/catalog.mjs', 'src/prepare.mjs', 'src/input.mjs', 'src/line.mjs']) {
-  const bytes = await readFile(path)
-  payload.push({ path, sha256: hash(bytes), bytes: bytes.length, gzipBytes: gzipSync(bytes, { level: 9 }).length, brotliBytes: brotliCompressSync(bytes).length })
+  const bytes = await readFile(file)
+  payload.push({ path: file, sha256: hash(bytes), bytes: bytes.length, gzipBytes: gzipSync(bytes, { level: 9 }).length, brotliBytes: brotliCompressSync(bytes).length })
 }
 const report = { encoderSha256: reference.encoderSha256, dimensions: encoder.dimensions, hardware: cpus()[0]?.model, cpuError, gpuError, embeddingError, timing, payload,
   componentBytes: payload.reduce((sum, item) => sum + item.bytes, 0),
   scope: 'Existing CPU/Metal convolution kernels with native encoder outputs. Single-window projection timing excludes image preparation and catalog search. Bytes include encoder, catalog and existing inference/preparation modules; include catalog parsing/ranking; exclude demo and optional font previews.' }
-await writeFile('bench/encoder-runtime.json', JSON.stringify(report, null, 2) + '\n')
+await mkdir(dirname(reportPath), { recursive: true })
+await writeFile(reportPath, JSON.stringify(report, null, 2) + '\n')
 console.log(report)

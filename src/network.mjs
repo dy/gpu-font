@@ -1,16 +1,17 @@
 export const architecture = 'font-conv16-32-48-64-v1'
 export const contextArchitecture = 'font-conv16-32-48-64-64-v2'
 export const corpusArchitecture = 'font-conv32-64-96-128-128-v3'
+export const largeArchitecture = 'font-conv64-128-192-256-256-v4'
 export const channels = [1, 16, 32, 48, 64]
 export const strides = [1, 2, 2, 2]
 
 export function readNetwork(artifact) {
-  if (artifact?.version !== 1 || ![architecture, contextArchitecture, corpusArchitecture].includes(artifact.architecture)) throw new Error('Unsupported font classifier')
+  if (artifact?.version !== 1 || ![architecture, contextArchitecture, corpusArchitecture, largeArchitecture].includes(artifact.architecture)) throw new Error('Unsupported font classifier')
   const fonts = artifact.fonts, p = artifact.preparation
   const encoder = artifact.kind === 'font-encoder'
   if (encoder && (artifact.dimensions !== 128 || artifact.normalization !== 'l2' || fonts !== undefined)) throw new Error('Invalid encoder output')
   const context = artifact.architecture !== architecture
-  const shapeChannels = artifact.architecture === corpusArchitecture ? [1, 32, 64, 96, 128, 128] : context ? [...channels, 64] : channels, shapeStrides = context ? [...strides, 1] : strides
+  const shapeChannels = artifact.architecture === largeArchitecture ? [1, 64, 128, 192, 256, 256] : artifact.architecture === corpusArchitecture ? [1, 32, 64, 96, 128, 128] : context ? [...channels, 64] : channels, shapeStrides = context ? [...strides, 1] : strides
   const depth = shapeStrides.length
   const dilations = artifact.dilations ?? Array(depth).fill(1)
   if (!Array.isArray(dilations) || dilations.length !== depth || dilations.some(d => d !== 1 && d !== 2)) throw new Error('Invalid filter dilations')

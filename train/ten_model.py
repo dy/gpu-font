@@ -11,15 +11,17 @@ STRIDES = [1, 2, 2, 2]
 ARCH = 'font-conv16-32-48-64-v1'
 CONTEXT_ARCH = 'font-conv16-32-48-64-64-v2'
 CORPUS_ARCH = 'font-conv32-64-96-128-128-v3'
+LARGE_ARCH = 'font-conv64-128-192-256-256-v4'
 
 
 class Classifier(nn.Module):
-    def __init__(self, classes=10, training=True, dilations=None, context=False, wide=False):
+    def __init__(self, classes=10, training=True, dilations=None, context=False, wide=False, large=False):
         super().__init__()
         if wide and not context: raise ValueError('Wide encoder requires context')
-        self.context, self.wide = context, wide
-        self.architecture = CORPUS_ARCH if wide else CONTEXT_ARCH if context else ARCH
-        channels = [1, 32, 64, 96, 128, 128] if wide else CHANNELS + [64] if context else CHANNELS
+        if large and not wide: raise ValueError('Large encoder requires the wide architecture')
+        self.context, self.wide, self.large = context, wide, large
+        self.architecture = LARGE_ARCH if large else CORPUS_ARCH if wide else CONTEXT_ARCH if context else ARCH
+        channels = [1, 64, 128, 192, 256, 256] if large else [1, 32, 64, 96, 128, 128] if wide else CHANNELS + [64] if context else CHANNELS
         self.strides = STRIDES + [1] if context else STRIDES
         self.dilations = dilations or [1] * len(self.strides)
         if len(self.dilations) != len(self.strides): raise ValueError('Wrong dilation count')
@@ -41,7 +43,7 @@ class Classifier(nn.Module):
         return self.head(x.sum((2, 3)) / sizes.prod(1)[:, None])
 
     def folded(self):
-        result = Classifier(self.head.out_features, training=False, dilations=self.dilations, context=self.context, wide=self.wide)
+        result = Classifier(self.head.out_features, training=False, dilations=self.dilations, context=self.context, wide=self.wide, large=self.large)
         self.eval()
         for i, (conv, norm) in enumerate(zip(self.convs, self.norms)):
             result.convs[i] = nn.utils.fuse_conv_bn_eval(conv, norm) if isinstance(norm, nn.BatchNorm2d) else copy.deepcopy(conv)
@@ -49,10 +51,28 @@ class Classifier(nn.Module):
         return result.eval()
 
 
+def widen(model,noise=0):
+    """Duplicate channels and divide incoming weights, preserving the initial function."""
+    if not model.wide or model.large or not np.isfinite(noise) or noise<0:raise ValueError('Expected the small corpus encoder and nonnegative noise')
+    result=Classifier(model.head.out_features,training=isinstance(model.norms[0],nn.BatchNorm2d),dilations=model.dilations,context=True,wide=True,large=True).to(next(model.parameters()).device)
+    with torch.no_grad():
+        for old,new,onorm,nnorm in zip(model.convs,result.convs,model.norms,result.norms):
+            outs=torch.arange(new.out_channels,device=new.weight.device)%old.out_channels
+            ins=torch.arange(new.in_channels,device=new.weight.device)%old.in_channels
+            counts=torch.bincount(ins,minlength=old.in_channels)
+            new.weight.copy_(old.weight[outs][:,ins]/counts[ins][None,:,None,None]);new.bias.copy_(old.bias[outs])
+            if noise:new.weight[old.out_channels:].add_(torch.randn_like(new.weight[old.out_channels:])*noise)
+            if isinstance(onorm,nn.BatchNorm2d):
+                for key,value in onorm.state_dict().items():nnorm.state_dict()[key].copy_(value if value.ndim==0 else value[outs])
+        ins=torch.arange(result.head.in_features,device=result.head.weight.device)%model.head.in_features
+        result.head.weight.copy_(model.head.weight[:,ins]/2);result.head.bias.copy_(model.head.bias)
+    return result.train(model.training)
+
+
 def load_export(artifact):
-    if artifact['version'] != 1 or artifact['architecture'] not in [ARCH, CONTEXT_ARCH, CORPUS_ARCH]:
+    if artifact['version'] != 1 or artifact['architecture'] not in [ARCH, CONTEXT_ARCH, CORPUS_ARCH, LARGE_ARCH]:
         raise ValueError('Unsupported classifier')
-    model = Classifier(len(artifact['fonts']), training=False, dilations=artifact.get('dilations'), context=artifact['architecture'] != ARCH, wide=artifact['architecture'] == CORPUS_ARCH).eval()
+    model = Classifier(len(artifact['fonts']), training=False, dilations=artifact.get('dilations'), context=artifact['architecture'] != ARCH, wide=artifact['architecture'] in [CORPUS_ARCH,LARGE_ARCH], large=artifact['architecture']==LARGE_ARCH).eval()
     modules = [*model.convs, model.head]
     if len(artifact['layers']) != len(modules):
         raise ValueError('Wrong layer count')
@@ -70,7 +90,7 @@ def load_export(artifact):
 def export(model, fonts, preparation):
     model = model.folded()
     layers = []
-    restored = Classifier(len(fonts), training=False, dilations=model.dilations, context=model.context, wide=model.wide).eval()
+    restored = Classifier(len(fonts), training=False, dilations=model.dilations, context=model.context, wide=model.wide, large=model.large).eval()
     for source, target in zip([*model.convs, model.head], [*restored.convs, restored.head]):
         weight = source.weight.detach().numpy()
         row = weight.reshape(len(weight), -1)
