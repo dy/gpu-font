@@ -2,7 +2,9 @@
 
 This iteration addresses failed recognition of the demo's Lora and Montserrat samples. It changes the learned embedding and the catalog references; it does not restrict the search to the sample's known identity. Every Google query still searches all 2,004 eligible families.
 
-**The first candidate is held back.** Fresh phrase top-1/top-5 improves from 26.03%/44.91% to 38.72%/63.27%, but the reported Lora example falls from rank 2 to 11. Montserrat moves from 29 to 16. These regressions fail the practical requirement despite better aggregate metrics. The deployed encoder remains unchanged while case-diverse training is investigated. The first phrase benchmark is now opened diagnostic evidence for that next iteration.
+**The demo now uses the compact refined encoder with script-separated references**, selected by the recovery comparison below. The [fresh confirmation](encoder-recovery-quality.json) improves top-1/top-five from 21.24%/37.61% to 24.41%/45.72%. This remains weak recognition. Lora's reported sample ranks first with a narrow margin; Montserrat still ranks twelfth. [Model, Google catalog and required modules](encoder-recovery-runtime.json) total 1,723,636 bytes, below 10 MB. All source catalogs were regenerated with the selected encoder.
+
+The initial script-plus-words candidate was held back. Its first phrase top-1/top-5 improves from 26.03%/44.91% to 38.72%/63.27%, but the reported Lora example falls from rank 2 to 11. Montserrat moves from 29 to 16. Those regressions fail the practical requirement despite better aggregate metrics. The first phrase benchmark became opened diagnostic evidence for subsequent iterations. Results from different phrase banks must not be compared as if they used identical queries.
 
 ## Selection protocol
 
@@ -64,7 +66,7 @@ The [text-dependence diagnostic](encoder-text-dependence.json) reuses opened dev
 
 The capacity experiment doubles convolution channels to 64/128/192/256/256 while retaining 128 output dimensions and the same preparation. It has 1,363,264 parameters. Widening duplicates existing filters and divides their incoming weights to preserve the initial function; a small training-only perturbation breaks symmetry. Tests check the preserved projections, batch padding, repeated inputs, gradients and int8 export. The run uses the same case-diverse data and checkpoint criterion, for 12,000 updates. It is a bounded capacity probe, not an equal-update comparison with the 20,000-step case run.
 
-The third phrase bank is frozen before capacity results: `Silver branches sway`, `Warm stone arches`, `Painted clay vessels`, `Fresh thyme and sage`, `wBNgkfea`, `es`, at 26/52 px. Its strings are disjoint from all earlier training, reference and phrase banks. It is confirmation data, not checkpoint-selection data. The original deployed encoder stays in place while this candidate is evaluated.
+The third phrase bank is frozen before capacity results: `Silver branches sway`, `Warm stone arches`, `Painted clay vessels`, `Fresh thyme and sage`, `wBNgkfea`, `es`, at 26/52 px. Its strings are disjoint from all earlier training, reference and phrase banks. It is confirmation data, not checkpoint-selection data. The capacity run selects step 12,000 and completes in 1,773.6 seconds. Its encoder is 1,856,928 bytes. Script-only references put Lora/Montserrat at ranks 2/20; adding word references gives 9/23. It fails the recovery gate and is held back. [CPU/Metal parity and payload](encoder-large-runtime.json) are verified independently of deployment.
 
 ```sh
 node scripts/encoder-quality.mjs --large
@@ -86,3 +88,18 @@ This stage changes the earlier protocol deliberately: reported examples are no l
 node scripts/python.mjs -m train.encoder_recovery
 node scripts/python.mjs -m train.encoder_case_quality --recovery
 ```
+
+The [frozen recovery choice](encoder-recovery-selection.json) is `refined-scripts`. On the historical final queries, unseen-family top-one/top-five rises from 26.78%/47.31% to 39.59%/63.06%. The reported cases are development evidence, not independent accuracy claims:
+
+| Sample | Previous rank | Current rank |
+|---|---:|---:|
+| Lora | 2 | 1 |
+| Montserrat | 29 | 12 |
+| Inter | 26 | 9 |
+| Roboto | 42 | 29 |
+| Poppins | 213 | 17 |
+| Merriweather | 8 | 5 |
+| Playfair Display | 1 | 1 |
+| Geist Mono | 6 | 2 |
+
+The next quality experiment should address the measured text dependence: compare training with glyph identities against the current objective at a fixed budget, with whole-glyph boundaries and known labels during synthetic training. A training-only glyph head can be tested before committing to runtime OCR or a larger download. Its benefit remains unproven. Require improvements on fresh text and Montserrat/Roboto confusions; do not mistake the new Lora ranking for reliable general recognition.

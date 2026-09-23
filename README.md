@@ -2,7 +2,7 @@
 
 A small neural font encoder running in the browser. The demo searches **2,004 Google Fonts families** or a compatible image-reference catalog using the same frozen 128-dimensional encoder. Adding a font requires indexing its specimens, not retraining the model.
 
-**Recognition quality is still experimental.** On synthetic crops of 300 unseen families, top-1/top-5 is 26.78%/47.31%; useful rejection coverage remains unproven. See [the encoder experiment](bench/encoder.md). Catalog switching demonstrates the architecture, not reliable recognition of arbitrary screenshots.
+**Recognition quality is still experimental.** The [compact recovery](bench/encoder-quality.md) reaches 39.59%/63.06% top-1/top-five on historical synthetic queries from 300 unseen families. On a fresh phrase bank it reaches only 24.41%/45.72%, up from 21.24%/37.61%. The reported Lora sample now ranks first; Montserrat still ranks twelfth. Model, Google catalog and required modules total 1.72 MB. Useful rejection coverage remains unproven.
 
 The [preview audit and catalog workflow](bench/preview-catalogs.md) cover two collected archives, raster-only compilation, genuine face metadata, and current limits. Earlier [100-family classification](bench/hundred.md), [deskew](bench/preparation.md), and [weight/italic](bench/faces.md) experiments remain available; their calibration is not applied to encoder similarity scores.
 
@@ -19,7 +19,7 @@ Open **http://localhost:4179**. Click the image area to choose a file, or paste 
 
 The landing page introduces image-to-font matching and explains local inference and the model's limits. The demo is preloaded with a Lora sample. Model & results holds the loaded catalog's actual family count, measured synthetic accuracy and diagnostic export; no accuracy on real screenshots is claimed.
 
-Choose a search catalog below Font matches. The Google Fonts catalog is included by default; compiled preview catalogs appear when available locally. “Open catalog JSON…” accepts version 1/2 catalogs bound to this encoder and preparation. Names alone are insufficient. Changing catalogs reuses the current image embedding; its timing then measures ranking only. A failed import retains the current catalog and result.
+Choose a search catalog below Font matches. The Google Fonts catalog is included by default; compiled preview catalogs appear when available locally. “Open catalog JSON…” accepts version 1/2/3 catalogs bound to this encoder and preparation. Names alone are insufficient. Changing catalogs reuses the current image embedding; its timing then measures ranking only. A failed import retains the current catalog and result.
 
 The Model input previews show the complete arrays actually sent to inference, with their actual aspect ratios. Blank borders are removed from the tensors. A long line produces up to three local windows; these are not recognized words and may cut letters. Normalized window embeddings are averaged and normalized again. The displayed values are cosine similarities, not certainty percentages. Download diagnostic JSON under Model & results exports the actual arrays, dimensions, crop, resolution, model/catalog hashes, embedding and ranked faces. Rejection is explicitly uncalibrated.
 
@@ -30,6 +30,8 @@ The demo combines rapid crop updates into the current job and the newest pending
 The percentage dropdown in the image’s bottom-right corner downsamples the selected crop to 100%, 50%, 25% or 10% before normalization. It leaves the original image intact. Returning to 100% restores the original inference pixels. Dashed input outlines are mapped back to the original image coordinates. Font licenses and attribution are available under Model & results.
 
 ## Reproduce training
+
+The current shared encoder uses the [full-corpus pipeline](bench/encoder.md), followed by [cross-text refinement and recovery selection](bench/encoder-quality.md). The commands below reproduce the earlier classifiers. After changing the shared encoder, regenerate both Google and image-reference catalogs; previous vectors are incompatible.
 
 Tested with Node 25.9.0 and Python 3.14.6. Dependencies are pinned:
 

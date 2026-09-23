@@ -49,6 +49,7 @@ try {
   await page.goto(base); await page.waitForFunction(() => document.body.dataset.ready === 'true')
   const original = await result(page)
   assert.equal(original.backend, 'WebGPU'); await verify(page, original, data.catalogs[0])
+  assert.equal(original.matches[0].family, 'lora', 'The reported full-resolution Lora crop must remain the first match')
   const outputs = await page.evaluate(async ({ artifact, cases }) => {
     const { readNetwork } = await import('./src/network.mjs'), { createNetworkGPU } = await import('./src/network-gpu.mjs')
     const gpu = await createNetworkGPU(readNetwork(artifact)), outputs = []

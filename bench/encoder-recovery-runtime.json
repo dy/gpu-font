@@ -7,23 +7,23 @@
   "embeddingError": 1.283395643369989e-7,
   "timing": {
     "adapter": "metal-3",
-    "initializationMs": 54.80000019073486,
+    "initializationMs": 56.20000076293945,
     "warmWindowP50Ms": 0.8999996185302734,
-    "warmWindowP95Ms": 1.3999996185302734,
+    "warmWindowP95Ms": 1,
     "samples": 20,
     "width": 128,
     "height": 48
   },
   "payload": [
     {
-      "path": "models/encoder/encoder.json",
+      "path": ".data/encoder/retrieval-refine/encoder.json",
       "sha256": "39633bd246fa0b47ee91ebbe8eb09faa709611427d3cf311767b150b16f4ab5c",
       "bytes": 489085,
       "gzipBytes": 361293,
       "brotliBytes": 348535
     },
     {
-      "path": "models/encoder/google-fonts.json",
+      "path": ".data/detection-quality/recovery-google-fonts.json",
       "sha256": "8ac4527b4ea9873c924ceceaaa406ae6ec196e5663bc30f0c6c8fb778be021d2",
       "bytes": 1201567,
       "gzipBytes": 563198,

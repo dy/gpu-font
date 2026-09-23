@@ -84,8 +84,9 @@ for (const source of sourceCatalogs(sources, binding)) {
 }
 const measured = await read('bench/encoder-test.json')
 let metrics = measured.encoderSha256 === binding.encoderSha256 && measured.catalogSha256 === options[0].sha256 ? measured.results.groups['split/test'] : null
-if (await access('bench/encoder-quality.json').then(() => true, () => false)) {
-  const quality = (await read('bench/encoder-quality.json')).reports.after
+for (const file of ['bench/encoder-recovery-quality.json', 'bench/encoder-quality.json']) {
+  if (metrics || !await access(file).then(() => true, () => false)) continue
+  const quality = (await read(file)).reports.after
   if (quality.encoderSha256 === binding.encoderSha256 && quality.catalogSha256 === options[0].sha256) metrics = quality.historical['split/test']
 }
 if (!metrics) throw new Error('Changed encoder/catalog evaluation')
