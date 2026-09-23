@@ -183,6 +183,43 @@ export function rankSpecimenCandidates(candidates, { excludeTexts = [], labels =
   return { preferred: ordered.filter(candidate => !isLabel(candidate)), fallback: ordered.filter(isLabel) }
 }
 
+/**
+ * Without the binary we cannot read a cmap, so compare each face's own lowercase
+ * and uppercase lines: a design that maps lowercase onto capitals draws them the
+ * same, and its lowercase record must not claim small letters. Sizes are
+ * normalised first, because a source may render the two lines at different sizes.
+ */
+export function flagCapsOnlyFaces(records) {
+  const byFace = new Map()
+  for (const record of records) {
+    const group = byFace.get(record.faceId) ?? {}
+    group[record.recipeId] = record
+    byFace.set(record.faceId, group)
+  }
+  const add = (record, flag) => { if (!record.flags.includes(flag)) record.flags.push(flag) }
+  for (const group of byFace.values()) {
+    const lower = group['latin-lower-v1'], upper = group['latin-upper-v1']
+    if (!lower || !upper) continue
+    // Faces whose binary was read report their own case mapping; only previews
+    // without a font file need this measurement.
+    if (lower.verification?.fontSha256 || upper.verification?.fontSha256) continue
+    // Measure the ink itself where it was recorded, in ems of the rendered size:
+    // the stored region also carries a fixed margin that scales with nothing.
+    const ink = record => record.verification?.inkBounds ?? record.region
+    const scale = record => (record.render?.cssFontSize || 1) * (record.render?.deviceScaleFactor || 1)
+    const widthRatio = (ink(lower).width / scale(lower)) / (ink(upper).width / scale(upper))
+    const heightRatio = (ink(lower).height / scale(lower)) / (ink(upper).height / scale(upper))
+    if (widthRatio < 0.97 || widthRatio > 1.03 || heightRatio < 0.94 || heightRatio > 1.06) continue
+    for (const record of [lower, upper]) add(record, 'lowercase-and-uppercase-render-alike')
+    add(lower, 'visible-text-not-verified')
+    if (lower.text !== null) {
+      lower.verification = { ...lower.verification, requestedText: lower.text }
+      lower.text = null // the small letters may never have been drawn
+    }
+  }
+  return records
+}
+
 export const isSafeRelativePath = value => typeof value === 'string' && value.length > 0 &&
   !path.isAbsolute(value) && !value.startsWith('/') && !/(^|\/)\.\.(\/|$)/.test(value) && !value.includes('\\')
 
