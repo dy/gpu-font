@@ -133,6 +133,40 @@ export async function heldFamilies() {
 
 const bare = name => name.replace(/\s+(fonts|font family|typeface family|family|typeface)$/i, '').trim()
 
+// Documented open equivalents of a classic (bench/equivalents.json). Only relations
+// that reproduce the letterforms count as coverage; metric twins and "inspired by" do not.
+const VISUAL = ['same-design', 'clone', 'revival', 'basis']
+const MATCHES = ['exact', ...VISUAL]
+
+/** Where a classic stands, given the families we hold and the documented equivalents. */
+export function matcher(families, equivalentRows) {
+  const order = { indexed: 0, inventoried: 1, 'held-locally': 2 }
+  const known = [...families].sort((a, b) => order[a.status] - order[b.status])
+  const find = name => known.find(entry => key(entry.name) === key(name))
+  const equivalents = {}
+  for (const row of equivalentRows) (equivalents[key(row.classic)] ??= []).push(row)
+  return name => {
+    const target = bare(name), k = key(target)
+    // Every documented equivalent, with where it stands here, so a reader sees metric twins too.
+    const listed = (equivalents[k] ?? equivalents[key(name)] ?? []).map(({ family, relation, evidence }) => ({ family, relation, status: find(family)?.status ?? 'missing', evidence }))
+    const extra = listed.length ? { equivalents: listed } : {}
+    // The name itself or a documented twin, whichever we can serve best: an open clone
+    // on file outranks the original captured from a preview-only source.
+    const documented = [find(target) && { entry: find(target), match: 'exact' },
+      ...listed.filter(row => VISUAL.includes(row.relation) && row.status !== 'missing').map(row => ({ entry: find(row.family), match: row.relation }))]
+      .filter(Boolean).sort((a, b) => order[a.entry.status] - order[b.entry.status] || MATCHES.indexOf(a.match) - MATCHES.indexOf(b.match))[0]
+    if (documented) return { status: documented.entry.status, source: documented.entry.source, via: documented.entry.name, match: documented.match, ...extra }
+    // A family that carries the name as whole words is related, not the same design:
+    // Helvetica Now, EB Garamond, Libre Baskerville, DejaVu Sans. Best status, then the shortest name.
+    // A documented relation outranks the name: Libre Caslon is only inspired by Caslon.
+    const words = new RegExp(`(^|\\s)${target.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}(\\s|$)`, 'i')
+    const documentedNames = new Set(listed.map(row => key(row.family)))
+    const related = target.length >= 4 && known.filter(entry => words.test(entry.name) && !documentedNames.has(key(entry.name)))
+      .sort((a, b) => order[a.status] - order[b.status] || a.name.length - b.name.length)[0]
+    return related ? { status: related.status, source: related.source, via: related.name, match: 'related', ...extra } : { status: 'missing', ...extra }
+  }
+}
+
 async function coverage() {
   const read = async file => { try { return JSON.parse(await readFile(file, 'utf8')) } catch { return null } }
   const known = []
@@ -141,19 +175,7 @@ async function coverage() {
   for (const family of (await read('bench/open-fonts.json'))?.families ?? []) if (!family.excluded) known.push({ name: family.family, status: 'inventoried', source: family.source })
   // Preview captures held locally pending permission, read from the capture archives themselves.
   for (const held of await heldFamilies()) known.push({ ...held, status: 'held-locally' })
-  const order = { indexed: 0, inventoried: 1, 'held-locally': 2 }
-  known.sort((a, b) => order[a.status] - order[b.status])
-  return name => {
-    const target = bare(name), k = key(target)
-    const exact = known.find(entry => key(entry.name) === k)
-    if (exact) return { status: exact.status, source: exact.source, via: exact.name, match: 'exact' }
-    // A family that carries the name as whole words is related, not the same design:
-    // Helvetica Now, EB Garamond, Libre Baskerville, DejaVu Sans. Best status, then the shortest name.
-    const words = new RegExp(`(^|\\s)${target.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}(\\s|$)`, 'i')
-    const related = target.length >= 4 && known.filter(entry => words.test(entry.name))
-      .sort((a, b) => order[a.status] - order[b.status] || a.name.length - b.name.length)[0]
-    return related ? { status: related.status, source: related.source, via: related.name, match: 'related' } : { status: 'missing' }
-  }
+  return matcher(known, (await read('bench/equivalents.json'))?.equivalents ?? [])
 }
 
 async function main() {
@@ -204,7 +226,8 @@ async function main() {
   const styles = sorted.filter(entry => entry.kind !== 'typeface' && entry.score >= canon.at(-1).score)
     .map(({ name, kind, wikidata, designers, year, signals }) => ({ name, kind, wikidata, designers, year, signals }))
   const tally = canon.reduce((counts, entry) => {
-    const label = entry.coverage.match === 'related' ? `${entry.coverage.status} (related family)` : entry.coverage.status
+    const { status, match } = entry.coverage
+    const label = !match || match === 'exact' ? status : `${status} (${match === 'related' ? 'related family' : match})`
     return { ...counts, [label]: (counts[label] ?? 0) + 1 }
   }, {})
   await writeFile(OUT, JSON.stringify({
