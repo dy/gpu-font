@@ -6,6 +6,7 @@
 //   node scripts/foundries.mjs           refresh counts and print the table
 //   node scripts/foundries.mjs --check   validate only
 import { readFile, writeFile } from 'node:fs/promises'
+import { heldFamilies } from './canon.mjs'
 
 const REGISTRY = 'bench/foundries.json'
 export const KINDS = ['library', 'foundry', 'retailer', 'aggregator', 'platform', 'icons', 'music', 'math']
@@ -49,8 +50,9 @@ async function indexedCounts() {
   const read = async file => { try { return JSON.parse(await readFile(file, 'utf8')) } catch { return null } }
   // The corpus is counted by its own entries, matching the published 2,004.
   for (const family of (await read('bench/corpus.json'))?.families ?? []) if (!family.excluded) add('google-fonts', `id:${family.id}`)
-  for (const id of ['fontshare', 'velvetyne', 'myfonts', 'adobe-fonts'])
+  for (const id of ['fontshare', 'velvetyne'])
     for (const face of (await read(`models/encoder/catalogs/${id}.json`))?.faces ?? []) add(id, face.family)
+  for (const held of await heldFamilies()) add(held.source, held.name)
   for (const family of (await read('bench/open-fonts.json'))?.families ?? []) if (!family.excluded) add(family.source, family.family)
   return new Map([...names].map(([id, set]) => [id, set.size]))
 }
