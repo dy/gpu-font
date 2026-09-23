@@ -1,28 +1,28 @@
 {
-  "encoderSha256": "e0d9d931e3ba9e80f081a17d3f5f4af3b977e73db60edc8cbae0a251ab8f119a",
+  "encoderSha256": "62e556d8b0a34aa18618cc9ddaa34a632f49117480f08b6e6cdcd998103b0605",
   "catalogs": [
     {
       "id": "google-fonts",
-      "sha256": "391c6ecb47067f759b2c5c9e318fcb52751e7fad71e60c25768cf14e397f0832",
+      "sha256": "5e52ac1282c420b60a5fb4e77423bdb4f0ab8ba6c2e8de41d3a10a6be8d94bd2",
       "families": 2004,
       "faces": 8132
     },
     {
       "id": "fontshare",
-      "sha256": "b58581f0f587820e7aa2537bff5b8f9b68c452dde1c3670c6a859b58bb079e7f",
+      "sha256": "b774b2f98090fae491326c8b26354cb893871f669699c33249baca4b8436de32",
       "families": 39,
       "faces": 43
     },
     {
       "id": "velvetyne",
-      "sha256": "394b83371ee87d40c4ace5cd7461fd5fe9e3ed6bfe0f5c72f0458c99c1b68668",
+      "sha256": "237d564b5eb59abbc57371f8f8b82db84f612b16dbb0ce611aab037a9c16cdab",
       "families": 3,
       "faces": 3
     }
   ],
-  "cpuError": 9.5367431640625e-7,
-  "gpuError": 0.000003814697265625,
-  "detectionMilliseconds": 80.09999942779541,
+  "cpuError": 0.0000011324882507324219,
+  "gpuError": 0.0000037550926208496094,
+  "detectionMilliseconds": 44.09999942779541,
   "checks": [
     "native CPU/PyTorch/WebGPU projections",
     "exact displayed tensors and input stats",

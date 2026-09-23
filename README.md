@@ -2,7 +2,7 @@
 
 Find the font in an image, in your browser. A small neural network turns a crop of text into a style vector, then ranks the fonts of a catalog by similarity. It runs on WebGPU, or on the CPU without it.
 
-It is experimental. On rendered text in fonts it never saw, the right family is in the top five 84.3% of the time and first 62.5% (5–10 characters). Real screenshots are not measured yet. [How it was trained and measured](bench/style.md).
+It is experimental. On rendered text in fonts it never saw, the right family is in the top five 87.3% of the time and first 68.6% (5–10 characters). Real screenshots are not measured yet. [How it was trained and measured](bench/style.md).
 
 ## What it does
 
@@ -11,7 +11,7 @@ It is experimental. On rendered text in fonts it never saw, the right family is 
 - Search Google Fonts (2,004 families, every weight and italic), Fontshare or Velvetyne, or open your own catalog JSON. New fonts need indexing, not retraining.
 - Families with identical letters fold into one row: IBM Plex Sans KR and IBM Plex Sans Arabic show under IBM Plex Sans.
 
-Not yet: hand-drawn letters, icons, symbols and emoji, and matching capitals when a catalog holds only lowercase (47% top five). The page's Goals section lists each aim and where it stands.
+Not yet: hand-drawn letters, icons, symbols and emoji, and matching capitals when a catalog holds only lowercase (54% top five). The page's Goals section lists each aim and where it stands.
 
 ## Run the demo
 
@@ -66,8 +66,6 @@ A catalog is a JSON file of reference vectors, bound to the exact model that mad
 - **Fontshare and Velvetyne**: built from captured previews. Only names, links and vectors are committed; the captures stay local.
 - Sources without verified permission (currently MyFonts and Adobe Fonts) are built locally and never shipped. `sources.html` shows each source's terms.
 
-Swapping catalogs works: in a [benchmark](bench/preview-catalogs.md#catalog-swap) of 125 collected fonts it never saw, each came back in the top five from its own catalog.
-
 ## Test
 
 ```sh
@@ -78,7 +76,6 @@ npm run test:demo     # with the demo running; needs a Chromium with WebGPU
 ## More
 
 - [bench/style.md](bench/style.md): the current encoder, its benchmark and results.
-- [bench/preview-catalogs.md](bench/preview-catalogs.md): catalogs from captured previews.
 - [todo.md](todo.md): what's next. [research.md](research.md): background.
 - Earlier experiments, not shipped: [ten fonts](bench/ten.md), [a hundred fonts](bench/hundred.md), [weight and italic](bench/faces.md), [deskew](bench/preparation.md), [retrieval pilot](bench/report.md).
 

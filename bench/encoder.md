@@ -109,7 +109,7 @@ On Apple M4 Max / Chromium Metal, one warm 128×48 projection takes **1.4 ms med
 | Inference, preparation and catalog modules | 32,578 | 10,376 |
 | Measured components | **1,430,450** | **717,645** |
 
-These components fit the 10 MB ceiling. They include catalog parsing/ranking and exclude the website, optional font-preview assets and the training-only checkpoint. Artifacts are in [`models/encoder/`](../models/encoder/); the local demo now searches caller-selected catalogs with this encoder. See [preview catalog integration](preview-catalogs.md).
+These components fit the 10 MB ceiling. They include catalog parsing/ranking and exclude the website, optional font-preview assets and the training-only checkpoint. Artifacts are in [`models/encoder/`](../models/encoder/); the local demo now searches caller-selected catalogs with this encoder.
 
 The training-stage suite passed **56 JavaScript + 70 Python tests**; the catalog integration expands this to **68 JavaScript + 71 Python tests**. The size, parity and catalog-mechanics checks pass; retrieval and rejection gates fail. Preserve this candidate as a measured baseline. Next compare script-separated/clustered references on development data before spending on a larger encoder, then evaluate a training-only glyph objective if text invariance remains weak. Independent screenshots and genuine face coverage remain necessary before a release claim.
 

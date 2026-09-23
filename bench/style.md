@@ -32,7 +32,7 @@ Every query searches per-face references of all families: lowercase and uppercas
 
 ## Results
 
-`train/style.py` warm-starts from earlier checkpoints and trains 1,403 families (5,827 faces). The development families select checkpoints and the 300 test families never enter training or selection. The deployed model is the 1.36M-parameter encoder (the runtime's existing large architecture) after 30,000 steps, 2.5 hours on an M4 Max. The same objective on the 350K-parameter encoder reached 62.8% development top-five after 10,000 steps, where the large one had 67.8%: with unlimited text, capacity pays, unlike the earlier capacity probe on 32 fixed strings per alphabet.
+`train/style.py` warm-starts from earlier checkpoints and trains 1,403 families (5,827 faces). The development families select checkpoints and the 300 test families never enter training or selection. The first style model was the 1.36M-parameter encoder after 30,000 steps, 2.5 hours on an M4 Max. The same objective on the 350K-parameter encoder reached 62.8% development top-five after 10,000 steps, where the large one had 67.8%: with unlimited text, capacity pays, unlike the earlier capacity probe on 32 fixed strings per alphabet. The deployed model takes that further: 10,000 more steps, then a 1.5× wider encoder of 3.04M parameters for 20,000 ([second step](#second-step-longer-then-wider)).
 
 Catalog references rendered by Chromium match browser crops far better than FreeType renders of the same lines. Chosen on development families only ([comparison](style-references.json)):
 
@@ -45,47 +45,61 @@ Catalog references rendered by Chromium match browser crops far better than Free
 
 Final report on the frozen benchmark, every model against the same Chromium per-face references of all 2,004 families ([report](style-quality.json)):
 
-| | Previous encoder | Interim (case-diverse) | Style, 350K | **Style, 1.36M (deployed)** |
-|---|---:|---:|---:|---:|
-| Held-out families, top-5 | 60.5% | 65.7% | 72.0% | **84.3%** |
-| Held-out families, top-1 | 37.3% | 42.3% | 49.5% | **62.5%** |
-| Held-out, 8–10 characters, top-5 | | | | **87.8%** |
-| Held-out, 5–7 characters, top-5 | | | | **81.2%** |
-| Held-out, clean Latin, top-5 | 64.9% | 71.2% | 75.2% | **87.9%** |
-| All roles, uppercase / lowercase, top-5 | 60.7% / 54.3% | 65.6% / 63.0% | 73.5% / 70.7% | **85.6% / 83.8%** |
-| All roles, degraded, top-5 | 41.5% | 49.1% | 59.1% | **75.0%** |
-| All roles, Hanzi, top-5 | 9.0% | 8.5% | 34.3% | **49.2%** |
-| All roles, other scripts, top-5 | 34.6% | 35.0% | 51.8% | **64.0%** |
-| Top-5 answers in the true Google category | 72.5% | 73.8% | 75.6% | **78.3%** |
-| Top-5 answers that can draw the query's script | 94.2% | 94.1% | 97.5% | **98.6%** |
-| Weight error of the matched face | 9 | 10 | 10 | **8** |
+| | Previous encoder | Interim (case-diverse) | Style, 350K | Style, 1.36M | **Style, 3.04M (deployed)** |
+|---|---:|---:|---:|---:|---:|
+| Held-out families, top-5 | 60.4% | 65.7% | 72.0% | 84.3% | **87.3%** |
+| Held-out families, top-1 | 37.3% | 42.3% | 49.5% | 62.5% | **68.6%** |
+| Held-out, 8–10 characters, top-5 | | | | 87.7% | **89.4%** |
+| Held-out, 5–7 characters, top-5 | | | | 81.2% | **85.3%** |
+| Held-out, clean Latin, top-5 | 64.8% | 71.3% | 75.2% | 87.9% | **90.5%** |
+| All roles, uppercase / lowercase, top-5 | 60.7% / 54.2% | 65.6% / 63.0% | 73.5% / 70.7% | 85.6% / 83.8% | **89.1% / 87.7%** |
+| All roles, degraded, top-5 | 41.5% | 49.1% | 59.1% | 75.0% | **80.0%** |
+| All roles, Hanzi, top-5 | 9.3% | 8.5% | 34.3% | 49.2% | **55.7%** |
+| All roles, other scripts, top-5 | 34.6% | 35.2% | 51.8% | 64.0% | **70.4%** |
+| Top-5 answers in the true Google category | 72.5% | 73.8% | 75.6% | 78.3% | **79.3%** |
+| Top-5 answers that can draw the query's script | 94.2% | 94.1% | 97.5% | 98.6% | **99.1%** |
+| Weight error of the matched face, held-out | 8 | 9 | 10 | 8 | **5** |
 
-Strict top-five (twins not credited) is 84.0% on held-out families; seen families contain more near-duplicates (strict 69.2%, twins counted 82.8%). Dark-mode copies score exactly as their light originals: the preparation inverts polarity to identical pixels. The eight reported demo samples all rank in the top five, seven first; Roboto ranks first, followed by its Latin twins Heebo and Vazirmatn, Gothic A1 and Atkinson Hyperlegible Next.
+Strict top-five (twins not credited) is 86.9% on held-out families, top-one 66.5%; seen families contain more near-duplicates (strict 72.9%, twins counted 87.1%). Dark-mode copies score exactly as their light originals: the preparation inverts polarity to identical pixels. The eight reported demo samples all rank first.
 
-Typed verdicts, from the heads: italic 97.5%, script 97%. The weight head is weak (82 on the 100–900 scale), so weight comes from the matched face instead (8).
+Typed verdicts, from the heads: italic 97.6%, script 97.2%. The weight head is weak (82 on the 100–900 scale), so weight comes from the matched face instead (5).
+
+## Second step: longer, then wider
+
+The first model's errors were not near-duplicates. On development families only 5.8% of wrong first answers sit within 0.03 of the truth by letter distance (three times the renderer noise); the median wrong answer is 0.082 away. The model underfit: 41% of training views were right, families it trained on scored no better than unseen ones, and development accuracy was still rising when the schedule ended. Retrieval was already right: keeping reference lines apart, or scoring windows apart, gained nothing over averaging them.
+
+Two continuations of 10,000 steps from that model, same learning rate, compared on development families (top-5, and top-1 for all queries):
+
+| | All | Capitals among lowercase references | Other scripts among Latin references | Degraded | 5–7 characters |
+|---|---:|---:|---:|---:|---:|
+| Start | 83.5% / 62.1% | 45.4% | 40.9% | 74.4% | 79.5% |
+| View-to-view loss, each face's two views in opposite cases | 84.0% / 62.2% | **53.2%** | 40.9% | 75.2% | 80.4% |
+| Plain continuation | **84.5% / 63.3%** | 46.2% | **44.2%** | **76.2%** | **81.9%** |
+
+The view loss taught case but cost everything else, so it stays off (`--pairs`). `widen` then duplicates each channel and divides its outgoing weights, so the 3.04M-parameter encoder starts with the exact function of the plain continuation (outputs within 3.8e-6), and trains 20,000 steps on a fresh data seed (4.5 hours on a busy M4 Max). Development top-five rose from 84.5% to 88.0% and top-one from 63.3% to 68.5%, still climbing at the end; training views went from 41% to 45% right. The held-out test, run once, is in the table above.
 
 ## By requirement
 
 `train.style breakdown` splits the held-out test families by the requirements ([report](style-breakdown.json)), with the same script-aware search and twin credit.
 
-Decorative styles are the easy ones: brush 96.7% top-five (91 queries), Didone 93.4%, techno 94.4%, formal script 92.5%, display 90.4%, handwriting 88.6%. Plain text faces are the hard ones, because many of them look alike: Garalde old-style serifs 74.5%, humanist sans 76.3%, modern serifs 79.5%, sans serif overall 79.4%. So a collected catalog of brush or script faces needs coverage, not training.
+Decorative styles are the easy ones: brush 96.7% top-five (91 queries), Didone 95.1%, formal script 93.3%, techno 92.5%, handwriting 92.5%, display 92.4%. Plain text faces are the hard ones, because many of them look alike: humanist sans 81.1%, Garalde old-style serifs 81.6%, sans serif overall 82.6%, modern serifs 84.9%. So a collected catalog of brush or script faces needs coverage, not training.
 
-Length matters as expected: 81.2% at 5–7 characters, 87.7% at 8–10. Scripts do not: Latin 85.6%, other scripts 69.8%, Chinese 48.1% (only 52 queries).
+Length matters as expected: 85.3% at 5–7 characters, 89.4% at 8–10. Scripts do not: Latin 88.4%, other scripts 75.1%, Chinese 57.7% (only 52 queries).
 
 The shipped catalog holds every case and script of a face, which hides how little style crosses between letterforms. With one kind of reference removed for every family:
 
 | Held-out query | References kept | Top-5 | With every reference |
 |---|---|---:|---:|
-| Capitals | lowercase only | 46.9% | 85.0% |
-| Lowercase | capitals only | 52.3% | 84.1% |
-| Other scripts | Latin only | 42.0% | 69.8% |
-| Chinese | Latin only | 19.2% | 48.1% |
+| Capitals | lowercase only | 54.0% | 86.6% |
+| Lowercase | capitals only | 56.5% | 87.3% |
+| Other scripts | Latin only | 43.6% | 75.1% |
+| Chinese | Latin only | 15.4% | 57.7% |
 
-A catalog built from one case or from Latin alone, like most collected previews, finds capitals, other scripts and Chinese far less often. Style transfer across case and script is the next thing to train, and the benchmark to train it against now exists.
+A catalog built from one case or from Latin alone, like most collected previews, finds capitals, other scripts and Chinese far less often. The wider encoder raised the case rows by 4–7 points, not the script rows. Style transfer across case and script is the next thing to train.
 
 ## Catalog
 
-The Google Fonts catalog lists every face: 8,132 entries with 23,234 Chromium references (lowercase, uppercase and each script), a style name (Thin to Black, Italic), script coverage, and, on default faces, per-script twins: families whose letters in that script are closer than 95% of one face's re-renders (0.0148). Encoder (1,980,636 bytes, with heads), catalog (6,404,833) and required modules total 8,423,440 bytes, 4,235,749 with Brotli ([runtime check](style-runtime.json)); CPU and Metal agree with PyTorch within 3.8e-6, and a warm 128×48 window takes 1.3 ms on Metal. Chromium parses and decodes the catalog in 44 ms (39 ms warm) and ranks it in 6 ms. Search skips fonts that cannot draw the script the heads detect; a catalog with none of them ranks every font by style instead.
+The Google Fonts catalog lists every face: 8,132 entries with 23,234 Chromium references (lowercase, uppercase and each script), a style name (Thin to Black, Italic), script coverage, and, on default faces, per-script twins: families whose letters in that script are closer than 95% of one face's re-renders (0.0148). Encoder (4,232,607 bytes, with heads), catalog (6,404,810) and required modules total 10,675,579 bytes, 5,348,002 with Brotli ([runtime check](style-runtime.json)); CPU and Metal agree with PyTorch within 3.8e-6, and a warm 128×48 window takes 2.6 ms on Metal. The wider encoder costs 2.25 MB more, 1.1 MB with Brotli. Chromium parses and decodes the catalog in 44 ms (39 ms warm) and ranks it in 6 ms. Search skips fonts that cannot draw the script the heads detect; a catalog with none of them ranks every font by style instead.
 
 The page shows one row per design. Families that are twins in the crop's script fold into one row, named by the member whose name begins the others (IBM Plex Sans KR, Arabic and the Thai-derived Anuphan under IBM Plex Sans), scored by its best member and listing the rest; the saved result keeps every family. Twins are judged per script because shared Latin letters say nothing about the rest: Noto Sans Arabic and Noto Kufi Arabic are Latin twins but different Arabic designs. The display threshold is looser than the benchmark's median twins on purpose: a fold hides nothing, since folded names stay listed, while accuracy credits only the stricter pairs.
 
@@ -94,7 +108,7 @@ The page shows one row per design. Families that are twins in the crop's script 
 - **Hand drawings do not work.** On the synthetic sketch slice the deployed model puts the drawn font in the top five 5% of the time, and 39% of its answers share the drawing's category (chance is about 28%). Two fine-tunes did not help: training sketch views on identity (8% of views) left development accuracy 1.7 points lower and sketch results unchanged; training them on a broad style target (25%) cost 4.8 points and lowered sketch category agreement to 33%. Both runs were stopped; the second is kept in `.data/style/rejected-sketch-style-target`, the first was overwritten. A real drawing set, and a category-level target, come first.
 - **Other rasterizers are unmeasured.** Queries and references share Chromium on macOS. Safari, Firefox, Windows ClearType and phone screenshots may differ; the averaged catalog is one point lower here and hedges that risk.
 - **Synthetic queries.** No real screenshots, photographed text, colored backgrounds or letter-spacing beyond training augmentation are measured.
-- **Gates.** Held-out families at 8–10 characters: 87.8% top-five, above the 80% target. Seen families: 87.3% at 8–10 characters, below the 95% target. Other scripts (64%) and Hanzi (49%) stay well below Latin instead of within five points; 98.6% of answers can draw the script, not all; the italic head is 97.5% (the matched face's posture is right 99.9%). The two letter-distance style targets are not met, and the metrics themselves are unreliable beyond the nearest twenty designs.
+- **Gates.** Held-out families at 8–10 characters: 89.4% top-five, above the 80% target. Seen families: 91.7% at 8–10 characters, below the 95% target. Other scripts (70%) and Hanzi (56%) stay well below Latin instead of within five points; 99.1% of answers can draw the script, not all; the italic head is 97.6% (the matched face's posture is right 99.4%). The two letter-distance style targets are not met, and the metrics themselves are unreliable beyond the nearest twenty designs.
 - **Filtering by the predicted posture was rejected**: restricting candidates to upright or italic faces lowered development top-five from 61.7% to 59.7%, because 3% of posture predictions are wrong.
 
 ## Reproduce
@@ -111,11 +125,14 @@ node scripts/python.mjs -m train.style_bench instances --references --workers 6
 node scripts/style-references-browser.mjs                       # Chromium references
 node scripts/python.mjs -m train.style train --run evaluation-large --large --lr 3e-4 --warm .data/encoder/large-refine/best.pt --steps 30000 --seed 20260923
 node scripts/python.mjs -m train.style compare --run evaluation-large
-node scripts/python.mjs -m train.style final --run evaluation-large,evaluation-small --source browser
-node scripts/python.mjs -m train.style export --run evaluation-large
-node scripts/python.mjs -m train.style catalog --run evaluation-large --source browser
-node scripts/python.mjs -m train.style deploy --run evaluation-large
-node scripts/python.mjs -m train.style breakdown --run evaluation-large    # by length, style, case and script
+node scripts/python.mjs -m train.style train --run plain-10k --large --lr 1.5e-4 --warm .data/style/evaluation-large/best.pt --steps 10000 --seed 20260923
+node scripts/python.mjs -m train.style train --run pairs-10k --large --lr 1.5e-4 --warm .data/style/evaluation-large/best.pt --steps 10000 --seed 20260923 --pairs 1   # rejected
+node scripts/python.mjs -m train.style train --run wider-20k --wider --lr 2e-4 --warm .data/style/plain-10k/best.pt --steps 20000 --seed 20260924
+node scripts/python.mjs -m train.style final --run wider-20k,evaluation-large,evaluation-small --source browser
+node scripts/python.mjs -m train.style export --run wider-20k
+node scripts/python.mjs -m train.style catalog --run wider-20k --source browser
+node scripts/python.mjs -m train.style deploy --run wider-20k
+node scripts/python.mjs -m train.style breakdown --run wider-20k            # by length, style, case and script
 node scripts/python.mjs -m scripts.preview_swap                             # catalog swap on collected previews
 node checks/encoder.mjs models/encoder/encoder.json models/encoder/google-fonts.json bench/style-runtime.json
 ```

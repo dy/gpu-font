@@ -40,7 +40,7 @@ for (const version of ['v1', 'v2']) {
   if (hash(snapshot) !== report.inputsSha256) throw new Error('Changed preview input snapshot; recompile the catalog')
   const inputs = JSON.parse(snapshot), records = inputs.samples
   if (inputs.manifestSha256 !== report.sourceManifestSha256 || inputs.encoderSha256 !== binding.encoderSha256) throw new Error('Incompatible preview snapshot')
-  const product = report.catalogs.find(c => c.recipe === 'all')  // every capture, one row each; bench/preview-swap.json measures it
+  const product = report.catalogs.find(c => c.recipe === 'all')  // every capture, one row each
   if (!product) continue
   const path = `${compiled}/${product.path}`
   if (hash(await readFile(path)) !== product.sha256) throw new Error('Changed preview catalog')
@@ -79,10 +79,6 @@ if (!metrics && await access('bench/style-quality.json').then(() => true, () => 
   if (quality?.encoderSha256 === binding.encoderSha256 && quality.catalogSha256 === options[0].sha256) metrics = quality.metrics
 }
 if (!metrics) throw new Error('Changed encoder/catalog evaluation')
-// Catalog swap (scripts/preview_swap.py): collected fonts the encoder never saw, found in their own catalogs and among Google's.
-const swap = await read('bench/preview-swap.json')
-if (swap.encoderSha256 !== binding.encoderSha256 || swap.googleCatalogSha256 !== options[0].sha256) throw new Error('Changed encoder/catalog swap benchmark')
-metrics = { ...metrics, swapTop5: swap.results.shipped['all sources'].top5, swapMergedTop5: swap.results.shipped['with Google Fonts'].top5 }
 // Held-out case and script figures (train.style breakdown): every reference, then capitals, lowercase or other scripts against fewer.
 const breakdown = await read('bench/style-breakdown.json'), { groups, cross } = breakdown
 if (breakdown.encoderSha256 !== binding.encoderSha256) throw new Error('Changed encoder breakdown')
