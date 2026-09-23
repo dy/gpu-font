@@ -1,7 +1,7 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
 import { readFile } from 'node:fs/promises'
-import { readCatalog, rankCatalog, embedWindows, preparationHash, sha256 } from '../src/catalog.mjs'
+import { readCatalog, rankCatalog, embedWindows, preparationHash, sha256, readHeads, verdict, matchCatalog, foldTwins } from '../src/catalog.mjs'
 import { readNetwork, inferCPU } from '../src/network.mjs'
 
 const binding = { encoderSha256: 'encoder', preparationSha256: 'preparation' }
@@ -41,6 +41,18 @@ test('catalog parser rejects empty, incompatible, truncated, trailing, zero and 
   for (const change of changes) { const a = catalog(); change(a); assert.throws(() => readCatalog(a, binding)) }
   for (const q of [null, [], vector(0, NaN), vector(0, 0), [1]]) assert.throws(() => rankCatalog(q, readCatalog(catalog(), binding)))
 })
+test('decoded rows are the unit-normalized float32 dequantization, with overflow judged as stored', () => {
+  const row = (entries, n = 128) => Array.from({ length: n }, (_, d) => entries[d] ?? 0)
+  const data = catalog(); data.version = 3; delete data.referencesPerFace
+  data.vectors = { encoding: 'int8-base64', shape: [3, 128], owners: [0, 1, 2], scales: [.5, 1e-3, 2e36],
+    data: Buffer.from(Int8Array.from([...row({ 0: 3, 1: 4 }), ...row({ 0: -127, 127: 127 }), ...row({ 5: 127 })]).buffer).toString('base64') }
+  const { vectors } = readCatalog(data, binding)
+  const expected = [row({ 0: .6, 1: .8 }), row({ 0: -Math.SQRT1_2, 127: Math.SQRT1_2 }), row({ 5: 1 })].flat()
+  assert.ok(vectors.every((v, i) => Math.abs(v - expected[i]) < 1e-7))
+  for (let r = 0; r < 3; r++) assert.ok(Math.abs(Math.hypot(...vectors.subarray(r * 128, (r + 1) * 128)) - 1) < 1e-6)
+  data.vectors.scales[2] = 3e36  // 127 × 3e36 overflows float32: the stored row would be infinite
+  assert.throws(() => readCatalog(data, binding), /Invalid embedding/)
+})
 test('variable references keep distinct scripts and require every face to own a vector', () => {
   const data = catalog(); data.version = 3; delete data.referencesPerFace
   data.faces.splice(1, 1); data.vectors.owners = [0, 0, 1]
@@ -52,6 +64,63 @@ test('variable references keep distinct scripts and require every face to own a 
   assert.deepEqual(data, before)
   for (const change of [a => a.referencesPerFace = 1, a => a.vectors.owners = [0, 0, 0], a => a.vectors.shape = [0, 128], a => a.vectors.shape = [640001, 128], a => a.vectors.shape = [3.5, 128], a => a.vectors.shape = null]) {
     const bad = structuredClone(data); change(bad); assert.throws(() => readCatalog(bad, binding))
+  }
+})
+test('typed verdicts reproduce the head arithmetic; the script filter never returns a face lacking the script', () => {
+  const zero = () => Array(128).fill(0), row = (d, v) => { const r = zero(); r[d] = v; return r }
+  const artifact = { heads: {
+    weight: { weights: [row(0, 1)], bias: [0], scale: 300, offset: 400 }, italic: { weights: [row(1, 2)], bias: [0] },
+    script: { weights: [row(0, 1), row(1, 1)], bias: [0, 0], labels: ['Latn', 'Hani'] },
+    category: { weights: [row(0, 1), zero()], bias: [0, 0], labels: ['SANS_SERIF', 'SERIF'] },
+    fine: { weights: [row(0, 3)], bias: [0], labels: ['/Sans/Geometric'] } } }
+  const v = verdict(vector(0, 1), readHeads(artifact))
+  assert.equal(v.weight, 700); assert.equal(v.italic, .5)
+  assert.equal(v.script[0].label, 'Latn'); assert.ok(Math.abs(v.script[0].p - Math.E / (Math.E + 1)) < 1e-6)
+  assert.ok(Math.abs(v.fine[0].p - 1 / (1 + Math.exp(-3))) < 1e-6); assert.equal(v.category[0].label, 'SANS_SERIF')
+  assert.equal(readHeads({}), null)
+  for (const change of [h => h.weight.scale = NaN, h => h.script.labels = ['Latn'], h => h.script.labels = ['Latn', 'Latn'], h => h.italic.weights = [row(0, NaN)], h => h.fine.weights[0].length = 64,
+    h => delete h.italic, h => h.category.bias = [0, Infinity], h => { for (const key of Object.keys(h)) delete h[key] }]) {
+    const bad = structuredClone(artifact); change(bad.heads); assert.throws(() => readHeads(bad))
+  }
+  const data = catalog(); data.faces[0].scripts = ['Latn']; data.faces[1].scripts = ['Latn']; data.faces[2].scripts = ['Latn', 'Hani']
+  const decoded = readCatalog(data, binding)
+  assert.deepEqual(rankCatalog(vector(1, 1), decoded, { script: 'Hani' }).map(m => m.family), ['b'])
+  assert.deepEqual(rankCatalog(vector(1, 1), decoded, { script: 'Latn' }).map(m => m.family), ['a', 'b'])
+  assert.deepEqual(matchCatalog(vector(1, 1), decoded, { script: [{ label: 'Hani', p: .9 }] }).map(m => m.family), ['b'])
+  assert.deepEqual(matchCatalog(vector(1, 1), decoded, { script: [{ label: 'Arab', p: .9 }] }).map(m => m.family), ['a', 'b'])  // no Arabic font: style across scripts
+  assert.deepEqual(matchCatalog(vector(1, 1), decoded).map(m => m.family), ['a', 'b'])
+  delete data.faces[0].scripts  // undeclared coverage stays eligible
+  assert.deepEqual(rankCatalog(vector(0, 1), readCatalog(data, binding), { script: 'Hani' }).map(m => m.face.id), ['a/regular', 'b'])
+})
+test('identical designs fold into one row per script, never by chains, under their base name', () => {
+  const face = (familyId, family, twins) => ({ id: familyId + '/400', familyId, family, ...(twins ? { twins } : {}) })
+  const plex = ['anuphan', 'plexkr', 'plex', 'plexar'], latin = id => ({ Latn: plex.filter(f => f !== id) })
+  const faces = [face('anuphan', 'Anuphan', latin('anuphan')), face('plexkr', 'IBM Plex Sans KR', latin('plexkr')), face('plex', 'IBM Plex Sans', latin('plex')),
+    face('plexar', 'IBM Plex Sans Arabic', { ...latin('plexar'), Arab: ['kufi'] }), face('kufi', 'Kufi', { Arab: ['plexar'] }),
+    face('a', 'A', { Latn: ['b'] }), face('b', 'B', { Latn: ['a', 'c'] }), face('c', 'C', { Latn: ['b'] }), face('d', 'D')]
+  const ranked = [['anuphan', .96], ['plexkr', .95], ['plex', .94], ['a', .9], ['plexar', .89], ['kufi', .85], ['b', .8], ['c', .7], ['d', .6]].map(([id, score]) => ({ family: id, score, face: faces.find(f => f.familyId === id) }))
+  const before = structuredClone(ranked), folded = foldTwins(ranked, { faces }, { script: 'Latn' })
+  assert.deepEqual(folded.map(m => [m.family, m.score, m.siblings]), [['plex', .96, ['Anuphan', 'IBM Plex Sans KR', 'IBM Plex Sans Arabic']], ['a', .9, ['B']], ['kufi', .85, []], ['c', .7, []], ['d', .6, []]])
+  assert.equal(folded[0].face.family, 'IBM Plex Sans')  // the base's own face, the group's best score
+  assert.deepEqual(ranked, before)
+  // Twins are judged in the query's script: families sharing Latin letters stay apart for Arabic text.
+  assert.deepEqual(foldTwins(ranked, { faces }, { script: 'Arab' }).map(m => [m.family, m.siblings]).filter(([, s]) => s.length), [['plexar', ['Kufi']]])
+  for (const script of [undefined, 'Hani']) assert.deepEqual(foldTwins(ranked, { faces }, { script }).map(m => m.family), ranked.map(m => m.family))
+  assert.deepEqual(foldTwins([], { faces }, { script: 'Latn' }), [])
+  // A limit keeps the first groups whole: a sibling ranked after the limit still joins its group.
+  assert.deepEqual(foldTwins(ranked, { faces }, { script: 'Latn', limit: 2 }).map(m => [m.family, m.siblings]), [['plex', ['Anuphan', 'IBM Plex Sans KR', 'IBM Plex Sans Arabic']], ['a', ['B']]])
+})
+test('the twin index is kept per catalog and per script: A → A, A → B → A, scripts interleaved', () => {
+  const face = (familyId, family, twins) => ({ id: familyId + '/400', familyId, family, ...(twins ? { twins } : {}) })
+  const a = { faces: [face('x', 'X', { Latn: ['y'] }), face('y', 'Y', { Latn: ['x'], Arab: ['z'] }), face('z', 'Z', { Arab: ['y'] })] }
+  const b = { faces: [face('x', 'X', { Latn: ['z'] }), face('y', 'Y'), face('z', 'Z', { Latn: ['x'] })] }
+  const ranked = a.faces.map((f, i) => ({ family: f.familyId, score: 1 - i / 10, face: f }))
+  const fold = (catalog, script) => foldTwins(ranked, catalog, { script }).map(m => [m.family, m.siblings])
+  for (let n = 0; n < 2; n++) {
+    assert.deepEqual(fold(a, 'Latn'), [['x', ['Y']], ['z', []]])
+    assert.deepEqual(fold(a, 'Arab'), [['x', []], ['y', ['Z']]])
+    assert.deepEqual(fold(b, 'Latn'), [['x', ['Z']], ['y', []]])
+    assert.deepEqual(fold(a, undefined), [['x', []], ['y', []], ['z', []]])
   }
 })
 test('source embedding averages normalized windows, retaining direction rather than projection magnitude', () => {

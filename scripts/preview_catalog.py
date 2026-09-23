@@ -13,10 +13,13 @@ from train.encoder_data import save, validate_shard
 from train.encoder_catalog import preparation_hash, read_catalog
 from train.robustness import read, sha
 
-RECIPES={'words':{'words-a-v1','words-b-v1'}, 'alphabet':{'latin-lower-v1','latin-upper-v1'}, 'provided':{'provided-v1'}}
+RECIPES={'all':{'latin-lower-v1','latin-upper-v1','words-a-v1','words-b-v1','digits-v1'},'words':{'words-a-v1','words-b-v1'},
+         'alphabet':{'latin-lower-v1','latin-upper-v1'},'provided':{'provided-v1'}}
 
 
 def make_catalog(records,vectors,encoder_path,manifest_hash,recipe):
+    """Version 3: one reference row per capture, owned by its face, so a face scores by its best capture as Google Fonts
+    faces do. One averaged row per face lost 21 points of top-5 once these faces met Google's per-case rows."""
     if recipe not in RECIPES or len(records)!=len(vectors):raise ValueError('Invalid reference recipe or vectors')
     ids=[i for i,r in enumerate(records) if r['recipeId'] in RECIPES[recipe]]
     if not ids:raise ValueError('No references for recipe '+recipe)
@@ -30,16 +33,26 @@ def make_catalog(records,vectors,encoder_path,manifest_hash,recipe):
                       'weight':first['weight'],'style':'normal' if first['slant']=='upright' else first['slant'],
                       'axes':first['axes'],'foundry':first['foundry'],'scripts':sorted({s for r in rows for s in r['scripts']}),
                       'sourceUrl':first['sourceUrl'],'referenceIds':[r['id'] for r in rows]})
-    refs,owners,packed,scales=references(vectors[ids],[{'family':r['faceId']} for r in selected],face_ids,1,True)
-    encoder=read(encoder_path)
-    catalog={'version':2,'kind':'font-catalog','encoderSha256':sha(encoder_path),'preparationSha256':preparation_hash(encoder['preparation']),
-             'dimensions':DIMENSIONS,'referencesPerFace':1,'sourceManifestSha256':manifest_hash,'referenceRecipe':recipe,
+    rows=sorted(range(len(selected)),key=lambda k:(face_ids.index(selected[k]['faceId']),selected[k]['id']))
+    refs,_,packed,scales=references(vectors[ids][rows],[{'family':selected[k]['id']} for k in rows],[selected[k]['id'] for k in rows],1,True)
+    owners=np.array([face_ids.index(selected[k]['faceId']) for k in rows]);encoder=read(encoder_path)
+    catalog={'version':3,'kind':'font-catalog','encoderSha256':sha(encoder_path),'preparationSha256':preparation_hash(encoder['preparation']),
+             'dimensions':DIMENSIONS,'sourceManifestSha256':manifest_hash,'referenceRecipe':recipe,
              'faces':faces,'vectors':{'encoding':'int8-base64','shape':list(packed.shape),'data':base64.b64encode(packed.tobytes()).decode(),
                                        'scales':scales[:,0].tolist(),'owners':owners.tolist()}}
     decoded,decoded_owners,labels=read_catalog(catalog,encoder_path)
     np.testing.assert_allclose(decoded,refs,atol=1e-6);np.testing.assert_array_equal(decoded_owners,owners)
     if labels!=face_ids:raise ValueError('Changed face order')
     return catalog
+
+
+def complete(records,recipe):
+    """Faces holding every capture of the recipe; partial faces wait for the collector instead of failing the archive."""
+    have={}
+    for r in records:
+        if r['recipeId'] in RECIPES[recipe]:have.setdefault(r['faceId'],set()).add(r['recipeId'])
+    ready={f for f,s in have.items() if s==RECIPES[recipe]}
+    return [i for i,r in enumerate(records) if r['faceId'] in ready],sorted(set(have)-ready)
 
 
 def compile_catalogs(archive,encoder_path,output,device='cpu'):
@@ -57,11 +70,12 @@ def compile_catalogs(archive,encoder_path,output,device='cpu'):
     np.save(output/'embeddings.npy',vectors,allow_pickle=False)
     products=[]
     for recipe in RECIPES:
-        if not any(r['recipeId'] in RECIPES[recipe] for r in records):continue
-        catalog=make_catalog(records,vectors,encoder_path,manifest_hash,recipe)
+        ids,skipped=complete(records,recipe)
+        if not ids:continue
+        catalog=make_catalog([records[i] for i in ids],vectors[ids],encoder_path,manifest_hash,recipe)
         target=output/f'preview-pilot-{recipe}.json';save(target,catalog)
         products.append({'path':target.name,'sha256':sha(target),'bytes':target.stat().st_size,'recipe':recipe,
-                         'families':len({f['familyId'] for f in catalog['faces']}),'faces':len(catalog['faces'])})
+                         'families':len({f['familyId'] for f in catalog['faces']}),'faces':len(catalog['faces']),'skippedFaces':skipped})
     if sha(encoder_path)!=before or sha(archive/'manifest.jsonl')!=manifest_hash:raise ValueError('Changed encoder or source manifest')
     report={'encoderSha256':before,'sourceManifestSha256':manifest_hash,'inputsSha256':sha(prefix.with_suffix('.json')),'records':len(records),'windows':len(manifest['windows']),
             'embeddingSha256':sha(output/'embeddings.npy'),'catalogs':products,'encoderUnchanged':True,

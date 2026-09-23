@@ -2,7 +2,7 @@ import test from 'node:test'
 import assert from 'node:assert/strict'
 import { prepareBatch } from '../scripts/corpus-prepare.mjs'
 import { prepareLine } from '../src/line.mjs'
-import { readNetwork, inferCPU, corpusArchitecture, largeArchitecture } from '../src/network.mjs'
+import { readNetwork, inferCPU, corpusArchitecture, largeArchitecture, widerArchitecture } from '../src/network.mjs'
 
 test('corpus batch preparation is byte-identical to browser input, including blank and repeated batches', () => {
   const width = 35, height = 20, gray = Buffer.alloc(width * height, 255)
@@ -20,7 +20,7 @@ test('corpus batch preparation is byte-identical to browser input, including bla
   assert.deepEqual(prepareBatch([source]), [expected])
 })
 
-for (const [architecture, channels] of [[corpusArchitecture,[1,32,64,96,128,128]], [largeArchitecture,[1,64,128,192,256,256]]]) test(`${architecture} uses every feature and the last of 2,055 output rows`, () => {
+for (const [architecture, channels] of [[corpusArchitecture,[1,32,64,96,128,128]], [largeArchitecture,[1,64,128,192,256,256]], [widerArchitecture,[1,96,192,288,384,384]]]) test(`${architecture} uses every feature and the last of 2,055 output rows`, () => {
   const features=channels.at(-1), fonts=Array.from({length:2055},(_,i)=>`f${i}`)
   const layers=Array.from({length:6},(_,i)=>{
     const shape=i===5?[fonts.length,features]:[channels[i+1],channels[i],3,3]

@@ -46,9 +46,10 @@ Model SHA-256: `66b98a49d1bebe9b2e56bc896f1fbe9b8e76ece52e74608aeae58ef3dd4cefbb
 
 ## Reproduce the selected model
 
-After dependency setup and the font imports in the README:
+After the setup in the [README](../README.md) and the ten-font import in [ten.md](ten.md). Training uses Apple MPS; set `training.device` in `bench/hundred.json` to `cpu` elsewhere.
 
 ```sh
+node scripts/python.mjs -m train.hundred_data import --source ~/projects/fontr/data/fonts_collected/google
 npm run train:ten
 node scripts/hundred.mjs data
 node scripts/python.mjs -m train.hundred train

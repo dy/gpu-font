@@ -83,9 +83,10 @@ Next: collect verified screenshots for these ten faces, split by source before t
 
 ## Reproduce the selected model
 
-After the dependency/font setup in [README](../README.md):
+After the setup in the [README](../README.md). The import pins existing local font files and creates regular weight-400 instances; it does not modify `fontr`, which is unnecessary afterwards.
 
 ```sh
+npm run data:import -- --source ~/projects/fontr/data/fonts_collected/google
 npm run train:ten
 node scripts/ten.mjs evaluate
 npm run demo:build

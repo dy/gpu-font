@@ -2,16 +2,20 @@ export const architecture = 'font-conv16-32-48-64-v1'
 export const contextArchitecture = 'font-conv16-32-48-64-64-v2'
 export const corpusArchitecture = 'font-conv32-64-96-128-128-v3'
 export const largeArchitecture = 'font-conv64-128-192-256-256-v4'
+export const widerArchitecture = 'font-conv96-192-288-384-384-v5'
 export const channels = [1, 16, 32, 48, 64]
 export const strides = [1, 2, 2, 2]
+// Channels per layer for each supported architecture; every one but the first adds a stride-1 context layer.
+const shapes = new Map([[architecture, channels], [contextArchitecture, [...channels, 64]], [corpusArchitecture, [1, 32, 64, 96, 128, 128]],
+  [largeArchitecture, [1, 64, 128, 192, 256, 256]], [widerArchitecture, [1, 96, 192, 288, 384, 384]]])
 
 export function readNetwork(artifact) {
-  if (artifact?.version !== 1 || ![architecture, contextArchitecture, corpusArchitecture, largeArchitecture].includes(artifact.architecture)) throw new Error('Unsupported font classifier')
+  if (artifact?.version !== 1 || !shapes.has(artifact.architecture)) throw new Error('Unsupported font classifier')
   const fonts = artifact.fonts, p = artifact.preparation
   const encoder = artifact.kind === 'font-encoder'
   if (encoder && (artifact.dimensions !== 128 || artifact.normalization !== 'l2' || fonts !== undefined)) throw new Error('Invalid encoder output')
   const context = artifact.architecture !== architecture
-  const shapeChannels = artifact.architecture === largeArchitecture ? [1, 64, 128, 192, 256, 256] : artifact.architecture === corpusArchitecture ? [1, 32, 64, 96, 128, 128] : context ? [...channels, 64] : channels, shapeStrides = context ? [...strides, 1] : strides
+  const shapeChannels = shapes.get(artifact.architecture), shapeStrides = context ? [...strides, 1] : strides
   const depth = shapeStrides.length
   const dilations = artifact.dilations ?? Array(depth).fill(1)
   if (!Array.isArray(dilations) || dilations.length !== depth || dilations.some(d => d !== 1 && d !== 2)) throw new Error('Invalid filter dilations')
@@ -27,9 +31,11 @@ export function readNetwork(artifact) {
     const [rows] = shape, count = shape.reduce((a, b) => a * b, 1)
     if (!Array.isArray(layer.scale) || layer.scale.length !== rows || layer.scale.some(s => !Number.isFinite(s) || s <= 0) || !Array.isArray(layer.bias) || layer.bias.length !== rows || !layer.bias.every(Number.isFinite)) throw new Error('Invalid layer values')
     if (typeof layer.weights !== 'string' || !/^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?$/.test(layer.weights)) throw new Error('Invalid packed weights')
-    const bytes = Uint8Array.from(atob(layer.weights), c => c.charCodeAt(0))
-    if (bytes.length !== count) throw new Error('Invalid weight count')
-    const integers = new Int8Array(bytes.buffer), weights = Float32Array.from(integers, (v, n) => v * layer.scale[Math.floor(n / (count / rows))])
+    const binary = atob(layer.weights)
+    if (binary.length !== count) throw new Error('Invalid weight count')
+    // Plain loop: per-element callbacks cost ~100 ms on a million-weight encoder.
+    const weights = new Float32Array(count), per = count / rows
+    for (let n = 0; n < count; n++) { const byte = binary.charCodeAt(n); weights[n] = (byte > 127 ? byte - 256 : byte) * layer.scale[Math.floor(n / per)] }
     const bias = Float32Array.from(layer.bias)
     if (!weights.every(Number.isFinite) || !bias.every(Number.isFinite)) throw new Error('Weight overflow')
     return { shape, weights, bias }

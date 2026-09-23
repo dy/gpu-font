@@ -1,0 +1,77 @@
+{
+  "encoderSha256": "e0d9d931e3ba9e80f081a17d3f5f4af3b977e73db60edc8cbae0a251ab8f119a",
+  "dimensions": 128,
+  "hardware": "Apple M4 Max",
+  "cpuError": 9.5367431640625e-7,
+  "gpuError": 0.000003814697265625,
+  "embeddingError": 1.5707347766208413e-7,
+  "timing": {
+    "adapter": "metal-3",
+    "initializationMs": 43.30000019073486,
+    "warmWindowP50Ms": 1.3000001907348633,
+    "warmWindowP95Ms": 2,
+    "samples": 20,
+    "width": 128,
+    "height": 48
+  },
+  "payload": [
+    {
+      "path": "models/encoder/encoder.json",
+      "sha256": "e0d9d931e3ba9e80f081a17d3f5f4af3b977e73db60edc8cbae0a251ab8f119a",
+      "bytes": 1980636,
+      "gzipBytes": 1413907,
+      "brotliBytes": 1351134
+    },
+    {
+      "path": "models/encoder/google-fonts.json",
+      "sha256": "391c6ecb47067f759b2c5c9e318fcb52751e7fad71e60c25768cf14e397f0832",
+      "bytes": 6404833,
+      "gzipBytes": 3064719,
+      "brotliBytes": 2872576
+    },
+    {
+      "path": "src/network.mjs",
+      "sha256": "186f15217ef8ee73fc1c044677a16876b271224eb35119c32dfe7d8afe507d47",
+      "bytes": 6524,
+      "gzipBytes": 2254,
+      "brotliBytes": 2016
+    },
+    {
+      "path": "src/network-gpu.mjs",
+      "sha256": "fa27d2362027749dd689b0478cd4eca35839eaa0f40331f1f586fef0a2633f61",
+      "bytes": 6123,
+      "gzipBytes": 2121,
+      "brotliBytes": 1909
+    },
+    {
+      "path": "src/catalog.mjs",
+      "sha256": "43231cdfb631a434694f009da2b1ebbf96f86265319442aea5cf8f2fccfd3d99",
+      "bytes": 9599,
+      "gzipBytes": 3465,
+      "brotliBytes": 3076
+    },
+    {
+      "path": "src/prepare.mjs",
+      "sha256": "c48ce58778ad111f611ed96ad73a41b0c5821c2d1733cc3368931c4abafd7a13",
+      "bytes": 5811,
+      "gzipBytes": 2127,
+      "brotliBytes": 1897
+    },
+    {
+      "path": "src/input.mjs",
+      "sha256": "6499378ce15d196937fab2e76c87c4b3bdd802981a01e363a0fbcddeb5b6d853",
+      "bytes": 2150,
+      "gzipBytes": 916,
+      "brotliBytes": 799
+    },
+    {
+      "path": "src/line.mjs",
+      "sha256": "e35378b08a94e5e0539fabbc1c2f0075177a73ae1b88f5721dcd90f102e01b39",
+      "bytes": 7764,
+      "gzipBytes": 2632,
+      "brotliBytes": 2342
+    }
+  ],
+  "componentBytes": 8423440,
+  "scope": "Existing CPU/Metal convolution kernels with native encoder outputs. Single-window projection timing excludes image preparation and catalog search. Bytes include encoder, catalog and existing inference/preparation modules; include catalog parsing/ranking; exclude demo and optional font previews."
+}
