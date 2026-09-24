@@ -8,7 +8,7 @@
 //
 // --private also counts the preview captures held for private experiments and writes
 // to .data/private/canon.json; the committed bench/canon.json never mentions them.
-import { mkdir, readFile, writeFile } from 'node:fs/promises'
+import { mkdir, readdir, readFile, writeFile } from 'node:fs/promises'
 
 const CACHE = '.data/canon'
 const PRIVATE = process.argv.includes('--private')
@@ -175,7 +175,8 @@ async function coverage() {
   const read = async file => { try { return JSON.parse(await readFile(file, 'utf8')) } catch { return null } }
   const known = []
   for (const family of (await read('bench/corpus.json'))?.families ?? []) if (!family.excluded) known.push({ name: family.family, status: 'indexed', source: 'google-fonts' })
-  for (const id of ['fontshare', 'velvetyne']) for (const face of (await read(`models/encoder/catalogs/${id}.json`))?.faces ?? []) known.push({ name: face.family, status: 'indexed', source: id })
+  for (const file of (await readdir('models/encoder/catalogs')).filter(name => name.endsWith('.json') && name !== 'index.json'))
+    for (const face of (await read(`models/encoder/catalogs/${file}`))?.faces ?? []) known.push({ name: face.family, status: 'indexed', source: file.slice(0, -5) })
   for (const family of (await read('bench/open-fonts.json'))?.families ?? []) if (!family.excluded) known.push({ name: family.family, status: 'inventoried', source: family.source })
   // Preview captures held for private experiments, read from the capture archives themselves.
   if (PRIVATE) for (const held of await heldFamilies()) known.push({ ...held, status: 'held-locally' })

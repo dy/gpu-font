@@ -8,7 +8,7 @@ Files stay local under .data/fonts-open; bench/open-fonts.json pins the archives
 
     python scripts/open_fonts.py            download (verifying pins) and inventory
 """
-import hashlib, io, json, re, sys, tarfile, zipfile
+import hashlib, io, json, re, subprocess, sys, tarfile, zipfile
 from pathlib import Path, PurePosixPath
 from fontTools.agl import toUnicode
 from fontTools.ttLib import TTFont
@@ -109,6 +109,11 @@ FONTSHARE_LICENCES = {'itf_ffl': 'ITF Free Font License (free for personal and c
 # signals ai-train=yes. Blackout Two AM is the League's stale copy of Blackout 2AM, held above.
 FONTSOURCE_API = 'https://api.fontsource.org/v1/fonts'
 FONTSOURCE_SKIP = {'blackout-two-am'}
+# Debian admits only fonts under free licences and records each licence in the package's
+# copyright file. Every font package in its archive, after every rights holder's own release;
+# X11 bitmap fonts are not OpenType, Noto is Google Fonts' own, TeX Live's fonts are CTAN's.
+DEBIAN = 'https://deb.debian.org/debian/'
+DEBIAN_SKIP = re.compile(r'^(xfonts-|fonts-noto|texlive-)')
 # A font is known by its signature, not its name: repositories also commit macOS "._" forks,
 # Git LFS pointers and HTML error pages under font extensions.
 SFNT = (b'OTTO', b'\x00\x01\x00\x00', b'true', b'ttcf')
@@ -132,7 +137,7 @@ def fetch(url, pinned, commit=None):
     if not cache.exists():
         cache.parent.mkdir(parents=True, exist_ok=True)
         if commit:
-            import subprocess, tempfile
+            import tempfile
             with tempfile.TemporaryDirectory() as folder:
                 subprocess.run(['git', 'clone', '--quiet', '--filter=blob:none', '--no-checkout', url, folder], check=True, capture_output=True)
                 prefix = f"{PurePosixPath(url).stem}-{commit}/"
@@ -146,17 +151,21 @@ def fetch(url, pinned, commit=None):
 
 
 def members(data, url, format=None):
-    """(path, bytes) for every file in a zip, tar or cabinet archive, or the file itself."""
+    """(path, bytes) for every file in a zip, tar, cabinet or Debian archive, or the file itself."""
     if format == 'file':
         yield PurePosixPath(url.split('?')[0]).name, data
         return
-    if format == 'cab':  # self-extracting cabinet installers; libarchive's bsdtar reads them
-        import subprocess, tempfile
+    if format in ('cab', 'deb'):  # libarchive's bsdtar reads cabinet installers and a .deb's ar wrapper
+        import tempfile
         with tempfile.TemporaryDirectory() as folder:
-            archive = Path(folder) / 'installer.exe'; archive.write_bytes(data)
-            subprocess.run(['bsdtar', '-xf', str(archive), '-C', folder], check=True, capture_output=True)
-            for path in sorted(Path(folder).iterdir()):
-                if path.is_file() and path.name != 'installer.exe': yield path.name, path.read_bytes()
+            archive, out = Path(folder) / 'archive', Path(folder) / 'out'
+            archive.write_bytes(data); out.mkdir()
+            subprocess.run(['bsdtar', '-xf', str(archive), '-C', str(out)], check=True, capture_output=True)
+            if format == 'deb':  # the installed files are in data.tar.*
+                payload = next(out.glob('data.tar*')); out = Path(folder) / 'data'; out.mkdir()
+                subprocess.run(['bsdtar', '-xf', str(payload), '-C', str(out)], check=True, capture_output=True)
+            for path in sorted(out.rglob('*')):
+                if path.is_file() and not path.is_symlink(): yield str(path.relative_to(out)), path.read_bytes()
         return
     if url.endswith('.zip') or format == 'git':
         with zipfile.ZipFile(io.BytesIO(data)) as archive:
@@ -235,6 +244,23 @@ def fontshare_groups(google_names):
                                  'extra': {'sourceUrl': f"https://www.fontshare.com/fonts/{font['slug']}", 'sourceId': font['id']}}
 
 
+def debian_sources():
+    """Debian's font packages, each pinned to the SHA-256 its signed archive index publishes."""
+    import lzma
+    index = lzma.decompress(corpus.request(DEBIAN + 'dists/sid/main/binary-all/Packages.xz')).decode()
+    for block in index.split('\n\n'):
+        field = dict(re.findall(r'^([A-Za-z0-9-]+): (.*)$', block, re.M))
+        if field.get('Section') != 'fonts' or DEBIAN_SKIP.match(field.get('Package', '')): continue
+        yield {'source': 'debian', 'url': DEBIAN + field['Filename'], 'sha256': field['SHA256'], 'format': 'deb',
+               'licence': 'see the package copyright file', 'include': r'usr/share/fonts/(truetype|opentype)/.+\.(ttf|otf)$'}
+
+
+def debian_licences(copyright):
+    """The licence names a machine-readable Debian copyright file declares, in order."""
+    names = re.findall(r'^License: *(\S[^\n]*)$', copyright.decode('utf-8', 'replace'), re.M)
+    return '; '.join(dict.fromkeys(name.strip() for name in names)) or 'see the package copyright file'
+
+
 def get_json(url):
     return json.loads(corpus.request(url))  # retried with backoff
 
@@ -247,7 +273,7 @@ def fontsource_groups(held):
         if entry['type'] == 'google' or entry['id'] in FONTSOURCE_SKIP or name_key(entry['family']) in held: continue
         try: font = get_json(f"{FONTSOURCE_API}/{entry['id']}"); items = fontsource_files(font)
         except OSError as error: print(f"fontsource: {entry['family']} skipped: {error}"); continue
-        if not items or name_key(family_name(STORE / items[0]['path'])) in held: continue
+        if not items or not (inner := family_name(STORE / items[0]['path'])) or name_key(inner) in held: continue
         held.add(name_key(font['family']))
         yield font['family'], {'spec': {'licence': font['license']}, 'items': items, 'licences': [],
                                'extra': {'sourceUrl': f"https://fontsource.org/fonts/{font['id']}", 'sourceId': font['id'],
@@ -268,9 +294,13 @@ def fontsource_files(font):
 
 
 def family_name(path):
-    with TTFont(path, lazy=True) as font:
-        name = font['name']
-        return (name.getDebugName(16) or name.getDebugName(1) or path.stem).strip()
+    """The family a font declares; None when the file cannot be read (no name table, damaged)."""
+    try:
+        with TTFont(path, lazy=True) as font:
+            name = font['name']
+            return (name.getDebugName(16) or name.getDebugName(1) or path.stem).strip()
+    except Exception:  # fontTools raises many kinds on malformed files
+        return None
 
 
 def main():
@@ -281,14 +311,22 @@ def main():
     original_source_path = corpus.source_path
     corpus.source_path = lambda path: STORE / path  # face_info reads our store, not the Google cache
     try:
-        for spec in SOURCES:
+        for spec in [*SOURCES, *debian_sources()]:  # Debian last among files: rights holders first
             licences = []
             for url in spec.get('files') or [spec['url']]:  # an archive, or loose files pinned one by one
                 key = f"{url}#{spec['commit']}" if 'commit' in spec else url
-                data, digest = fetch(url, pins.get(key), spec.get('commit'))
-                archives.append({'source': spec['source'], 'url': key, 'sha256': digest, 'bytes': len(data), 'licence': spec['licence']})
+                try:
+                    data, digest = fetch(url, pins.get(key) or spec.get('sha256'), spec.get('commit'))
+                    wanted = [(name, content) for name, content in members(data, url, spec.get('format'))
+                              if re.search(spec['include'], name, re.I) or LICENCE_NAMES.search(name)]
+                except (OSError, ValueError, subprocess.CalledProcessError) as error:
+                    # Curated sources fail loudly; one of Debian's hundreds of packages is reported and skipped.
+                    if spec.get('format') != 'deb': raise
+                    print(f'{url}: skipped ({type(error).__name__}: {error})'); continue
+                archive = {'source': spec['source'], 'url': key, 'sha256': digest, 'bytes': len(data), 'licence': spec['licence']}
+                archives.append(archive)
                 root = PurePosixPath(spec['source']) / ('' if 'files' in spec else Path(url).name.split('?')[0])
-                for name, content in members(data, url, spec.get('format')):
+                for name, content in wanted:
                     keep_font = re.search(spec['include'], name, re.I) and is_font(content)
                     keep_licence = LICENCE_NAMES.search(name)
                     if not (keep_font or keep_licence): continue
@@ -297,9 +335,10 @@ def main():
                     target.parent.mkdir(parents=True, exist_ok=True)
                     if not target.exists() or target.read_bytes() != content: target.write_bytes(content)
                     if keep_licence and not keep_font:
+                        if spec.get('format') == 'deb' and name.endswith('/copyright'): spec['licence'] = archive['licence'] = debian_licences(content)
                         licences.append({'path': relative, 'blob': corpus.blob(content)}); continue
                     item = {'path': relative, 'size': len(content), 'sha': corpus.blob(content)}
-                    name = family_name(target)
+                    if not (name := family_name(target)): print(f'{relative}: unreadable, left out'); continue
                     if (owner := owners.setdefault(name_key(name), spec['source'])) != spec['source']:
                         elsewhere.setdefault(spec['source'], set()).add(f'{name} ({owner})'); continue
                     groups.setdefault((spec['source'], name), {'spec': spec, 'items': [], 'licences': licences})['items'].append(item)

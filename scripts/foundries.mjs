@@ -5,9 +5,10 @@
 //
 //   node scripts/foundries.mjs           refresh counts and print the table
 //   node scripts/foundries.mjs --check   validate only
-import { readFile, writeFile } from 'node:fs/promises'
+import { readdir, readFile, writeFile } from 'node:fs/promises'
 
 const REGISTRY = 'bench/foundries.json'
+const CATALOGS = 'models/encoder/catalogs'
 export const KINDS = ['library', 'foundry', 'retailer', 'aggregator', 'platform', 'icons', 'music', 'math']
 export const ACCESS = ['files', 'previews', 'none']
 export const TERMS = ['permitted', 'none-found', 'restricted', 'ban', 'not-verified']
@@ -39,20 +40,19 @@ export function validateRegistry(registry) {
   return problems
 }
 
-/** Family counts per source, read from the corpus, compiled catalogues and the open-font inventory.
- *  The same family reached two ways (a preview catalogue and its files) counts once. */
-async function indexedCounts() {
-  const names = new Map(), add = (id, key) => {
-    if (!names.has(id)) names.set(id, new Set())
-    names.get(id).add(key.toLowerCase().replace(/[^a-z0-9:]/g, ''))
-  }
+/** Family counts per source, read from the artifacts: families in each shipped catalogue
+ *  (models/encoder/catalogs, plus the Google corpus) and in the open-font inventory. */
+export async function familyCounts() {
+  const indexed = new Map(), inventoried = new Map()
+  const tally = (map, id, key) => (map.get(id) ?? map.set(id, new Set()).get(id)).add(key)
   const read = async file => { try { return JSON.parse(await readFile(file, 'utf8')) } catch { return null } }
   // The corpus is counted by its own entries, matching the published 2,004.
-  for (const family of (await read('bench/corpus.json'))?.families ?? []) if (!family.excluded) add('google-fonts', `id:${family.id}`)
-  for (const id of ['fontshare', 'velvetyne'])
-    for (const face of (await read(`models/encoder/catalogs/${id}.json`))?.faces ?? []) add(id, face.family)
-  for (const family of (await read('bench/open-fonts.json'))?.families ?? []) if (!family.excluded) add(family.source, family.family)
-  return new Map([...names].map(([id, set]) => [id, set.size]))
+  for (const family of (await read('bench/corpus.json'))?.families ?? []) if (!family.excluded) tally(indexed, 'google-fonts', family.id)
+  for (const file of (await readdir(CATALOGS)).filter(name => name.endsWith('.json') && name !== 'index.json'))
+    for (const face of (await read(`${CATALOGS}/${file}`))?.faces ?? []) tally(indexed, file.slice(0, -5), face.familyId)
+  for (const family of (await read('bench/open-fonts.json'))?.families ?? []) if (!family.excluded) tally(inventoried, family.source, family.family)
+  const sizes = map => new Map([...map].map(([id, set]) => [id, set.size]))
+  return { indexed: sizes(indexed), inventoried: sizes(inventoried) }
 }
 
 async function main() {
@@ -60,12 +60,13 @@ async function main() {
   const problems = validateRegistry(registry)
   if (problems.length) { for (const problem of problems) console.error(`  ${problem}`); process.exit(1) }
   if (process.argv.includes('--check')) return console.log(`${registry.sources.length} sources valid`)
-  const counts = await indexedCounts()
-  // Only indexed or partial sources count as coverage. Private captures never enter this public registry.
+  const { indexed, inventoried } = await familyCounts()
+  // A shipped catalogue is what makes a source indexed; private captures never enter this public registry.
   for (const source of registry.sources) {
     delete source.work.familiesIndexed; delete source.work.familiesInventoried; delete source.work.familiesHeldLocally
-    const field = ['indexed', 'partial'].includes(source.work.status) ? 'familiesIndexed' : source.work.status === 'inventoried' ? 'familiesInventoried' : null
-    if (field && counts.has(source.id)) source.work[field] = counts.get(source.id)
+    if (indexed.has(source.id) && ['planned', 'inventoried', 'partial'].includes(source.work.status)) source.work.status = 'indexed'
+    if (['indexed', 'partial'].includes(source.work.status) && indexed.has(source.id)) source.work.familiesIndexed = indexed.get(source.id)
+    else if (source.work.status === 'inventoried' && inventoried.has(source.id)) source.work.familiesInventoried = inventoried.get(source.id)
   }
   registry.updated = new Date().toISOString().slice(0, 10)
   await writeFile(REGISTRY, JSON.stringify(registry, null, 2) + '\n')

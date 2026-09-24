@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updated": "2026-09-23",
+  "updated": "2026-09-24",
   "purpose": "Every font source considered: what it offers, its licence, what its terms allow, and where work with it stands. Work never proceeds against a written ban without recorded permission.",
   "sources": [
     {
@@ -48,9 +48,9 @@
         "note": "ITF Free Font License allows using the fonts to create images and forbids modification and redistribution of the files; no clause on machine learning. 36 families are OFL."
       },
       "work": {
-        "status": "inventoried",
-        "route": "files from the public catalogue API, kept local; catalogue compilation next",
-        "familiesInventoried": 65
+        "status": "indexed",
+        "route": "files from the public catalogue API, kept local; built into a catalogue from those files",
+        "familiesIndexed": 65
       },
       "log": [
         {
@@ -86,9 +86,9 @@
         "note": "Each family's licence read from its own repository. velvetyne.fr's robots.txt, read on 2026-09-23, asks AI agents, Claude and Anthropic among them, not to crawl it. The 2026-09-22 pilot had already fetched Basteleur, Karrik and Sligoil from their specimen pages on the site; nothing has been taken from the site since, and every family now comes from the foundry's repositories."
       },
       "work": {
-        "status": "inventoried",
+        "status": "indexed",
         "route": "pinned commits of the foundry's GitLab and GitHub repositories and its designers' own; bench/open-releases.json lists each family and every one left out",
-        "familiesInventoried": 64
+        "familiesIndexed": 62
       },
       "log": [
         {
@@ -123,9 +123,9 @@
         "quote": "All the fonts from The League of Moveable Type are free & open source, available to use commercially and subject to the Open Font License."
       },
       "work": {
-        "status": "inventoried",
+        "status": "indexed",
         "route": "pinned GitHub commits and releases; families Google Fonts carries are covered there",
-        "familiesInventoried": 13
+        "familiesIndexed": 12
       },
       "log": [
         {
@@ -151,9 +151,9 @@
         "note": "Every family's LICENSE.txt read in its repository. collletttivo.it asks AI agents not to crawl it; the site itself was not crawled."
       },
       "work": {
-        "status": "inventoried",
+        "status": "indexed",
         "route": "pinned commits of the collective's GitHub repositories",
-        "familiesInventoried": 17
+        "familiesIndexed": 17
       },
       "log": [
         {
@@ -180,9 +180,9 @@
         "note": "robots.txt asks for a 10-second crawl delay. Files come from the designers' own repositories and sites, each site's robots.txt checked first; nothing more is taken from Uncut."
       },
       "work": {
-        "status": "inventoried",
+        "status": "indexed",
         "route": "families resolved to their designers' repositories or sites and pinned; bench/open-releases.json lists each one and every family left out",
-        "familiesInventoried": 63
+        "familiesIndexed": 62
       },
       "log": [
         {
@@ -209,9 +209,9 @@
         "quote": "Content-Signal: ai-train=yes, search=yes, ai-input=yes"
       },
       "work": {
-        "status": "inventoried",
+        "status": "indexed",
         "route": "its own (non-Google) fonts from the public API, pinned to each npm release; a family its foundry publishes is taken from the foundry",
-        "familiesInventoried": 90
+        "familiesIndexed": 89
       },
       "log": [
         {
@@ -221,6 +221,30 @@
         {
           "date": "2026-09-23",
           "event": "Files are its default subset, usually Latin; full-script files remain upstream"
+        }
+      ]
+    },
+    {
+      "id": "debian",
+      "name": "Debian font packages",
+      "url": "https://packages.debian.org/sid/fonts/",
+      "kind": "platform",
+      "access": "files",
+      "licence": "per package, all free under the Debian Free Software Guidelines (OFL, GPL with font exception, Apache, MIT, public domain and others)",
+      "terms": {
+        "status": "permitted",
+        "checked": "2026-09-23",
+        "url": "https://www.debian.org/social_contract#guidelines",
+        "note": "Debian admits only freely licensed fonts and records each licence in the package's copyright file, which is kept with every family."
+      },
+      "work": {
+        "status": "inventoried",
+        "route": "every package in the fonts section of Debian's archive, pinned to the SHA-256 its index publishes; families a rights holder publishes are taken from the rights holder"
+      },
+      "log": [
+        {
+          "date": "2026-09-23",
+          "event": "660 packages in the fonts section; 576 taken. X11 bitmap fonts are not OpenType, Noto comes through Google Fonts, and the TeX Live font packages follow separately"
         }
       ]
     },
@@ -334,9 +358,9 @@
         "checked": "2026-09-23"
       },
       "work": {
-        "status": "inventoried",
-        "route": "pinned official archive, inventoried like the Google corpus; catalogue compilation next",
-        "familiesInventoried": 4
+        "status": "indexed",
+        "route": "pinned official archive, inventoried like the Google corpus; built into a catalogue from those files",
+        "familiesIndexed": 4
       },
       "log": [
         {
@@ -361,9 +385,9 @@
         "checked": "2026-09-23"
       },
       "work": {
-        "status": "inventoried",
-        "route": "pinned official archive, inventoried like the Google corpus; catalogue compilation next",
-        "familiesInventoried": 3
+        "status": "indexed",
+        "route": "pinned official archive, inventoried like the Google corpus; built into a catalogue from those files",
+        "familiesIndexed": 3
       },
       "log": [
         {
@@ -388,9 +412,9 @@
         "checked": "2026-09-23"
       },
       "work": {
-        "status": "inventoried",
-        "route": "pinned official archive, inventoried like the Google corpus; catalogue compilation next",
-        "familiesInventoried": 3
+        "status": "indexed",
+        "route": "pinned official archive, inventoried like the Google corpus; built into a catalogue from those files",
+        "familiesIndexed": 3
       },
       "log": [
         {
@@ -415,9 +439,9 @@
         "checked": "2026-09-23"
       },
       "work": {
-        "status": "inventoried",
-        "route": "pinned official archive, inventoried like the Google corpus; catalogue compilation next",
-        "familiesInventoried": 11
+        "status": "indexed",
+        "route": "pinned official archive, inventoried like the Google corpus; built into a catalogue from those files",
+        "familiesIndexed": 9
       },
       "log": [
         {
@@ -442,9 +466,9 @@
         "checked": "2026-09-23"
       },
       "work": {
-        "status": "inventoried",
-        "route": "pinned official archive, inventoried like the Google corpus; catalogue compilation next",
-        "familiesInventoried": 17
+        "status": "indexed",
+        "route": "pinned official archive, inventoried like the Google corpus; built into a catalogue from those files",
+        "familiesIndexed": 17
       },
       "log": [
         {
@@ -469,9 +493,9 @@
         "checked": "2026-09-23"
       },
       "work": {
-        "status": "inventoried",
-        "route": "pinned official archives (text and maths), inventoried like the Google corpus; catalogue compilation next",
-        "familiesInventoried": 13
+        "status": "indexed",
+        "route": "pinned official archives (text and maths), inventoried like the Google corpus; built into a catalogue from those files",
+        "familiesIndexed": 13
       },
       "log": [
         {
@@ -496,9 +520,9 @@
         "checked": "2026-09-23"
       },
       "work": {
-        "status": "inventoried",
-        "route": "pinned release, inventoried like the Google corpus; catalogue compilation next",
-        "familiesInventoried": 3
+        "status": "indexed",
+        "route": "pinned release, inventoried like the Google corpus; built into a catalogue from those files",
+        "familiesIndexed": 3
       },
       "log": [
         {
@@ -523,9 +547,9 @@
         "checked": "2026-09-23"
       },
       "work": {
-        "status": "inventoried",
-        "route": "pinned release, inventoried like the Google corpus; catalogue compilation next",
-        "familiesInventoried": 3
+        "status": "indexed",
+        "route": "pinned release, inventoried like the Google corpus; built into a catalogue from those files",
+        "familiesIndexed": 3
       },
       "log": [
         {
@@ -550,9 +574,9 @@
         "checked": "2026-09-23"
       },
       "work": {
-        "status": "inventoried",
-        "route": "pinned release, inventoried like the Google corpus; catalogue compilation next",
-        "familiesInventoried": 6
+        "status": "indexed",
+        "route": "pinned release, inventoried like the Google corpus; built into a catalogue from those files",
+        "familiesIndexed": 6
       },
       "log": [
         {
@@ -577,9 +601,9 @@
         "checked": "2026-09-23"
       },
       "work": {
-        "status": "inventoried",
-        "route": "pinned release, inventoried like the Google corpus; catalogue compilation next",
-        "familiesInventoried": 1
+        "status": "indexed",
+        "route": "pinned release, inventoried like the Google corpus; built into a catalogue from those files",
+        "familiesIndexed": 1
       },
       "log": [
         {
@@ -604,9 +628,9 @@
         "checked": "2026-09-23"
       },
       "work": {
-        "status": "inventoried",
+        "status": "indexed",
         "route": "pinned releases of families Google Fonts lacks",
-        "familiesInventoried": 1
+        "familiesIndexed": 1
       },
       "log": [
         {
@@ -631,9 +655,9 @@
         "checked": "2026-09-23"
       },
       "work": {
-        "status": "inventoried",
-        "route": "pinned release, inventoried like the Google corpus; catalogue compilation next",
-        "familiesInventoried": 1
+        "status": "indexed",
+        "route": "pinned release, inventoried like the Google corpus; built into a catalogue from those files",
+        "familiesIndexed": 1
       },
       "log": [
         {
@@ -658,9 +682,9 @@
         "checked": "2026-09-23"
       },
       "work": {
-        "status": "inventoried",
-        "route": "pinned release, inventoried like the Google corpus; catalogue compilation next",
-        "familiesInventoried": 3
+        "status": "indexed",
+        "route": "pinned release, inventoried like the Google corpus; built into a catalogue from those files",
+        "familiesIndexed": 3
       },
       "log": [
         {
@@ -685,9 +709,9 @@
         "checked": "2026-09-23"
       },
       "work": {
-        "status": "inventoried",
-        "route": "pinned release, inventoried like the Google corpus; catalogue compilation next",
-        "familiesInventoried": 1
+        "status": "indexed",
+        "route": "pinned release, inventoried like the Google corpus; built into a catalogue from those files",
+        "familiesIndexed": 1
       },
       "log": [
         {
@@ -712,9 +736,9 @@
         "checked": "2026-09-23"
       },
       "work": {
-        "status": "inventoried",
+        "status": "indexed",
         "route": "pinned CTAN packages that carry OpenType or TrueType files",
-        "familiesInventoried": 4
+        "familiesIndexed": 4
       },
       "log": [
         {
@@ -741,9 +765,9 @@
         "quote": "They are available for free use, including in commercial applications; my own contributions are public domain, and others have licensed their copyright claims."
       },
       "work": {
-        "status": "inventoried",
-        "route": "pinned release, inventoried like the Google corpus; catalogue compilation next",
-        "familiesInventoried": 2
+        "status": "indexed",
+        "route": "pinned release, inventoried like the Google corpus; built into a catalogue from those files",
+        "familiesIndexed": 2
       },
       "log": [
         {
@@ -768,9 +792,9 @@
         "checked": "2026-09-23"
       },
       "work": {
-        "status": "inventoried",
-        "route": "pinned release, inventoried like the Google corpus; catalogue compilation next",
-        "familiesInventoried": 3
+        "status": "indexed",
+        "route": "pinned release, inventoried like the Google corpus; built into a catalogue from those files",
+        "familiesIndexed": 3
       },
       "log": [
         {
@@ -795,9 +819,9 @@
         "checked": "2026-09-23"
       },
       "work": {
-        "status": "inventoried",
-        "route": "pinned release, inventoried like the Google corpus; catalogue compilation next",
-        "familiesInventoried": 1
+        "status": "indexed",
+        "route": "pinned release, inventoried like the Google corpus; built into a catalogue from those files",
+        "familiesIndexed": 1
       },
       "log": [
         {
@@ -822,9 +846,9 @@
         "checked": "2026-09-23"
       },
       "work": {
-        "status": "inventoried",
-        "route": "pinned release, inventoried like the Google corpus; catalogue compilation next",
-        "familiesInventoried": 1
+        "status": "indexed",
+        "route": "pinned release, inventoried like the Google corpus; built into a catalogue from those files",
+        "familiesIndexed": 1
       },
       "log": [
         {
@@ -849,9 +873,9 @@
         "checked": "2026-09-23"
       },
       "work": {
-        "status": "inventoried",
-        "route": "pinned release, inventoried like the Google corpus; catalogue compilation next",
-        "familiesInventoried": 1
+        "status": "indexed",
+        "route": "pinned release, inventoried like the Google corpus; built into a catalogue from those files",
+        "familiesIndexed": 1
       },
       "log": [
         {
@@ -876,9 +900,9 @@
         "checked": "2026-09-23"
       },
       "work": {
-        "status": "inventoried",
-        "route": "pinned release, inventoried like the Google corpus; catalogue compilation next",
-        "familiesInventoried": 1
+        "status": "indexed",
+        "route": "pinned release, inventoried like the Google corpus; built into a catalogue from those files",
+        "familiesIndexed": 1
       },
       "log": [
         {
@@ -903,9 +927,9 @@
         "checked": "2026-09-23"
       },
       "work": {
-        "status": "inventoried",
-        "route": "pinned release, inventoried like the Google corpus; catalogue compilation next",
-        "familiesInventoried": 7
+        "status": "indexed",
+        "route": "pinned release, inventoried like the Google corpus; built into a catalogue from those files",
+        "familiesIndexed": 7
       },
       "log": [
         {
@@ -930,9 +954,9 @@
         "checked": "2026-09-23"
       },
       "work": {
-        "status": "inventoried",
-        "route": "pinned release, inventoried like the Google corpus; catalogue compilation next",
-        "familiesInventoried": 1
+        "status": "indexed",
+        "route": "pinned release, inventoried like the Google corpus; built into a catalogue from those files",
+        "familiesIndexed": 1
       },
       "log": [
         {
@@ -957,9 +981,9 @@
         "checked": "2026-09-23"
       },
       "work": {
-        "status": "inventoried",
-        "route": "pinned release, inventoried like the Google corpus; catalogue compilation next",
-        "familiesInventoried": 1
+        "status": "indexed",
+        "route": "pinned release, inventoried like the Google corpus; built into a catalogue from those files",
+        "familiesIndexed": 1
       },
       "log": [
         {
@@ -1163,9 +1187,9 @@
         "note": "EULA read from inside the original installer. Rendering text is use; nothing is altered or redistributed. Late-1990s versions of the Windows core fonts."
       },
       "work": {
-        "status": "inventoried",
-        "route": "original cabinet installers, pinned; catalogue compilation next",
-        "familiesInventoried": 10
+        "status": "indexed",
+        "route": "original cabinet installers, pinned; built into a catalogue from those files",
+        "familiesIndexed": 10
       },
       "log": [
         {

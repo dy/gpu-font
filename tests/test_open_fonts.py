@@ -7,7 +7,7 @@ from pathlib import Path
 from fontTools.fontBuilder import FontBuilder
 from fontTools.pens.ttGlyphPen import TTGlyphPen
 
-from scripts.open_fonts import MANIFEST, ROOT, colour_letters, is_font, members, name_key, symbol_encoded
+from scripts.open_fonts import MANIFEST, ROOT, colour_letters, debian_licences, family_name, is_font, members, name_key, symbol_encoded
 
 
 def build(folder, names, coloured=()):
@@ -59,6 +59,18 @@ class ColourLetters(unittest.TestCase):
             self.assertFalse(colour_letters(build(folder, ['A', 'B'], coloured=['layer'])))
 
 
+class FamilyName(unittest.TestCase):
+    def test_a_font_declares_its_family_and_an_unreadable_one_has_none(self):
+        from fontTools.ttLib import TTFont
+        with tempfile.TemporaryDirectory() as folder:
+            path = build(folder, ['A', 'B'])
+            self.assertEqual(family_name(path), 'Test')
+            font = TTFont(path); del font['name']; font.save(path)  # a real Debian font ships like this
+            self.assertIsNone(family_name(path))
+            path.write_bytes(b'\x00\x01\x00\x00 truncated')
+            self.assertIsNone(family_name(path))
+
+
 class FontSignature(unittest.TestCase):
     def test_fonts_are_known_by_signature_not_extension(self):
         with tempfile.TemporaryDirectory() as folder:
@@ -93,6 +105,29 @@ class StoredFont(unittest.TestCase):
 class Members(unittest.TestCase):
     def test_a_loose_file_is_its_own_member_named_without_query(self):
         self.assertEqual(list(members(b'font', 'https://host/fonts/FSEX302.ttf?raw=1', 'file')), [('FSEX302.ttf', b'font')])
+
+
+class DebianPackage(unittest.TestCase):
+    def test_a_deb_yields_its_installed_files_and_its_licences(self):
+        import tarfile
+        with tempfile.TemporaryDirectory() as folder:
+            root = Path(folder)
+            (root / 'debian-binary').write_text('2.0\n')
+            with tarfile.open(root / 'control.tar.gz', 'w:gz'): pass
+            files = {'usr/share/fonts/truetype/x/A.ttf': b'\x00\x01\x00\x00font', 'usr/share/doc/fonts-x/copyright':
+                     b'Format: https://www.debian.org/doc/packaging-manuals/copyright-format/1.0/\n\nFiles: *\nLicense: OFL-1.1\n\nFiles: debian/*\nLicense: GPL-2+\n\nLicense: OFL-1.1\n full text\n'}
+            with tarfile.open(root / 'data.tar.gz', 'w:gz') as data:
+                for name, content in files.items():
+                    path = root / 'tree' / name; path.parent.mkdir(parents=True, exist_ok=True); path.write_bytes(content)
+                    data.add(path, arcname='./' + name)
+            # The common ar format dpkg writes (macOS's ar adds a BSD symbol table instead).
+            ar = b'!<arch>\n' + b''.join(
+                b'%-16s%-12d%-6d%-6d%-8s%-10d`\n' % (name.encode(), 0, 0, 0, b'100644', len(body)) + body + b'\n' * (len(body) % 2)
+                for name in ['debian-binary', 'control.tar.gz', 'data.tar.gz'] for body in [(root / name).read_bytes()])
+            got = dict(members(ar, 'https://deb/fonts-x.deb', 'deb'))
+            self.assertEqual(got, files)
+            self.assertEqual(debian_licences(files['usr/share/doc/fonts-x/copyright']), 'OFL-1.1; GPL-2+')
+            self.assertEqual(debian_licences(b'no machine-readable fields'), 'see the package copyright file')
 
 
 class GitPin(unittest.TestCase):
