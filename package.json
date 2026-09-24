@@ -40,6 +40,7 @@
     "train:focus": "node scripts/focus.mjs",
     "train:ten": "node scripts/ten.mjs",
     "demo:build": "node scripts/demo-build.mjs",
+    "stamp": "node scripts/stamp.mjs",
     "demo": "node scripts/demo-serve.mjs",
     "test:demo": "node checks/demo.mjs",
     "train:hundred": "node scripts/hundred.mjs"

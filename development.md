@@ -11,6 +11,8 @@ node scripts/og.mjs   # og.png, the link preview, captured from the running page
 
 `npm run demo:build` refreshes `site.json` (catalog list, checksums, byte sizes, measured figures) after the model or a catalog changes. WebGPU needs localhost or HTTPS.
 
+`npm run stamp` pins each page's stylesheets and modules to their content hashes (`?v=` and an import map). GitHub Pages lets browsers cache every file for ten minutes on its own, so without it a page can run another deploy's script. Run it after changing any page, stylesheet or module; `tests/stamp.test.mjs` fails until you do.
+
 The repository holds scripts and JSON, plus `og.png`, the link preview. Fonts, other images and PyTorch checkpoints stay in the ignored `.data/` and `*.pt` files; training and evaluation rebuild them ([corpus](bench/corpus.md), [style references](bench/style.md#reproduce), [sample fonts](bench/hundred.md)). Tested with Node 25.9.0 and Python 3.14.6:
 
 ```sh

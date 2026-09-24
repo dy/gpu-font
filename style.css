@@ -2,7 +2,6 @@
  * pre-emit critique: P5 H4 E4 S5 R5 V4 · contrast: pass · mobile: 320 / 375 / 414 / 768
  * Every colour, size, radius, shadow and space comes from tokens.css.
  */
-@import './tokens.css';
 * { box-sizing: border-box; }
 html { overflow-x: clip; scroll-behavior: smooth; }
 body { margin: 0; overflow-x: clip; background: var(--color-paper); color: var(--color-ink); font: 400 var(--text-body)/1.5 var(--font-body); font-synthesis: none; }
