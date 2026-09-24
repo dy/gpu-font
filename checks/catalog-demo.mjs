@@ -80,6 +80,7 @@ try {
   assert.equal(await page.locator('footer .footer-license').getAttribute('href'), 'https://github.com/dy/gpu-font/blob/main/LICENSE')
   const headerRight = await page.locator('header, header .header-icon').evaluateAll(elements => elements.map(element => element.getBoundingClientRect().right))
   assert.ok(Math.abs(headerRight[0] - headerRight[1]) < 1)
+  assert.deepEqual(await page.locator('footer .footer-license, footer .omkara').evaluateAll(links => links.map(a => getComputedStyle(a).textDecorationLine)), ['underline', 'underline'], 'MIT and the Krishnized license are both underlined links')
   const footerCenters = await page.locator('footer .footer-license, footer .omkara').evaluateAll(elements => elements.map(element => {
     const rect = element.getBoundingClientRect(); return rect.top + rect.height / 2
   }))
@@ -202,6 +203,13 @@ try {
   // The crop stays in view while the long list scrolls beside it.
   await page.locator('#results .result').nth(30).scrollIntoViewIfNeeded()
   assert.equal(await page.locator('.source-panel').evaluate(panel => Math.round(panel.getBoundingClientRect().top)), 0, 'The input panel sticks to the top')
+  // A window shorter than the panel pins it by its bottom edge, and the verdict stays in the panel, under its windows, in view.
+  const stuck = () => page.evaluate(() => { const panel = document.querySelector('.source-panel').getBoundingClientRect(), verdict = document.querySelector('#result-summary').getBoundingClientRect(), windows = document.querySelector('#normalized').getBoundingClientRect()
+    return { bottom: Math.round(panel.bottom - innerHeight), top: Math.round(panel.top), verdict: verdict.top >= windows.bottom && verdict.bottom <= panel.bottom && verdict.bottom <= innerHeight && verdict.top >= 0 } })
+  await page.setViewportSize({ width: 1440, height: 560 }); await page.locator('#results .result').nth(40).scrollIntoViewIfNeeded()
+  const short = await stuck(); assert.ok(short.bottom === 0 && short.top < 0 && short.verdict, `Short window: ${JSON.stringify(short)}`)
+  await page.setViewportSize({ width: 1440, height: 1000 }); await page.locator('#results .result').nth(30).scrollIntoViewIfNeeded()
+  const tall = await stuck(); assert.ok(tall.top === 0 && tall.verdict, `Tall window: ${JSON.stringify(tall)}`)
   // Rows past the fifth preview through a subset face of their own, read-only; the refused one names its absence.
   await page.waitForFunction(() => [...document.querySelectorAll('#results .result')].slice(5).every(r => r.querySelector('.result-unavailable') || r.querySelector('.result-preview')?.style.visibility === ''))
   assert.equal(await page.locator('#results .result').nth(5).locator('.result-unavailable').textContent(), 'No preview available')

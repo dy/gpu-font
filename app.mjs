@@ -136,6 +136,8 @@ function brushCursor() {
   frame.style.cursor = `url("data:image/svg+xml,${encodeURIComponent(svg)}") ${Math.round(c)} ${Math.round(c)}, crosshair`
 }
 window.addEventListener('resize', brushCursor)
+// The input panel's height, so CSS can pin a panel taller than the window by its bottom edge while matches scroll.
+new ResizeObserver(([entry]) => entry.target.style.setProperty('--panel-height', `${entry.borderBoxSize[0].blockSize}px`)).observe(document.querySelector('.source-panel'))
 function startDrawing() {
   revision++; invalidate()
   const sheet = document.createElement('canvas'), c = sheet.getContext('2d')
