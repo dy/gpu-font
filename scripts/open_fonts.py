@@ -140,8 +140,10 @@ FONTSOURCE_SKIP = {'blackout-two-am'}
 DEBIAN = 'https://deb.debian.org/debian/'
 DEBIAN_SKIP = re.compile(r'^(xfonts-|fonts-noto|texlive-(?!fonts-(extra|recommended)$))')
 # Catalogues gather other people's releases. A family goes to the first source that claims it:
-# rights holders' own releases, then Fontshare's library, then catalogues, then Debian and Fontsource.
-CATALOGUES = {'uncut', 'fontlibrary'}
+# rights holders' own releases, then Fontshare's library, then catalogues, then Debian, then the
+# long tail of GitHub repositories (some mirror others' fonts), then Fontsource.
+CATALOGUES = {'uncut', 'fontlibrary', 'use-and-modify'}
+LONG_TAIL = {'github'}
 FONTSHARE = {'source': 'fontshare'}  # stands for Fontshare's API in the claiming order
 # A font is known by its signature, not its name: repositories also commit macOS "._" forks,
 # Git LFS pointers and HTML error pages under font extensions.
@@ -274,9 +276,11 @@ def fontshare_groups(google_names):
                                  'extra': {'sourceUrl': f"https://www.fontshare.com/fonts/{font['slug']}", 'sourceId': font['id']}}
 
 
-def claim_order(specs):
-    """Rights holders' own releases first, then Fontshare's library, then the catalogues."""
-    return [*(spec for spec in specs if spec['source'] not in CATALOGUES), FONTSHARE, *(spec for spec in specs if spec['source'] in CATALOGUES)]
+def claim_order(specs, debian=()):
+    """Rights holders' own releases, Fontshare's library, the catalogues, Debian, then GitHub's long tail."""
+    tier = lambda source: 2 if source in CATALOGUES else 3 if source in LONG_TAIL else 0
+    return [*(spec for spec in specs if tier(spec['source']) == 0), FONTSHARE, *(spec for spec in specs if tier(spec['source']) == 2),
+            *debian, *(spec for spec in specs if tier(spec['source']) == 3)]
 
 
 def split_collections(members):
@@ -390,7 +394,7 @@ def main():
     def add(source, name, group):
         groups.setdefault((source, name_key(name)), {**group, 'name': name, 'items': []})['items'].extend(group['items'])
     try:
-        for spec in [*claim_order(SOURCES), *debian_sources()]:
+        for spec in claim_order(SOURCES, list(debian_sources())):
             if spec is FONTSHARE:
                 for name, group in fontshare_groups(google_names):
                     if claim('fontshare', name): add('fontshare', name, group)

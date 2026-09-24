@@ -141,13 +141,11 @@ class DebianSkip(unittest.TestCase):
 
 
 class ClaimOrder(unittest.TestCase):
-    def test_rights_holders_then_fontshare_then_catalogues(self):
-        from scripts.open_fonts import CATALOGUES, SOURCES, claim_order
-        order = [spec['source'] for spec in claim_order(SOURCES)]
-        fontshare = order.index('fontshare')
-        self.assertTrue(all(source not in CATALOGUES for source in order[:fontshare]))
-        self.assertTrue(all(source in CATALOGUES for source in order[fontshare + 1:]))
-        self.assertEqual(len(order), len(SOURCES) + 1)
+    def test_rights_holders_then_fontshare_then_catalogues_then_debian_then_the_long_tail(self):
+        from scripts.open_fonts import CATALOGUES, LONG_TAIL, claim_order
+        specs = [{'source': 'github'}, {'source': 'fontlibrary'}, {'source': 'velvetyne'}, {'source': 'use-and-modify'}, {'source': 'dejavu'}]
+        order = [spec['source'] for spec in claim_order(specs, [{'source': 'debian'}])]
+        self.assertEqual(order, ['velvetyne', 'dejavu', 'fontshare', 'fontlibrary', 'use-and-modify', 'debian', 'github'])
 
 
 class SplitCollections(unittest.TestCase):
