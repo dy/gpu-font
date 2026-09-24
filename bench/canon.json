@@ -11,10 +11,12 @@
  "coverage": {
   "indexed (clone)": 10,
   "indexed": 544,
-  "missing": 397,
+  "missing": 387,
   "indexed (revival)": 11,
   "indexed (related family)": 18,
   "indexed (same-design)": 17,
+  "inventoried": 5,
+  "inventoried (related family)": 5,
   "inventoried (clone)": 2,
   "indexed (basis)": 1
  },
@@ -37,7 +39,7 @@
    "score": 0.994,
    "coverage": {
     "status": "indexed",
-    "source": "urw-base35",
+    "source": "other",
     "via": "Nimbus Sans",
     "match": "clone",
     "equivalents": [
@@ -327,7 +329,7 @@
    "score": 0.896,
    "coverage": {
     "status": "indexed",
-    "source": "urw-base35",
+    "source": "other",
     "via": "Nimbus Mono PS",
     "match": "clone",
     "equivalents": [
@@ -501,7 +503,7 @@
    "score": 0.818,
    "coverage": {
     "status": "indexed",
-    "source": "d-din",
+    "source": "other",
     "via": "D-DIN",
     "match": "revival",
     "equivalents": [
@@ -593,7 +595,7 @@
    "score": 0.797,
    "coverage": {
     "status": "indexed",
-    "source": "urw-base35",
+    "source": "other",
     "via": "P052",
     "match": "clone",
     "equivalents": [
@@ -772,7 +774,7 @@
    "score": 0.767,
    "coverage": {
     "status": "indexed",
-    "source": "cc-accidenz-commons",
+    "source": "other",
     "via": "CC Accidenz Commons",
     "match": "revival",
     "equivalents": [
@@ -808,7 +810,10 @@
    },
    "score": 0.765,
    "coverage": {
-    "status": "missing",
+    "status": "inventoried",
+    "source": "debian",
+    "via": "Caslon",
+    "match": "exact",
     "equivalents": [
      {
       "family": "Libre Caslon Text",
@@ -930,7 +935,7 @@
    "score": 0.738,
    "coverage": {
     "status": "indexed",
-    "source": "liberation",
+    "source": "other",
     "via": "Liberation Mono",
     "match": "related"
    }
@@ -974,7 +979,7 @@
    "score": 0.727,
    "coverage": {
     "status": "indexed",
-    "source": "dejavu",
+    "source": "other",
     "via": "DejaVu Sans",
     "match": "related"
    }
@@ -999,7 +1004,7 @@
    "score": 0.726,
    "coverage": {
     "status": "indexed",
-    "source": "railway-sans",
+    "source": "other",
     "via": "Railway",
     "match": "revival",
     "equivalents": [
@@ -1287,7 +1292,7 @@
    "score": 0.673,
    "coverage": {
     "status": "indexed",
-    "source": "linux-libertine",
+    "source": "other",
     "via": "Linux Libertine O",
     "match": "same-design",
     "equivalents": [
@@ -1530,7 +1535,7 @@
    "score": 0.648,
    "coverage": {
     "status": "indexed",
-    "source": "roadgeek",
+    "source": "other",
     "via": "Roadgeek 2014 Series B",
     "match": "clone",
     "equivalents": [
@@ -1654,7 +1659,7 @@
    "score": 0.637,
    "coverage": {
     "status": "indexed",
-    "source": "opendyslexic",
+    "source": "other",
     "via": "OpenDyslexic",
     "match": "exact"
    }
@@ -1677,7 +1682,7 @@
    "score": 0.634,
    "coverage": {
     "status": "indexed",
-    "source": "ctan",
+    "source": "other",
     "via": "Theano Didot",
     "match": "revival",
     "equivalents": [
@@ -1728,7 +1733,7 @@
    "score": 0.628,
    "coverage": {
     "status": "indexed",
-    "source": "ocr-skala",
+    "source": "other",
     "via": "OCR B",
     "match": "exact",
     "equivalents": [
@@ -1809,7 +1814,7 @@
    "score": 0.619,
    "coverage": {
     "status": "indexed",
-    "source": "fixedsys-excelsior",
+    "source": "other",
     "via": "Fixedsys Excelsior",
     "match": "clone",
     "equivalents": [
@@ -1858,7 +1863,10 @@
    },
    "score": 0.618,
    "coverage": {
-    "status": "missing"
+    "status": "inventoried",
+    "source": "debian",
+    "via": "Font Awesome 6 Free Solid",
+    "match": "related"
    }
   },
   {
@@ -1947,7 +1955,7 @@
    "score": 0.612,
    "coverage": {
     "status": "indexed",
-    "source": "urw-base35",
+    "source": "other",
     "via": "URW Gothic",
     "match": "clone",
     "equivalents": [
@@ -1984,7 +1992,7 @@
    "score": 0.607,
    "coverage": {
     "status": "indexed",
-    "source": "ocr-skala",
+    "source": "other",
     "via": "OCR A",
     "match": "exact",
     "equivalents": [
@@ -2068,7 +2076,7 @@
    "score": 0.599,
    "coverage": {
     "status": "indexed",
-    "source": "bitstream-vera",
+    "source": "other",
     "via": "Bitstream Vera Sans",
     "match": "same-design",
     "equivalents": [
@@ -2239,7 +2247,7 @@
    "score": 0.576,
    "coverage": {
     "status": "indexed",
-    "source": "gnu-unifont",
+    "source": "other",
     "via": "Unifont",
     "match": "same-design",
     "equivalents": [
@@ -2311,7 +2319,7 @@
    "score": 0.572,
    "coverage": {
     "status": "indexed",
-    "source": "chicago-kare",
+    "source": "other",
     "via": "Chicago Kare",
     "match": "revival",
     "equivalents": [
@@ -2385,7 +2393,7 @@
    "score": 0.564,
    "coverage": {
     "status": "indexed",
-    "source": "gnu-freefont",
+    "source": "other",
     "via": "FreeSerif",
     "match": "same-design",
     "equivalents": [
@@ -2472,7 +2480,7 @@
    "score": 0.559,
    "coverage": {
     "status": "indexed",
-    "source": "copperplate-cc",
+    "source": "other",
     "via": "Copperplate CC",
     "match": "revival",
     "equivalents": [
@@ -2501,7 +2509,7 @@
    "score": 0.559,
    "coverage": {
     "status": "indexed",
-    "source": "droid",
+    "source": "other",
     "via": "Droid Sans",
     "match": "same-design",
     "equivalents": [
@@ -2907,7 +2915,7 @@
    "score": 0.527,
    "coverage": {
     "status": "indexed",
-    "source": "junicode",
+    "source": "other",
     "via": "Junicode VF",
     "match": "same-design",
     "equivalents": [
@@ -3273,7 +3281,7 @@
    "score": 0.514,
    "coverage": {
     "status": "indexed",
-    "source": "bitstream-vera",
+    "source": "other",
     "via": "Bitstream Vera Sans Mono",
     "match": "basis",
     "equivalents": [
@@ -3589,7 +3597,7 @@
    "score": 0.504,
    "coverage": {
     "status": "indexed",
-    "source": "urw-base35",
+    "source": "other",
     "via": "URW Bookman",
     "match": "clone",
     "equivalents": [
@@ -3822,7 +3830,7 @@
    "score": 0.497,
    "coverage": {
     "status": "indexed",
-    "source": "ctan",
+    "source": "other",
     "via": "Euler Math",
     "match": "same-design",
     "equivalents": [
@@ -4035,7 +4043,7 @@
    "score": 0.485,
    "coverage": {
     "status": "indexed",
-    "source": "urw-base35",
+    "source": "other",
     "via": "Nimbus Sans",
     "match": "exact"
    }
@@ -4505,7 +4513,7 @@
    "score": 0.467,
    "coverage": {
     "status": "indexed",
-    "source": "hershey",
+    "source": "other",
     "via": "AVHershey Simplex",
     "match": "same-design",
     "equivalents": [
@@ -4769,7 +4777,7 @@
    "score": 0.46,
    "coverage": {
     "status": "indexed",
-    "source": "urw-base35",
+    "source": "other",
     "via": "Nimbus Roman",
     "match": "same-design",
     "equivalents": [
@@ -4864,7 +4872,7 @@
    "score": 0.458,
    "coverage": {
     "status": "indexed",
-    "source": "ctan",
+    "source": "other",
     "via": "Theano Didot",
     "match": "exact"
    }
@@ -5479,7 +5487,7 @@
    "score": 0.439,
    "coverage": {
     "status": "indexed",
-    "source": "ctan",
+    "source": "other",
     "via": "erewhon",
     "match": "same-design",
     "equivalents": [
@@ -5748,7 +5756,7 @@
    "score": 0.433,
    "coverage": {
     "status": "indexed",
-    "source": "urw-base35",
+    "source": "other",
     "via": "Z003",
     "match": "clone",
     "equivalents": [
@@ -6139,7 +6147,7 @@
    "score": 0.427,
    "coverage": {
     "status": "indexed",
-    "source": "ubuntu-titling",
+    "source": "other",
     "via": "Ubuntu-Title",
     "match": "same-design",
     "equivalents": [
@@ -6188,7 +6196,7 @@
    "score": 0.426,
    "coverage": {
     "status": "indexed",
-    "source": "sil",
+    "source": "other",
     "via": "Doulos SIL",
     "match": "exact"
    }
@@ -6421,7 +6429,10 @@
    },
    "score": 0.424,
    "coverage": {
-    "status": "missing"
+    "status": "inventoried",
+    "source": "debian",
+    "via": "Tiresias LPfont",
+    "match": "related"
    }
   },
   {
@@ -7018,7 +7029,7 @@
    "score": 0.415,
    "coverage": {
     "status": "indexed",
-    "source": "urw-base35",
+    "source": "other",
     "via": "Nimbus Mono PS",
     "match": "same-design",
     "equivalents": [
@@ -7798,7 +7809,7 @@
    "score": 0.401,
    "coverage": {
     "status": "indexed",
-    "source": "ctan",
+    "source": "other",
     "via": "Asana Math",
     "match": "exact"
    }
@@ -8201,7 +8212,10 @@
    },
    "score": 0.395,
    "coverage": {
-    "status": "missing"
+    "status": "inventoried",
+    "source": "debian",
+    "via": "Stereofidelic",
+    "match": "exact"
    }
   },
   {
@@ -8439,7 +8453,10 @@
    },
    "score": 0.391,
    "coverage": {
-    "status": "missing"
+    "status": "inventoried",
+    "source": "debian",
+    "via": "Aharoni CLM",
+    "match": "related"
    }
   },
   {
@@ -9431,7 +9448,10 @@
    },
    "score": 0.374,
    "coverage": {
-    "status": "missing"
+    "status": "inventoried",
+    "source": "debian",
+    "via": "NK57 Monospace",
+    "match": "related"
    }
   },
   {
@@ -9534,7 +9554,7 @@
    "score": 0.372,
    "coverage": {
     "status": "indexed",
-    "source": "urw-base35",
+    "source": "other",
     "via": "C059",
     "match": "clone",
     "equivalents": [
@@ -9968,7 +9988,10 @@
    },
    "score": 0.367,
    "coverage": {
-    "status": "missing"
+    "status": "inventoried",
+    "source": "debian",
+    "via": "Chandas",
+    "match": "exact"
    }
   },
   {
@@ -10191,7 +10214,10 @@
    },
    "score": 0.363,
    "coverage": {
-    "status": "missing"
+    "status": "inventoried",
+    "source": "debian",
+    "via": "GFS Porson",
+    "match": "related"
    }
   },
   {
@@ -11503,7 +11529,10 @@
    },
    "score": 0.339,
    "coverage": {
-    "status": "missing"
+    "status": "inventoried",
+    "source": "debian",
+    "via": "Awami Nastaliq",
+    "match": "exact"
    }
   },
   {
@@ -12465,7 +12494,7 @@
    "score": 0.32,
    "coverage": {
     "status": "indexed",
-    "source": "fixedsys-excelsior",
+    "source": "other",
     "via": "Fixedsys Excelsior",
     "match": "related"
    }
@@ -19583,7 +19612,10 @@
    },
    "score": 0.186,
    "coverage": {
-    "status": "missing"
+    "status": "inventoried",
+    "source": "debian",
+    "via": "Century Catalogue",
+    "match": "exact"
    }
   },
   {

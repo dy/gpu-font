@@ -172,6 +172,14 @@ class Inventory(unittest.TestCase):
         for family in self.inventory['families']:
             self.assertIn(family['selected'], [face['path'] for face in family['faces']], family['family'])
 
+    def test_the_committed_inventory_stays_small(self):
+        # Letters are counted here and kept in full beside the files; licence text is kept once per family.
+        self.assertLess(MANIFEST.stat().st_size, 12_000_000)
+        for family in self.inventory['families']:
+            self.assertNotIn('alphabets', family)
+            self.assertTrue(all(isinstance(count, int) and count >= 8 for count in family['letters'].values()), family['family'])
+            self.assertTrue(all('embeddedLicense' not in face for face in family['faces']), family['family'])
+
     def test_every_archive_is_pinned_by_hash(self):
         # The Fontshare and Fontsource APIs are listings, not archives; their files are pinned per face by blob.
         unpinned = [a['url'] for a in self.inventory['archives'] if a['source'] not in ('fontshare', 'fontsource') and len(a.get('sha256', '')) != 64]

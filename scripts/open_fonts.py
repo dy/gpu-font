@@ -2,7 +2,7 @@
 
 Each source is a pinned release: the rights holder's own where it still publishes
 one, otherwise a faithful copy named at the source. Faces are read with the corpus's own
-face_info, so scripts, alphabets, exclusions and the normal-face choice mean the
+face_info, so scripts, letters, exclusions and the normal-face choice mean the
 same thing here as for Google Fonts, and the catalogue compiler reads both alike.
 Files stay local under .data/fonts-open; bench/open-fonts.json pins the archives.
 
@@ -350,7 +350,7 @@ def main():
         held = google_names | {name_key(name) for _, name in groups}
         for name, group in fontsource_groups(held): groups[('fontsource', name)] = group
         archives.append({'source': 'fontsource', 'url': FONTSOURCE_API, 'licence': 'per family (OFL-1.1, Apache-2.0, MIT, CC0-1.0, Unlicense)'})
-        families, in_google = [], {}
+        families, in_google, alphabet_store = [], {}, {}
         for (source, name), group in sorted(groups.items()):
             if name_key(name) in google_names:
                 in_google.setdefault(source, []).append(name); continue
@@ -365,19 +365,24 @@ def main():
             alphabets = {s: ''.join(map(chr, cps)) for s, cps in letters.items() if len(cps) >= 8 and s not in ('Zyyy', 'Zinh')}
             if not reason and not alphabets: reason = 'insufficient-letter-coverage'
             symbol = symbol_encoded(STORE / selected['path'])
-            families.append({'id': f'{source}-{slug(name)}', 'family': name, 'source': source, 'folder': str(PurePosixPath(selected['path']).parent),
+            family_id = f'{source}-{slug(name)}'
+            alphabet_store[family_id] = alphabets
+            # A family's embedded licence text is kept once, not once per face.
+            embedded = sorted({(face.pop('embeddedLicense') or '').strip()[:300] for face, _ in faces} - {''})
+            families.append({'id': family_id, 'family': name, 'source': source, 'folder': str(PurePosixPath(selected['path']).parent),
                              **({'symbolEncoded': True} if symbol else {}), **group.get('extra', {}),
-                             'declaredLicense': [group['spec']['licence']], 'licenses': group['licences'],
+                             'declaredLicense': [group['spec']['licence']], 'licenses': group['licences'], 'embeddedLicences': embedded,
                              'faces': [face for face, _ in faces], 'selected': selected['path'],
-                             'trainingAxes': corpus.normal_axes(selected), 'alphabets': alphabets, 'excluded': reason})
+                             'trainingAxes': corpus.normal_axes(selected), 'letters': {s: len(a) for s, a in alphabets.items()}, 'excluded': reason})
     finally:
         corpus.source_path = original_source_path
     ids = [f['id'] for f in families]
     if len(set(ids)) != len(ids): raise ValueError('Duplicate family ids')
     result = {'version': 1, 'store': '.data/fonts-open',
-              'scope': 'Openly licensed families outside Google Fonts, from pinned official archives. Same family/face/alphabet semantics as bench/corpus.json; one normal face selected per family; exclusions explicit.',
+              'scope': 'Openly licensed families outside Google Fonts, from pinned releases. Same family and face semantics as bench/corpus.json; one normal face selected per family; exclusions explicit. `letters` counts the letters per script; the letters themselves are in .data/fonts-open/alphabets.json, rebuilt with the files.',
               'archives': archives, 'fontFiles': sum(len(f['faces']) for f in families), 'families': families}
     MANIFEST.write_text(json.dumps(result, ensure_ascii=False, separators=(',', ':')) + '\n')
+    (STORE / 'alphabets.json').write_text(json.dumps(alphabet_store, ensure_ascii=False, separators=(',', ':')) + '\n')
     counts = {}
     for f in families: counts.setdefault(f['source'], [0, 0])[0 if not f['excluded'] else 1] += 1
     for source, (ok, excluded) in counts.items(): print(f'{source}: {ok} families{f", {excluded} excluded" if excluded else ""}')

@@ -241,14 +241,22 @@
       },
       "work": {
         "status": "inventoried",
-        "route": "every package in the fonts section of Debian's archive, pinned to the SHA-256 its index publishes; families a rights holder publishes are taken from the rights holder"
+        "route": "every package in the fonts section of Debian's archive, pinned to the SHA-256 its index publishes; families a rights holder publishes are taken from the rights holder",
+        "familiesInventoried": 1815
       },
       "log": [
         {
           "date": "2026-09-23",
           "event": "660 packages in the fonts section; 576 taken. X11 bitmap fonts are not OpenType, Noto comes through Google Fonts, and the TeX Live font packages follow separately"
+        },
+        {
+          "date": "2026-09-24",
+          "event": "Inventoried: 1849 families from Debian (1815 usable), the rest left to Google Fonts and to rights holders' own releases"
         }
-      ]
+      ],
+      "familiesAvailable": 2075,
+      "availableUnit": "families",
+      "availableNote": "families found in the 576 font packages of Debian's fonts section (sid, https://deb.debian.org/debian/dists/sid/main/binary-all/Packages.xz) by the inventory, 2026-09-24: 1849 taken from Debian, 171 carried by Google Fonts, 55 by their own releases"
     },
     {
       "id": "open-foundry",
@@ -354,6 +362,31 @@
       "availableNote": "No official figure published (DaFont is on the do-not-fetch list and its FAQ states no total). Third-party citations range widely, from ~30,000 to 80,000; 'almost 40,000 fonts' is the figure most consistently repeated across independent review sources circa 2024-2025. (search result: https://www.dafont.com/), 2026-09-24"
     },
     {
+      "id": "fonts-in-use",
+      "name": "Fonts In Use",
+      "url": "https://fontsinuse.com/",
+      "kind": "aggregator",
+      "access": "none",
+      "licence": "site licence for lawful, personal, non-commercial use; the images are third parties' work shown under fair use",
+      "terms": {
+        "status": "ban",
+        "checked": "2026-09-24",
+        "url": "https://fontsinuse.com/terms-and-conditions-of-use/",
+        "quote": "This license does not include … any collection and use of any product listings, descriptions, images, prices; any derivative use of this Site or its contents; … or any use of data mining, robots, spiders or similar data gathering and extraction tools.",
+        "note": "robots.txt allows ClaudeBot with a 1-second delay, but the terms forbid automated collection. The typeface list with use counts is the reference for real-world coverage; it needs the site's permission."
+      },
+      "work": {
+        "status": "permission-to-request",
+        "permission": null
+      },
+      "log": [
+        {
+          "date": "2026-09-24",
+          "event": "Terms read: automated collection forbidden; permission to use the typeface list and use counts to be requested. Not crawled"
+        }
+      ]
+    },
+    {
       "id": "dejavu",
       "name": "DejaVu",
       "url": "https://dejavu-fonts.github.io/",
@@ -366,8 +399,7 @@
       },
       "work": {
         "status": "indexed",
-        "route": "pinned official archive, inventoried like the Google corpus; built into a catalogue from those files",
-        "familiesIndexed": 4
+        "route": "pinned official archive, inventoried like the Google corpus; built into a catalogue from those files"
       },
       "log": [
         {
@@ -393,8 +425,7 @@
       },
       "work": {
         "status": "indexed",
-        "route": "pinned official archive, inventoried like the Google corpus; built into a catalogue from those files",
-        "familiesIndexed": 3
+        "route": "pinned official archive, inventoried like the Google corpus; built into a catalogue from those files"
       },
       "log": [
         {
@@ -420,8 +451,7 @@
       },
       "work": {
         "status": "indexed",
-        "route": "pinned official archive, inventoried like the Google corpus; built into a catalogue from those files",
-        "familiesIndexed": 3
+        "route": "pinned official archive, inventoried like the Google corpus; built into a catalogue from those files"
       },
       "log": [
         {
@@ -447,8 +477,7 @@
       },
       "work": {
         "status": "indexed",
-        "route": "pinned official archive, inventoried like the Google corpus; built into a catalogue from those files",
-        "familiesIndexed": 9
+        "route": "pinned official archive, inventoried like the Google corpus; built into a catalogue from those files"
       },
       "log": [
         {
@@ -528,8 +557,7 @@
       },
       "work": {
         "status": "indexed",
-        "route": "pinned release, inventoried like the Google corpus; built into a catalogue from those files",
-        "familiesIndexed": 3
+        "route": "pinned release, inventoried like the Google corpus; built into a catalogue from those files"
       },
       "log": [
         {
@@ -555,8 +583,7 @@
       },
       "work": {
         "status": "indexed",
-        "route": "pinned release, inventoried like the Google corpus; built into a catalogue from those files",
-        "familiesIndexed": 3
+        "route": "pinned release, inventoried like the Google corpus; built into a catalogue from those files"
       },
       "log": [
         {
@@ -582,8 +609,7 @@
       },
       "work": {
         "status": "indexed",
-        "route": "pinned release, inventoried like the Google corpus; built into a catalogue from those files",
-        "familiesIndexed": 6
+        "route": "pinned release, inventoried like the Google corpus; built into a catalogue from those files"
       },
       "log": [
         {
@@ -609,8 +635,7 @@
       },
       "work": {
         "status": "indexed",
-        "route": "pinned release, inventoried like the Google corpus; built into a catalogue from those files",
-        "familiesIndexed": 1
+        "route": "pinned release, inventoried like the Google corpus; built into a catalogue from those files"
       },
       "log": [
         {
@@ -636,8 +661,7 @@
       },
       "work": {
         "status": "indexed",
-        "route": "pinned releases of families Google Fonts lacks",
-        "familiesIndexed": 1
+        "route": "pinned releases of families Google Fonts lacks"
       },
       "log": [
         {
@@ -663,8 +687,7 @@
       },
       "work": {
         "status": "indexed",
-        "route": "pinned release, inventoried like the Google corpus; built into a catalogue from those files",
-        "familiesIndexed": 1
+        "route": "pinned release, inventoried like the Google corpus; built into a catalogue from those files"
       },
       "log": [
         {
@@ -690,8 +713,7 @@
       },
       "work": {
         "status": "indexed",
-        "route": "pinned release, inventoried like the Google corpus; built into a catalogue from those files",
-        "familiesIndexed": 3
+        "route": "pinned release, inventoried like the Google corpus; built into a catalogue from those files"
       },
       "log": [
         {
@@ -717,8 +739,7 @@
       },
       "work": {
         "status": "indexed",
-        "route": "pinned release, inventoried like the Google corpus; built into a catalogue from those files",
-        "familiesIndexed": 1
+        "route": "pinned release, inventoried like the Google corpus; built into a catalogue from those files"
       },
       "log": [
         {
@@ -744,8 +765,7 @@
       },
       "work": {
         "status": "indexed",
-        "route": "pinned CTAN packages that carry OpenType or TrueType files",
-        "familiesIndexed": 4
+        "route": "pinned CTAN packages that carry OpenType or TrueType files"
       },
       "log": [
         {
@@ -773,8 +793,7 @@
       },
       "work": {
         "status": "indexed",
-        "route": "pinned release, inventoried like the Google corpus; built into a catalogue from those files",
-        "familiesIndexed": 2
+        "route": "pinned release, inventoried like the Google corpus; built into a catalogue from those files"
       },
       "log": [
         {
@@ -800,8 +819,7 @@
       },
       "work": {
         "status": "indexed",
-        "route": "pinned release, inventoried like the Google corpus; built into a catalogue from those files",
-        "familiesIndexed": 3
+        "route": "pinned release, inventoried like the Google corpus; built into a catalogue from those files"
       },
       "log": [
         {
@@ -827,8 +845,7 @@
       },
       "work": {
         "status": "indexed",
-        "route": "pinned release, inventoried like the Google corpus; built into a catalogue from those files",
-        "familiesIndexed": 1
+        "route": "pinned release, inventoried like the Google corpus; built into a catalogue from those files"
       },
       "log": [
         {
@@ -854,8 +871,7 @@
       },
       "work": {
         "status": "indexed",
-        "route": "pinned release, inventoried like the Google corpus; built into a catalogue from those files",
-        "familiesIndexed": 1
+        "route": "pinned release, inventoried like the Google corpus; built into a catalogue from those files"
       },
       "log": [
         {
@@ -881,8 +897,7 @@
       },
       "work": {
         "status": "indexed",
-        "route": "pinned release, inventoried like the Google corpus; built into a catalogue from those files",
-        "familiesIndexed": 1
+        "route": "pinned release, inventoried like the Google corpus; built into a catalogue from those files"
       },
       "log": [
         {
@@ -908,8 +923,7 @@
       },
       "work": {
         "status": "indexed",
-        "route": "pinned release, inventoried like the Google corpus; built into a catalogue from those files",
-        "familiesIndexed": 1
+        "route": "pinned release, inventoried like the Google corpus; built into a catalogue from those files"
       },
       "log": [
         {
@@ -935,8 +949,7 @@
       },
       "work": {
         "status": "indexed",
-        "route": "pinned release, inventoried like the Google corpus; built into a catalogue from those files",
-        "familiesIndexed": 7
+        "route": "pinned release, inventoried like the Google corpus; built into a catalogue from those files"
       },
       "log": [
         {
@@ -962,8 +975,7 @@
       },
       "work": {
         "status": "indexed",
-        "route": "pinned release, inventoried like the Google corpus; built into a catalogue from those files",
-        "familiesIndexed": 1
+        "route": "pinned release, inventoried like the Google corpus; built into a catalogue from those files"
       },
       "log": [
         {
@@ -989,8 +1001,7 @@
       },
       "work": {
         "status": "indexed",
-        "route": "pinned release, inventoried like the Google corpus; built into a catalogue from those files",
-        "familiesIndexed": 1
+        "route": "pinned release, inventoried like the Google corpus; built into a catalogue from those files"
       },
       "log": [
         {
