@@ -122,6 +122,8 @@
   {"classic": "M+ Fonts", "family": "M PLUS 1", "relation": "same-design", "evidence": "https://mplusfonts.github.io/"},
   {"classic": "Caslon", "family": "Libre Caslon Condensed", "relation": "inspired", "evidence": "https://github.com/impallari/Libre-Caslon-Text"},
   {"classic": "Junicode", "family": "Junicode VF", "relation": "same-design", "evidence": "https://github.com/psb1558/Junicode-font"},
-  {"classic": "Bitstream Charter", "family": "Charis SIL", "relation": "clone", "evidence": "https://software.sil.org/charis/design/"}
+  {"classic": "Bitstream Charter", "family": "Charis SIL", "relation": "clone", "evidence": "https://software.sil.org/charis/design/"},
+  {"classic": "Univers", "family": "U001", "relation": "clone", "evidence": "https://en.wikipedia.org/wiki/Univers#URW_Classic_Sans"},
+  {"classic": "Optima", "family": "URW Classico", "relation": "clone", "evidence": "https://en.wikipedia.org/wiki/Optima"}
  ]
 }

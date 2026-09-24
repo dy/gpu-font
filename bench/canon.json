@@ -11,13 +11,13 @@
  "coverage": {
   "indexed (clone)": 10,
   "indexed": 544,
-  "missing": 387,
+  "missing": 378,
   "indexed (revival)": 11,
   "indexed (related family)": 18,
   "indexed (same-design)": 17,
-  "inventoried": 5,
-  "inventoried (related family)": 5,
-  "inventoried (clone)": 2,
+  "inventoried (clone)": 4,
+  "inventoried": 7,
+  "inventoried (related family)": 10,
   "indexed (basis)": 1
  },
  "typefaces": [
@@ -481,7 +481,7 @@
      {
       "family": "Selawik",
       "relation": "metric-compatible",
-      "status": "missing",
+      "status": "inventoried",
       "evidence": "https://learn.microsoft.com/en-us/typography/font-list/selawik"
      }
     ]
@@ -574,7 +574,18 @@
    },
    "score": 0.802,
    "coverage": {
-    "status": "missing"
+    "status": "inventoried",
+    "source": "fontlibrary",
+    "via": "U001",
+    "match": "clone",
+    "equivalents": [
+     {
+      "family": "U001",
+      "relation": "clone",
+      "status": "inventoried",
+      "evidence": "https://en.wikipedia.org/wiki/Univers#URW_Classic_Sans"
+     }
+    ]
    }
   },
   {
@@ -1040,13 +1051,22 @@
    },
    "score": 0.722,
    "coverage": {
-    "status": "missing",
+    "status": "inventoried",
+    "source": "fontlibrary",
+    "via": "URWClassico",
+    "match": "clone",
     "equivalents": [
      {
       "family": "Linux Biolinum O",
       "relation": "inspired",
       "status": "indexed",
       "evidence": "https://en.wikipedia.org/wiki/Linux_Libertine"
+     },
+     {
+      "family": "URW Classico",
+      "relation": "clone",
+      "status": "inventoried",
+      "evidence": "https://en.wikipedia.org/wiki/Optima"
      }
     ]
    }
@@ -3242,7 +3262,10 @@
    },
    "score": 0.516,
    "coverage": {
-    "status": "missing"
+    "status": "inventoried",
+    "source": "fontlibrary",
+    "via": "Waltograph",
+    "match": "exact"
    }
   },
   {
@@ -3789,7 +3812,10 @@
    },
    "score": 0.5,
    "coverage": {
-    "status": "missing"
+    "status": "inventoried",
+    "source": "fontlibrary",
+    "via": "Terminal Grotesque",
+    "match": "related"
    }
   },
   {
@@ -4996,7 +5022,10 @@
    },
    "score": 0.453,
    "coverage": {
-    "status": "missing"
+    "status": "inventoried",
+    "source": "fontlibrary",
+    "via": "Literaturnaya Book",
+    "match": "related"
    }
   },
   {
@@ -6177,7 +6206,10 @@
    },
    "score": 0.427,
    "coverage": {
-    "status": "missing"
+    "status": "inventoried",
+    "source": "fontlibrary",
+    "via": "Hussar Motorway",
+    "match": "related"
    }
   },
   {
@@ -6552,7 +6584,10 @@
    },
    "score": 0.422,
    "coverage": {
-    "status": "missing"
+    "status": "inventoried",
+    "source": "fontlibrary",
+    "via": "Aardvark Fixed",
+    "match": "related"
    }
   },
   {
@@ -7434,7 +7469,10 @@
    },
    "score": 0.408,
    "coverage": {
-    "status": "missing"
+    "status": "inventoried",
+    "source": "fontlibrary",
+    "via": "SST",
+    "match": "exact"
    }
   },
   {
@@ -10215,7 +10253,7 @@
    "score": 0.363,
    "coverage": {
     "status": "inventoried",
-    "source": "debian",
+    "source": "fontlibrary",
     "via": "GFS Porson",
     "match": "related"
    }
@@ -11823,7 +11861,10 @@
    },
    "score": 0.334,
    "coverage": {
-    "status": "missing"
+    "status": "inventoried",
+    "source": "fontlibrary",
+    "via": "Tower Print",
+    "match": "related"
    }
   },
   {

@@ -242,7 +242,7 @@
       "work": {
         "status": "inventoried",
         "route": "every package in the fonts section of Debian's archive, pinned to the SHA-256 its index publishes; families a rights holder publishes are taken from the rights holder",
-        "familiesInventoried": 1815
+        "familiesInventoried": 1597
       },
       "log": [
         {
@@ -293,19 +293,25 @@
       "url": "https://fontlibrary.org/",
       "kind": "aggregator",
       "access": "files",
-      "licence": "OFL, GPL, MIT and other free licences",
+      "licence": "per family, as each family page states: 926 OFL, 154 GPL or LGPL, 48 MIT, 61 CC-BY or CC-BY-SA, 47 freeware, 33 not recorded, and others",
       "terms": {
-        "status": "not-verified",
-        "checked": "2026-09-23"
+        "status": "none-found",
+        "checked": "2026-09-24",
+        "note": "No robots.txt and no terms page found. Each family's licence is read from its own page; some zips carry no licence file, so the page is the record."
       },
       "work": {
-        "status": "planned",
-        "route": "render OFL/Apache/MIT/GPL-with-exception families from files"
+        "status": "inventoried",
+        "route": "every family page read at 1.8-second spacing; each openly licensed family's zip downloaded once and pinned",
+        "familiesInventoried": 1315
       },
       "log": [
         {
           "date": "2026-09-23",
           "event": "Surveyed; ~1,100 fonts"
+        },
+        {
+          "date": "2026-09-24",
+          "event": "1,399 families enumerated from the catalogue pages, matching the site's category totals; 1,397 taken with the licence each page states (freeware, unrecorded and Aladdin included), 2 whose pages the site removed left out"
         }
       ],
       "familiesAvailable": 1399,

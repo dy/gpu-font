@@ -7,7 +7,7 @@ from pathlib import Path
 from fontTools.fontBuilder import FontBuilder
 from fontTools.pens.ttGlyphPen import TTGlyphPen
 
-from scripts.open_fonts import MANIFEST, ROOT, colour_letters, debian_licences, family_name, is_font, members, name_key, symbol_encoded
+from scripts.open_fonts import MANIFEST, ROOT, colour_letters, debian_licences, family_name, is_font, members, name_key, one_format, symbol_encoded
 
 
 def build(folder, names, coloured=()):
@@ -128,6 +128,23 @@ class DebianPackage(unittest.TestCase):
             self.assertEqual(got, files)
             self.assertEqual(debian_licences(files['usr/share/doc/fonts-x/copyright']), 'OFL-1.1; GPL-2+')
             self.assertEqual(debian_licences(b'no machine-readable fields'), 'see the package copyright file')
+
+
+class ClaimOrder(unittest.TestCase):
+    def test_rights_holders_then_fontshare_then_catalogues(self):
+        from scripts.open_fonts import CATALOGUES, SOURCES, claim_order
+        order = [spec['source'] for spec in claim_order(SOURCES)]
+        fontshare = order.index('fontshare')
+        self.assertTrue(all(source not in CATALOGUES for source in order[:fontshare]))
+        self.assertTrue(all(source in CATALOGUES for source in order[fontshare + 1:]))
+        self.assertEqual(len(order), len(SOURCES) + 1)
+
+
+class OneFormat(unittest.TestCase):
+    def test_a_style_in_two_formats_is_one_face_and_opentype_wins(self):
+        given = [('x/Foo-Bold.ttf', b't'), ('x/Foo-Bold.otf', b'o'), ('x/Foo-Italic.ttf', b'i'), ('x/OFL.txt', b'l'), ('y/Foo-Bold.ttf', b'y')]
+        self.assertEqual(sorted(one_format(given)), [('x/Foo-Bold.otf', b'o'), ('x/Foo-Italic.ttf', b'i'), ('x/OFL.txt', b'l'), ('y/Foo-Bold.ttf', b'y')])
+        self.assertEqual(one_format([]), [])
 
 
 class GitPin(unittest.TestCase):

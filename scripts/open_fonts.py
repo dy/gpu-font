@@ -85,11 +85,6 @@ SOURCES += [
      'files': ['https://github.com/kika/fixedsys/releases/download/v3.09.10/FSEX302.ttf']},
     {'source': 'ubuntu-titling', 'licence': 'OFL-1.1', 'url': 'https://deb.debian.org/debian/pool/main/f/fonts-ubuntu-title/fonts-ubuntu-title_0.3.orig.tar.gz', 'include': r'\.ttf$'},
 ]
-# Families from open catalogues (Velvetyne, Collletttivo, Uncut): pinned to their designers'
-# repositories by scripts/open_releases.py, or a release file on the designer's own site.
-SOURCES += [{'source': row['source'], 'licence': row['licence'], 'url': row['url'], 'include': row['include'],
-             **({'format': row['format']} if row.get('format') else {}), **({'commit': row['commit']} if row.get('format') == 'git' else {})}
-            for row in json.loads((ROOT / 'bench/open-releases.json').read_text())['releases'] if row.get('include')]
 # The League of Moveable Type: all 18 families are OFL-1.1. Eleven reach us through Google
 # Fonts; these are the other seven, as the GitHub organisation holds them.
 LEAGUE_REPOS = {'junction': 'fb73260e86dd301b383cf6cc9ca8e726ef806535', 'chunk': '12a243f3fb7c7a68844901023f7d95d6eaf14104',
@@ -101,6 +96,11 @@ SOURCES += [{'source': 'league-of-moveable-type', 'licence': 'OFL-1.1', 'url': G
 SOURCES += [{'source': 'league-of-moveable-type', 'licence': 'OFL-1.1', 'include': r'/static/OTF/[^/]+\.otf$',
              'url': f'https://github.com/theleagueof/{repo}/releases/download/{version}/{name}-{version}.zip'}
             for repo, name, version in [('league-mono', 'LeagueMono', '2.300'), ('the-neue-black', 'TheNeueBlack', '1.007')]]
+# Families from open catalogues (Velvetyne, Collletttivo, Uncut, Font Library), after every source above:
+# pinned to their designers' repositories by scripts/open_releases.py, or a release file on a site.
+SOURCES += [{'source': row['source'], 'licence': row['licence'], 'url': row['url'], 'include': row['include'],
+             **({'format': row['format']} if row.get('format') else {}), **({'commit': row['commit']} if row.get('format') == 'git' else {})}
+            for row in json.loads((ROOT / 'bench/open-releases.json').read_text())['releases'] if row.get('include')]
 # Fontshare publishes its whole catalogue through a public API. Its font files carry
 # "false" as their family name, so names come from the catalogue instead.
 FONTSHARE_API = 'https://api.fontshare.com/v2/fonts?limit=200'
@@ -114,6 +114,10 @@ FONTSOURCE_SKIP = {'blackout-two-am'}
 # X11 bitmap fonts are not OpenType, Noto is Google Fonts' own, TeX Live's fonts are CTAN's.
 DEBIAN = 'https://deb.debian.org/debian/'
 DEBIAN_SKIP = re.compile(r'^(xfonts-|fonts-noto|texlive-)')
+# Catalogues gather other people's releases. A family goes to the first source that claims it:
+# rights holders' own releases, then Fontshare's library, then catalogues, then Debian and Fontsource.
+CATALOGUES = {'uncut', 'fontlibrary'}
+FONTSHARE = {'source': 'fontshare'}  # stands for Fontshare's API in the claiming order
 # A font is known by its signature, not its name: repositories also commit macOS "._" forks,
 # Git LFS pointers and HTML error pages under font extensions.
 SFNT = (b'OTTO', b'\x00\x01\x00\x00', b'true', b'ttcf')
@@ -143,7 +147,8 @@ def fetch(url, pinned, commit=None):
                 prefix = f"{PurePosixPath(url).stem}-{commit}/"
                 cache.write_bytes(subprocess.run(['git', '-C', folder, 'archive', '--format=zip', f'--prefix={prefix}', commit], check=True, capture_output=True).stdout)
         else:
-            cache.write_bytes(corpus.request(url))
+            import time
+            cache.write_bytes(corpus.request(url)); time.sleep(1)  # one download a second, whatever the host
     data = cache.read_bytes(); digest = hashlib.sha256(data).hexdigest()
     if pinned and pinned != digest:
         raise ValueError(f'Archive changed since it was pinned: {url}')
@@ -244,6 +249,24 @@ def fontshare_groups(google_names):
                                  'extra': {'sourceUrl': f"https://www.fontshare.com/fonts/{font['slug']}", 'sourceId': font['id']}}
 
 
+def claim_order(specs):
+    """Rights holders' own releases first, then Fontshare's library, then the catalogues."""
+    return [*(spec for spec in specs if spec['source'] not in CATALOGUES), FONTSHARE, *(spec for spec in specs if spec['source'] in CATALOGUES)]
+
+
+def one_format(members):
+    """A style shipped as both Foo.otf and Foo.ttf is one face: the OpenType file is kept."""
+    ranked = sorted(members, key=lambda pair: (PurePosixPath(pair[0]).suffix.lower() != '.otf', pair[0]))
+    seen, kept = set(), []
+    for name, content in ranked:
+        path = PurePosixPath(name)
+        if path.suffix.lower() in ('.otf', '.ttf'):
+            if (stem := str(path.with_suffix('')).lower()) in seen: continue
+            seen.add(stem)
+        kept.append((name, content))
+    return kept
+
+
 def debian_sources():
     """Debian's font packages, each pinned to the SHA-256 its signed archive index publishes."""
     import lzma
@@ -310,15 +333,27 @@ def main():
     owners, elsewhere = {}, {}  # a family belongs to the first source that lists it: foundries before catalogues
     original_source_path = corpus.source_path
     corpus.source_path = lambda path: STORE / path  # face_info reads our store, not the Google cache
+    google_names = {name_key(f['family']) for f in json.loads((ROOT / 'bench/corpus.json').read_text())['families']}
+    def claim(source, name):
+        """The first source to list a family, by its normalised name, takes it."""
+        if (owner := owners.setdefault(name_key(name), source)) == source: return True
+        elsewhere.setdefault(source, set()).add(f'{name} ({owner})'); return False
+    def add(source, name, group):
+        groups.setdefault((source, name_key(name)), {**group, 'name': name, 'items': []})['items'].extend(group['items'])
     try:
-        for spec in [*SOURCES, *debian_sources()]:  # Debian last among files: rights holders first
+        for spec in [*claim_order(SOURCES), *debian_sources()]:
+            if spec is FONTSHARE:
+                for name, group in fontshare_groups(google_names):
+                    if claim('fontshare', name): add('fontshare', name, group)
+                archives.append({'source': 'fontshare', 'url': FONTSHARE_API, 'licence': 'per family (ITF Free Font License or OFL-1.1)'})
+                continue
             licences = []
             for url in spec.get('files') or [spec['url']]:  # an archive, or loose files pinned one by one
                 key = f"{url}#{spec['commit']}" if 'commit' in spec else url
                 try:
                     data, digest = fetch(url, pins.get(key) or spec.get('sha256'), spec.get('commit'))
-                    wanted = [(name, content) for name, content in members(data, url, spec.get('format'))
-                              if re.search(spec['include'], name, re.I) or LICENCE_NAMES.search(name)]
+                    wanted = one_format([(name, content) for name, content in members(data, url, spec.get('format'))
+                                         if re.search(spec['include'], name, re.I) or LICENCE_NAMES.search(name)])
                 except (OSError, ValueError, subprocess.CalledProcessError) as error:
                     # Curated sources fail loudly; one of Debian's hundreds of packages is reported and skipped.
                     if spec.get('format') != 'deb': raise
@@ -339,19 +374,14 @@ def main():
                         licences.append({'path': relative, 'blob': corpus.blob(content)}); continue
                     item = {'path': relative, 'size': len(content), 'sha': corpus.blob(content)}
                     if not (name := family_name(target)): print(f'{relative}: unreadable, left out'); continue
-                    if (owner := owners.setdefault(name_key(name), spec['source'])) != spec['source']:
-                        elsewhere.setdefault(spec['source'], set()).add(f'{name} ({owner})'); continue
-                    groups.setdefault((spec['source'], name), {'spec': spec, 'items': [], 'licences': licences})['items'].append(item)
-        google = json.loads((ROOT / 'bench/corpus.json').read_text())['families']
-        google_names = {name_key(f['family']) for f in google}
-        for name, group in fontshare_groups(google_names): groups[('fontshare', name)] = group
-        archives.append({'source': 'fontshare', 'url': FONTSHARE_API, 'licence': 'per family (ITF Free Font License or OFL-1.1)'})
-        # Aggregators last: a family the rights holder's own release or Google Fonts carries is taken from there.
-        held = google_names | {name_key(name) for _, name in groups}
-        for name, group in fontsource_groups(held): groups[('fontsource', name)] = group
+                    if claim(spec['source'], name): add(spec['source'], name, {'spec': spec, 'items': [item], 'licences': licences})
+        # Fontsource last: a family any source above or Google Fonts carries is taken from there.
+        for name, group in fontsource_groups(google_names | set(owners)):
+            if claim('fontsource', name): add('fontsource', name, group)
         archives.append({'source': 'fontsource', 'url': FONTSOURCE_API, 'licence': 'per family (OFL-1.1, Apache-2.0, MIT, CC0-1.0, Unlicense)'})
         families, in_google, alphabet_store = [], {}, {}
-        for (source, name), group in sorted(groups.items()):
+        for (source, _), group in sorted(groups.items()):
+            name = group['name']
             if name_key(name) in google_names:
                 in_google.setdefault(source, []).append(name); continue
             faces = []
