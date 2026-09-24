@@ -1,7 +1,7 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
 import { readFile } from 'node:fs/promises'
-import { readCatalog, rankCatalog, embedWindows, preparationHash, sha256, readHeads, verdict, matchCatalog, foldTwins } from '../src/catalog.mjs'
+import { base64, readCatalog, rankCatalog, embedWindows, preparationHash, sha256, readHeads, verdict, matchCatalog, foldTwins } from '../src/catalog.mjs'
 import { readNetwork, inferCPU } from '../src/network.mjs'
 
 const binding = { encoderSha256: 'encoder', preparationSha256: 'preparation' }
@@ -142,4 +142,16 @@ test('frozen Google catalog binds native encoder outputs and Python preparation 
   assert.deepEqual(inferCPU(model, input), a)
   assert.throws(() => readNetwork({ ...artifact, fonts: ['fake'] }), /encoder/)
   for (const change of [{ dimensions: 64 }, { normalization: 'none' }]) assert.throws(() => readNetwork({ ...artifact, ...change }))
+})
+
+test('base64 accepts exactly padded standard base64, as the grouped pattern it replaced', () => {
+  const grouped = text => /^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?$/.test(text)
+  for (const text of ['', 'AAAA', 'AA==', 'AAA=', '+/+/', Buffer.from([255, 254, 1]).toString('base64')]) assert.equal(base64(text), true, text)
+  for (const text of ['A', 'AAA', 'AAAAA', 'A===', '====', 'AA=A', 'AA==AAAA', 'AAAA\n', 'AA A', '-_AA', 'AAA\u00e9']) assert.equal(base64(text), false, text)
+  let seed = 1
+  const next = () => (seed = seed * 16807 % 2147483647) / 2147483647
+  for (let i = 0; i < 20000; i++) {
+    const text = Array.from({ length: Math.floor(next() * 13) }, () => 'AZaz09+/=-\n'[Math.floor(next() * 11)]).join('')
+    assert.equal(base64(text), grouped(text), JSON.stringify(text))
+  }
 })

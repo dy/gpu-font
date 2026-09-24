@@ -8,21 +8,33 @@
       "faces": 8132
     },
     {
+      "id": "debian",
+      "sha256": "c82b17d2c184a6dcefcfa259b47eb030c86509eec995360257e42bbbab3e0f58",
+      "families": 1509,
+      "faces": 2695
+    },
+    {
       "id": "fontshare",
       "sha256": "b774b2f98090fae491326c8b26354cb893871f669699c33249baca4b8436de32",
       "families": 39,
       "faces": 43
     },
     {
-      "id": "velvetyne",
-      "sha256": "237d564b5eb59abbc57371f8f8b82db84f612b16dbb0ce611aab037a9c16cdab",
-      "families": 3,
-      "faces": 3
+      "id": "collletttivo",
+      "sha256": "33ae20cc6b23edb4eb81652b4a9087824d6c78dd4fd7d81be24130d065706d2c",
+      "families": 17,
+      "faces": 68
+    },
+    {
+      "id": "other",
+      "sha256": "7c59e18dc254c22624d45b0609109ee22bcd6fab71a4c3d50ba5bd00f1881446",
+      "families": 24,
+      "faces": 65
     }
   ],
   "cpuError": 0.0000011324882507324219,
   "gpuError": 0.0000037550926208496094,
-  "detectionMilliseconds": 44.09999942779541,
+  "detectionMilliseconds": 90.40000057220459,
   "checks": [
     "native CPU/PyTorch/WebGPU projections",
     "exact displayed tensors and input stats",
@@ -34,12 +46,13 @@
     "resolution and crop round trip",
     "image button/switch/replacement",
     "crop, pencil and eraser tools on any source, exact undo, brush size and cursor",
-    "twin tooltip and matches 06–99",
-    "token contrast, links, popovers, code, FAQ and goals layout, dropdowns follow scroll",
+    "twin tooltip and the list grown to 50 with subset previews",
+    "token contrast, links, popovers, code, section and question layout, dropdowns follow scroll",
     "no captured specimens shipped",
     "only cleared sources shipped",
     "no fonts or images served; fonts from Google",
-    "sources page",
+    "catalogs page",
+    "my fonts: browser-indexed Lora equals the encoder on stored references, join, installed faces, previews, removal",
     "Aa returns to the last sample",
     "narrow crop keeps layout",
     "empty image/sample entry",

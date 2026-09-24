@@ -7,6 +7,7 @@ import { readNetwork, inferCPU, rankWindows } from '../src/network.mjs'
 
 // The site runs from the repository root; the legacy classifier suite runs against dist/ (npm run test:demo -- --dist).
 if (!process.argv.includes('--dist')) {
+  await import('./loading.mjs')
   await import('./catalog-demo.mjs')
   process.exit(0)
 }
@@ -54,7 +55,7 @@ async function saveResult(page) {
     }
   }
   assert.equal(await page.locator('#result-summary').textContent() === 'Below threshold', !result.accepted)
-  assert.equal(await page.locator('#detection-time').textContent(), `Detected in ${result.milliseconds.toFixed(1)}ms`)
+  assert.equal(await page.locator('#detection-time').textContent(), `${result.milliseconds.toFixed(1)}ms`)
   return result
 }
 async function assertEmpty(page) {
@@ -68,7 +69,6 @@ async function assertEmpty(page) {
   for (const id of ['detection-time', 'result-summary', 'message']) assert.equal(await page.locator(`#${id}`).textContent(), '', id)
   assert.equal(await page.locator('.result, #normalized canvas, #input-regions span').count(), 0)
   assert.ok(await page.locator('#save').isDisabled())
-  assert.ok(await page.locator('#results-empty').isVisible())
 }
 async function chooseSample(page, id) {
   await page.locator('#sample').click()
@@ -202,7 +202,7 @@ try {
     const result = await saveResult(scorePage)
     assert.deepEqual(result.matches.slice(0, 5).map(m => m.score), scores)
     assert.deepEqual(await scorePage.locator('.result-score').allTextContents(), labels)
-    assert.match(await scorePage.locator('#detection-time').textContent(), /^Detected in \d+\.\dms$/)
+    assert.match(await scorePage.locator('#detection-time').textContent(), /^\d+\.\dms$/)
     assert.equal(result.accepted, scores[0] >= (catalog.calibration?.threshold ?? 1.01))
   }
   const whitePixel = await scorePage.evaluate(() => {
@@ -561,7 +561,7 @@ try {
   assert.deepEqual(await page.locator('.workbench .panel-head > h2').evaluateAll(hs => hs.map(h => h.className)), ['sr-only', 'sr-only'], 'Source and Catalog are named for assistive technology only')
   assert.equal(await page.locator('.scope, .score-label, .result-foot, .result-preview-control').count(), 0)
   assert.doesNotMatch(await page.locator('body').textContent(), /never leaves|nothing is uploaded|images stay/i)
-  assert.match(await page.locator('#detection-time').textContent(), /^Detected in \d+\.\dms$/)
+  assert.match(await page.locator('#detection-time').textContent(), /^\d+\.\dms$/)
 
   // Hold one real GPU readback while 50 new crop updates arrive.
   await page.evaluate(() => {

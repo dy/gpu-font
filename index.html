@@ -4,8 +4,20 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#f9f9f9">
-  <meta name="description" content="Find matching fonts from a cropped image using a neural encoder in your browser.">
-  <title>gpu-font — match fonts from an image</title>
+  <meta name="description" content="Crop a line of text and get the closest free fonts from Google Fonts, Debian, Fontshare, Collletttivo and more, with their weight and italic.">
+  <title>Find the font in an image, in your browser – gpu-font</title>
+  <link rel="canonical" href="https://dy.github.io/gpu-font/">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="gpu-font">
+  <meta property="og:url" content="https://dy.github.io/gpu-font/">
+  <meta property="og:title" content="Find the font in an image, in your browser">
+  <meta property="og:description" content="Crop a line of text and get the closest free fonts from Google Fonts, Debian, Fontshare, Collletttivo and more, with their weight and italic.">
+  <meta property="og:image" content="https://dy.github.io/gpu-font/og.png">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta property="og:image:alt" content="“Find the font in an image” beside a cropped line of text and its closest fonts, ranked">
+  <meta name="twitter:card" content="summary_large_image">
+  <script type="application/ld+json">{"@context":"https://schema.org","@type":"WebApplication","name":"gpu-font","url":"https://dy.github.io/gpu-font/","description":"Crop a line of text and get the closest free fonts from Google Fonts, Debian, Fontshare, Collletttivo and more, with their weight and italic.","image":"https://dy.github.io/gpu-font/og.png","applicationCategory":"DesignApplication","operatingSystem":"Any","browserRequirements":"Requires JavaScript; runs on WebGPU, or on the CPU without it","isAccessibleForFree":true,"offers":{"@type":"Offer","price":"0","priceCurrency":"USD"},"license":"https://github.com/dy/gpu-font/blob/main/LICENSE","sameAs":"https://github.com/dy/gpu-font"}</script>
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 32 32%22%3E%3Crect width=%2232%22 height=%2232%22 rx=%226%22 fill=%22%23222%22/%3E%3Ctext x=%2216%22 y=%2222%22 font-family=%22Georgia,serif%22 font-size=%2216%22 fill=%22%23fff%22 text-anchor=%22middle%22%3EAa%3C/text%3E%3C/svg%3E">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -16,7 +28,7 @@
   <a class="skip" href="#workbench">Skip to workbench</a>
   <header class="masthead">
     <a href="./" class="wordmark" aria-label="gpu-font home">gpu-font</a>
-    <span id="backend" class="sr-only" role="status">Loading…</span><nav class="site-nav" aria-label="Site"><a href="./#how-to-use">How to use</a><a href="./#faq">Questions</a><a href="./sources.html">Sources</a></nav><a class="header-icon" href="https://github.com/dy/gpu-font" aria-label="GitHub repository" title="GitHub"><svg width="20" height="20" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M6.766 11.328c-2.063-.25-3.516-1.734-3.516-3.656 0-.781.281-1.625.75-2.188-.203-.515-.172-1.609.063-2.062.625-.078 1.468.25 1.968.703.594-.187 1.219-.281 1.985-.281.765 0 1.39.094 1.953.265.484-.437 1.344-.765 1.969-.687.218.422.25 1.515.046 2.047.5.593.766 1.39.766 2.203 0 1.922-1.453 3.375-3.547 3.64.531.344.89 1.094.89 1.954v1.625c0 .468.391.734.86.547C13.781 14.359 16 11.53 16 8.03 16 3.61 12.406 0 7.984 0 3.563 0 0 3.61 0 8.031a7.88 7.88 0 0 0 5.172 7.422c.422.156.828-.125.828-.547v-1.25c-.219.094-.5.156-.75.156-1.031 0-1.64-.562-2.078-1.609-.172-.422-.36-.672-.719-.719-.187-.015-.25-.093-.25-.187 0-.188.313-.328.625-.328.453 0 .844.281 1.25.86.313.452.64.655 1.031.655s.641-.14 1-.5c.266-.265.47-.5.657-.656"/></svg></a>
+    <span id="backend" class="sr-only" role="status">Loading…</span><nav class="site-nav" aria-label="Site"><a href="./catalogs.html">Catalogs</a></nav><a class="header-icon" href="https://github.com/dy/gpu-font" aria-label="GitHub repository" title="GitHub"><svg width="20" height="20" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M6.766 11.328c-2.063-.25-3.516-1.734-3.516-3.656 0-.781.281-1.625.75-2.188-.203-.515-.172-1.609.063-2.062.625-.078 1.468.25 1.968.703.594-.187 1.219-.281 1.985-.281.765 0 1.39.094 1.953.265.484-.437 1.344-.765 1.969-.687.218.422.25 1.515.046 2.047.5.593.766 1.39.766 2.203 0 1.922-1.453 3.375-3.547 3.64.531.344.89 1.094.89 1.954v1.625c0 .468.391.734.86.547C13.781 14.359 16 11.53 16 8.03 16 3.61 12.406 0 7.984 0 3.563 0 0 3.61 0 8.031a7.88 7.88 0 0 0 5.172 7.422c.422.156.828-.125.828-.547v-1.25c-.219.094-.5.156-.75.156-1.031 0-1.64-.562-2.078-1.609-.172-.422-.36-.672-.719-.719-.187-.015-.25-.093-.25-.187 0-.188.313-.328.625-.328.453 0 .844.281 1.25.86.313.452.64.655 1.031.655s.641-.14 1-.5c.266-.265.47-.5.657-.656"/></svg></a>
   </header>
   <main>
     <section class="intro" aria-labelledby="intro-title">
@@ -26,7 +38,8 @@
         <p id="intro-scope" class="intro-scope">Recognition is experimental.</p>
       </div>
     </section>
-    <div id="workbench" class="workbench">
+    <div id="workbench" class="workbench" aria-busy="true">
+      <div class="loader"><span aria-hidden="true">Loading the model <span id="loading-percent"></span></span><progress id="loading" aria-label="Loading the model"></progress></div>
       <section class="source-panel" aria-labelledby="source-title">
         <div id="source-head" class="panel-head source-head" role="group" aria-labelledby="source-title">
           <h2 id="source-title" class="sr-only">Source</h2>
@@ -66,7 +79,7 @@
         <figure id="model-input" class="model-input">
           <figcaption class="panel-head"><span>Model input</span><span id="input-count" class="sr-only"></span><div id="resolution-control" class="resolution-control" hidden><label class="sr-only" for="resolution">Model input resolution</label><select id="resolution"><option value="100">100%</option><option value="50">50%</option><option value="25">25%</option><option value="10">10%</option></select></div></figcaption>
           <div id="normalized" class="input-windows"></div>
-          <div class="input-meta"><p id="detection-time" class="input-time" role="status" aria-label="Recognition time" title="Image preparation, inference and ranking"></p><span id="result-summary" title="Detected style"></span><button id="save" class="text-button" disabled>Download JSON</button></div>
+          <div class="input-meta" role="status"><span id="result-summary" title="Detected style"></span><span id="detection-time" class="input-time" title="Image preparation, inference and ranking"></span></div>
         </figure>
       </section>
 
@@ -76,7 +89,7 @@
             <h2 id="catalog-title" class="sr-only">Catalog</h2>
             <button id="catalog-button" class="text-button" aria-controls="catalog-menu" aria-haspopup="dialog" aria-expanded="false" aria-label="Choose search catalog"><svg class="catalog-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 3 3 7.5 12 12l9-4.5L12 3Z" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"/><path d="m3 12 9 4.5 9-4.5M3 16.5 12 21l9-4.5" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"/></svg><span id="catalog-label"></span><svg class="chevron" width="14" height="14" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="m4 6 4 4 4-4" stroke="currentColor" stroke-width="1.2"/></svg></button>
           </div>
-          <div id="catalog-menu" class="popover catalog-menu" popover="auto" role="dialog" aria-label="Search catalog"><div id="catalog-list"></div><button id="import-catalog" class="catalog-option">Open catalog JSON…</button></div>
+          <div id="catalog-menu" class="popover catalog-menu" popover="auto" role="dialog" aria-label="Search catalog"><div id="catalog-list"></div><button id="import-catalog" class="catalog-option">Open catalog JSON…</button><a id="add-my-fonts" class="catalog-option" href="./catalogs.html#my-fonts">Index my fonts…</a></div>
           <input id="catalog-file" type="file" accept=".json,application/json" hidden>
           <p id="catalog-error" class="message" data-error role="status" hidden></p>
         </section>
@@ -84,80 +97,118 @@
         <section class="results-panel" aria-labelledby="results-title">
           <h2 id="results-title" class="sr-only">Font matches</h2>
           <p id="preview-error" class="message" data-error role="status" hidden>These font previews don’t support this character.</p>
-          <p id="results-empty" class="results-empty">No matches yet.</p>
           <div id="twins-tip" class="popover twins-tip" popover="manual" role="tooltip"></div>
           <ol id="results" class="results" aria-label="Ranked font matches" aria-describedby="score-note"></ol>
-          <button id="more-matches" class="text-button more-matches" popovertarget="more-menu" aria-haspopup="dialog" aria-expanded="false" inert>More matches<svg class="chevron" width="14" height="14" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="m4 6 4 4 4-4" stroke="currentColor" stroke-width="1.2"/></svg></button>
-          <div id="more-menu" class="popover more-menu" popover="auto" role="dialog" aria-label="Matches 6 to 99"><ol id="more-list" class="more-list"></ol></div>
+          <div class="results-foot"><button id="more-matches" class="text-button more-matches" aria-controls="results" aria-expanded="false" inert>More matches<svg class="chevron" width="14" height="14" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="m4 6 4 4 4-4" stroke="currentColor" stroke-width="1.2"/></svg></button><button id="save" class="text-button" aria-label="Download JSON" title="Download the result as JSON" disabled><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 4h-.5C8.1 4 7.5 4.6 7.5 6v3.5c0 1.4-.8 2.5-2 2.5 1.2 0 2 1.1 2 2.5V18c0 1.4.6 2 2 2h.5M14 4h.5c1.4 0 2 .6 2 2v3.5c0 1.4.8 2.5 2 2.5-1.2 0-2 1.1-2 2.5V18c0 1.4-.6 2-2 2H14"/></svg>JSON</button></div>
         </section>
       </div>
     </div>
 
-    <section id="how-it-works" class="explanation" aria-labelledby="how-title">
-      <h2 id="how-title">How it works</h2>
-      <div class="explanation-copy">
-        <p id="method-note">The crop is split into up to three small grayscale windows. A small neural network scores every font for each window, and the scores are averaged into the ranking.</p>
-        <dl class="facts">
-          <div><dt id="network-label">Model</dt><dd id="parameters">–</dd></div>
-          <div><dt>Input</dt><dd>Up to 3 grayscale windows, at most 128 × 48 px</dd></div>
-          <div><dt>Catalog</dt><dd id="catalog-size">–</dd></div>
-          <div><dt>Runs on</dt><dd id="device">Starting…</dd></div>
-        </dl>
-        <table id="accuracy" class="accuracy" hidden><caption>Top-1 by source text length</caption><thead><tr><th scope="col">Characters</th><th scope="col">Clean</th><th scope="col">All views</th></tr></thead><tbody></tbody></table>
+    <section id="how-it-works" class="stacked" aria-labelledby="how-title">
+      <div class="split">
+        <h2 id="how-title">How it works</h2>
+        <div class="explanation-copy">
+          <p id="method-note">The crop is split into up to three small grayscale windows. A small neural network scores every font for each window, and the scores are averaged into the ranking.</p>
+          <p>It searches free fonts whose terms allow it, and your own.</p>
+          <p>Trained in PyTorch on Google Fonts rendered by Pillow and Chromium; the repository has everything to reproduce it.</p>
+        </div>
+        <div>
+          <dl class="facts">
+            <div><dt id="network-label">Model</dt><dd id="parameters">–</dd></div>
+            <div><dt>Input</dt><dd>Up to 3 grayscale windows, at most 128 × 48 px</dd></div>
+            <div><dt>Catalog</dt><dd id="catalog-size">–</dd></div>
+            <div><dt>Runs on</dt><dd id="device">Starting…</dd></div>
+            <div><dt>First download</dt><dd><span data-metric="downloadMegabytes" data-format="megabytes">–</span></dd></div>
+          </dl>
+          <table id="accuracy" class="figures" hidden><caption>Top-1 by source text length</caption><thead><tr><th scope="col">Characters</th><th scope="col">Clean</th><th scope="col">All views</th></tr></thead><tbody></tbody></table>
+        </div>
+      </div>
+      <div class="metrics">
+        <div id="how-accurate">
+          <h3>Accuracy</h3>
+          <dl class="meters">
+            <div><dt>1st result</dt><dd class="meter" data-metric="top1">–</dd></div>
+            <div><dt>Top 5</dt><dd class="meter" data-metric="top5Accuracy">–</dd></div>
+          </dl>
+        </div>
+        <div id="how-fast">
+          <h3>Speed</h3>
+          <dl class="meters">
+            <div><dt>WebGPU</dt><dd class="meter" data-metric="matchWebgpuSeconds" data-format="seconds">–</dd></div>
+            <div><dt>CPU</dt><dd class="meter" data-metric="matchCpuSeconds" data-format="seconds">–</dd></div>
+          </dl>
+        </div>
       </div>
     </section>
-    <section id="faq" class="stacked" aria-labelledby="faq-title">
-      <h2 id="faq-title">Questions</h2>
-      <dl class="pairs">
-        <div><dt>How accurate is it?</dt><dd>On 5–10 characters of rendered text from 300 Google Fonts families it never saw, the right family (or an identical design) comes first <span data-metric="top1">–</span> of the time and is in the top five <span data-metric="top5Accuracy">–</span>. Real screenshots aren’t measured yet. Scores are cosine similarity, not probability.</dd></div>
-        <div><dt>Why did it miss my font?</dt><dd>The selected catalog may not have it. It works best on one line in one font, several letters, on a plain background; the eraser removes stray marks.</dd></div>
-        <div><dt>Can it tell weight, italic or width?</dt><dd>Weight and italic, yes: every Google Fonts weight and italic is indexed, and each match names the closest. Width only between separate families, such as Roboto and Roboto Condensed.</dd></div>
-        <div><dt>Which fonts can it find?</dt><dd>Those in its catalogs: Google Fonts (except color and emoji fonts), Fontshare and Velvetyne. Anything else gets its closest look-alikes. <a href="./sources.html">Sources</a> lists every source considered.</dd></div>
-        <div><dt>Other scripts, handwriting, logos?</dt><dd>Other scripts, yes, less reliably than Latin; fonts that can’t draw the detected script are skipped. Handwriting fonts, yes. Real handwriting, lettering and logos get loose matches only.</dd></div>
-        <div><dt>Do new fonts need retraining?</dt><dd>No: adding a font means computing its 128-number style vector, and the accuracy above is measured that way. Styles unlike the training data match less well; a retrained model needs every catalog rebuilt.</dd></div>
-        <div><dt>Can I add my own fonts?</dt><dd>Yes: build a catalog with the repository’s scripts and load it with “Open catalog JSON…”.</dd></div>
-        <div><dt>Why WebGPU, and without it?</dt><dd>WebGPU runs the model on the graphics card. Without it the CPU runs the same model, slower, with results equal to within 0.0001.</dd></div>
-        <div><dt>How was it trained?</dt><dd>A small convolutional network, trained in PyTorch on Google Fonts rendered by Pillow and Chromium, with 8-bit weights. The repository has everything to reproduce it.</dd></div>
-      </dl>
+    <section id="faq" class="stacked" aria-label="Questions">
+      <div class="questions">
+        <div class="qa">
+          <h3>Why did it miss my font?</h3>
+          <p>The catalog may not have it. Crop one line in one font, several letters, on a plain background; the eraser removes stray marks.</p>
+        </div>
+        <div class="qa">
+          <h3>Can it tell weight, italic or width?</h3>
+          <p>Weight and italic, yes: each match names its closest face. Width only between families, such as Roboto and Roboto Condensed.</p>
+        </div>
+        <div class="qa">
+          <h3>Can it find commercial fonts?</h3>
+          <p>Not by name: its catalogs hold free fonts, so a commercial font gets its closest free look-alikes, unless you index your own copy.</p>
+        </div>
+        <div class="qa">
+          <h3>Does it work on all caps?</h3>
+          <p>Yes: every font is indexed from its capitals as well as its lowercase.</p>
+        </div>
+        <div class="qa">
+          <h3>Does it work beyond Latin?</h3>
+          <p>Yes, less reliably than Latin: <span data-metric="otherScriptTop5">–</span> in the top 5, <span data-metric="hanziTop5">–</span> for Chinese. Fonts that can’t draw the script are skipped.</p>
+        </div>
+        <div class="qa">
+          <h3>Does it support handwriting, icons, non-fonts?</h3>
+          <p>Not yet. Real handwriting, lettering and logos get only loose matches, and icons and symbols aren’t indexed. Handwriting fonts match like any other font.</p>
+        </div>
+        <div class="qa">
+          <h3>Do new fonts need retraining?</h3>
+          <p>No. A new font needs only its 128-number style vector, and fonts it never saw match as well as fonts it trained on. Styles unlike the training data match less well.</p>
+        </div>
+        <div class="qa">
+          <h3>Can I add my own fonts?</h3>
+          <p>Yes: index them on <a href="./catalogs.html#my-fonts">Catalogs</a>, then choose My fonts in the catalog menu. They stay in your browser.</p>
+        </div>
+      </div>
     </section>
-    <section id="inspiration" class="stacked" aria-labelledby="inspiration-title">
-      <h2 id="inspiration-title">Goals</h2>
-      <dl class="goals">
-        <div data-state="working"><dt>Find the font from 5–10 characters</dt><dd><span data-metric="top5Accuracy">–</span> in the top five, fonts it never saw</dd></div>
-        <div data-state="partial"><dt>Swap in another catalog and find its fonts</dt><dd>Works; accuracy being re-measured on cleared sources</dd></div>
-        <div data-state="working"><dt>Tell the weight and italic of a match</dt><dd>Weight within <span data-metric="faceWeightError" data-format="number">–</span> on 100–900; italic right <span data-metric="faceItalic">–</span></dd></div>
-        <div data-state="partial"><dt>Find capitals from lowercase and back</dt><dd>Weak from one case: <span data-metric="capitalsFromLowercaseTop5">–</span> and <span data-metric="lowercaseFromCapitalsTop5">–</span> in the top five</dd></div>
-        <div data-state="working"><dt>Find the font from another script it draws</dt><dd><span data-metric="otherScriptTop5">–</span> in the top five, <span data-metric="otherScriptsFromLatinTop5">–</span> from Latin alone; Chinese <span data-metric="hanziTop5">–</span> and <span data-metric="hanziFromLatinTop5">–</span></dd></div>
-        <div data-state="not-yet"><dt>Find the font from letters drawn by hand</dt><dd>Not yet: <span data-metric="drawnTop5">–</span> on synthetic drawings</dd></div>
-        <div data-state="not-yet"><dt>Drop an icon and find its icon font</dt><dd>Not yet: icon fonts are not indexed</dd></div>
-        <div data-state="not-yet"><dt>Drop symbols, notes or other Unicode blocks</dt><dd>Not yet: letters only</dd></div>
-        <div data-state="not-yet"><dt>Drop any graphic and find type in its style, or none</dt><dd>Not yet</dd></div>
-      </dl>
-    </section>
-
-    <section id="how-to-use" class="explanation" aria-labelledby="use-title">
+    <section id="how-to-use" class="explanation split" aria-labelledby="use-title">
+      <h2 id="use-title">How to use</h2>
       <div class="use-text">
-        <h2 id="use-title">How to use</h2>
         <p>The page is plain ES modules, so you can use it from your own code.</p>
-        <p>Matches come back best first. Without WebGPU it runs on the CPU. Any catalog JSON built for this model works the same way; the <a href="https://github.com/dy/gpu-font#readme">README</a> covers training and building catalogs.</p>
+        <p>Matches come back best first. Without WebGPU it runs on the CPU. Any catalog JSON built for this model works the same way; the <a href="https://github.com/dy/gpu-font/blob/main/development.md">development notes</a> cover training and building catalogs.</p>
       </div>
-      <pre class="code"><code><span class="tok-k">import</span> <span class="tok-p">{</span> createMatcher <span class="tok-p">}</span> <span class="tok-k">from</span> <span class="tok-s">'./src/match.mjs'</span>
+      <pre class="code"><code><span class="tok-k">import</span> <span class="tok-p">{</span> createMatcher<span class="tok-p">,</span> catalogs <span class="tok-p">}</span> <span class="tok-k">from</span> <span class="tok-s">'./src/match.mjs'</span>
 
-<span class="tok-k">const</span> matcher <span class="tok-p">=</span> <span class="tok-k">await</span> <span class="tok-f">createMatcher</span><span class="tok-p">(</span>
-  <span class="tok-s">'models/encoder/encoder.json'</span><span class="tok-p">,</span> <span class="tok-s">'models/encoder/google-fonts.json'</span><span class="tok-p">)</span>
+<span class="tok-c">// Google Fonts; createMatcher(catalogs.fontshare) searches another catalog</span>
+<span class="tok-k">const</span> matcher <span class="tok-p">=</span> <span class="tok-k">await</span> <span class="tok-f">createMatcher</span><span class="tok-p">()</span>
 
 <span class="tok-c">// imageData: an RGBA crop of one line of text</span>
 <span class="tok-k">const</span> <span class="tok-p">[</span>best<span class="tok-p">]</span> <span class="tok-p">=</span> <span class="tok-k">await</span> matcher<span class="tok-p">.</span><span class="tok-f">match</span><span class="tok-p">(</span>imageData<span class="tok-p">)</span>
 console<span class="tok-p">.</span><span class="tok-f">log</span><span class="tok-p">(</span>best<span class="tok-p">.</span>face<span class="tok-p">.</span>family<span class="tok-p">,</span> best<span class="tok-p">.</span>score<span class="tok-p">)</span></code></pre>
     </section>
-
-
+    <section id="compare" class="stacked" aria-labelledby="compare-title">
+      <h2 id="compare-title">How does it compare?</h2>
+      <div class="table-scroll"><table class="figures">
+        <thead><tr><th scope="col">Font finder</th><th scope="col">Owner</th><th scope="col">Fonts</th><th scope="col">Your fonts</th><th scope="col">Weight, italic</th><th scope="col">Subsets</th></tr></thead>
+        <tbody>
+          <tr><th scope="row"><a href="https://www.whatfontis.com/">WhatFontIs</a></th><td><a href="https://www.whatfontis.com/about.html">WhatFontIs Com SRL</a></td><td>1,200,000+</td><td>–</td><td>–</td><td>Latin</td></tr>
+          <tr><th scope="row"><a href="https://www.myfonts.com/pages/whatthefont">WhatTheFont</a></th><td><a href="https://www.myfonts.com/pages/about">MyFonts</a></td><td>400,000+</td><td>–</td><td>–</td><td>–</td></tr>
+          <tr><th scope="row"><a href="https://helpx.adobe.com/photoshop/desktop/text-typography/select-manage-fonts/match-fonts.html">Photoshop Match Font</a></th><td><a href="https://fonts.adobe.com/about">Adobe</a></td><td>30,000+</td><td>Installed</td><td>–</td><td>Latin, Japanese</td></tr>
+          <tr><th scope="row"><a href="https://www.fontsquirrel.com/matcherator">Matcherator</a></th><td><a href="https://www.fontsquirrel.com/faq">Font Squirrel</a></td><td>Not stated</td><td>–</td><td>–</td><td>–</td></tr>
+          <tr><th scope="row"><a href="./catalogs.html#included">gpu-font</a></th><td><a href="https://github.com/dy/gpu-font">Open source</a></td><td id="compared-fonts">–</td><td><a href="./catalogs.html#my-fonts">Installed, folders</a></td><td>±<span data-metric="faceWeightError" data-format="number">–</span> weight, <span data-metric="faceItalic">–</span> italic</td><td id="compared-scripts">–</td></tr>
+        </tbody></table></div>
+    </section>
 
     <section id="legal" class="explanation" aria-labelledby="legal-title">
       <h2 id="legal-title">Licenses</h2>
       <div class="explanation-copy">
         <p>Font previews and samples load from <a href="https://fonts.google.com/">Google Fonts</a>, under each family’s own license (SIL Open Font License, Apache License or Ubuntu Font Licence). No font files are distributed here.</p>
-        <p>The Fontshare and Velvetyne catalogs hold names, links and style numbers only, with no fonts or images. A source ships only when its terms allow collection or say nothing against it; <a href="./sources.html">Sources</a> lists every source considered, its terms and where work stands.</p>
+        <p>The other catalogs hold names, links and style numbers only, with no fonts or images. A source ships only when its terms allow collection or say nothing against it; <a href="./catalogs.html">Catalogs</a> lists every source considered, its terms and where work stands.</p>
         <p>A match is not a license: check a font’s license with its foundry before using it. Font and foundry names are trademarks of their owners; gpu-font is not affiliated with or endorsed by them.</p>
         <p>The code is <a href="https://github.com/dy/gpu-font/blob/main/LICENSE" rel="license">MIT-licensed</a>, commercial use included. Results are experimental and come without warranty.</p>
       </div>

@@ -119,9 +119,17 @@ class TeacherTests(unittest.TestCase):
 class CatalogAndLossTests(unittest.TestCase):
     def test_reference_kinds_cover_both_latin_cases_and_other_scripts(self):
         latin = ''.join(sorted(set(''.join(LATIN['lower'] + LATIN['upper']))))
-        self.assertEqual(sorted(kinds({'Latn': latin, 'Cyrl': 'абвгдежзийклмноп'})), ['Cyrl', 'Latn-lower', 'Latn-upper'])
+        self.assertEqual(sorted(kinds({'Latn': latin, 'Cyrl': 'абвгдежзийклмноп'})), ['Cyrl-lower', 'Latn-lower', 'Latn-upper'])
         self.assertEqual(sorted(kinds({'Latn': latin.lower()})), ['Latn-lower'])
         self.assertEqual(kinds({'Grek': 'αβγ'}), {})
+        # A cased script gets both cases, each alphabet whole across three lines; digits are not letters.
+        cyrillic = 'абвгдеёжзийклмнопрстуфхцчшщъыьэюяАБВГДЕЁЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯ0123456789'
+        lines = kinds({'Cyrl': cyrillic})
+        self.assertEqual(sorted(lines), ['Cyrl-lower', 'Cyrl-upper']); self.assertEqual([len(l) for l in lines['Cyrl-upper']], [11, 11, 11])
+        self.assertEqual(''.join(lines['Cyrl-lower']), cyrillic[:33]); self.assertEqual(''.join(lines['Cyrl-upper']), cyrillic[33:66])
+        # Other scripts: four lines of the 32 most shared characters, or fewer when the face has fewer.
+        han = ''.join(chr(0x4e00 + i) for i in range(40))
+        self.assertEqual(kinds({'Hani': han})['Hani'], [han[i:i + 8] for i in range(0, 32, 8)]); self.assertEqual(kinds({'Hani': han[:12]})['Hani'], [han[:8], han[8:12]])
 
     def test_twins_share_the_identity_target_and_geometry_follows_the_teacher(self):
         n = 3; distance = torch.tensor([[0, .001, .3], [.001, 0, .3], [.3, .3, 0]])

@@ -1,3 +1,5 @@
+import { base64 } from './catalog.mjs'
+
 export const architecture = 'font-conv16-32-48-64-v1'
 export const contextArchitecture = 'font-conv16-32-48-64-64-v2'
 export const corpusArchitecture = 'font-conv32-64-96-128-128-v3'
@@ -30,7 +32,7 @@ export function readNetwork(artifact) {
     if (JSON.stringify(layer.shape) !== JSON.stringify(shape)) throw new Error('Invalid layer shape')
     const [rows] = shape, count = shape.reduce((a, b) => a * b, 1)
     if (!Array.isArray(layer.scale) || layer.scale.length !== rows || layer.scale.some(s => !Number.isFinite(s) || s <= 0) || !Array.isArray(layer.bias) || layer.bias.length !== rows || !layer.bias.every(Number.isFinite)) throw new Error('Invalid layer values')
-    if (typeof layer.weights !== 'string' || !/^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?$/.test(layer.weights)) throw new Error('Invalid packed weights')
+    if (typeof layer.weights !== 'string' || !base64(layer.weights)) throw new Error('Invalid packed weights')
     const binary = atob(layer.weights)
     if (binary.length !== count) throw new Error('Invalid weight count')
     // Plain loop: per-element callbacks cost ~100 ms on a million-weight encoder.

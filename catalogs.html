@@ -4,8 +4,19 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#f9f9f9">
-  <meta name="description" content="Every font source gpu-font considered: what its terms allow and where work with it stands.">
-  <title>gpu-font sources</title>
+  <meta name="description" content="The font catalogs gpu-font searches, your own fonts indexed in your browser, and the sources left out and why.">
+  <title>Catalogs – gpu-font</title>
+  <link rel="canonical" href="https://dy.github.io/gpu-font/catalogs.html">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="gpu-font">
+  <meta property="og:url" content="https://dy.github.io/gpu-font/catalogs.html">
+  <meta property="og:title" content="gpu-font catalogs">
+  <meta property="og:description" content="The font catalogs gpu-font searches, your own fonts indexed in your browser, and the sources left out and why.">
+  <meta property="og:image" content="https://dy.github.io/gpu-font/og.png">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta property="og:image:alt" content="“Find the font in an image” beside a cropped line of text and its closest fonts, ranked">
+  <meta name="twitter:card" content="summary_large_image">
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 32 32%22%3E%3Crect width=%2232%22 height=%2232%22 rx=%226%22 fill=%22%23222%22/%3E%3Ctext x=%2216%22 y=%2222%22 font-family=%22Georgia,serif%22 font-size=%2216%22 fill=%22%23fff%22 text-anchor=%22middle%22%3EAa%3C/text%3E%3C/svg%3E">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -13,31 +24,76 @@
   <link rel="stylesheet" href="./style.css">
 </head>
 <body>
-  <a class="skip" href="#sources">Skip to sources</a>
+  <a class="skip" href="#my-fonts">Skip to catalogs</a>
   <header class="masthead">
     <a href="./" class="wordmark" aria-label="gpu-font home">gpu-font</a>
-    <nav class="site-nav" aria-label="Site"><a href="./#how-to-use">How to use</a><a href="./#faq">Questions</a><a href="./sources.html" aria-current="page">Sources</a></nav><a class="header-icon" href="https://github.com/dy/gpu-font" aria-label="GitHub repository" title="GitHub"><svg width="20" height="20" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M6.766 11.328c-2.063-.25-3.516-1.734-3.516-3.656 0-.781.281-1.625.75-2.188-.203-.515-.172-1.609.063-2.062.625-.078 1.468.25 1.968.703.594-.187 1.219-.281 1.985-.281.765 0 1.39.094 1.953.265.484-.437 1.344-.765 1.969-.687.218.422.25 1.515.046 2.047.5.593.766 1.39.766 2.203 0 1.922-1.453 3.375-3.547 3.64.531.344.89 1.094.89 1.954v1.625c0 .468.391.734.86.547C13.781 14.359 16 11.53 16 8.03 16 3.61 12.406 0 7.984 0 3.563 0 0 3.61 0 8.031a7.88 7.88 0 0 0 5.172 7.422c.422.156.828-.125.828-.547v-1.25c-.219.094-.5.156-.75.156-1.031 0-1.64-.562-2.078-1.609-.172-.422-.36-.672-.719-.719-.187-.015-.25-.093-.25-.187 0-.188.313-.328.625-.328.453 0 .844.281 1.25.86.313.452.64.655 1.031.655s.641-.14 1-.5c.266-.265.47-.5.657-.656"/></svg></a>
+    <nav class="site-nav" aria-label="Site"><a href="./catalogs.html" aria-current="page">Catalogs</a></nav><a class="header-icon" href="https://github.com/dy/gpu-font" aria-label="GitHub repository" title="GitHub"><svg width="20" height="20" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M6.766 11.328c-2.063-.25-3.516-1.734-3.516-3.656 0-.781.281-1.625.75-2.188-.203-.515-.172-1.609.063-2.062.625-.078 1.468.25 1.968.703.594-.187 1.219-.281 1.985-.281.765 0 1.39.094 1.953.265.484-.437 1.344-.765 1.969-.687.218.422.25 1.515.046 2.047.5.593.766 1.39.766 2.203 0 1.922-1.453 3.375-3.547 3.64.531.344.89 1.094.89 1.954v1.625c0 .468.391.734.86.547C13.781 14.359 16 11.53 16 8.03 16 3.61 12.406 0 7.984 0 3.563 0 0 3.61 0 8.031a7.88 7.88 0 0 0 5.172 7.422c.422.156.828-.125.828-.547v-1.25c-.219.094-.5.156-.75.156-1.031 0-1.64-.562-2.078-1.609-.172-.422-.36-.672-.719-.719-.187-.015-.25-.093-.25-.187 0-.188.313-.328.625-.328.453 0 .844.281 1.25.86.313.452.64.655 1.031.655s.641-.14 1-.5c.266-.265.47-.5.657-.656"/></svg></a>
   </header>
   <main>
-    <section class="intro page-intro" aria-labelledby="sources-title">
-      <h1 id="sources-title">Sources</h1>
+    <section class="intro page-intro" aria-labelledby="catalogs-title">
+      <h1 id="catalogs-title">Catalogs</h1>
       <div class="intro-copy">
-        <p>Every font source considered: what it offers, what its terms allow, and where work with it stands.</p>
+        <p>Your own fonts, the fonts a search covers, and the sources left out.</p>
         <p id="sources-summary" class="intro-scope"></p>
       </div>
     </section>
-    <section id="sources" class="sources" aria-labelledby="sources-title">
-      <div class="table-scroll">
-        <table class="sources-table">
-          <thead><tr><th scope="col">Source</th><th scope="col">Licence</th><th scope="col">Terms</th><th scope="col">Status</th></tr></thead>
-          <tbody id="sources-rows"><tr><td colspan="4">Loading…</td></tr></tbody>
+    <section id="my-fonts" class="stacked" aria-labelledby="my-fonts-title">
+      <h2 id="my-fonts-title">My fonts</h2>
+      <div class="explanation-copy">
+        <div class="my-fonts-actions">
+          <button id="index-installed" class="action" hidden>Index installed fonts</button>
+          <button id="index-folder" class="action">Choose a font folder</button>
+          <button id="index-files" class="text-button">or font files</button>
+          <button id="index-stop" class="text-button" hidden>Stop</button>
+        </div>
+        <input id="folder-input" type="file" webkitdirectory multiple hidden>
+        <input id="files-input" type="file" accept=".ttf,.otf,.ttc,.otc,.woff,.woff2" multiple hidden>
+        <p id="my-fonts-status" role="status" aria-live="polite"></p>
+        <p id="my-fonts-stored" hidden><a id="my-fonts-search" href="./?catalog=my-fonts">Search my fonts</a><button id="my-fonts-remove" class="text-button">Remove</button></p>
+      </div>
+      <div class="table-scroll" :if="mine.length">
+        <table class="sources-table my-fonts-table">
+          <thead><tr><th scope="col">Family</th><th scope="col">Styles</th><th scope="col" class="number">Faces</th></tr></thead>
+          <tbody><tr :each="font in mine"><th scope="row" :text="font.family"></th><td :text="font.styles"></td><td class="number" :text="count(font.faces)"></td></tr></tbody>
         </table>
       </div>
-      <p class="sources-note">Families held locally were captured for research and are not shipped or searchable. Work never proceeds against a written ban without recorded permission. Generated from <a href="https://github.com/dy/gpu-font/blob/main/bench/foundries.json"><code>bench/foundries.json</code></a>, updated <time id="sources-updated"></time>.</p>
     </section>
+    <section id="included" class="stacked" aria-labelledby="included-title">
+      <h2 id="included-title">Included</h2>
+      <div class="table-scroll" :scope="{ list: included, sort: { key: 'families', dir: -1 }, json: true }" :html="document.getElementById('source-table')"></div>
+    </section>
+    <section id="sources" class="stacked" aria-labelledby="sources-title">
+      <h2 id="sources-title">Not included</h2>
+      <div class="table-scroll" :scope="{ list: others, sort: { key: 'status', dir: 1 }, json: false }" :html="document.getElementById('source-table')"></div>
+    </section>
+    <template id="source-table">
+    <table class="sources-table">
+      <thead><tr>
+        <th scope="col" :aria-sort="order(sort, 'name')"><button class="sort" :onclick="sort = next(sort, 'name')">Source</button></th>
+        <th scope="col" :aria-sort="order(sort, 'terms')"><button class="sort" :onclick="sort = next(sort, 'terms')">Terms</button></th>
+        <th scope="col" :aria-sort="order(sort, 'licence')"><button class="sort" :onclick="sort = next(sort, 'licence')">Licence</button></th>
+        <th scope="col" :aria-sort="order(sort, 'status')"><button class="sort" :onclick="sort = next(sort, 'status')">Status</button></th>
+        <th scope="col" class="number" :aria-sort="order(sort, 'families')"><button class="sort" :onclick="sort = next(sort, 'families')">Families</button></th>
+        <th scope="col" class="number" :if="json">JSON</th>
+      </tr></thead>
+      <tbody>
+        <tr :each="source in sorted(list, sort)" :id="source.id">
+          <th scope="row"><a :href="source.url" target="_blank" rel="noopener" :text="source.name"></a><span class="detail" :if="source.members" :text="source.members"></span></th>
+          <td>
+            <span class="pill" :data-terms="source.terms.status" :text="TERMS[source.terms.status] ?? source.terms.status"></span>
+            <details :if="source.terms.quote || source.terms.note"><summary :text="source.terms.quote ? 'Clause' : 'Note'"></summary><blockquote :if="source.terms.quote" :text="source.terms.quote"></blockquote><p :if="source.terms.note" :text="source.terms.note"></p><p class="checked"><a :if="source.terms.url" :href="source.terms.url" target="_blank" rel="noopener">Terms</a><span :text="source.terms.url ? `, read ${source.terms.checked}` : `Checked ${source.terms.checked}`"></span></p></details>
+          </td>
+          <td :text="source.licence ?? '–'"></td>
+          <td><span class="status" :text="WORK[source.work.status] ?? source.work.status"></span><span class="held" :if="source.work.familiesHeldLocally" :text="`${count(source.work.familiesHeldLocally)} held locally, not shipped`"></span><span class="detail" :if="source.work.reason || source.work.route" :text="source.work.reason ?? source.work.route"></span></td>
+          <td class="number" :text="familiesText(source)" :title="source.availableNote"></td>
+          <td class="number" :if="json"><a :href="source.json.file" download :text="size(source.json.bytes)"></a></td>
+        </tr>
+      </tbody>
+    </table>
+    </template>
   </main>
   <footer><div class="related"><span>Inspired by</span><a href="https://gpu-lexer.vercel.app/">gpu-lexer</a><a href="https://github.com/arikchakma/gpu-time">gpu-time</a><a href="https://github.com/safzanpirani/gpu-query">gpu-query</a></div><div class="footer-links"><a class="footer-license" href="https://github.com/dy/gpu-font/blob/main/LICENSE" rel="license">MIT</a><a class="footer-icon omkara" href="https://github.com/krishnized/license" aria-label="Krishnized license" title="Krishnized license"><span aria-hidden="true">ॐ</span></a></div></footer>
 
-  <script type="module" src="./sources.mjs"></script>
+  <script type="module" src="./catalogs.mjs"></script>
 </body>
 </html>

@@ -2,6 +2,8 @@
 export const sha256 = async bytes => Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256', bytes)), b => b.toString(16).padStart(2, '0')).join('')
 const canonical = value => Array.isArray(value) ? value.map(canonical) : value && typeof value === 'object' ? Object.fromEntries(Object.keys(value).sort().map(key => [key, canonical(value[key])])) : value
 export const preparationHash = preparation => sha256(new TextEncoder().encode(JSON.stringify(canonical(preparation))))
+// Padded standard base64; one character class scans megabytes linearly where grouped quantifiers crawl.
+export const base64 = text => text.length % 4 === 0 && /^[A-Za-z0-9+/]*={0,2}$/.test(text)
 
 export function unit(values) {
   if (!values?.length || !Array.from(values).every(Number.isFinite)) throw new Error('Invalid embedding')
@@ -34,7 +36,7 @@ export function readCatalog(data, binding) {
   const rows = data.version === 3 ? v?.shape?.[0] : faces.length * data.referencesPerFace
   if (!Number.isInteger(rows) || rows < faces.length || rows > 640000) throw new Error('Invalid reference count')
   if (v?.encoding !== 'int8-base64' || JSON.stringify(v.shape) !== JSON.stringify([rows, 128])) throw new Error('Invalid vector shape')
-  if (typeof v.data !== 'string' || v.data.length > Math.ceil(rows * 128 / 3) * 4 || !/^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?$/.test(v.data)) throw new Error('Invalid vector bytes')
+  if (typeof v.data !== 'string' || v.data.length > Math.ceil(rows * 128 / 3) * 4 || !base64(v.data)) throw new Error('Invalid vector bytes')
   const binary = atob(v.data), bytes = new Uint8Array(binary.length)
   for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i)
   if (bytes.length !== rows * 128) throw new Error('Truncated or trailing vectors')

@@ -7,12 +7,19 @@
   "embeddingError": 2.821551719836557e-7,
   "timing": {
     "adapter": "metal-3",
-    "initializationMs": 93.09999942779541,
-    "warmWindowP50Ms": 2.59999942779541,
-    "warmWindowP95Ms": 3.1999998092651367,
+    "initializationMs": 204.89999961853027,
+    "warmWindowP50Ms": 2.8999996185302734,
+    "warmWindowP95Ms": 9.5,
     "samples": 20,
     "width": 128,
     "height": 48
+  },
+  "match": {
+    "text": "Quiet rivers flow",
+    "font": "56px serif",
+    "median": "of 9 WebGPU and 3 CPU matches after one warm-up",
+    "webgpuMs": 132.80000019073486,
+    "cpuMs": 12467.199999809265
   },
   "payload": [
     {
@@ -31,10 +38,10 @@
     },
     {
       "path": "src/network.mjs",
-      "sha256": "51be7b52b97bace3400153a4279b7c369b51fba96b25048d6cc97c2d62ad30f9",
-      "bytes": 6715,
-      "gzipBytes": 2351,
-      "brotliBytes": 2099
+      "sha256": "f20e7033994fe1151d44ad40033ab2bbd02a13bbbaef8a8b92a2fafb366fc181",
+      "bytes": 6690,
+      "gzipBytes": 2337,
+      "brotliBytes": 2086
     },
     {
       "path": "src/network-gpu.mjs",
@@ -45,10 +52,10 @@
     },
     {
       "path": "src/catalog.mjs",
-      "sha256": "43231cdfb631a434694f009da2b1ebbf96f86265319442aea5cf8f2fccfd3d99",
-      "bytes": 9599,
-      "gzipBytes": 3465,
-      "brotliBytes": 3076
+      "sha256": "64a49b0317dff5dfde54be37cc5630fd9febfe422b866bf25cc18d01b64e67ca",
+      "bytes": 9730,
+      "gzipBytes": 3547,
+      "brotliBytes": 3134
     },
     {
       "path": "src/prepare.mjs",
@@ -72,6 +79,6 @@
       "brotliBytes": 2342
     }
   ],
-  "componentBytes": 10675579,
-  "scope": "Existing CPU/Metal convolution kernels with native encoder outputs. Single-window projection timing excludes image preparation and catalog search. Bytes include encoder, catalog and existing inference/preparation modules; include catalog parsing/ranking; exclude demo and optional font previews."
+  "componentBytes": 10675685,
+  "scope": "Existing CPU/Metal convolution kernels with native encoder outputs. Single-window projection timing excludes image preparation and catalog search; match timing is one whole match in Chromium through createMatcher. Bytes include encoder, catalog and existing inference/preparation modules; include catalog parsing/ranking; exclude demo and optional font previews."
 }

@@ -1,10 +1,30 @@
 [
   {
+    "id": "debian",
+    "name": "Debian font packages"
+  },
+  {
     "id": "fontshare",
     "name": "Fontshare"
   },
   {
-    "id": "velvetyne",
-    "name": "Velvetyne"
+    "id": "collletttivo",
+    "name": "Collletttivo"
+  },
+  {
+    "id": "other",
+    "name": "Other",
+    "sources": [
+      "ctan",
+      "dejavu",
+      "bitstream-vera",
+      "d-din",
+      "droid",
+      "velvetyne",
+      "cc-accidenz-commons",
+      "chicago-kare",
+      "copperplate-cc",
+      "fixedsys-excelsior"
+    ]
   }
 ]

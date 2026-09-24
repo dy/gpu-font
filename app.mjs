@@ -4,6 +4,7 @@ import { prepareLine } from './src/line.mjs'
 import { readNetwork, inferCPU, rankWindows } from './src/network.mjs'
 import { createNetworkGPU } from './src/network-gpu.mjs'
 import { readCatalog, matchCatalog, foldTwins, embedWindows, sha256, preparationHash, readHeads, verdict } from './src/catalog.mjs'
+import { readMyFonts } from './my-fonts.mjs'
 
 const $ = id => document.getElementById(id)
 // Dropdowns are absolutely positioned in page coordinates: they open inside the viewport, then scroll with their trigger.
@@ -14,6 +15,9 @@ let revision = 0, analysis = 0, dragging = null, armed = null
 let scheduled = 0, running = false, pending = false
 let previewText = 'Quiet rivers flow', previewValid = true
 let searchCatalog = null, catalogRevision = 0
+// More matches grows the list in place, with previews, from the top five to the top fifty.
+const SHORT = 5, LONG = 50
+let expanded = false
 const fonts = new Map()
 const isEncoder = () => model?.kind === 'font-encoder'
 
@@ -38,7 +42,7 @@ function invalidate(retain = false) {
   analysis++; last = null; pending = false
   cancelAnimationFrame(scheduled); scheduled = 0
   if (!retain) {
-    $('results').replaceChildren(); $('results-empty').hidden = false; hideTwins(); $('more-matches').inert = true
+    $('results').replaceChildren(); hideTwins(); $('more-matches').inert = true
     previewValid = true; $('preview-error').hidden = true
   }
   $('save').disabled = true
@@ -46,7 +50,6 @@ function invalidate(retain = false) {
   if (!retain) $('normalized').replaceChildren()
   $('input-regions').replaceChildren()
   $('result-summary').textContent = ''; $('input-count').textContent = ''; $('detection-time').textContent = ''
-  $('results-empty').textContent = 'No matches yet.'
   $('results').removeAttribute('aria-busy')
   controls()
 }
@@ -59,13 +62,13 @@ function schedule() {
 function backend() {
   $('backend').textContent = gpu ? 'WebGPU' : 'CPU'
   $('backend').dataset.backend = gpu ? 'webgpu' : 'cpu'
-  $('device').textContent = gpu ? `WebGPU · ${gpu.info}` : gpuReason || 'CPU (JavaScript)'
+  $('device').textContent = gpu ? `WebGPU, ${gpu.info}` : gpuReason || 'CPU (JavaScript)'
 }
 function showInput(windows, region, sampled) {
   $('normalized').replaceChildren(); $('input-regions').replaceChildren()
   for (const [index, input] of windows.entries()) {
     const canvas = document.createElement('canvas'), image = new ImageData(input.width, input.height)
-    canvas.width = input.width; canvas.height = input.height; canvas.style.width = `${input.width * 2}px`
+    canvas.width = input.width; canvas.height = input.height; canvas.style.cssText = `--w: ${input.width}; --h: ${input.height}` // CSS fits it to the row
     canvas.setAttribute('role', 'img'); canvas.setAttribute('aria-label', `Input ${index + 1}, ${input.width} by ${input.height} pixels`)
     for (let i = 0; i < input.pixels.length; i++) {
       image.data.fill(Math.round(input.pixels[i] * 255), i * 4, i * 4 + 3); image.data[i * 4 + 3] = 255
@@ -169,20 +172,39 @@ document.addEventListener('keydown', event => {
   if (edits.strokes.length) { event.preventDefault(); undo() }
 })
 // Fonts load from Google Fonts when first shown; none are shipped. A face is { family, weight, style } and resolves to
-// the CSS family to render with. The legacy classifier build passes local files ({ file }) instead.
+// the CSS family to render with. Installed faces in My fonts render by PostScript name ({ local }); the legacy classifier
+// build passes local files ({ file }). Their descriptors name the exact face, so it is never synthesized bolder or slanted.
 function googleCss({ family, weight = 400, style = 'normal' }) {
   const axes = style === 'italic' ? `:ital,wght@1,${weight}` : weight === 400 ? '' : `:wght@${weight}`
   return `https://fonts.googleapis.com/css2?family=${encodeURIComponent(family).replaceAll('%20', '+')}${axes}&display=block`
 }
 async function loadFont(key, face) {
   if (!face) throw new Error('Font is absent from this catalog')
-  if (!fonts.has(key)) fonts.set(key, (face.file
-    ? new FontFace(`specimen-${key}`, `url("${face.file}")`).load().then(loaded => { document.fonts.add(loaded); return loaded.family })
+  const src = face.file ? `url("${face.file}")` : face.local && `local("${face.local}")`
+  if (!fonts.has(key)) fonts.set(key, (src
+    ? new FontFace(`specimen-${key}`, src, { weight: String(face.weight ?? 400), style: face.style ?? 'normal' }).load().then(loaded => { document.fonts.add(loaded); return loaded.family })
     : new Promise((resolve, reject) => document.head.append(Object.assign(document.createElement('link'), { rel: 'stylesheet', href: googleCss(face), onload: resolve, onerror: () => reject(new Error(`Google Fonts does not serve ${face.family}`)) })))
       .then(() => document.fonts.load(`${face.style ?? 'normal'} ${face.weight ?? 400} 16px "${face.family}"`))
       .then(loaded => { if (!loaded.length) throw new Error(`Google Fonts does not serve ${face.family}`); return face.family })
   ).catch(error => { fonts.delete(key); throw error }))
   return fonts.get(key)
+}
+// Rows past the fifth load only the glyphs of their text (Google Fonts text=), under a family of their own, so a subset
+// never stands in for the full face another row uses. Each face and text loads once.
+const subsets = new Map()
+let subsetCount = 0
+function subsetFont(face, text) {
+  const glyphs = [...new Set(text)].sort().join(''), key = `${face.id}\n${glyphs}`
+  if (!subsets.has(key)) subsets.set(key, fetch(`${googleCss(face)}&text=${encodeURIComponent(glyphs)}`)
+    .then(response => response.ok ? response.text() : Promise.reject(new Error(`Google Fonts does not serve ${face.family}`)))
+    .then(css => {
+      const url = css.match(/src:\s*url\(([^)]+)\)/)?.[1]
+      if (!url) throw new Error(`Google Fonts does not serve ${face.family}`)
+      return new FontFace(`subset-${++subsetCount}`, `url(${url})`, { weight: String(face.weight ?? 400), style: face.style ?? 'normal' }).load()
+    })
+    .then(loaded => { document.fonts.add(loaded); return loaded.family })
+    .catch(error => { subsets.delete(key); throw error }))
+  return subsets.get(key)
 }
 const sampleFont = id => { const font = catalog.fonts.find(f => f.id === id); return font && { ...font, family: font.family ?? font.name } }
 async function sample(id) {
@@ -257,7 +279,6 @@ async function analyze() {
     if (prepared.status !== 'ok') {
       invalidate()
       if (specimen.drawing) return
-      $('results-empty').textContent = 'No matches.'
       message(prepared.status === 'blank' ? 'No visible text in this crop.' : 'Not enough contrast in this crop.', true)
       return
     }
@@ -282,7 +303,7 @@ async function analyze() {
     showInput(prepared.windows, region, sampled)
     renderResults()
     $('result-summary').textContent = embedding ? describe(judged) : last.accepted ? 'Above threshold' : 'Below threshold'
-    $('detection-time').textContent = `Detected in ${elapsed.toFixed(1)}ms`
+    $('detection-time').textContent = `${elapsed.toFixed(1)}ms`
     $('detection-time').title = 'Image preparation, inference and ranking'
     $('save').disabled = false
   } catch (error) { if (run === analysis) { invalidate(); message(`Could not analyze this crop: ${error.message}`, true) } }
@@ -294,14 +315,15 @@ async function analyze() {
 }
 function renderResults() {
   hideTwins() // Its note is about to be replaced.
-  $('more-matches').inert = true; if ($('more-menu').matches(':popover-open')) $('more-menu').hidePopover()
+  $('more-matches').inert = true
   if (!last) return
-  $('more-matches').inert = !isEncoder() || foldTwins(last.matches, searchCatalog, { script: last.verdict?.script?.[0]?.label, limit: 6 }).length <= 5
+  $('more-matches').inert = !isEncoder() || foldTwins(last.matches, searchCatalog, { script: last.verdict?.script?.[0]?.label, limit: SHORT + 1 }).length <= SHORT
+  $('more-matches').setAttribute('aria-expanded', String(expanded)); $('more-matches').firstChild.textContent = expanded ? 'Fewer matches' : 'More matches'
+  subsetRows.clear()
   previewValid = true; $('preview-error').hidden = true
-  $('results-empty').hidden = true
   const fragment = document.createDocumentFragment()
   // Identical designs in the crop's script (IBM Plex Sans and its KR, Arabic… families) fold into one row; the saved result keeps every family.
-  const shown = isEncoder() ? foldTwins(last.matches, searchCatalog, { script: last.verdict?.script?.[0]?.label, limit: 5 }) : last.matches.slice(0, 5)
+  const shown = isEncoder() ? foldTwins(last.matches, searchCatalog, { script: last.verdict?.script?.[0]?.label, limit: expanded ? LONG : SHORT }) : last.matches.slice(0, SHORT)
   for (const [i, match] of shown.entries()) {
     if (isEncoder()) { fragment.append(encoderResult(match, i)); continue }
     const font = catalog.fonts.find(f => f.id === match.family)
@@ -326,14 +348,15 @@ function renderResults() {
 }
 
 const CATEGORY = { SANS_SERIF: 'Sans serif', SERIF: 'Serif', DISPLAY: 'Display', HANDWRITING: 'Handwriting', MONOSPACE: 'Monospace' }
+const SCRIPT = new Intl.DisplayNames('en', { type: 'script' }) // Latn → Latin
 // The typed verdict for the crop itself: category, the likeliest fine class, upright or italic, script.
 function describe(judged) {
-  if (!judged) return 'Uncalibrated'
-  const fine = judged.fine[0].p >= .5 ? ` · ${judged.fine[0].label.split('/').at(-1)}` : ''
-  return `${CATEGORY[judged.category[0].label] ?? judged.category[0].label}${fine} · ${judged.italic >= .5 ? 'italic' : 'upright'} · ${judged.script[0].label}`
+  if (!judged) return ''
+  const fine = judged.fine[0].p >= .5 ? `, ${judged.fine[0].label.split('/').at(-1)}` : ''
+  return `${CATEGORY[judged.category[0].label] ?? judged.category[0].label}${fine}, ${judged.italic >= .5 ? 'italic' : 'upright'}, ${SCRIPT.of(judged.script[0].label)}`
 }
 
-// One match on one line: rank, linked name, face, ≈ twins, score. Shared by the top five and the full list.
+// One match on one line: rank, linked name, face, ≈ twins, score.
 function matchLine(match, index) {
   const { face, score, siblings } = match, line = document.createElement('div'); line.className = 'result-top'
   line.innerHTML = '<span class="rank"></span><span class="font-name"><a target="_blank" rel="noopener"></a><span class="font-style"></span></span><span class="result-score"></span>'
@@ -358,7 +381,7 @@ function matchLine(match, index) {
 function encoderResult(match, index) {
   const { face } = match, item = document.createElement('li'); item.className = 'result'
   item.append(matchLine(match, index))
-  const preview = searchCatalog.builtin ? catalog.previews[face.familyId] : null
+  const preview = searchCatalog.builtin ? catalog.previews[face.familyId] : face.local ? { latin: true } : null
   if (preview) {
     // Never display a fallback face as if it were a matching specimen.
     const input = document.createElement('input'); input.className = 'result-preview'; input.type = 'text'; input.maxLength = 80
@@ -368,21 +391,25 @@ function encoderResult(match, index) {
     input.style.fontWeight = face.weight ?? 400; input.style.fontStyle = face.style ?? 'normal'
     if (!index && preview.latin) input.id = 'preview-text'
     item.append(input)
-    loadFont(face.id, face).then(family => { input.style.setProperty('--font-specimen', `"${family}"`); input.style.visibility = '' }).catch(() => { input.remove() })
+    const subset = index >= SHORT && !face.local && !face.file
+    if (subset) { input.readOnly = true; input.tabIndex = -1; if (preview.latin) subsetRows.set(input, face) }
+    ;(subset ? subsetFont(face, input.value) : loadFont(face.id, face)).then(family => { input.style.setProperty('--font-specimen', `"${family}"`); input.style.visibility = '' })
+      .catch(() => { const note = document.createElement('p'); note.className = 'result-unavailable'; note.textContent = 'No preview available'; input.replaceWith(note) })
   }
   return item
 }
 
-async function selectCatalog(option, file = null) {
+async function selectCatalog(option, file = null, { focus = true } = {}) {
   const version = ++catalogRevision
-  $('catalog-menu').hidePopover(); $('catalog-button').focus({ preventScroll: true })
+  $('catalog-menu').hidePopover(); if (focus) $('catalog-button').focus({ preventScroll: true })
   $('catalog-error').hidden = true; $('catalog-button').setAttribute('aria-busy', 'true')
   try {
     let bytes
     if (file) {
       if (file.size > 20 * 1024 * 1024) throw new Error('Choose a catalog smaller than 20 MB.')
       bytes = await file.arrayBuffer()
-    } else {
+    } else if (option.data) bytes = new TextEncoder().encode(JSON.stringify(option.data))
+    else {
       const response = await fetch(option.file)
       if (!response.ok) throw new Error('Could not load this catalog.')
       bytes = await response.arrayBuffer()
@@ -392,14 +419,14 @@ async function selectCatalog(option, file = null) {
     const data = readCatalog(JSON.parse(new TextDecoder().decode(bytes)), catalog)
     if (version !== catalogRevision) return
     const cached = last
-    searchCatalog = { ...option, ...data, sha256: hash, builtin: !file }
+    searchCatalog = { ...option, ...data, sha256: hash, builtin: !file && !option.data }
     invalidate(); updateCatalogLabel()
     if (cached?.embedding && current) {
       const start = performance.now(), matches = matchCatalog(cached.embedding, searchCatalog, cached.verdict)
       const elapsed = performance.now() - start
       last = { ...cached, matches, catalog: { id: option.id, sha256: hash }, milliseconds: elapsed, cachedEmbedding: true }
       showInput(last.inputs, last.crop, last.resolution); renderResults()
-      $('detection-time').textContent = `Ranked in ${elapsed.toFixed(1)}ms`
+      $('detection-time').textContent = `ranked in ${elapsed.toFixed(1)}ms`
       $('detection-time').title = 'Catalog ranking; image embedding reused'
       $('result-summary').textContent = describe(last.verdict); $('save').disabled = false
     } else if (current) schedule()
@@ -441,7 +468,7 @@ $('catalog-menu').addEventListener('keydown', event => {
   if (event.key === 'Escape') { event.preventDefault(); $('catalog-menu').hidePopover(); $('catalog-button').focus(); return }
   if (!['ArrowDown', 'ArrowUp', 'Home', 'End'].includes(event.key)) return
   event.preventDefault()
-  const buttons = [...$('catalog-menu').querySelectorAll('button')], at = buttons.indexOf(document.activeElement)
+  const buttons = [...$('catalog-menu').querySelectorAll('button, a:not([hidden])')], at = buttons.indexOf(document.activeElement)
   buttons[event.key === 'Home' ? 0 : event.key === 'End' ? buttons.length - 1 : (at + (event.key === 'ArrowUp' ? -1 : 1) + buttons.length) % buttons.length].focus()
 })
 window.addEventListener('resize', () => { if ($('catalog-menu').matches(':popover-open')) positionCatalog() })
@@ -455,24 +482,17 @@ function showTwins(note) {
   place(tip, Math.max(12, Math.min(innerWidth - tip.offsetWidth - 12, rect.left)), below ? rect.bottom + 6 : Math.max(12, rect.top - 6 - tip.offsetHeight))
 }
 function hideTwins() { if ($('twins-tip').matches(':popover-open')) $('twins-tip').hidePopover() }
-for (const list of [$('results'), $('more-list')]) {
-  for (const type of ['pointerover', 'focusin']) list.addEventListener(type, event => { const note = event.target.closest('.font-twins'); if (note) showTwins(note) })
-  for (const type of ['pointerout', 'focusout']) list.addEventListener(type, event => { if (event.target.closest('.font-twins') && !event.relatedTarget?.closest?.('.font-twins')) hideTwins() })
-  list.addEventListener('keydown', event => { if (event.key === 'Escape' && $('twins-tip').matches(':popover-open')) { event.stopPropagation(); hideTwins() } })
+for (const type of ['pointerover', 'focusin']) $('results').addEventListener(type, event => { const note = event.target.closest('.font-twins'); if (note) showTwins(note) })
+for (const type of ['pointerout', 'focusout']) $('results').addEventListener(type, event => { if (event.target.closest('.font-twins') && !event.relatedTarget?.closest?.('.font-twins')) hideTwins() })
+$('results').addEventListener('keydown', event => { if (event.key === 'Escape' && $('twins-tip').matches(':popover-open')) { event.stopPropagation(); hideTwins() } })
+$('more-matches').addEventListener('click', () => { expanded = !expanded; renderResults() })
+// Subset rows follow the edited text once its glyphs load, so they never show a fallback face in between.
+const subsetRows = new Map()
+let subsetTimer = 0
+function followText(text) {
+  clearTimeout(subsetTimer)
+  subsetTimer = setTimeout(() => { for (const [input, face] of subsetRows) subsetFont(face, text).then(family => { if (!input.isConnected || previewText !== text) return; input.style.setProperty('--font-specimen', `"${family}"`); input.value = text }).catch(() => {}) }, 250)
 }
-// The full ranking, folded like the top five, built only when opened.
-function positionMore() {
-  const menu = $('more-menu'), rect = $('more-matches').getBoundingClientRect(), inset = menu.clientLeft + parseFloat(getComputedStyle(menu).paddingLeft)
-  place(menu, Math.max(12, Math.min(innerWidth - menu.offsetWidth - 12, rect.left - inset)), Math.max(12, Math.min(innerHeight - menu.offsetHeight - 12, rect.bottom + 4)))
-}
-$('more-menu').addEventListener('beforetoggle', event => {
-  const open = event.newState === 'open'; $('more-matches').setAttribute('aria-expanded', String(open))
-  if (!open) { hideTwins(); $('more-list').replaceChildren(); return }
-  const rest = foldTwins(last.matches, searchCatalog, { script: last.verdict?.script?.[0]?.label, limit: 99 }).slice(5)
-  $('more-list').replaceChildren(...rest.map((match, index) => { const item = document.createElement('li'); item.append(matchLine(match, index + 5)); return item }))
-})
-$('more-menu').addEventListener('toggle', event => { if (event.newState === 'open') { positionMore(); $('more-list').querySelector('a')?.focus({ preventScroll: true }) } })
-window.addEventListener('resize', () => { if ($('more-menu').matches(':popover-open')) positionMore() })
 function updatePreview(input) {
   const text = input.value.trim() || 'Quiet rivers flow'
   previewValid = /^[\x20-\x7e]+$/.test(text) && !/[~^]/.test(text)
@@ -485,6 +505,7 @@ function updatePreview(input) {
     other.setAttribute('aria-invalid', 'false')
     if (other !== input) other.value = text
   }
+  followText(text)
 }
 function point(event) {
   const r = source.getBoundingClientRect()
@@ -634,37 +655,60 @@ $('save').addEventListener('click', () => {
 })
 window.addEventListener('pagehide', () => { invalidate(); gpu?.destroy() })
 
+// Counts a download's bytes as they arrive: decompressed, as site.json sizes them (Content-Length is the gzip size).
+async function download(path, received, failure = `Could not load ${path}.`) {
+  const response = await fetch(path)
+  if (!response.ok) throw new Error(failure)
+  return new Response(response.body.pipeThrough(new TransformStream({ transform(chunk, stream) { received(chunk.byteLength); stream.enqueue(chunk) } }))).arrayBuffer()
+}
 async function initialize() {
   try {
-    // site.json names the model and catalogs in the repository; nothing is built or copied.
-    const load = async path => { const response = await fetch(path); if (!response.ok) throw new Error(`Could not load ${path}.`); return response }
-    const data = await (await load('./site.json')).json(), modelBytes = await (await load(data.model)).arrayBuffer()
-    const artifact = JSON.parse(new TextDecoder().decode(modelBytes))
+    // site.json names the model and catalogs in the repository; nothing is built or copied. The model and first catalog
+    // download together, and the catalog is read once the model checks out. (Safari would fetch a <link rel=preload> twice.)
+    const data = JSON.parse(new TextDecoder().decode(await download('./site.json', () => {})))
+    const option = data.catalogs?.[0], total = data.modelBytes + (option ? option.bytes : 0), bar = $('loading')
+    const received = total ? n => { bar.max = total; bar.value += n; $('loading-percent').textContent = `${Math.floor(bar.value / total * 100)}%` } : () => {}
+    const catalogBytes = option && download(option.file, received, 'Could not load the initial catalog.')
+    catalogBytes?.catch(() => {}) // Reported when awaited, after the model's own checks.
+    const modelBytes = await download(data.model, received), artifact = JSON.parse(new TextDecoder().decode(modelBytes))
     if (await sha256(modelBytes) !== data.modelSha256) throw new Error('Model checksum failed.')
     model = readNetwork(artifact); heads = readHeads(artifact); catalog = data
     if (isEncoder()) {
       if (await preparationHash(artifact.preparation) !== data.preparationSha256) throw new Error('Preparation checksum failed.')
-      const option = data.catalogs[0], response = await fetch(option.file)
-      if (!response.ok) throw new Error('Could not load the initial catalog.')
-      const bytes = await response.arrayBuffer(), hash = await sha256(bytes)
+      const bytes = await catalogBytes, hash = await sha256(bytes)
       if (hash !== option.sha256) throw new Error('Catalog checksum failed.')
       searchCatalog = { ...option, ...readCatalog(JSON.parse(new TextDecoder().decode(bytes)), data), builtin: true }
       $('catalog-control').hidden = false
-      $('catalog-list').replaceChildren(...data.catalogs.map(option => {
+      // My fonts, indexed on the Catalogs page, join the menu once they fit this model; until then the menu links there.
+      const stored = (await readMyFonts())?.catalog, mine = stored?.encoderSha256 === data.modelSha256 && stored.preparationSha256 === data.preparationSha256
+        ? { id: 'my-fonts', name: 'My fonts', data: stored, families: new Set(stored.faces.map(f => f.familyId)).size } : null
+      const options = mine ? [...data.catalogs, mine] : data.catalogs
+      $('catalog-list').replaceChildren(...options.map(option => {
         const button = document.createElement('button'); button.className = 'catalog-option'; button.dataset.catalog = option.id
         const label = document.createElement('span'), count = document.createElement('span')
         label.textContent = option.name; count.textContent = option.families.toLocaleString()
         button.append(label, count); button.addEventListener('click', () => selectCatalog(option)); return button
       }))
+      $('add-my-fonts').hidden = !!mine
       updateCatalogLabel()
+      // A link can name the catalog to search: ?catalog=my-fonts.
+      const wanted = options.find(each => each !== option && each.id === new URLSearchParams(location.search).get('catalog'))
+      if (wanted) await selectCatalog(wanted, null, { focus: false })
       // Shipped catalogs, not the selected or imported one.
-      // Fractions read as percentages; data-format="number" figures (the weight error) as whole numbers.
+      // Fractions read as percentages; data-format names the rest. A .meter draws its fraction as a bar, or a time
+      // against the slowest time beside it.
+      const formats = { number: v => String(Math.round(v)), seconds: v => `${v < 1 ? v.toFixed(2) : Math.round(v)} s`, megabytes: v => `${Math.round(v)} MB` }
       for (const figure of document.querySelectorAll('[data-metric]')) {
-        const value = data.metrics[figure.dataset.metric]
-        figure.textContent = figure.dataset.format === 'number' ? String(Math.round(value)) : `${(value * 100).toFixed(1)}%`
+        const value = data.metrics[figure.dataset.metric], format = figure.dataset.format
+        figure.textContent = formats[format]?.(value) ?? `${(value * 100).toFixed(1)}%`
+        const peers = format === 'seconds' ? [...figure.parentElement.parentElement.querySelectorAll('[data-format="seconds"]')].map(f => data.metrics[f.dataset.metric]) : [1]
+        figure.style.setProperty('--value', value / Math.max(...peers))
       }
       intro(`Finds the closest of ${data.families.toLocaleString()} font families, from ${data.catalogs.length} catalogs, to any line of text.`, data.metrics.top1, 'rendered text in fonts it never saw')
-      $('method-note').textContent = `The crop is straightened and split into up to three small grayscale windows. A small neural network turns each window into 128 numbers that describe its style, and their average is compared with every font in the catalog${heads ? ' that can draw the detected script' : ''}. Switching catalogs re-ranks the same numbers without running the network again.`
+      // The comparison counts fonts as other finders do: every face of every shipped catalog.
+      $('compared-fonts').textContent = data.catalogs.reduce((n, option) => n + option.faces, 0).toLocaleString('en-US')
+      if (heads) $('compared-scripts').textContent = String(heads.script.labels.length)
+      $('method-note').textContent = 'A small neural network turns the crop into 128 numbers that describe its style. Every font has its own 128 numbers; the nearest are the matches.'
       $('network-label').textContent = 'Encoder'
     }
     try { gpu = await createNetworkGPU(model) } catch (error) { gpuReason = `CPU fallback: ${error.message}` }
@@ -689,11 +733,11 @@ async function initialize() {
       }
     }
     $('parameters').textContent = `${data.parameters.toLocaleString()} parameters, int8 weights`
-    document.body.dataset.ready = 'true'
+    $('workbench').removeAttribute('aria-busy'); document.body.dataset.ready = 'true'
     if (revision === 0) await sample('lora')
     else if (current) { invalidate(true); schedule() }
   } catch (error) {
-    $('backend').textContent = 'Model unavailable'; message(error.message, true)
+    $('workbench').removeAttribute('aria-busy'); $('backend').textContent = 'Model unavailable'; message(error.message, true)
     if (!catalog) $('sample-empty').textContent = 'Fonts unavailable.'
   }
 }

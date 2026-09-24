@@ -1,12 +1,13 @@
 // One JSON batch per process; reuse the browser's exact normalization and deskew.
 import { readFileSync } from 'node:fs'
 import { prepareLine } from '../src/line.mjs'
+import { base64 } from '../src/catalog.mjs'
 
 export function prepareBatch(images) {
   if (!Array.isArray(images) || images.length > 4096) throw new Error('Invalid image batch')
   return images.map(image => {
     const { width, height, pixels } = image
-    if (!Number.isInteger(width) || !Number.isInteger(height) || width < 1 || height < 1 || width * height > 16777216 || typeof pixels !== 'string' || !/^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?$/.test(pixels)) throw new Error('Invalid grayscale image')
+    if (!Number.isInteger(width) || !Number.isInteger(height) || width < 1 || height < 1 || width * height > 16777216 || typeof pixels !== 'string' || !base64(pixels)) throw new Error('Invalid grayscale image')
     const gray = Buffer.from(pixels, 'base64')
     if (gray.length !== width * height) throw new Error('Truncated or trailing grayscale pixels')
     const data = new Uint8Array(gray.length * 4)

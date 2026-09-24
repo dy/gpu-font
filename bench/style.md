@@ -28,6 +28,8 @@ Each batch holds 32 faces and, for each, one of its sixteen nearest designs, two
 
 `train/style_bench.py` froze the evaluation before any style result: 9,409 Chromium canvas renders of static instances (so optical sizing cannot change a face), each random 5–10 characters: 300 families seen in training, the 301 development families that select checkpoints, and the 300 final families held out as a swapped catalog. Default, bold and italic faces; lower, upper, title and mixed case; one other-script query per face where the family has one; 1,426 degraded (75% size, JPEG 70) and 1,405 dark-mode copies; and a Hanzi slice of 406 queries. A separate synthetic slice of 2,214 sketches applies the training sketch transform, with fixed seeds, to clean Latin development and test renders at 32 px and above: it bounds real drawings from above.
 
+Its dependency pins changed once, when `scripts/corpus-prepare.mjs` changed only its input validation: preparation output was verified identical and the queries and pixels are unchanged (the `repins` entry in each manifest).
+
 Every query searches per-face references of all families: lowercase and uppercase Latin lines, plus two lines per other script, averaged per face. A result counts when the true family, or a twin of it, is in the top five.
 
 ## Results

@@ -1,7 +1,7 @@
 // The site is the repository root. Only the legacy classifier build copies it into dist/.
 import { cp, mkdir } from 'node:fs/promises'
 
-export const siteFiles = ['index.html', 'sources.html', 'style.css', 'tokens.css', 'app.mjs', 'crop.mjs', 'sources.mjs']
+export const siteFiles = ['index.html', 'catalogs.html', 'style.css', 'tokens.css', 'app.mjs', 'crop.mjs', 'catalogs.mjs', 'my-fonts.mjs']
 
 export async function copySite() {
   await mkdir('dist', { recursive: true })

@@ -1,10 +1,11 @@
 // Writes site.json, the page's manifest. The page reads the model and catalogs straight from the repository and loads
-// every font from Google Fonts, so nothing heavy is built, copied or committed.
-import { readFile, writeFile, mkdir, access, rm } from 'node:fs/promises'
+// every font from Google Fonts, so nothing heavy is built, copied or committed. Byte sizes let it show download progress.
+import { readFile, writeFile, mkdir, access, rm, readdir } from 'node:fs/promises'
 import { createHash } from 'node:crypto'
 import { readNetwork } from '../src/network.mjs'
 import { readCatalog, preparationHash } from '../src/catalog.mjs'
 import { sourceCatalogs } from './catalog-sources.mjs'
+import { joinCatalogs } from '../src/references.mjs'
 
 const hash = bytes => createHash('sha256').update(bytes).digest('hex')
 const read = async path => JSON.parse(await readFile(path, 'utf8'))
@@ -16,9 +17,9 @@ for (const [name, key] of [['input', 'sha256'], ['prepare', 'normalizerSha256'],
 }
 const options = [], families = new Set(), previews = {}, inventory = await read('bench/corpus.json')
 const byId = new Map(inventory.families.map(f => [f.id, f]))
-async function addCatalog(id, name, file) {
+async function addCatalog(id, name, file, sources) {
   const bytes = await readFile(file), data = JSON.parse(bytes), decoded = readCatalog(data, binding)
-  options.push({ id, name, file, sha256: hash(bytes), families: decoded.families, faces: data.faces.length })
+  options.push({ id, name, file, sha256: hash(bytes), bytes: bytes.length, families: decoded.families, faces: data.faces.length, ...(sources ? { sources } : {}) })
   for (const face of data.faces) families.add(face.family.toLowerCase())
   return data
 }
@@ -53,20 +54,37 @@ for (const version of ['v1', 'v2']) {
 // against it; banned, restricted, unverified and unlisted sources are derived into .data and stay there.
 const derived = 'models/encoder/catalogs', withheld = '.data/catalogs/withheld'
 const ledger = new Map((await read('bench/foundries.json')).sources.map(source => [source.id, source]))
-const shippable = ({ id }) => ['permitted', 'none-found'].includes(ledger.get(id)?.terms?.status)
+// A grouped catalog ships only when every source in it would ship alone.
+const shippable = ({ id, sources = [id] }) => sources.every(id => ['permitted', 'none-found'].includes(ledger.get(id)?.terms?.status))
 const compiled = sourceCatalogs(sources, binding).filter(source => source.id !== 'google-fonts') // Google is indexed in full above.
-let shipped = compiled.filter(shippable)
+// Catalogs built from pinned font files (scripts/catalog-files.mjs) supersede capture-built ones of the same source.
+const files = '.data/catalogs/files'
+for (const file of (await readdir(files).catch(() => [])).filter(name => name.endsWith('.json')).sort()) {
+  const data = await read(`${files}/${file}`), id = file.slice(0, -5)
+  if (data.encoderSha256 !== binding.encoderSha256 || data.preparationSha256 !== binding.preparationSha256) { console.log(`Skipped ${files}/${file}: built for another encoder; run scripts/catalog-files.mjs.`); continue }
+  compiled.splice(0, compiled.length, ...compiled.filter(source => source.id !== id), { id, name: data.name, data })
+}
+// The menu lists the largest catalogs first. Cleared sources under ten families are searched together as Other, last:
+// a catalog of one or two families is not worth its own entry. Each face keeps the source it came from.
+const familyCount = source => new Set(source.data.faces.map(f => f.familyId)).size, SMALL = 10
+compiled.sort((a, b) => familyCount(b) - familyCount(a) || a.id.localeCompare(b.id))
+const cleared = compiled.filter(shippable), small = cleared.filter(source => familyCount(source) < SMALL)
+let shipped = cleared.filter(source => familyCount(source) >= SMALL)
+if (small.length) shipped.push({ id: 'other', name: 'Other', sources: small.map(s => s.id),
+  data: small.map(s => ({ ...s.data, faces: s.data.faces.map(f => ({ ...f, sourceId: s.id })) })).reduce((all, next) => joinCatalogs(all, next)) })
 if (compiled.length) {
   await mkdir(derived, { recursive: true }); await mkdir(withheld, { recursive: true })
-  for (const source of compiled) await writeFile(`${shippable(source) ? derived : withheld}/${source.id}.json`, JSON.stringify(source.data) + '\n')
-  for (const source of compiled.filter(source => !shippable(source))) await rm(`${derived}/${source.id}.json`, { force: true })
-  await writeFile(`${derived}/index.json`, JSON.stringify(shipped.map(({ id, name }) => ({ id, name })), null, 2) + '\n')
+  for (const source of compiled.filter(source => !shippable(source))) await writeFile(`${withheld}/${source.id}.json`, JSON.stringify(source.data) + '\n')
+  // Only what ships stays in the catalogs folder: grouped and withheld sources lose their own files there.
+  for (const source of compiled) await rm(`${derived}/${source.id}.json`, { force: true })
+  for (const source of shipped) await writeFile(`${derived}/${source.id}.json`, JSON.stringify(source.id === 'other' ? { ...source.data, source: 'other' } : source.data) + '\n')
+  await writeFile(`${derived}/index.json`, JSON.stringify(shipped.map(({ id, name, sources }) => ({ id, name, ...(sources ? { sources } : {}) })), null, 2) + '\n')
 } else if (await access(`${derived}/index.json`).then(() => true, () => false)) {
   const listed = (await read(`${derived}/index.json`)).filter(shippable)
-  shipped = await Promise.all(listed.map(async ({ id, name }) => ({ id, name, data: await read(`${derived}/${id}.json`) })))
+  shipped = await Promise.all(listed.map(async ({ id, name, sources }) => ({ id, name, sources, data: await read(`${derived}/${id}.json`) })))
 }
 for (const source of compiled.filter(source => !shippable(source))) console.log(`Withheld ${source.name}: terms ${ledger.get(source.id)?.terms?.status ?? 'not in bench/foundries.json'}; kept in ${withheld}.`)
-for (const source of shipped) await addCatalog(source.id, source.name, `${derived}/${source.id}.json`)
+for (const source of shipped) await addCatalog(source.id, source.name, `${derived}/${source.id}.json`, source.sources)
 const measured = await read('bench/encoder-test.json')
 let metrics = measured.encoderSha256 === binding.encoderSha256 && measured.catalogSha256 === options[0].sha256 ? measured.results.groups['split/test'] : null
 for (const file of ['bench/encoder-recovery-quality.json', 'bench/encoder-quality.json']) {
@@ -85,6 +103,11 @@ if (breakdown.encoderSha256 !== binding.encoderSha256) throw new Error('Changed 
 metrics = { ...metrics, latinTop5: groups['script/Latn'].twin5, otherScriptTop5: groups['case/native'].twin5, hanziTop5: groups['slice/hanzi'].twin5,
   capitalsFromLowercaseTop5: cross.capitalsFromLowercase.twin5, lowercaseFromCapitalsTop5: cross.lowercaseFromCapitals.twin5,
   otherScriptsFromLatinTop5: cross.otherScriptsFromLatin.twin5, hanziFromLatinTop5: cross.hanziFromLatin.twin5 }
-await writeFile('site.json', JSON.stringify({ ...binding, modelSha256: binding.encoderSha256, model: modelPath, fonts, catalogs: options, families: families.size, previews,
+// Speed and download (checks/encoder.mjs): one whole match on WebGPU and on the CPU, and the gzipped model and Google catalog.
+const runtime = await read('bench/style-runtime.json'), measuredFiles = new Map(runtime.payload.map(file => [file.path, file]))
+if (runtime.encoderSha256 !== binding.encoderSha256 || measuredFiles.get(modelPath)?.sha256 !== binding.encoderSha256 || measuredFiles.get(options[0].file)?.sha256 !== options[0].sha256 || !runtime.match?.cpuMs) throw new Error('Changed encoder/catalog runtime; run checks/encoder.mjs')
+metrics = { ...metrics, matchWebgpuSeconds: runtime.match.webgpuMs / 1000, matchCpuSeconds: runtime.match.cpuMs / 1000,
+  downloadMegabytes: (measuredFiles.get(modelPath).gzipBytes + measuredFiles.get(options[0].file).gzipBytes) / 1e6 }
+await writeFile('site.json', JSON.stringify({ ...binding, modelSha256: binding.encoderSha256, model: modelPath, modelBytes: bytes.length, fonts, catalogs: options, families: families.size, previews,
   parameters: model.layers.reduce((sum, l) => sum + l.weights.length + l.bias.length, 0), metrics }) + '\n')
 console.log(`Wrote site.json: ${options.map(o => `${o.name} (${o.families})`).join(', ')}. Fonts load from Google Fonts.`)

@@ -13,7 +13,7 @@ import numpy as np
 from scripts.corpus import ROOT
 from train.encoder_data import save, validate_shard
 from train.robustness import read, sha
-from train.style_data import Fonts, Preparer, pools as make_pools
+from train.style_data import Fonts, Preparer, pools as make_pools, CASED
 from train.style_teacher import glyph_sets
 
 OUT = ROOT/'.data/style'
@@ -24,7 +24,9 @@ STATE = {}
 
 
 def kinds(pool):
-    """Reference kinds and their lines for one family: Latin cases, then two lines per other script."""
+    """Reference kinds and their lines for one family: each case of a cased script in lines covering its alphabet
+    (queries mix cases, so one lowercase line would leave capitals to style transfer), and four lines of the most
+    shared characters of every other script."""
     result = {}
     if 'Latn' in pool:
         for case, lines in LATIN.items():
@@ -34,8 +36,13 @@ def kinds(pool):
             if len(own) >= 8: result['Latn-' + case] = [own[i:i + 12] for i in range(0, min(len(own), 36), 12)]
     for script, chars in sorted(pool.items()):
         if script == 'Latn': continue
-        head = chars[:16]
-        if len(head) >= 8: result[script] = [head[:len(head)//2], head[len(head)//2:]]
+        if script in CASED:
+            for case in ('lower', 'upper'):
+                own = ''.join(c for c in chars if c.isalpha() and (c.islower() if case == 'lower' else c.isupper()))
+                if len(own) >= 8: step = -(-len(own)//3); result[f'{script}-{case}'] = [own[i:i + step] for i in range(0, len(own), step)]
+            continue
+        head = chars[:32]
+        if len(head) >= 8: result[script] = [head[i:i + 8] for i in range(0, len(head), 8)]
     return result
 
 
