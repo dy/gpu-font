@@ -34,3 +34,12 @@ test('ids, vocabularies, URLs and the log are checked', () => {
     assert.ok(problems.some(problem => pattern.test(problem)), `${pattern} in ${problems.join('; ')}`)
   assert.deepEqual(validateRegistry({}), ['sources must be an array'])
 })
+
+test('an approximate size carries its unit and where it was read', () => {
+  const sized = patch => validateRegistry({ sources: [entry(patch)] })
+  assert.deepEqual(sized({ familiesAvailable: 5616, availableNote: 'Adobe Fonts browse page' }), [])
+  assert.deepEqual(sized({ familiesAvailable: 2000, availableUnit: 'icons', availableNote: 'icons.getbootstrap.com' }), [])
+  assert.equal(sized({ familiesAvailable: 5616 }).length, 1)
+  assert.equal(sized({ familiesAvailable: 0, availableNote: 'x' }).length, 1)
+  assert.equal(sized({ familiesAvailable: 12, availableUnit: 'glyphs', availableNote: 'x' }).length, 1)
+})

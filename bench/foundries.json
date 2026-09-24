@@ -71,7 +71,9 @@
         }
       ],
       "familiesAvailable": 100,
-      "notes": "The licence allows free personal and commercial use but does not address machine learning."
+      "notes": "The licence allows free personal and commercial use but does not address machine learning.",
+      "availableUnit": "families",
+      "availableNote": "total reported by Fontshare's public API, https://api.fontshare.com/v2/fonts (count_total), 2026-09-23"
     },
     {
       "id": "velvetyne",
@@ -298,7 +300,9 @@
           "event": "Surveyed; ~1,100 fonts"
         }
       ],
-      "familiesAvailable": 1100
+      "familiesAvailable": 1399,
+      "availableUnit": "families",
+      "availableNote": "catalogue pages at https://fontlibrary.org/en/catalogue, matching the site's own category totals, 2026-09-24"
     },
     {
       "id": "font-squirrel",
@@ -1293,7 +1297,9 @@
           "event": "Permission request drafted"
         }
       ],
-      "familiesAvailable": 5616
+      "familiesAvailable": 5616,
+      "availableUnit": "families",
+      "availableNote": "families listed in Adobe Fonts' public sitemap, https://assets.fonts.adobe.com/sitemaps/sitemap.xml, 2026-09-23"
     },
     {
       "id": "fontspring",
@@ -1479,7 +1485,9 @@
           "event": "Surveyed; 1,359 families, no terms page located"
         }
       ],
-      "familiesAvailable": 1359
+      "familiesAvailable": 1359,
+      "availableUnit": "families",
+      "availableNote": "counted on the foundry's own catalogue in the 2026-09-23 survey (bench/font-sources.md)"
     },
     {
       "id": "klim",
@@ -1502,7 +1510,9 @@
           "event": "Surveyed; ~50 families (Söhne, Tiempos)"
         }
       ],
-      "familiesAvailable": 50
+      "familiesAvailable": 50,
+      "availableUnit": "families",
+      "availableNote": "counted on the foundry's own catalogue in the 2026-09-23 survey (bench/font-sources.md)"
     },
     {
       "id": "grilli",
@@ -1525,7 +1535,9 @@
           "event": "Surveyed; 21 families (GT America, GT Walsheim)"
         }
       ],
-      "familiesAvailable": 21
+      "familiesAvailable": 21,
+      "availableUnit": "families",
+      "availableNote": "counted on the foundry's own catalogue in the 2026-09-23 survey (bench/font-sources.md)"
     },
     {
       "id": "swiss-typefaces",
@@ -1548,7 +1560,9 @@
           "event": "Surveyed; 18 families (Suisse)"
         }
       ],
-      "familiesAvailable": 18
+      "familiesAvailable": 18,
+      "availableUnit": "families",
+      "availableNote": "counted on the foundry's own catalogue in the 2026-09-23 survey (bench/font-sources.md)"
     },
     {
       "id": "oh-no-type",
@@ -1615,7 +1629,9 @@
           "event": "Surveyed; ~29 families"
         }
       ],
-      "familiesAvailable": 29
+      "familiesAvailable": 29,
+      "availableUnit": "families",
+      "availableNote": "counted on the foundry's own catalogue in the 2026-09-23 survey (bench/font-sources.md)"
     },
     {
       "id": "cotype",
@@ -1683,7 +1699,9 @@
           "event": "Surveyed; ~62 families (Neue Montreal); permission request drafted"
         }
       ],
-      "familiesAvailable": 62
+      "familiesAvailable": 62,
+      "availableUnit": "families",
+      "availableNote": "counted on the foundry's own catalogue in the 2026-09-23 survey (bench/font-sources.md)"
     },
     {
       "id": "sharp-type",
@@ -1755,7 +1773,9 @@
           "event": "Surveyed; 123 families (Graphik, Canela); permission request drafted"
         }
       ],
-      "familiesAvailable": 123
+      "familiesAvailable": 123,
+      "availableUnit": "families",
+      "availableNote": "counted on the foundry's own catalogue in the 2026-09-23 survey (bench/font-sources.md)"
     },
     {
       "id": "abc-dinamo",
@@ -1779,7 +1799,9 @@
           "event": "Surveyed; ~50 families (Favorit, Diatype); permission request drafted"
         }
       ],
-      "familiesAvailable": 50
+      "familiesAvailable": 50,
+      "availableUnit": "families",
+      "availableNote": "counted on the foundry's own catalogue in the 2026-09-23 survey (bench/font-sources.md)"
     },
     {
       "id": "frere-jones",
@@ -1850,7 +1872,9 @@
           "event": "Surveyed; 312 families"
         }
       ],
-      "familiesAvailable": 312
+      "familiesAvailable": 312,
+      "availableUnit": "families",
+      "availableNote": "counted on the foundry's own catalogue in the 2026-09-23 survey (bench/font-sources.md)"
     },
     {
       "id": "font-diner",

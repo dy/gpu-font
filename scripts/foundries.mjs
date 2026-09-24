@@ -12,6 +12,7 @@ const CATALOGS = 'models/encoder/catalogs'
 export const KINDS = ['library', 'foundry', 'retailer', 'aggregator', 'platform', 'icons', 'music', 'math']
 export const ACCESS = ['files', 'previews', 'none']
 export const TERMS = ['permitted', 'none-found', 'restricted', 'ban', 'not-verified']
+export const UNITS = ['families', 'fonts', 'icons']
 export const WORK = ['indexed', 'partial', 'inventoried', 'planned', 'paused', 'permission-to-request', 'awaiting-permission', 'declined', 'excluded']
 
 /** Structural check; returns a list of problems. */
@@ -36,6 +37,10 @@ export function validateRegistry(registry) {
       problems.push(`${at}: work cannot proceed against a ban without recorded permission`)
     if (!Array.isArray(source.log) || !source.log.length || source.log.some(entry => !/^\d{4}-\d{2}-\d{2}$/.test(entry.date ?? '') || !entry.event))
       problems.push(`${at}: log needs dated events`)
+    // An approximate size, in the unit the source itself states, with where it was read.
+    if ('familiesAvailable' in source && !(Number.isInteger(source.familiesAvailable) && source.familiesAvailable > 0 && typeof source.availableNote === 'string' && source.availableNote))
+      problems.push(`${at}: familiesAvailable needs a positive count and an availableNote saying where it was read`)
+    if ('availableUnit' in source && !UNITS.includes(source.availableUnit)) problems.push(`${at}: availableUnit must be one of ${UNITS.join(', ')}`)
   }
   return problems
 }
