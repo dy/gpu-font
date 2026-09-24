@@ -24,7 +24,7 @@
   <script type="importmap">{"imports":{"./crop.mjs":"./crop.mjs?v=550aca56ca","./my-fonts.mjs":"./my-fonts.mjs?v=d075f19d67","./src/catalog.mjs":"./src/catalog.mjs?v=64a49b0317","./src/input.mjs":"./src/input.mjs?v=6499378ce1","./src/line.mjs":"./src/line.mjs?v=e35378b08a","./src/network-gpu.mjs":"./src/network-gpu.mjs?v=fa27d23620","./src/network.mjs":"./src/network.mjs?v=f20e703399","./src/prepare.mjs":"./src/prepare.mjs?v=c48ce58778"}}</script>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter&family=Source+Serif+4&display=swap">
   <link rel="stylesheet" href="./tokens.css?v=887bf6e761">
-  <link rel="stylesheet" href="./style.css?v=ab2bb2a147">
+  <link rel="stylesheet" href="./style.css?v=d630dea5fd">
 </head>
 <body>
   <a class="skip" href="#workbench">Skip to workbench</a>
@@ -146,7 +146,7 @@
       <div class="questions">
         <div class="qa">
           <h3>Why did it miss my font?</h3>
-          <p>The catalog may not have it. Crop one line in one font, several letters, on a plain background; the eraser removes stray marks.</p>
+          <p>The model is still improving. It learned from clean rendered text, so photos, blur, perspective, outlines and textures throw it off, as do one or two letters, mixed fonts and look-alike families. Or the catalogs lack the font.</p>
         </div>
         <div class="qa">
           <h3>Can it tell weight, italic or width?</h3>
@@ -154,15 +154,11 @@
         </div>
         <div class="qa">
           <h3>Can it find commercial fonts?</h3>
-          <p>Not by name: its catalogs hold free fonts, so a commercial font gets its closest free look-alikes, unless you index your own copy.</p>
-        </div>
-        <div class="qa">
-          <h3>Does it work on all caps?</h3>
-          <p>Yes: every font is indexed from its capitals as well as its lowercase.</p>
+          <p>Only the ones you own. Commercial libraries’ terms mostly forbid collecting their fonts, so the catalogs hold openly licensed ones, and a commercial font gets its closest open look-alikes. <a href="./catalogs.html#my-fonts">Index your own collection</a> to find the font itself.</p>
         </div>
         <div class="qa">
           <h3>Does it work beyond Latin?</h3>
-          <p>Yes, less reliably than Latin: <span data-metric="otherScriptTop5">–</span> in the top 5, <span data-metric="hanziTop5">–</span> for Chinese. Fonts that can’t draw the script are skipped.</p>
+          <p>Yes, less reliably. In the top 5: Latin <span data-metric="latinTop5">–</span>, Cyrillic <span data-metric="cyrillicTop5">–</span>, Arabic <span data-metric="arabicTop5">–</span>, Chinese <span data-metric="hanziTop5">–</span>, measured on few non-Latin families so far. Fonts without the detected script’s subset are left out.</p>
         </div>
         <div class="qa">
           <h3>Does it support handwriting, icons, non-fonts?</h3>

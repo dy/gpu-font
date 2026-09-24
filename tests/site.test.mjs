@@ -46,3 +46,8 @@ test('the sitemap lists every page by its canonical address', async () => {
   const listed = [...(await readFile('sitemap.xml', 'utf8')).matchAll(/<loc>([^<]*)<\/loc>/g)].map(m => m[1])
   assert.deepEqual(listed, await Promise.all(['index.html', 'catalogs.html'].map(async page => link(await readFile(page, 'utf8'), 'canonical'))))
 })
+
+test('per-script accuracy on the page comes from the shipped breakdown', async () => {
+  const { metrics } = JSON.parse(await readFile('site.json', 'utf8')), { groups } = JSON.parse(await readFile('bench/style-breakdown.json', 'utf8'))
+  assert.deepEqual([metrics.latinTop5, metrics.cyrillicTop5, metrics.arabicTop5], ['script/Latn', 'script/Cyrl', 'script/Arab'].map(key => groups[key].twin5))
+})

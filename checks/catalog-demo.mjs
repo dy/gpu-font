@@ -118,7 +118,7 @@ try {
   assert.ok(typeof family === 'string' && family && Number.isFinite(score), `The How to use sample runs: ${family}, ${score}`)
   // The other questions flow in two columns, each a heading over its answer, text only.
   const questions = await page.locator('.questions > .qa').evaluateAll(items => items.map(q => [q.children[0].tagName, q.children[1].tagName, Math.round(q.getBoundingClientRect().left), q.children.length]))
-  assert.ok(questions.length >= 8 && questions.every(([h, p, , count]) => h === 'H3' && p === 'P' && count === 2) && new Set(questions.map(q => q[2])).size === 2, JSON.stringify(questions))
+  assert.ok(questions.length >= 7 && questions.every(([h, p, , count]) => h === 'H3' && p === 'P' && count === 2) && new Set(questions.map(q => q[2])).size === 2, JSON.stringify(questions))
   // Accuracy: two bars, the first result and the top 5, each filled to its shipped metric; no title over the other questions.
   assert.deepEqual(await page.locator('#how-accurate .meter').evaluateAll(m => m.map(e => [e.previousElementSibling.textContent, e.dataset.metric, Number(e.style.getPropertyValue('--value'))])), [['1st result', 'top1', data.metrics.top1], ['Top 5', 'top5Accuracy', data.metrics.top5Accuracy]], 'Accuracy names the first result and the top five plainly')
   assert.equal(await page.locator('#faq h2').count(), 0)
@@ -199,6 +199,9 @@ try {
   assert.deepEqual(await page.locator('#more-matches').evaluate(b => [b.firstChild.textContent, b.getAttribute('aria-expanded')]), ['Fewer matches', 'true'])
   assert.deepEqual(await page.locator('#results .rank').evaluateAll(r => [r[0].textContent, r.at(-1).textContent]), ['01', String(all.length).padStart(2, '0')])
   assert.deepEqual(await page.locator('#results .result-score').allTextContents(), all.map(m => m.score.toFixed(3)))
+  // The crop stays in view while the long list scrolls beside it.
+  await page.locator('#results .result').nth(30).scrollIntoViewIfNeeded()
+  assert.equal(await page.locator('.source-panel').evaluate(panel => Math.round(panel.getBoundingClientRect().top)), 0, 'The input panel sticks to the top')
   // Rows past the fifth preview through a subset face of their own, read-only; the refused one names its absence.
   await page.waitForFunction(() => [...document.querySelectorAll('#results .result')].slice(5).every(r => r.querySelector('.result-unavailable') || r.querySelector('.result-preview')?.style.visibility === ''))
   assert.equal(await page.locator('#results .result').nth(5).locator('.result-unavailable').textContent(), 'No preview available')

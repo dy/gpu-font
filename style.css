@@ -73,6 +73,9 @@ code { font: 400 var(--text-code)/1.6 var(--font-mono); color: var(--color-code)
 .source-panel, .results-column { min-width: 0; padding-block: var(--space-6) var(--space-8); }
 /* The model input follows the preview and fills the rest of its column. */
 .source-panel { display: flex; flex-direction: column; }
+/* While More matches lists fifty, the crop stays in view beside them, wherever the window is tall enough to hold it.
+   Folded to five, both columns stretch to one height, so the verdict keeps its line with More matches. */
+@media (min-width: 62rem) and (min-height: 45rem) { .workbench:has(#more-matches[aria-expanded="true"]) .source-panel { position: sticky; top: 0; align-self: start; } }
 .results-panel, .catalog-panel { min-width: 0; }
 /* Each block opens on one label line: label left, its controls right. Equal heights keep the columns level. */
 .panel-head { display: flex; align-items: center; justify-content: flex-end; gap: var(--space-1); min-height: var(--size-target); margin-bottom: var(--space-2); color: var(--color-muted); font-size: var(--text-small); }

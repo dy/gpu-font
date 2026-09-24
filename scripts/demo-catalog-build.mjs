@@ -100,7 +100,7 @@ if (!metrics) throw new Error('Changed encoder/catalog evaluation')
 // Held-out case and script figures (train.style breakdown): every reference, then capitals, lowercase or other scripts against fewer.
 const breakdown = await read('bench/style-breakdown.json'), { groups, cross } = breakdown
 if (breakdown.encoderSha256 !== binding.encoderSha256) throw new Error('Changed encoder breakdown')
-metrics = { ...metrics, latinTop5: groups['script/Latn'].twin5, otherScriptTop5: groups['case/native'].twin5, hanziTop5: groups['slice/hanzi'].twin5,
+metrics = { ...metrics, latinTop5: groups['script/Latn'].twin5, cyrillicTop5: groups['script/Cyrl'].twin5, arabicTop5: groups['script/Arab'].twin5, otherScriptTop5: groups['case/native'].twin5, hanziTop5: groups['slice/hanzi'].twin5,
   capitalsFromLowercaseTop5: cross.capitalsFromLowercase.twin5, lowercaseFromCapitalsTop5: cross.lowercaseFromCapitals.twin5,
   otherScriptsFromLatinTop5: cross.otherScriptsFromLatin.twin5, hanziFromLatinTop5: cross.hanziFromLatin.twin5 }
 // Speed and download (checks/encoder.mjs): one whole match on WebGPU and on the CPU, and the gzipped model and Google catalog.
