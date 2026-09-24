@@ -382,22 +382,29 @@
       "access": "files",
       "licence": "mixed per font, often personal use only",
       "terms": {
-        "status": "not-verified",
-        "checked": "2026-09-23"
+        "status": "restricted",
+        "checked": "2026-09-24",
+        "url": "https://www.dafont.com/robots.txt",
+        "quote": "User-agent: *\nDisallow: /dl.php\nDisallow: /download/",
+        "note": "The download paths are disallowed for every crawler, and the site disclaims its own licence labels as non-authoritative."
       },
       "work": {
         "status": "excluded",
-        "reason": "licences vary per font"
+        "reason": "robots.txt disallows the download paths for every crawler; licence labels are the uploaders' own"
       },
       "log": [
         {
           "date": "2026-09-23",
           "event": "Surveyed; ~46,000 styles with mixed licences"
+        },
+        {
+          "date": "2026-09-24",
+          "event": "robots.txt read: download paths disallowed for every crawler"
         }
       ],
       "familiesAvailable": 40000,
       "availableUnit": "fonts",
-      "availableNote": "No official figure published (DaFont is on the do-not-fetch list and its FAQ states no total). Third-party citations range widely, from ~30,000 to 80,000; 'almost 40,000 fonts' is the figure most consistently repeated across independent review sources circa 2024-2025. (search result: https://www.dafont.com/), 2026-09-24"
+      "availableNote": "101,213 fonts stated on https://www.dafont.com/, 2026-09-24"
     },
     {
       "id": "free-faces",
