@@ -24,7 +24,7 @@
   <script type="importmap">{"imports":{"./crop.mjs":"./crop.mjs?v=550aca56ca","./my-fonts.mjs":"./my-fonts.mjs?v=d075f19d67","./src/catalog.mjs":"./src/catalog.mjs?v=64a49b0317","./src/input.mjs":"./src/input.mjs?v=6499378ce1","./src/line.mjs":"./src/line.mjs?v=e35378b08a","./src/network-gpu.mjs":"./src/network-gpu.mjs?v=fa27d23620","./src/network.mjs":"./src/network.mjs?v=f20e703399","./src/prepare.mjs":"./src/prepare.mjs?v=c48ce58778"}}</script>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter&family=Source+Serif+4&display=swap">
   <link rel="stylesheet" href="./tokens.css?v=887bf6e761">
-  <link rel="stylesheet" href="./style.css?v=c7c8570b69">
+  <link rel="stylesheet" href="./style.css?v=7000961b31">
 </head>
 <body>
   <a class="skip" href="#workbench">Skip to workbench</a>
@@ -43,8 +43,8 @@
     <div id="workbench" class="workbench" aria-busy="true">
       <div class="loader"><span aria-hidden="true">Loading the model <span id="loading-percent"></span></span><progress id="loading" aria-label="Loading the model"></progress></div>
       <section class="source-panel" aria-labelledby="source-title">
+        <h2 id="source-title" class="column-title">Source</h2>
         <div id="source-head" class="panel-head source-head" role="group" aria-labelledby="source-title">
-          <h2 id="source-title" class="sr-only">Source</h2>
             <button id="source-font" class="icon-button source-kind" aria-pressed="false" hidden aria-label="Font sample" title="Font sample"><span class="font-icon" aria-hidden="true">Aa</span></button>
             <button id="draw" class="icon-button source-kind" aria-pressed="false" hidden aria-label="Blank sheet" title="Draw on a blank sheet"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="2" stroke="currentColor" stroke-width="1.3"/><path d="M7 13c1.5-2.5 3-2.5 4.5 0s3 2.5 4.5 0" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
             <button id="choose-image" class="icon-button source-kind" aria-pressed="false" hidden aria-label="Open an image" title="Open an image"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="2" stroke="currentColor" stroke-width="1.3"/><circle cx="8" cy="8" r="1.5" fill="currentColor"/><path d="m3 17 5-5 4 4 4-6 5 7" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"/></svg></button>
@@ -86,6 +86,7 @@
       </section>
 
       <div class="results-column">
+        <h2 id="matches-title" class="column-title">Matches</h2>
         <section id="catalog-control" class="catalog-panel" aria-labelledby="catalog-title" hidden>
           <div class="panel-head">
             <h2 id="catalog-title" class="sr-only">Catalog</h2>
@@ -96,8 +97,7 @@
           <p id="catalog-error" class="message" data-error role="status" hidden></p>
         </section>
 
-        <section class="results-panel" aria-labelledby="results-title">
-          <h2 id="results-title" class="sr-only">Font matches</h2>
+        <section class="results-panel" aria-labelledby="matches-title">
           <p id="preview-error" class="message" data-error role="status" hidden>These font previews don’t support this character.</p>
           <div id="twins-tip" class="popover twins-tip" popover="manual" role="tooltip"></div>
           <ol id="results" class="results" aria-label="Ranked font matches" aria-describedby="score-note"></ol>
@@ -192,13 +192,14 @@ console<span class="tok-p">.</span><span class="tok-f">log</span><span class="to
     <section id="compare" class="stacked" aria-labelledby="compare-title">
       <h2 id="compare-title">How does it compare?</h2>
       <div class="table-scroll"><table class="figures">
-        <thead><tr><th scope="col">Font finder</th><th scope="col">Owner</th><th scope="col">Fonts</th><th scope="col">Your fonts</th><th scope="col">Weight, italic</th><th scope="col">Subsets</th></tr></thead>
+        <thead><tr><th scope="col">Font finder</th><th scope="col">Fonts</th><th scope="col">Your fonts</th><th scope="col">Weight, italic</th><th scope="col">Subsets</th><th scope="col">Runs on</th><th scope="col">Open source</th><th scope="col">Cost</th></tr></thead>
         <tbody>
-          <tr><th scope="row"><a href="https://www.whatfontis.com/">WhatFontIs</a></th><td><a href="https://www.whatfontis.com/about.html">WhatFontIs Com SRL</a></td><td>1,200,000+</td><td>–</td><td>–</td><td>Latin</td></tr>
-          <tr><th scope="row"><a href="https://www.myfonts.com/pages/whatthefont">WhatTheFont</a></th><td><a href="https://www.myfonts.com/pages/about">MyFonts</a></td><td>400,000+</td><td>–</td><td>–</td><td>–</td></tr>
-          <tr><th scope="row"><a href="https://helpx.adobe.com/photoshop/desktop/text-typography/select-manage-fonts/match-fonts.html">Photoshop Match Font</a></th><td><a href="https://fonts.adobe.com/about">Adobe</a></td><td>30,000+</td><td>Installed</td><td>–</td><td>Latin, Japanese</td></tr>
-          <tr><th scope="row"><a href="https://www.fontsquirrel.com/matcherator">Matcherator</a></th><td><a href="https://www.fontsquirrel.com/faq">Font Squirrel</a></td><td>Not stated</td><td>–</td><td>–</td><td>–</td></tr>
-          <tr><th scope="row"><a href="./catalogs.html#included">gpu-font</a></th><td><a href="https://github.com/dy/gpu-font">Open source</a></td><td id="compared-fonts">–</td><td><a href="./catalogs.html#my-fonts">Installed, folders</a></td><td>±<span data-metric="faceWeightError" data-format="number">–</span> weight, <span data-metric="faceItalic">–</span> italic</td><td id="compared-scripts">–</td></tr>
+          <tr><th scope="row"><a href="https://www.whatfontis.com/">WhatFontIs</a><span class="detail">WhatFontIs Com SRL</span></th><td>1,200,000+<span class="detail">Free and commercial, many vendors</span></td><td>–</td><td>–</td><td>Latin</td><td>Server</td><td>No</td><td>5 a day free, paid PRO</td></tr>
+          <tr><th scope="row"><a href="https://www.myfonts.com/pages/whatthefont">WhatTheFont</a><span class="detail">MyFonts</span></th><td>400,000+<span class="detail"><a href="https://www.myfonts.com/pages/about">MyFonts</a></span></td><td>–</td><td>–</td><td>–</td><td>Server, web and apps</td><td>No</td><td>Free</td></tr>
+          <tr><th scope="row"><a href="https://helpx.adobe.com/photoshop/desktop/text-typography/select-manage-fonts/match-fonts.html">Photoshop Match Font</a><span class="detail">Adobe</span></th><td>30,000+<span class="detail"><a href="https://fonts.adobe.com/about">Adobe Fonts</a></span></td><td>Installed</td><td>–</td><td>Latin, Japanese</td><td>Desktop app</td><td>No</td><td>Subscription</td></tr>
+          <tr><th scope="row"><a href="https://github.com/mixfont/lens">Lens</a><span class="detail">Mixfont</span></th><td>5,000+<span class="detail">Google Fonts and other open fonts</span></td><td>–</td><td>Yes</td><td>–</td><td>Local Python, or hosted</td><td>Non‑commercial</td><td>Free non‑commercial, paid API</td></tr>
+          <tr><th scope="row"><a href="https://www.fontsquirrel.com/matcherator">Matcherator</a><span class="detail">Font Squirrel</span></th><td>Not stated<span class="detail"><a href="https://www.fontsquirrel.com/faq">Font Squirrel, Fontspring, MyFonts</a></span></td><td>–</td><td>–</td><td>–</td><td>Server</td><td>No</td><td>Free</td></tr>
+          <tr><th scope="row"><a href="https://github.com/dy/gpu-font">gpu-font</a><span class="detail">dy</span></th><td><span id="compared-fonts">–</span><span class="detail"><a href="./catalogs.html#included">Google Fonts, Debian, Fontshare and more</a></span></td><td><a href="./catalogs.html#my-fonts">Installed, folders</a></td><td>±<span data-metric="faceWeightError" data-format="number">–</span> weight, <span data-metric="faceItalic">–</span> italic</td><td id="compared-scripts">–</td><td>Browser, WebGPU or CPU</td><td>MIT</td><td>Free</td></tr>
         </tbody></table></div>
     </section>
 

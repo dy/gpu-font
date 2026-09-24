@@ -82,6 +82,8 @@ code { font: 400 var(--text-code)/1.6 var(--font-mono); color: var(--color-code)
 .panel-head { display: flex; align-items: center; justify-content: flex-end; gap: var(--space-1); min-height: var(--size-target); margin-bottom: var(--space-2); color: var(--color-muted); font-size: var(--text-small); }
 .panel-head > :first-child { margin-right: auto; }
 .panel-head h2 { font-size: inherit; }
+/* Each workbench column names itself, as Model input does: Source on the left, Matches on the right. */
+.column-title { margin-bottom: var(--space-2); color: var(--color-muted); font-size: var(--text-small); font-weight: 400; }
 .text-button { border: 0; background: var(--color-transparent); color: var(--color-muted); padding: var(--space-2); min-height: var(--size-target); font-size: var(--text-small); }
 .text-button:not(:disabled):hover { color: var(--color-accent); text-decoration: underline 1px currentColor; text-underline-offset: var(--link-offset); }
 .icon-button { display: grid; place-items: center; width: var(--size-target); height: var(--size-target); padding: 0; border: 0; background: var(--color-transparent); color: var(--color-muted); }
@@ -240,10 +242,10 @@ input, select { width: 100%; min-width: 0; padding: var(--space-2); min-height: 
 /* How it works ends on its measures: accuracy and speed side by side, bars only, on the split's two columns. */
 .metrics { display: grid; gap: var(--space-8) var(--space-14); margin-top: var(--space-6); }
 .metrics h3 { margin-bottom: var(--space-4); font: 400 var(--text-subtitle)/1.35 var(--font-display); color: var(--color-ink); }
-/* How does it compare: the table alone, one line a row; a narrow screen scrolls it. */
-#compare :is(th, td) { white-space: nowrap; text-align: left; }
-#compare :is(th, td):nth-child(3) { text-align: right; }
-#compare :is(th, td) + :is(th, td) { padding-left: var(--space-8); }
+/* How does it compare: the table alone; each finder names its owner and each count its sources. A narrow screen scrolls it. */
+#compare :is(th, td) { text-align: left; }
+#compare :is(th, td) + :is(th, td) { padding-left: var(--space-5); }
+#compare thead th { white-space: nowrap; }
 /* Questions: short ones, text only, two to a row. */
 .questions { display: grid; gap: var(--space-8) var(--space-14); }
 .qa { display: grid; align-content: start; gap: var(--space-3); color: var(--color-muted); font-size: var(--text-small); }
