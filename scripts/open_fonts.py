@@ -8,7 +8,7 @@ Files stay local under .data/fonts-open; bench/open-fonts.json pins the archives
 
     python scripts/open_fonts.py            download (verifying pins) and inventory
 """
-import hashlib, io, json, re, subprocess, sys, tarfile, zipfile
+import hashlib, io, json, re, subprocess, sys, tarfile, urllib.parse, zipfile
 from pathlib import Path, PurePosixPath
 from fontTools.agl import toUnicode
 from fontTools.ttLib import TTFont
@@ -85,6 +85,29 @@ SOURCES += [
      'files': ['https://github.com/kika/fixedsys/releases/download/v3.09.10/FSEX302.ttf']},
     {'source': 'ubuntu-titling', 'licence': 'OFL-1.1', 'url': 'https://deb.debian.org/debian/pool/main/f/fonts-ubuntu-title/fonts-ubuntu-title_0.3.orig.tar.gz', 'include': r'\.ttf$'},
 ]
+# Icons, music notation and emoji: open fonts whose glyphs are pictures, not letters. They are
+# inventoried for recognising symbols; text catalogues skip them as fonts without letters.
+MATERIAL = 'https://raw.githubusercontent.com/google/material-design-icons/27e9ef1dbeedc13d682fece4a58e1eda4cb0961a/variablefont/'
+BRAVURA = 'https://github.com/steinbergmedia/bravura/releases/download/bravura-1.482/'
+PETALUMA = 'https://raw.githubusercontent.com/steinbergmedia/petaluma/95d295f722128cfc8521c2899366615732896373/redist/'
+LELAND = 'https://raw.githubusercontent.com/MuseScoreFonts/Leland/d91cf5d21045e2c294541676ad386b7ffb4ac881/'
+SOURCES += [
+    {'source': 'material-symbols', 'licence': 'Apache-2.0', 'format': 'file', 'include': r'\.ttf$',
+     'files': [MATERIAL + urllib.parse.quote(f'MaterialSymbols{style}[FILL,GRAD,opsz,wght].ttf') for style in ('Outlined', 'Rounded', 'Sharp')]},
+    {'source': 'font-awesome', 'licence': 'OFL-1.1 (fonts; icons CC-BY-4.0)', 'include': r'\.otf$',
+     'url': 'https://github.com/FortAwesome/Font-Awesome/releases/download/7.3.1/fontawesome-free-7.3.1-desktop.zip'},
+    {'source': 'bootstrap-icons', 'licence': 'MIT', 'include': r'\.woff2$', 'url': 'https://github.com/twbs/icons/releases/download/v1.13.1/bootstrap-icons-1.13.1.zip'},
+    {'source': 'phosphor', 'licence': 'MIT', 'include': r'\.ttf$', 'url': 'https://registry.npmjs.org/@phosphor-icons/web/-/web-2.1.2.tgz'},
+    {'source': 'tabler-icons', 'licence': 'MIT', 'include': r'\.ttf$', 'url': 'https://registry.npmjs.org/@tabler/icons-webfont/-/icons-webfont-3.48.0.tgz'},
+    {'source': 'remix-icon', 'licence': 'Apache-2.0', 'include': r'\.ttf$', 'url': 'https://registry.npmjs.org/remixicon/-/remixicon-4.9.1.tgz'},
+    {'source': 'openmoji', 'licence': 'CC-BY-SA-4.0', 'include': r'OpenMoji-black-glyf\.ttf$', 'url': 'https://github.com/hfg-gmuend/openmoji/releases/download/17.0.0/openmoji-font.zip'},
+    {'source': 'smufl', 'licence': 'OFL-1.1', 'format': 'file', 'include': r'\.otf$', 'folder': 'bravura',
+     'files': [BRAVURA + name for name in ('Bravura.otf', 'BravuraText.otf', 'OFL.txt')]},
+    {'source': 'smufl', 'licence': 'OFL-1.1', 'format': 'file', 'include': r'\.otf$', 'folder': 'petaluma',
+     'files': [PETALUMA + name for name in ('otf/Petaluma.otf', 'otf/PetalumaScript.otf', 'otf/PetalumaText.otf', 'OFL.txt')]},
+    {'source': 'smufl', 'licence': 'OFL-1.1', 'format': 'file', 'include': r'\.otf$', 'folder': 'leland',
+     'files': [LELAND + name for name in ('Leland.otf', 'LelandText.otf')]},
+]
 # The League of Moveable Type: all 18 families are OFL-1.1. Eleven reach us through Google
 # Fonts; these are the other seven, as the GitHub organisation holds them.
 LEAGUE_REPOS = {'junction': 'fb73260e86dd301b383cf6cc9ca8e726ef806535', 'chunk': '12a243f3fb7c7a68844901023f7d95d6eaf14104',
@@ -98,8 +121,9 @@ SOURCES += [{'source': 'league-of-moveable-type', 'licence': 'OFL-1.1', 'include
             for repo, name, version in [('league-mono', 'LeagueMono', '2.300'), ('the-neue-black', 'TheNeueBlack', '1.007')]]
 # Families from open catalogues (Velvetyne, Collletttivo, Uncut, Font Library), after every source above:
 # pinned to their designers' repositories by scripts/open_releases.py, or a release file on a site.
-SOURCES += [{'source': row['source'], 'licence': row['licence'], 'url': row['url'], 'include': row['include'],
-             **({'format': row['format']} if row.get('format') else {}), **({'commit': row['commit']} if row.get('format') == 'git' else {})}
+SOURCES += [{'source': row['source'], 'licence': row['licence'], 'include': row['include'],
+             **{key: row[key] for key in ('url', 'files', 'format', 'folder') if key in row},
+             **({'commit': row['commit']} if row.get('format') == 'git' else {})}
             for row in json.loads((ROOT / 'bench/open-releases.json').read_text())['releases'] if row.get('include')]
 # Fontshare publishes its whole catalogue through a public API. Its font files carry
 # "false" as their family name, so names come from the catalogue instead.
@@ -159,7 +183,7 @@ def fetch(url, pinned, commit=None):
 def members(data, url, format=None):
     """(path, bytes) for every file in a zip, tar, cabinet or Debian archive, or the file itself."""
     if format == 'file':
-        yield PurePosixPath(url.split('?')[0]).name, data
+        yield urllib.parse.unquote(PurePosixPath(url.split('?')[0]).name), data  # MaterialSymbols[FILL,…].ttf, not %5B…
         return
     if format in ('cab', 'deb'):  # libarchive's bsdtar reads cabinet installers and a .deb's ar wrapper
         import tempfile
@@ -267,6 +291,18 @@ def split_collections(members):
             yield f"{PurePosixPath(name).with_suffix('')}-{index}{'.otf' if font.sfntVersion == 'OTTO' else '.ttf'}", out.getvalue()
 
 
+def decode_webfonts(members):
+    """WOFF and WOFF2 files are fonts compressed for browsers; each is decoded to the font it holds."""
+    from fontTools.ttLib import TTFont
+    for name, content in members:
+        if content[:4] not in (b'wOFF', b'wOF2'): yield name, content; continue
+        try:
+            font = TTFont(io.BytesIO(content)); font.flavor = None
+            out = io.BytesIO(); font.save(out)
+        except Exception: continue  # a damaged web font yields nothing
+        yield str(PurePosixPath(name).with_suffix('.otf' if font.sfntVersion == 'OTTO' else '.ttf')), out.getvalue()
+
+
 def one_format(members):
     """A style shipped as both Foo.otf and Foo.ttf is one face: the OpenType file is kept."""
     ranked = sorted(members, key=lambda pair: (PurePosixPath(pair[0]).suffix.lower() != '.otf', pair[0]))
@@ -365,15 +401,15 @@ def main():
                 key = f"{url}#{spec['commit']}" if 'commit' in spec else url
                 try:
                     data, digest = fetch(url, pins.get(key) or spec.get('sha256'), spec.get('commit'))
-                    wanted = one_format(split_collections((name, content) for name, content in members(data, url, spec.get('format'))
-                                                          if re.search(spec['include'], name, re.I) or LICENCE_NAMES.search(name)))
+                    wanted = one_format(decode_webfonts(split_collections((name, content) for name, content in members(data, url, spec.get('format'))
+                                                                          if re.search(spec['include'], name, re.I) or LICENCE_NAMES.search(name))))
                 except (OSError, ValueError, subprocess.CalledProcessError) as error:
                     # Curated sources fail loudly; one of Debian's hundreds of packages is reported and skipped.
                     if spec.get('format') != 'deb': raise
                     print(f'{url}: skipped ({type(error).__name__}: {error})'); continue
                 archive = {'source': spec['source'], 'url': key, 'sha256': digest, 'bytes': len(data), 'licence': spec['licence']}
                 archives.append(archive)
-                root = PurePosixPath(spec['source']) / ('' if 'files' in spec else Path(url).name.split('?')[0])
+                root = PurePosixPath(spec['source']) / (spec.get('folder') or ('' if 'files' in spec else Path(url).name.split('?')[0]))
                 for name, content in wanted:
                     keep_font = re.search(spec['include'], name, re.I) and is_font(content)
                     keep_licence = LICENCE_NAMES.search(name)

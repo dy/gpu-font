@@ -89,7 +89,8 @@
       },
       "work": {
         "status": "indexed",
-        "route": "pinned commits of the foundry's GitLab and GitHub repositories and its designers' own; bench/open-releases.json lists each family and every one left out"
+        "route": "pinned commits of the foundry's GitLab and GitHub repositories and its designers' own; bench/open-releases.json lists each family and every one left out",
+        "familiesIndexed": 3
       },
       "log": [
         {
@@ -212,7 +213,7 @@
       "work": {
         "status": "indexed",
         "route": "its own (non-Google) fonts from the public API, pinned to each npm release; a family its foundry publishes is taken from the foundry",
-        "familiesIndexed": 89
+        "familiesIndexed": 79
       },
       "log": [
         {
@@ -260,6 +261,34 @@
       "familiesAvailable": 2075,
       "availableUnit": "families",
       "availableNote": "families found in the 576 font packages of Debian's fonts section (sid, https://deb.debian.org/debian/dists/sid/main/binary-all/Packages.xz) by the inventory, 2026-09-24: 1849 taken from Debian, 171 carried by Google Fonts, 55 by their own releases"
+    },
+    {
+      "id": "github",
+      "name": "Open font repositories on GitHub",
+      "url": "https://github.com/search?q=license%3Aofl-1.1&type=repositories",
+      "kind": "platform",
+      "access": "files",
+      "licence": "per repository, as GitHub reads its licence file: every OFL repository, and those tagged font, fonts or typeface under another open licence",
+      "terms": {
+        "status": "permitted",
+        "checked": "2026-09-24",
+        "url": "https://github.com/robots.txt",
+        "quote": "We also provide an extensive API: https://docs.github.com",
+        "note": "Found through GitHub's search API, pinned through its API, and fetched as the release folder's font files at the pinned commit from raw.githubusercontent.com."
+      },
+      "work": {
+        "status": "inventoried",
+        "route": "scripts/github_fonts.py lists the repositories, open_releases.py pins each to a commit and its release folder, open_fonts.py takes each family unless a source earlier in its order has it"
+      },
+      "familiesAvailable": 11892,
+      "availableUnit": "families",
+      "availableNote": "repositories GitHub search returns for license:ofl-1.1 (not each a family), 2026-09-24",
+      "log": [
+        {
+          "date": "2026-09-24",
+          "event": "Started: 11,892 OFL repositories plus those tagged font, fonts or typeface under other open licences"
+        }
+      ]
     },
     {
       "id": "open-foundry",
@@ -408,7 +437,8 @@
       },
       "work": {
         "status": "indexed",
-        "route": "pinned official archive, inventoried like the Google corpus; built into a catalogue from those files"
+        "route": "pinned official archive, inventoried like the Google corpus; built into a catalogue from those files",
+        "familiesIndexed": 4
       },
       "log": [
         {
@@ -566,7 +596,8 @@
       },
       "work": {
         "status": "indexed",
-        "route": "pinned release, inventoried like the Google corpus; built into a catalogue from those files"
+        "route": "pinned release, inventoried like the Google corpus; built into a catalogue from those files",
+        "familiesIndexed": 3
       },
       "log": [
         {
@@ -592,7 +623,8 @@
       },
       "work": {
         "status": "indexed",
-        "route": "pinned release, inventoried like the Google corpus; built into a catalogue from those files"
+        "route": "pinned release, inventoried like the Google corpus; built into a catalogue from those files",
+        "familiesIndexed": 3
       },
       "log": [
         {
@@ -774,7 +806,8 @@
       },
       "work": {
         "status": "indexed",
-        "route": "pinned CTAN packages that carry OpenType or TrueType files"
+        "route": "pinned CTAN packages that carry OpenType or TrueType files",
+        "familiesIndexed": 4
       },
       "log": [
         {
@@ -828,7 +861,8 @@
       },
       "work": {
         "status": "indexed",
-        "route": "pinned release, inventoried like the Google corpus; built into a catalogue from those files"
+        "route": "pinned release, inventoried like the Google corpus; built into a catalogue from those files",
+        "familiesIndexed": 3
       },
       "log": [
         {
@@ -880,7 +914,8 @@
       },
       "work": {
         "status": "indexed",
-        "route": "pinned release, inventoried like the Google corpus; built into a catalogue from those files"
+        "route": "pinned release, inventoried like the Google corpus; built into a catalogue from those files",
+        "familiesIndexed": 1
       },
       "log": [
         {
@@ -906,7 +941,8 @@
       },
       "work": {
         "status": "indexed",
-        "route": "pinned release, inventoried like the Google corpus; built into a catalogue from those files"
+        "route": "pinned release, inventoried like the Google corpus; built into a catalogue from those files",
+        "familiesIndexed": 1
       },
       "log": [
         {
@@ -932,7 +968,8 @@
       },
       "work": {
         "status": "indexed",
-        "route": "pinned release, inventoried like the Google corpus; built into a catalogue from those files"
+        "route": "pinned release, inventoried like the Google corpus; built into a catalogue from those files",
+        "familiesIndexed": 1
       },
       "log": [
         {
@@ -984,7 +1021,8 @@
       },
       "work": {
         "status": "indexed",
-        "route": "pinned release, inventoried like the Google corpus; built into a catalogue from those files"
+        "route": "pinned release, inventoried like the Google corpus; built into a catalogue from those files",
+        "familiesIndexed": 1
       },
       "log": [
         {
@@ -1029,19 +1067,23 @@
       "url": "https://fonts.google.com/icons",
       "kind": "icons",
       "access": "files",
-      "licence": "Apache 2.0",
+      "licence": "Apache-2.0",
       "terms": {
         "status": "permitted",
         "checked": "2026-09-23"
       },
       "work": {
-        "status": "planned",
-        "route": "glyph catalogue"
+        "status": "inventoried",
+        "route": "pinned release; glyphs are pictures, not letters, so text catalogues skip it until recognition matches symbols"
       },
       "log": [
         {
           "date": "2026-09-23",
           "event": "Icon probe: 75% exact top-1 with the text encoder; needs glyph mode"
+        },
+        {
+          "date": "2026-09-24",
+          "event": "Font files pinned and inventoried"
         }
       ],
       "familiesAvailable": 2500,
@@ -1054,19 +1096,23 @@
       "url": "https://fontawesome.com/",
       "kind": "icons",
       "access": "files",
-      "licence": "OFL 1.1 (fonts), CC BY 4.0 (icons)",
+      "licence": "OFL-1.1 (fonts; icons CC-BY-4.0)",
       "terms": {
         "status": "permitted",
         "checked": "2026-09-23"
       },
       "work": {
-        "status": "planned",
-        "route": "glyph catalogue"
+        "status": "inventoried",
+        "route": "pinned release; glyphs are pictures, not letters, so text catalogues skip it until recognition matches symbols"
       },
       "log": [
         {
           "date": "2026-09-23",
           "event": "Used in the icon probe"
+        },
+        {
+          "date": "2026-09-24",
+          "event": "Font files pinned and inventoried"
         }
       ],
       "familiesAvailable": 1000,
@@ -1085,13 +1131,17 @@
         "checked": "2026-09-23"
       },
       "work": {
-        "status": "planned",
-        "route": "glyph catalogue"
+        "status": "inventoried",
+        "route": "pinned release; glyphs are pictures, not letters, so text catalogues skip it until recognition matches symbols"
       },
       "log": [
         {
           "date": "2026-09-23",
           "event": "Used in the icon probe"
+        },
+        {
+          "date": "2026-09-24",
+          "event": "Font files pinned and inventoried"
         }
       ],
       "familiesAvailable": 2000,
@@ -1110,13 +1160,17 @@
         "checked": "2026-09-23"
       },
       "work": {
-        "status": "planned",
-        "route": "glyph catalogue"
+        "status": "inventoried",
+        "route": "pinned release; glyphs are pictures, not letters, so text catalogues skip it until recognition matches symbols"
       },
       "log": [
         {
           "date": "2026-09-23",
           "event": "Used in the icon probe"
+        },
+        {
+          "date": "2026-09-24",
+          "event": "Font files pinned and inventoried"
         }
       ],
       "familiesAvailable": 1512,
@@ -1135,13 +1189,17 @@
         "checked": "2026-09-23"
       },
       "work": {
-        "status": "planned",
-        "route": "glyph catalogue"
+        "status": "inventoried",
+        "route": "pinned release; glyphs are pictures, not letters, so text catalogues skip it until recognition matches symbols"
       },
       "log": [
         {
           "date": "2026-09-23",
           "event": "Surveyed; ~6,200 icons"
+        },
+        {
+          "date": "2026-09-24",
+          "event": "Font files pinned and inventoried"
         }
       ],
       "familiesAvailable": 6220,
@@ -1154,19 +1212,23 @@
       "url": "https://remixicon.com/",
       "kind": "icons",
       "access": "files",
-      "licence": "Apache 2.0 (brand marks separate)",
+      "licence": "Apache-2.0",
       "terms": {
         "status": "permitted",
         "checked": "2026-09-23"
       },
       "work": {
-        "status": "planned",
-        "route": "glyph catalogue; check brand-mark licence"
+        "status": "inventoried",
+        "route": "pinned release; glyphs are pictures, not letters, so text catalogues skip it until recognition matches symbols"
       },
       "log": [
         {
           "date": "2026-09-23",
           "event": "Surveyed"
+        },
+        {
+          "date": "2026-09-24",
+          "event": "Font files pinned and inventoried"
         }
       ],
       "familiesAvailable": 3200,
@@ -1179,19 +1241,23 @@
       "url": "https://www.smufl.org/fonts/",
       "kind": "music",
       "access": "files",
-      "licence": "OFL 1.1; Gonville public domain",
+      "licence": "OFL-1.1 (Bravura, Petaluma, Leland)",
       "terms": {
         "status": "permitted",
         "checked": "2026-09-23"
       },
       "work": {
-        "status": "planned",
-        "route": "glyph catalogue"
+        "status": "inventoried",
+        "route": "pinned release; glyphs are pictures, not letters, so text catalogues skip it until recognition matches symbols"
       },
       "log": [
         {
           "date": "2026-09-23",
           "event": "Surveyed; notes and symbols never entered training"
+        },
+        {
+          "date": "2026-09-24",
+          "event": "Font files pinned and inventoried"
         }
       ],
       "familiesAvailable": 41,
@@ -1204,19 +1270,23 @@
       "url": "https://openmoji.org/",
       "kind": "icons",
       "access": "files",
-      "licence": "CC BY-SA 4.0",
+      "licence": "CC-BY-SA-4.0",
       "terms": {
         "status": "permitted",
         "checked": "2026-09-23"
       },
       "work": {
-        "status": "planned",
-        "route": "colour glyph catalogue"
+        "status": "inventoried",
+        "route": "pinned release; glyphs are pictures, not letters, so text catalogues skip it until recognition matches symbols"
       },
       "log": [
         {
           "date": "2026-09-23",
           "event": "Surveyed; colour fonts need a colour branch"
+        },
+        {
+          "date": "2026-09-24",
+          "event": "Font files pinned and inventoried"
         }
       ],
       "familiesAvailable": 4495,

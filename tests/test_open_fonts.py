@@ -7,7 +7,7 @@ from pathlib import Path
 from fontTools.fontBuilder import FontBuilder
 from fontTools.pens.ttGlyphPen import TTGlyphPen
 
-from scripts.open_fonts import MANIFEST, ROOT, colour_letters, debian_licences, family_name, is_font, members, name_key, one_format, split_collections, symbol_encoded
+from scripts.open_fonts import MANIFEST, ROOT, colour_letters, debian_licences, decode_webfonts, family_name, is_font, members, name_key, one_format, split_collections, symbol_encoded
 
 
 def build(folder, names, coloured=()):
@@ -105,6 +105,7 @@ class StoredFont(unittest.TestCase):
 class Members(unittest.TestCase):
     def test_a_loose_file_is_its_own_member_named_without_query(self):
         self.assertEqual(list(members(b'font', 'https://host/fonts/FSEX302.ttf?raw=1', 'file')), [('FSEX302.ttf', b'font')])
+        self.assertEqual(list(members(b'f', 'https://raw/x/Sym%5BFILL%2Cwght%5D.ttf', 'file')), [('Sym[FILL,wght].ttf', b'f')])
 
 
 class DebianPackage(unittest.TestCase):
@@ -162,6 +163,20 @@ class SplitCollections(unittest.TestCase):
             for index, (name, content) in enumerate(out[:2]):
                 path = Path(folder) / f'split-{index}.ttf'; path.write_bytes(content)
                 self.assertEqual(family_name(path), 'Test')
+
+
+class DecodeWebfonts(unittest.TestCase):
+    def test_a_web_font_becomes_the_font_it_compresses(self):
+        import io
+        from fontTools.ttLib import TTFont
+        with tempfile.TemporaryDirectory() as folder:
+            font = TTFont(build(folder, ['A', 'B'])); font.flavor = 'woff2'
+            packed = io.BytesIO(); font.save(packed)
+            out = list(decode_webfonts([('web/Icons.woff2', packed.getvalue()), ('x/Plain.ttf', b'\x00\x01\x00\x00'), ('web/Bad.woff2', b'wOF2 broken')]))
+            self.assertEqual([name for name, _ in out], ['web/Icons.ttf', 'x/Plain.ttf'])
+            path = Path(folder) / 'decoded.ttf'; path.write_bytes(out[0][1])
+            self.assertTrue(is_font(out[0][1]))
+            self.assertEqual(family_name(path), 'Test')
 
 
 class OneFormat(unittest.TestCase):
