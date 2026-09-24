@@ -1,84 +1,107 @@
 # gpu-font
 
-Find the font in an image, in your browser. A small neural network turns a crop of text into a style vector, then ranks the fonts of a catalog by similarity. It runs on WebGPU, or on the CPU without it.
+Find the font in an image, in your browser. Crop a line of text from a screenshot or a design and get the closest font families, with weight and style, from Google Fonts and other free catalogs.
 
-It is experimental. On rendered text in fonts it never saw, the right family is in the top five 87.3% of the time and first 68.6% (5–10 characters). Real screenshots are not measured yet. [How it was trained and measured](bench/style.md).
+[![A crop of "Quiet rivers flow" matched to Lora Regular, then Sumana](https://raw.githubusercontent.com/dy/gpu-font/main/og.png)](https://dy.github.io/gpu-font/)
 
-## What it does
+**[Try it](https://dy.github.io/gpu-font/)**
 
-- Crop a line of text from an image, pick a font sample, or draw letters.
-- Get the five closest families with their matched weight and style: Bold Italic, Light and so on.
-- Search Google Fonts (2,004 families, every weight and italic), Fontshare or Velvetyne, or open your own catalog JSON. New fonts need indexing, not retraining.
+- Runs on the user's device, on WebGPU or the CPU: no server, no API key, the image is never uploaded.
+- Names the face, not only the family: Bold Italic, Light and so on.
+- Searches 2,004 Google Fonts families, every weight and italic, or one of four other free catalogs, 3,593 families in all.
 - Families with identical letters fold into one row: IBM Plex Sans KR and IBM Plex Sans Arabic show under IBM Plex Sans.
 
-Not yet: hand-drawn letters, icons, symbols and emoji, and matching capitals when a catalog holds only lowercase (54% top five). The page's Goals section lists each aim and where it stands.
+It is experimental: on fonts it never saw in training, the right family is in the top five 87% of the time and first 69%.
 
-## Run the demo
-
-The page runs straight from the repository, as [GitHub Pages](https://dy.github.io/gpu-font/) serves it: no build and no font files. It reads the model and catalogs from `models/encoder/` and loads every font from Google Fonts.
+## Usage
 
 ```sh
-npm run demo          # http://localhost:4179
+npm install gpu-font
 ```
-
-`npm run demo:build` refreshes `site.json` (catalog list, checksums, measured figures) after the model or a catalog changes. WebGPU needs localhost or HTTPS.
-
-The repository holds scripts and JSON only. Fonts, images and PyTorch checkpoints stay in the ignored `.data/` and `*.pt` files; training and evaluation rebuild them ([corpus](bench/corpus.md), [style references](bench/style.md#reproduce), [sample fonts](bench/hundred.md)). Tested with Node 25.9.0 and Python 3.14.6:
-
-```sh
-npm ci
-npx playwright install chromium
-uv venv --python 3.14 .venv
-uv pip install --python .venv/bin/python -r requirements.txt
-```
-
-To use another Python, set `GPU_FONT_PYTHON=/absolute/path/to/python`.
-
-On the page:
-
-- Drag the crop to move it, its edges or corners to resize. Arrow keys move it, Shift + arrows resize, Home selects the whole image.
-- The pencil and eraser edit any source. ⌘Z or Ctrl+Z undoes a stroke.
-- Type in a match's preview to compare your own text.
-- The resolution menu (100% to 10%) shows how smaller text matches.
-- Download JSON exports the exact model input, embedding and ranking.
-
-## Use in code
 
 ```js
-import { createMatcher } from './src/match.mjs'
+import { createMatcher } from 'gpu-font'
 
-const matcher = await createMatcher('models/encoder/encoder.json', 'models/encoder/google-fonts.json')
+const matcher = await createMatcher()   // Google Fonts
 
-// imageData: an RGBA crop of one line of text
+// imageData: one line of text, such as canvas.getContext('2d').getImageData(x, y, width, height)
 const [best] = await matcher.match(imageData)
-console.log(best.face.family, best.score)
+
+best.face.family      // 'Playfair Display'
+best.face.styleName   // 'Regular'
+best.score            // 0.87
 ```
 
-`match` returns fonts best first, identical designs folded into one entry with their `siblings`, or `[]` when the crop holds no text. It uses WebGPU when available and the CPU otherwise. A catalog built for a different model is rejected.
+`match` returns families best first, or `[]` when the image holds no text. Each match has:
 
-The steps are separate modules if you need them: `prepareLine` (`src/line.mjs`) cuts the crop into up to three 128×48 windows, `src/network.mjs` and `src/network-gpu.mjs` run the network, and `src/catalog.mjs` ranks and folds.
+- `face`: the closest face: `family`, `styleName`, `weight` (100–900), `style` (`normal` or `italic`), and `sourceUrl` outside Google Fonts.
+- `score`: similarity from -1 to 1, higher is closer.
+- `siblings`: names of families with the same letters, folded into this one.
+
+`matcher.destroy()` releases the GPU.
+
+Without a bundler, import it from a CDN:
+
+```html
+<script type="module">
+  import { createMatcher } from 'https://cdn.jsdelivr.net/npm/gpu-font/src/match.mjs'
+</script>
+```
+
+In Node, pass raw RGBA pixels, for example from [sharp](https://sharp.pixelplumbing.com):
+
+```js
+import sharp from 'sharp'
+
+const { data, info } = await sharp('crop.png').ensureAlpha().raw().toBuffer({ resolveWithObject: true })
+const matches = await matcher.match({ data, width: info.width, height: info.height })
+```
 
 ## Catalogs
 
-A catalog is a JSON file of reference vectors, bound to the exact model that made them. Retraining the model means reindexing every catalog.
+A matcher searches one catalog. A catalog holds font names, links and style vectors, not font files: get the fonts from their source.
 
-- **Google Fonts**: every family except color, emoji and letterless ones, from Chromium renders of each face.
-- **Fontshare and Velvetyne**: built from captured previews. Only names, links and vectors are committed; the captures stay local.
-- Sources without verified permission (currently MyFonts and Adobe Fonts) are built locally and never shipped. `sources.html` shows each source's terms.
+```js
+import { createMatcher, catalogs } from 'gpu-font'
 
-## Test
-
-```sh
-npm test
-npm run test:demo     # with the demo running; needs a Chromium with WebGPU
+const matcher = await createMatcher(catalogs.fontshare)
 ```
 
-## More
+| `catalogs.` | Families | |
+|---|---:|---|
+| `google-fonts` (default) | 2,004 | [Google Fonts](https://fonts.google.com) |
+| `debian` | 1,509 | [Debian's font packages](https://packages.debian.org/sid/fonts/) |
+| `fontshare` | 39 | [Fontshare](https://www.fontshare.com) |
+| `collletttivo` | 17 | [Collletttivo](https://www.collletttivo.it) |
+| `other` | 24 | DejaVu, Bitstream Vera, Droid, D-DIN, Velvetyne and more |
 
-- [bench/style.md](bench/style.md): the current encoder, its benchmark and results.
-- [todo.md](todo.md): what's next. [research.md](research.md): background.
-- Earlier experiments, not shipped: [ten fonts](bench/ten.md), [a hundred fonts](bench/hundred.md), [weight and italic](bench/faces.md), [deskew](bench/preparation.md), [retrieval pilot](bench/report.md).
+A catalog built for this model also works from its URL: `createMatcher('https://example.com/my-catalog.json')`.
+
+## How good it is
+
+On crops of 5–10 characters from 300 Google Fonts families the model never saw in training ([method and full results](https://github.com/dy/gpu-font/blob/main/bench/style.md)):
+
+| | |
+|---|---:|
+| Right family in the top five | 87% |
+| Right family first | 69% |
+| Top five: Latin, other scripts, Chinese | 88%, 75%, 58% |
+| Weight of the matched face, 100–900 | off by 5 on average |
+| Italic or upright | 99% right |
+
+Those crops are rendered text; screenshots and photos are not measured yet. It does best on one line in one font, several letters, on a plain background.
+
+Not yet: hand-drawn letters, icons, symbols and emoji, and matching capitals when a catalog holds only lowercase (54% top five).
+
+## Speed and size
+
+- `createMatcher()` downloads about 6 MB, compressed: the model and the Google Fonts catalog. Debian's catalog adds 0.7 MB; the others are under 40 KB.
+- With WebGPU, a match takes about 0.1 s. Without it, it runs on the CPU: about 10 s in Chromium, 12–20 s in Node. All measured on an Apple M4 Max.
+
+## Development
+
+Running the demo, training the model and building catalogs: [development.md](https://github.com/dy/gpu-font/blob/main/development.md).
 
 ## License
 
-[MIT](LICENSE). This work is also offered in the spirit described by the [Krishnized license](https://github.com/krishnized/license), which does not alter the MIT terms.
+[MIT](https://github.com/dy/gpu-font/blob/main/LICENSE). This work is also offered in the spirit described by the [Krishnized license](https://github.com/krishnized/license), which does not alter the MIT terms.
