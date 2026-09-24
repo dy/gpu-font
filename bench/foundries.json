@@ -400,6 +400,363 @@
       "availableNote": "No official figure published (DaFont is on the do-not-fetch list and its FAQ states no total). Third-party citations range widely, from ~30,000 to 80,000; 'almost 40,000 fonts' is the figure most consistently repeated across independent review sources circa 2024-2025. (search result: https://www.dafont.com/), 2026-09-24"
     },
     {
+      "id": "free-faces",
+      "name": "Free Faces",
+      "url": "https://freefaces.gallery/",
+      "kind": "aggregator",
+      "access": "files",
+      "licence": "per family (links to designers)",
+      "terms": {
+        "checked": "2026-09-24",
+        "status": "restricted",
+        "url": "https://freefaces.gallery/robots.txt",
+        "quote": "User-agent: *\nDisallow: /",
+        "note": "robots.txt also names ClaudeBot, anthropic-ai and other AI agents individually."
+      },
+      "work": {
+        "status": "excluded",
+        "reason": "robots.txt excludes all crawlers and AI agents by name; its families are reached at their designers' releases"
+      },
+      "log": [
+        {
+          "date": "2026-09-24",
+          "event": "robots.txt read; not crawled"
+        }
+      ]
+    },
+    {
+      "id": "fontesk",
+      "name": "Fontesk",
+      "url": "https://fontesk.com/",
+      "kind": "aggregator",
+      "access": "files",
+      "licence": "per family",
+      "terms": {
+        "checked": "2026-09-24",
+        "status": "ban",
+        "url": "https://fontesk.com/terms-of-service/",
+        "quote": "Engaging in any data mining, data harvesting, data extracting or any other similar activity in relation to our Site is strictly prohibited."
+      },
+      "work": {
+        "status": "excluded",
+        "reason": "terms ban data mining and extraction"
+      },
+      "log": [
+        {
+          "date": "2026-09-24",
+          "event": "Terms read; not crawled"
+        }
+      ]
+    },
+    {
+      "id": "fontspace",
+      "name": "FontSpace",
+      "url": "https://www.fontspace.com/",
+      "kind": "aggregator",
+      "access": "files",
+      "licence": "per font, tagged by uploaders; mostly personal-use freeware",
+      "terms": {
+        "checked": "2026-09-24",
+        "status": "restricted",
+        "url": "https://www.fontspace.com/robots.txt",
+        "quote": "User-agent: *\nDisallow: /download/\nDisallow: /get/"
+      },
+      "work": {
+        "status": "excluded",
+        "reason": "robots.txt disallows the download paths for every crawler"
+      },
+      "familiesAvailable": 160000,
+      "availableUnit": "fonts",
+      "availableNote": "\"160,000+ free fonts\" stated on https://www.fontspace.com/, 2026-09-24",
+      "log": [
+        {
+          "date": "2026-09-24",
+          "event": "robots.txt read; download paths disallowed"
+        }
+      ]
+    },
+    {
+      "id": "1001-fonts",
+      "name": "1001 Fonts",
+      "url": "https://www.1001fonts.com/",
+      "kind": "aggregator",
+      "access": "files",
+      "licence": "per font, mixed",
+      "terms": {
+        "checked": "2026-09-24",
+        "status": "restricted",
+        "url": "https://www.1001fonts.com/robots.txt",
+        "quote": "User-agent: *\nDisallow: /download/"
+      },
+      "work": {
+        "status": "excluded",
+        "reason": "robots.txt disallows the download path for every crawler"
+      },
+      "familiesAvailable": 62916,
+      "availableUnit": "fonts",
+      "availableNote": "fonts shown on https://www.1001fonts.com/, 2026-09-24",
+      "log": [
+        {
+          "date": "2026-09-24",
+          "event": "robots.txt read; download path disallowed"
+        }
+      ]
+    },
+    {
+      "id": "befonts",
+      "name": "Befonts",
+      "url": "https://befonts.com/",
+      "kind": "aggregator",
+      "access": "files",
+      "licence": "per font, mixed",
+      "terms": {
+        "checked": "2026-09-24",
+        "status": "ban",
+        "url": "https://befonts.com/terms-of-use",
+        "quote": "scrape, harvest, copy, mirror, republish, or distribute Site content at scale without prior written permission"
+      },
+      "work": {
+        "status": "excluded",
+        "reason": "terms ban scraping"
+      },
+      "familiesAvailable": 87000,
+      "availableUnit": "fonts",
+      "availableNote": "\"87,000+ free fonts\" stated on https://befonts.com/, 2026-09-24",
+      "log": [
+        {
+          "date": "2026-09-24",
+          "event": "Terms read; not crawled"
+        }
+      ]
+    },
+    {
+      "id": "fonts-arena",
+      "name": "Fonts Arena",
+      "url": "https://fontsarena.com/",
+      "kind": "aggregator",
+      "access": "files",
+      "licence": "per font, mixed",
+      "terms": {
+        "checked": "2026-09-24",
+        "status": "not-verified",
+        "note": "No terms page. A sampled page offers a Linotype commercial face as personal-use free, which suggests mislabelled redistribution."
+      },
+      "work": {
+        "status": "excluded",
+        "reason": "offers commercial fonts under free labels; provenance cannot be trusted"
+      },
+      "log": [
+        {
+          "date": "2026-09-24",
+          "event": "Surveyed; excluded for mislabelled commercial fonts"
+        }
+      ]
+    },
+    {
+      "id": "pixel-surplus",
+      "name": "Pixel Surplus free fonts",
+      "url": "https://pixelsurplus.com/collections/free-fonts",
+      "kind": "retailer",
+      "access": "files",
+      "licence": "free fonts for personal use only; commercial use needs a paid licence",
+      "terms": {
+        "checked": "2026-09-24",
+        "status": "restricted",
+        "url": "https://pixelsurplus.com/pages/licensing",
+        "quote": "Free goods available for personal use are limited to projects that will not be related with any business or monetary gain."
+      },
+      "work": {
+        "status": "excluded",
+        "reason": "personal-use licence only, delivered through a checkout"
+      },
+      "log": [
+        {
+          "date": "2026-09-24",
+          "event": "Licence read; not open"
+        }
+      ]
+    },
+    {
+      "id": "bye-bye-binary",
+      "name": "Bye Bye Binary (Typothèque BBB)",
+      "url": "https://typotheque.genderfluid.space/",
+      "kind": "foundry",
+      "access": "files",
+      "licence": "per family: CUTE, OFL and others",
+      "terms": {
+        "checked": "2026-09-24",
+        "status": "permitted",
+        "note": "Downloads are free; use follows each family's licence, CUTE for many, which sets conditions of use."
+      },
+      "work": {
+        "status": "planned",
+        "route": "each family's repository, with its licence recorded"
+      },
+      "log": [
+        {
+          "date": "2026-09-24",
+          "event": "Surveyed: about 50 families, licences per family"
+        }
+      ]
+    },
+    {
+      "id": "tunera",
+      "name": "Tunera Type Foundry",
+      "url": "https://www.tunera.xyz/",
+      "kind": "foundry",
+      "access": "files",
+      "licence": "OFL-1.1 (as stated publicly)",
+      "terms": {
+        "checked": "2026-09-24",
+        "status": "not-verified",
+        "note": "Site unreachable on 2026-09-24. Two families (Tanklager, Nyght Serif) already come from their repositories through Uncut."
+      },
+      "work": {
+        "status": "planned",
+        "route": "the foundry's repositories"
+      },
+      "log": [
+        {
+          "date": "2026-09-24",
+          "event": "Surveyed; site unreachable, to re-check"
+        }
+      ]
+    },
+    {
+      "id": "luuse",
+      "name": "Luuse",
+      "url": "https://www.luuse.io/",
+      "kind": "foundry",
+      "access": "files",
+      "licence": "not stated",
+      "terms": {
+        "checked": "2026-09-24",
+        "status": "none-found",
+        "note": "The collective disbanded in 2025; its font archive is marked as in progress and states no licence."
+      },
+      "work": {
+        "status": "planned",
+        "route": "once the archive states its licences"
+      },
+      "log": [
+        {
+          "date": "2026-09-24",
+          "event": "Surveyed; no licence stated yet"
+        }
+      ]
+    },
+    {
+      "id": "republish",
+      "name": "Republi.sh",
+      "url": "https://republi.sh/",
+      "kind": "foundry",
+      "access": "files",
+      "licence": "OFL-1.1",
+      "terms": {
+        "checked": "2026-09-24",
+        "status": "permitted",
+        "note": "Vietnamese open-source fonts, self-hosted; no restriction in robots.txt."
+      },
+      "work": {
+        "status": "planned",
+        "route": "pinned downloads"
+      },
+      "familiesAvailable": 5,
+      "availableUnit": "families",
+      "availableNote": "catalogue on https://republi.sh/, 2026-09-24",
+      "log": [
+        {
+          "date": "2026-09-24",
+          "event": "Surveyed: 5 families"
+        }
+      ]
+    },
+    {
+      "id": "fonderie-download",
+      "name": "fonderie.download",
+      "url": "https://fonderie.download/",
+      "kind": "foundry",
+      "access": "files",
+      "licence": "WTFPL",
+      "terms": {
+        "checked": "2026-09-24",
+        "status": "permitted",
+        "url": "https://fonderie.download/",
+        "quote": "All our fonts are released under the WTFPL license"
+      },
+      "work": {
+        "status": "planned",
+        "route": "pinned downloads; Garamon(d/t) already comes through Uncut"
+      },
+      "familiesAvailable": 7,
+      "availableUnit": "families",
+      "availableNote": "catalogue on https://fonderie.download/, 2026-09-24",
+      "log": [
+        {
+          "date": "2026-09-24",
+          "event": "Surveyed: 7 families"
+        }
+      ]
+    },
+    {
+      "id": "use-and-modify",
+      "name": "Use & Modify",
+      "url": "https://usemodify.com/",
+      "kind": "aggregator",
+      "access": "files",
+      "licence": "per family, curated to open licences",
+      "terms": {
+        "checked": "2026-09-24",
+        "status": "none-found",
+        "note": "A link directory; files live with their designers, each licence checked there."
+      },
+      "work": {
+        "status": "planned",
+        "route": "each family resolved to its designer's release, like Uncut"
+      },
+      "familiesAvailable": 400,
+      "availableUnit": "families",
+      "availableNote": "about 400 typefaces listed on https://usemodify.com/, 2026-09-24",
+      "log": [
+        {
+          "date": "2026-09-24",
+          "event": "Surveyed: about 400 typefaces"
+        }
+      ]
+    },
+    {
+      "id": "fedora",
+      "name": "Fedora font packages",
+      "url": "https://fedoraproject.org/wiki/Category:Packaged_fonts",
+      "kind": "platform",
+      "access": "files",
+      "licence": "per package, all approved by Fedora Legal",
+      "terms": {
+        "status": "restricted",
+        "checked": "2026-09-24",
+        "url": "https://dl.fedoraproject.org/robots.txt",
+        "quote": "User-agent: ClaudeBot\nDisallow: /",
+        "note": "The package mirror disallows every Claude agent (ClaudeBot, Claude-User, Claude-Web, anthropic-ai) and other AI crawlers. Not fetched, and not taken from third-party mirrors either; most of its fonts come through Debian."
+      },
+      "work": {
+        "status": "excluded",
+        "reason": "the package mirror's robots.txt excludes Claude by name"
+      },
+      "familiesAvailable": 215,
+      "availableUnit": "fonts",
+      "availableNote": "font packages listed on Fedora's Packaged fonts category, 2026-09-24",
+      "log": [
+        {
+          "date": "2026-09-24",
+          "event": "Surveyed: about 215 font packages"
+        },
+        {
+          "date": "2026-09-24",
+          "event": "Mirror robots.txt read: Claude agents disallowed; not fetched"
+        }
+      ]
+    },
+    {
       "id": "fonts-in-use",
       "name": "Fonts In Use",
       "url": "https://fontsinuse.com/",
