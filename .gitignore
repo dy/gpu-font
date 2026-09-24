@@ -21,3 +21,4 @@ raw/
 # The link preview is the one image the site serves; scripts/og.mjs renders it.
 !/og.png
 *.pt
+/promo
