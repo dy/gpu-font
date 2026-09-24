@@ -82,3 +82,23 @@ test('automatic deskew recovers both baseline directions and agrees with the ora
     assert.equal(prepareLine(base,{deskew:true,sampler:'windows'}).angle,0)
   }
 })
+
+test('a crop that touches the text prepares as one with a margin, regions mapped back to the crop', () => {
+  const boxes = [[0, 0, 7, 20], [13, 0, 7, 20], [45, 0, 8, 20], [60, 0, 8, 20], [95, 0, 8, 20]]
+  const tight = fixture(103, 20, boxes), margin = fixture(123, 40, boxes.map(([x, y, w, h]) => [x + 10, y + 10, w, h]))
+  for (const sampler of ['groups', 'windows']) {
+    const a = prepareLine(tight, { sampler }), b = prepareLine(margin, { sampler })
+    assert.deepEqual(a.windows.map(w => w.pixels), b.windows.map(w => w.pixels), sampler)
+    for (const [i, window] of a.windows.entries()) {
+      const r = b.windows[i].rect, x = Math.max(0, r.x - 10), y = Math.max(0, r.y - 10)
+      assert.deepEqual(window.rect, { x, y, width: Math.min(tight.width, r.x - 10 + r.width) - x, height: Math.min(tight.height, r.y - 10 + r.height) - y }, sampler)
+      if (window.polygon) assert.deepEqual(window.polygon, b.windows[i].polygon.map(([px, py]) => [px - 10, py - 10]), sampler)
+    }
+  }
+  // Word regions given in the crop's coordinates move with it into the frame.
+  const regions = [[[0, 0], [20, 0], [20, 20], [0, 20]], [[45, 0], [68, 0], [68, 20], [45, 20]]]
+  const a = prepareLine(tight, { regions }), b = prepareLine(margin, { regions: regions.map(points => points.map(([x, y]) => [x + 10, y + 10])) })
+  assert.equal(a.windows.length, 2)
+  assert.deepEqual(a.windows.map(w => w.pixels), b.windows.map(w => w.pixels))
+  assert.deepEqual(a.windows.map(w => w.polygon), b.windows.map(w => w.polygon.map(([x, y]) => [x - 10, y - 10])))
+})

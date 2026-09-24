@@ -28,7 +28,9 @@ Each batch holds 32 faces and, for each, one of its sixteen nearest designs, two
 
 `train/style_bench.py` froze the evaluation before any style result: 9,409 Chromium canvas renders of static instances (so optical sizing cannot change a face), each random 5–10 characters: 300 families seen in training, the 301 development families that select checkpoints, and the 300 final families held out as a swapped catalog. Default, bold and italic faces; lower, upper, title and mixed case; one other-script query per face where the family has one; 1,426 degraded (75% size, JPEG 70) and 1,405 dark-mode copies; and a Hanzi slice of 406 queries. A separate synthetic slice of 2,214 sketches applies the training sketch transform, with fixed seeds, to clean Latin development and test renders at 32 px and above: it bounds real drawings from above.
 
-Its dependency pins changed once, when `scripts/corpus-prepare.mjs` changed only its input validation: preparation output was verified identical and the queries and pixels are unchanged (the `repins` entry in each manifest).
+Its dependency pins have moved only when preparation output was verified identical on every stored render: once for `scripts/corpus-prepare.mjs` (input validation), then for `src/prepare.mjs`, `src/input.mjs` and `src/line.mjs` (crop edges, below). Each move is a `repins` entry in the manifest, with its evidence.
+
+A model trained on every family cannot be read on held-out families, so the same planner builds a catalog benchmark (`--name catalog`, its own text seed) over all 2,004 families: a validation role of 6,852 queries (default face, Latin lower and title, a degraded copy, one native line) that selects checkpoints of whole-catalog runs, and a test role of 20,851 queries in the frozen recipe, read once per released model. `train.style final`, `breakdown` and `deploy` measure a run on the benchmark its training roles allow.
 
 Every query searches per-face references of all families: lowercase and uppercase Latin lines, plus two lines per other script, averaged per face. A result counts when the true family, or a twin of it, is in the top five.
 
@@ -80,6 +82,25 @@ Two continuations of 10,000 steps from that model, same learning rate, compared 
 
 The view loss taught case but cost everything else, so it stays off (`--pairs`). `widen` then duplicates each channel and divides its outgoing weights, so the 3.04M-parameter encoder starts with the exact function of the plain continuation (outputs within 3.8e-6), and trains 20,000 steps on a fresh data seed (4.5 hours on a busy M4 Max). Development top-five rose from 84.5% to 88.0% and top-one from 63.3% to 68.5%, still climbing at the end; training views went from 41% to 45% right. The held-out test, run once, is in the table above.
 
+## Third step: references at three sizes
+
+The whole-catalog model read once on the catalog test with 48 px references, 20,851 crops, 91.7% top-five (twins counted), splits by text size:
+
+| Size | 16 px | 20 px | 24 px | 32 px | 40 px | 48 px | 64 px |
+|---|---:|---:|---:|---:|---:|---:|---:|
+| Top-5 | 82.3% | 89.8% | 91.9% | 94.6% | 94.2% | 95.0% | 94.2% |
+
+From 32 px up the model is at 95%; the gap is small text, and a wider encoder sees the same eight-pixel x-height. The other side of the match is the reference: every catalog vector came from lines drawn at 48 px, and a 16 px crop upscaled to the model's window looks unlike a 48 px line shrunk to it. The same lines drawn at 24 and 16 px too, all averaged into the face's vector (`src/references.mjs` SIZES, shared by the page's My fonts and the repository's renderer), on catalog validation with the exported model:
+
+| References | All | First | 16 px | 20 px | 24 px | 32 px | 64 px | Degraded |
+|---|---:|---:|---:|---:|---:|---:|---:|---:|
+| 48 px | 90.4% | 72.0% | 77.4% | 87.9% | 90.8% | 95.4% | 93.3% | 85.8% |
+| 48 + 24 | 91.4% | 74.8% | 79.0% | 90.1% | 92.3% | 95.8% | 93.3% | 86.6% |
+| **48 + 24 + 16** | **92.5%** | 74.3% | **83.7%** | 91.8% | 93.6% | 95.1% | 93.2% | 88.5% |
+| 24 + 16 | 91.6% | 72.8% | 83.7% | 91.2% | 92.2% | 94.4% | 91.6% | 88.0% |
+
+Two points of top-five with no training and no download cost: the catalog still holds one vector per face and case. Large sizes need the 48 px lines and small ones the 16 px lines; 32 px added (92.4%) or 32 and 20 px added (92.4%, first 75.3%) gain nothing more for a proportionally slower build. Building a catalog draws three times as many lines, in the page as in the repository.
+
 ## By requirement
 
 `train.style breakdown` splits the held-out test families by the requirements ([report](style-breakdown.json)), with the same script-aware search and twin credit.
@@ -103,7 +124,32 @@ A catalog built from one case or from Latin alone, like most collected previews,
 
 The Google Fonts catalog lists every face: 8,132 entries with 23,234 Chromium references (lowercase, uppercase and each script), a style name (Thin to Black, Italic), script coverage, and, on default faces, per-script twins: families whose letters in that script are closer than 95% of one face's re-renders (0.0148). Encoder (4,232,607 bytes, with heads), catalog (6,404,810) and required modules total 10,675,579 bytes, 5,348,002 with Brotli ([runtime check](style-runtime.json)); CPU and Metal agree with PyTorch within 3.8e-6, and a warm 128×48 window takes 2.6 ms on Metal. The wider encoder costs 2.25 MB more, 1.1 MB with Brotli. Chromium parses and decodes the catalog in 44 ms (39 ms warm) and ranks it in 6 ms. Search skips fonts that cannot draw the script the heads detect; a catalog with none of them ranks every font by style instead.
 
-The page shows one row per design. Families that are twins in the crop's script fold into one row, named by the member whose name begins the others (IBM Plex Sans KR, Arabic and the Thai-derived Anuphan under IBM Plex Sans), scored by its best member and listing the rest; the saved result keeps every family. Twins are judged per script because shared Latin letters say nothing about the rest: Noto Sans Arabic and Noto Kufi Arabic are Latin twins but different Arabic designs. The display threshold is looser than the benchmark's median twins on purpose: a fold hides nothing, since folded names stay listed, while accuracy credits only the stricter pairs.
+The page shows one row per family. Kinds of one family that are twins in the crop's script, one name holding the other's first word, fold into one row, named by the member whose name sits inside the others (IBM Plex Sans KR and Arabic under IBM Plex Sans), scored by its best member and listing the rest; a different font that borrows the letters, like Parastoo with Lora's Latin or Anuphan with IBM Plex Sans's, keeps its own row; the saved result keeps every family. Twins are judged per script because shared Latin letters say nothing about the rest: Noto Sans Arabic and Noto Kufi Arabic are Latin twins but different Arabic designs. The display threshold is looser than the benchmark's median twins on purpose: a fold hides nothing, since folded names stay listed, while accuracy credits only the stricter pairs.
+
+## Crop edges
+
+Two things at a crop's edge changed the answer; preparation (`src/prepare.mjs`, `src/input.mjs`, `src/line.mjs`) now removes both.
+
+- **A border caught in the crop.** A UI line along an edge counted as text: it shrank the letters in the model's input and, when faint, set their contrast, so Josefin Sans Light read as ExtraLight. Preparation now ignores a line that lies along an edge (at most two pixels in), is one to three pixels thick, inks 90% of its length, has background between it and the text (other borders aside) and runs past the text at both ends. Drawn onto 941 benchmark renders with 4 and 8 pixel margins, a black, gray or faint line on any side, on the edge or one pixel in, now prepares exactly as the render without it every time, and a box one pixel inside the crop 99.1–100% of the time; before, never. Letters never qualify: on 74,224 renders cropped exactly to their ink, clean and inverted, the rule changes nothing. A Devanagari headline fails the background test, since its stems hang from it; a tight crop's l or h fails the run-past test.
+- **A crop that touches the text.** Preparation keeps one pixel of background around the text, which a touching crop does not have, so its letters came out 4–10% larger than in any training view. Such a crop is now framed in two pixels of its own background first. On catalog validation cropped to the ink, the whole-catalog model (`catalog-30k`, not yet shipped) went from 88.48% to 90.00% twin top-five and from 4.4 to 3.6 mean weight error (CSS weight units), against 90.83% and 3.5 with margins. What remains is the degradation applied after cropping and the background estimate: the median of the crop's outer ring leaves the paper when text covers half of that ring, as in 5% of crops cut exactly to the ink.
+
+Every stored benchmark render prepares byte-for-byte as before (bench, catalog and sketch packs), so each manifest's pins moved with the evidence in its `repins`.
+
+## Quantization
+
+`catalog-30k` on catalog validation, weights or catalog vectors rounded per row to b bits (twin top-five / twin top-one):
+
+| Bits | Encoder weights | Catalog vectors |
+|---|---:|---:|
+| float | 90.78 / 72.02 | 90.78 / 72.02 |
+| 8 (shipped) | 90.54 / 72.01 | 90.76 / 71.89 |
+| 6 | 90.38 / 72.02 | 90.85 / 71.89 |
+| 5 | 87.93 / 68.62 | |
+| 4 | 76.43 / 53.24 | 90.78 / 71.89 |
+
+Weights hold at 6 bits and break at 5. Catalog vectors lose nothing measurable at 4 bits, and they are 3.3 MB of the Google catalog's 3.5 MB gzipped download.
+
+So the exporters now write 6-bit weights (`train.ten_model.export(bits=6)`, a `bits` field per layer) and 4-bit catalog vectors (`int4-base64`, 64 bytes a row), and both readers still take the 8-bit files. Reported accuracy now comes from the exported encoder, which the page runs, and the catalog is built with it: the float checkpoint scored 0.24 points above the shipped 8-bit model on this set.
 
 ## Limits and negative results
 
@@ -125,18 +171,31 @@ node scripts/python.mjs -m train.style_bench sketches
 node scripts/python.mjs -m train.style_catalog                  # FreeType references
 node scripts/python.mjs -m train.style_bench instances --references --workers 6
 node scripts/style-references-browser.mjs                       # Chromium references
-node scripts/python.mjs -m train.style train --run evaluation-large --large --lr 3e-4 --warm .data/encoder/large-refine/best.pt --steps 30000 --seed 20260923
+node scripts/python.mjs -m train.style train --run evaluation-large --architecture font-conv64-128-192-256-256-v4 --lr 3e-4 --warm .data/encoder/large-refine/best.pt --steps 30000 --seed 20260923
 node scripts/python.mjs -m train.style compare --run evaluation-large
-node scripts/python.mjs -m train.style train --run plain-10k --large --lr 1.5e-4 --warm .data/style/evaluation-large/best.pt --steps 10000 --seed 20260923
-node scripts/python.mjs -m train.style train --run pairs-10k --large --lr 1.5e-4 --warm .data/style/evaluation-large/best.pt --steps 10000 --seed 20260923 --pairs 1   # rejected
-node scripts/python.mjs -m train.style train --run wider-20k --wider --lr 2e-4 --warm .data/style/plain-10k/best.pt --steps 20000 --seed 20260924
-node scripts/python.mjs -m train.style final --run wider-20k,evaluation-large,evaluation-small --source browser
-node scripts/python.mjs -m train.style export --run wider-20k
+node scripts/python.mjs -m train.style train --run plain-10k --architecture font-conv64-128-192-256-256-v4 --lr 1.5e-4 --warm .data/style/evaluation-large/best.pt --steps 10000 --seed 20260923
+node scripts/python.mjs -m train.style train --run pairs-10k --architecture font-conv64-128-192-256-256-v4 --lr 1.5e-4 --warm .data/style/evaluation-large/best.pt --steps 10000 --seed 20260923 --pairs 1   # rejected
+node scripts/python.mjs -m train.style train --run wider-20k --architecture font-conv96-192-288-384-384-v5 --lr 2e-4 --warm .data/style/plain-10k/best.pt --steps 20000 --seed 20260924
+node scripts/python.mjs -m train.style export --run wider-20k               # the exported encoder is what final, breakdown and the catalog measure
 node scripts/python.mjs -m train.style catalog --run wider-20k --source browser
-node scripts/python.mjs -m train.style deploy --run wider-20k
+node scripts/python.mjs -m train.style final --run wider-20k,evaluation-large,evaluation-small --source browser
 node scripts/python.mjs -m train.style breakdown --run wider-20k            # by length, style, case and script
+node scripts/python.mjs -m train.style deploy --run wider-20k
 node scripts/python.mjs -m scripts.preview_swap                             # catalog swap on collected previews
+node scripts/python.mjs -m train.style_bench plan --name catalog            # catalog benchmark: every family, fresh text
+node scripts/python.mjs -m train.style_bench instances --name catalog --workers 6
+node scripts/python.mjs -m train.style_bench render --name catalog
+node scripts/python.mjs -m train.style_bench pack --name catalog
+node scripts/python.mjs -m train.style train --run wider-plain-10k --architecture font-conv96-192-288-384-384-v5 --lr 1.5e-4 --warm .data/style/wider-20k/best.pt --steps 10000 --seed 20260925
+node scripts/python.mjs -m train.style train --run catalog-30k --architecture font-conv96-192-288-384-384-v5 --roles train,development,test --select catalog:validation --lr 1.5e-4 --warm .data/style/wider-plain-10k/best.pt --steps 30000
+node scripts/python.mjs -m train.style export --run catalog-30k             # 6-bit weights
+node scripts/python.mjs -m train.style catalog --run catalog-30k --source browser   # 4-bit vectors, references at three sizes
+node scripts/python.mjs -m train.style final --run catalog-30k --source browser     # read on the catalog test: the run trained on every family
+node scripts/python.mjs -m train.style breakdown --run catalog-30k
+node scripts/python.mjs -m train.style deploy --run catalog-30k
+node scripts/catalog-files.mjs                                              # every other catalog, with the shipped encoder
 node checks/encoder.mjs models/encoder/encoder.json models/encoder/google-fonts.json bench/style-runtime.json
+node scripts/demo-build.mjs
 ```
 
 Preview catalogs are recompiled with `scripts.preview_catalog` after any encoder change; the compiler indexes faces whose captures are complete and reports the rest, so a live collection no longer stops the build.

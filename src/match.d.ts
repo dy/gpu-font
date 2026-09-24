@@ -30,7 +30,7 @@ export interface Match {
   score: number
   /** The family's closest face. */
   face: Face
-  /** Families with identical letters, folded into this one. */
+  /** Same-named families with identical letters, folded into this one. */
   siblings: string[]
 }
 
@@ -58,7 +58,7 @@ export interface Encoder {
 }
 
 /** The catalogs this package ships, by id. */
-export const catalogs: Record<'google-fonts' | 'debian' | 'fontshare' | 'collletttivo' | 'other', URL>
+export const catalogs: Record<'google-fonts' | 'debian' | 'other', URL>
 
 /** Loads a catalog (Google Fonts by default) and the model it was built with. */
 export function createMatcher(catalog?: string | URL, model?: string | URL): Promise<Matcher>

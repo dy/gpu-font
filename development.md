@@ -29,7 +29,7 @@ On the page:
 - Drag the crop to move it, its edges or corners to resize. Arrow keys move it, Shift + arrows resize, Home selects the whole image.
 - The pencil and eraser edit any source. ⌘Z or Ctrl+Z undoes a stroke.
 - Type in a match's preview to compare your own text.
-- The resolution menu (100% to 10%) shows how smaller text matches.
+- Under Model, the resolution menu (100% to 10%) shows how smaller text matches.
 - Download JSON exports the exact model input, embedding and ranking.
 
 ## Modules

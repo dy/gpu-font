@@ -1,8 +1,10 @@
 import assert from 'node:assert/strict'
 import { readFile, writeFile, mkdir } from 'node:fs/promises'
+import { openSync, readSync, closeSync } from 'node:fs'
 import { execFileSync } from 'node:child_process'
 import { chromium } from 'playwright'
-import { readCatalog, matchCatalog, foldTwins, embedWindows, unit } from '../src/catalog.mjs'
+import { readCatalog, matchCatalog, foldTwins, embedWindows, unit, rowBytes, unpack } from '../src/catalog.mjs'
+import { packVectors } from '../src/references.mjs'
 import { readNetwork, inferCPU } from '../src/network.mjs'
 
 const read = async p => JSON.parse(await readFile(p, 'utf8'))
@@ -12,6 +14,8 @@ const data = await read('site.json'), artifact = await read(data.model), model =
 const expectedIntro = [`Finds the closest of ${data.families.toLocaleString('en-US')} font families, from ${data.catalogs.length} catalogs, to any line of text.`,
   `Experimental: on rendered text in fonts it never saw, it names the right family first ${(data.metrics.top1 * 100).toFixed(1)}% of the time.`]
 const intro = page => page.locator('#intro-lead, #intro-scope').allTextContents()
+// The verdict: one pill per label, category, then an optional fine class, posture and script as a word, not an ISO 15924 code.
+const verdictPills = async page => (await page.locator('#result-summary > .pill').allTextContents()).join('|'), VERDICT = /^[^|]+(\|[^|]+)?\|(Upright|Italic)\|Latin$/
 const base = `http://127.0.0.1:${process.env.PORT || 4179}`
 execFileSync(process.execPath, ['scripts/python.mjs', '-m', 'scripts.encoder_reference', 'models/encoder/encoder.json', '.data/encoder/runtime-reference.json'], { stdio: 'inherit' })
 const reference = await read('.data/encoder/runtime-reference.json')
@@ -47,7 +51,7 @@ async function verify(page, value, option) {
   const script = value.verdict?.script?.[0]?.label, drawable = new Set(catalog.faces.filter(f => !script || !Array.isArray(f.scripts) || f.scripts.includes(script)).map(f => f.familyId)).size
   assert.equal(value.matches.length, drawable || catalog.families)
   if (artifact.heads) assert.ok(value.verdict && script, 'Encoders with heads report a typed verdict')
-  // The page shows one row per design (families with identical letters in the crop's script folded); the saved result keeps every family.
+  // The page shows one row per family (its kinds with identical letters in the crop's script folded); the saved result keeps every family.
   const shown = foldTwins(value.matches, catalog, { script, limit: 5 })
   assert.equal(await page.locator('.result').count(), Math.min(5, shown.length))
   assert.deepEqual(await page.locator('.result-score').allTextContents(), shown.map(m => m.score.toFixed(3)))
@@ -55,8 +59,9 @@ async function verify(page, value, option) {
   const canvases = await page.locator('#normalized canvas').evaluateAll(cs => cs.map(c => ({ width: c.width, height: c.height, pixels: Array.from(c.getContext('2d').getImageData(0, 0, c.width, c.height).data).filter((_, i) => i % 4 === 0) })))
   assert.deepEqual(canvases, value.inputs.map(i => ({ width: i.width, height: i.height, pixels: i.pixels.map(p => Math.round(p * 255)) })))
   assert.equal(await page.locator('#input-count').textContent(), `${value.inputs.length} window${value.inputs.length === 1 ? '' : 's'}`)
+  assert.match(await verdictPills(page), VERDICT, 'A catalog switch keeps the verdict pills')
   const ms = value.milliseconds.toFixed(1)
-  assert.equal(await page.locator('#detection-time').textContent(), value.cachedEmbedding ? `ranked in ${ms}ms` : `${ms}ms`, 'A catalog switch says it only re-ranked')
+  assert.equal(await page.locator('#detection-time').textContent(), value.cachedEmbedding ? `Ranked in ${ms}ms` : `${ms}ms`, 'A catalog switch says it only re-ranked')
 }
 try {
   const page = await browser.newPage({ viewport: { width: 1440, height: 1000 } })
@@ -75,6 +80,7 @@ try {
   assert.equal(await page.locator('header .header-icon[aria-label="GitHub repository"]').count(), 1)
   assert.equal(await page.locator('header #backend').getAttribute('class'), 'sr-only')
   assert.equal(await page.locator('footer [aria-label="GitHub repository"]').count(), 0)
+  assert.deepEqual([await page.locator('footer .credit').textContent(), await page.locator('footer .credit a').getAttribute('href')], ['Made by dy.', 'https://github.com/dy'])
   assert.equal(await page.locator('footer .footer-license').textContent(), 'MIT')
   assert.equal(await page.locator('footer .footer-license').getAttribute('rel'), 'license')
   assert.equal(await page.locator('footer .footer-license').getAttribute('href'), 'https://github.com/dy/gpu-font/blob/main/LICENSE')
@@ -85,38 +91,39 @@ try {
     const rect = element.getBoundingClientRect(); return rect.top + rect.height / 2
   }))
   assert.ok(Math.abs(footerCenters[0] - footerCenters[1]) < 1)
-  assert.equal(await page.locator('.source-panel > .panel-head > #sample').count(), 1)
+  assert.equal(await page.locator('.source-body > .panel-head > #sample').count(), 1)
   assert.equal(await page.locator('#clear').count(), 0, 'The workbench keeps a source; there is no close')
   // Every text grey meets WCAG AA on every ground it sits on.
   const contrast = await page.evaluate(() => {
     const c = document.createElement('canvas').getContext('2d', { willReadFrequently: true }), style = getComputedStyle(document.documentElement)
     const lum = token => { c.fillStyle = style.getPropertyValue(token); c.fillRect(0, 0, 1, 1); const rgb = [...c.getImageData(0, 0, 1, 1).data].slice(0, 3).map(v => { v /= 255; return v <= .04045 ? v / 12.92 : ((v + .055) / 1.055) ** 2.4 }); return rgb[0] * .2126 + rgb[1] * .7152 + rgb[2] * .0722 }
-    return [['--color-faint', '--color-paper'], ['--color-faint', '--color-well'], ['--color-faint', '--color-surface'], ['--color-muted', '--color-well'], ['--color-code', '--color-well']].map(([a, b]) => ({ pair: [a, b], ratio: (Math.max(lum(a), lum(b)) + .05) / (Math.min(lum(a), lum(b)) + .05) }))
+    return [['--color-muted', '--color-paper'], ['--color-muted', '--color-well'], ['--color-muted', '--color-surface'], ['--color-ink', '--color-well']].map(([a, b]) => ({ pair: [a, b], ratio: (Math.max(lum(a), lum(b)) + .05) / (Math.min(lum(a), lum(b)) + .05) }))
   })
   assert.ok(contrast.every(c => c.ratio >= 4.5), JSON.stringify(contrast))
-  // Links, popovers and code follow the tokens.
+  // Links and popovers follow the tokens.
   assert.deepEqual(await page.evaluate(() => [...new Set([...document.querySelectorAll('.popover')].map(p => getComputedStyle(p).borderRadius))]), ['6px'], 'Popovers share one radius')
-  assert.equal(await page.locator('.explanation-copy a, .related a').evaluateAll(links => new Set(links.map(a => getComputedStyle(a).textDecorationColor)).size), 1, 'Prose and footer links share one underline')
-  assert.ok(await page.locator('.code .tok-k').count() > 0 && await page.locator('.code .tok-c').count() > 0, 'The code block is highlighted')
-  // How it works and How to use: each heading with its text under it, its figure beside them from the heading's top.
+  assert.equal(await page.locator('.explanation-copy a, .credit a').evaluateAll(links => new Set(links.map(a => getComputedStyle(a).textDecorationColor)).size), 1, 'Prose and footer links share one underline')
+  // How it works: its heading with its text under it, its figure beside them from the heading's top.
   const splits = await page.locator('.split').evaluateAll(blocks => blocks.map(block => { const [heading, text, figure] = [...block.children], [h, t, f] = [heading, text, figure].map(e => e.getBoundingClientRect())
     return [heading.textContent, h.bottom <= t.top && f.left >= t.right && Math.abs(f.top - h.top) < 1] }))
-  assert.deepEqual(splits, ['How it works', 'How to use'].map(heading => [heading, true]), 'Split layout')
-  // How it works ends on accuracy and speed side by side, bars without text, on the split's columns.
-  const measures = await page.locator('#how-it-works .metrics > div').evaluateAll(cols => cols.map(c => [c.id, Math.round(c.getBoundingClientRect().left), Math.round(c.getBoundingClientRect().top), c.querySelectorAll('p').length]))
-  const [text, facts] = await page.locator('#how-it-works .split > :nth-child(2), #how-it-works .split > :nth-child(3)').evaluateAll(e => e.map(x => Math.round(x.getBoundingClientRect().left)))
-  assert.deepEqual(measures.map(([id, left, top, prose]) => [id, left, top === measures[0][2], prose]), [['how-accurate', text, true, 0], ['how-fast', facts, true, 0]], 'Accuracy and speed sit in How it works, side by side')
-  // How does it compare is its table alone; Goals are gone, answered by the questions; How to use follows them.
+  assert.deepEqual(splits, [['How it works', true]], 'Split layout')
+  // How it works: the text with the model's facts under it; accuracy over speed beside them, bars without text.
+  const measures = await page.locator('#how-it-works .metrics > div').evaluateAll(cols => cols.map(c => { const r = c.getBoundingClientRect(); return [c.id, Math.round(r.left), Math.round(r.top), Math.round(r.bottom), c.querySelectorAll('p').length] }))
+  const [text, copy, facts, figure] = await page.locator('#how-it-works :is(.split > :nth-child(2), .explanation-copy, .facts, .split > :nth-child(3))').evaluateAll(e => e.map(x => x.getBoundingClientRect()).map(r => ({ left: Math.round(r.left), top: Math.round(r.top), bottom: Math.round(r.bottom) })))
+  assert.deepEqual(measures.map(([id, left, , , prose]) => [id, left, prose]), [['how-accurate', figure.left, 0], ['how-fast', figure.left, 0]], 'Accuracy and speed sit in the right column of How it works')
+  assert.ok(measures[1][2] >= measures[0][3], 'Speed sits under accuracy')
+  assert.ok(facts.left === text.left && facts.top >= copy.bottom, 'The model\'s facts sit under the text')
+  // How does it compare is its table alone and follows the questions; Goals are gone, answered by the questions; the API lives in the README.
   assert.deepEqual(await page.locator('#compare').evaluate(s => [...s.children].map(e => e.tagName)), ['H2', 'DIV'])
-  assert.equal(await page.locator('#faq + #how-to-use + #compare').count(), 1, 'How to use follows the questions; the comparison follows How to use')
+  assert.equal(await page.locator('#faq + #compare').count(), 1, 'The comparison follows the questions')
   assert.equal(await page.locator('#inspiration, .goals').count(), 0)
-  // The How to use sample runs as printed: its import becomes a dynamic import, its log a return, on the page's own crop.
-  const sample = (await page.locator('#how-to-use .code').textContent()).replace(/^import \{([^}]*)\} from ('[^']*')/m, 'const {$1} = await import($2)').replace(/console\.log\((.*)\)\s*$/, 'return [$1]')
-  const [family, score] = await page.evaluate(async code => {
+  // The README's usage sample runs as printed, on the page's own crop: its package import becomes a dynamic import of the module.
+  const usage = (await readFile('README.md', 'utf8')).match(/```js\n([^`]*)```/)[1].replace(/^import \{([^}]*)\} from 'gpu-font'/m, "const {$1} = await import('./src/match.mjs')")
+  const [family, styleName, score] = await page.evaluate(async code => {
     const source = document.getElementById('source'), imageData = source.getContext('2d').getImageData(0, 0, source.width, source.height)
-    return new (async () => {}).constructor('imageData', code)(imageData)
-  }, sample)
-  assert.ok(typeof family === 'string' && family && Number.isFinite(score), `The How to use sample runs: ${family}, ${score}`)
+    return new (async () => {}).constructor('imageData', `${code}\nreturn [best.face.family, best.face.styleName, best.score]`)(imageData)
+  }, usage)
+  assert.ok(family && styleName && Number.isFinite(score), `The README sample runs: ${family} ${styleName}, ${score}`)
   // The other questions flow in two columns, each a heading over its answer, text only.
   const questions = await page.locator('.questions > .qa').evaluateAll(items => items.map(q => [q.children[0].tagName, q.children[1].tagName, Math.round(q.getBoundingClientRect().left), q.children.length]))
   assert.ok(questions.length >= 7 && questions.every(([h, p, , count]) => h === 'H3' && p === 'P' && count === 2) && new Set(questions.map(q => q[2])).size === 2, JSON.stringify(questions))
@@ -127,61 +134,114 @@ try {
   const terms = new Map((await read('bench/foundries.json')).sources.map(source => [source.id, source.terms?.status]))
   // A grouped catalog (Other) is cleared only when every source in it is.
   assert.deepEqual(data.catalogs.filter(option => !(option.sources ?? [option.id]).every(id => ['permitted', 'none-found'].includes(terms.get(id)))).map(option => option.id), [], 'Every shipped catalog has cleared terms')
-  assert.equal(data.catalogs.at(-1).id, 'other', 'Small sources are searched together as Other, last in the menu'); assert.ok(data.catalogs.every(c => c.sources || c.families >= 10))
+  assert.equal(data.catalogs.at(-1).id, 'other', 'Small sources are searched together as Other, last in the menu'); assert.ok(data.catalogs.every(c => c.sources || c.families >= 100))
   // Nothing heavy ships: fonts come from Google Fonts, and the page asks its own origin for no font or image.
   const own = new URL(base).host, fetched = await page.evaluate(() => performance.getEntriesByType('resource').map(r => r.name))
   assert.deepEqual(fetched.filter(u => new URL(u).host === own && /\.(ttf|otf|woff2?|png|jpe?g|webp)(\?|$)/.test(u)), [], 'No font or image is served by the site')
   assert.ok(fetched.some(u => u.startsWith('https://fonts.googleapis.com/css2?family=Lora')), 'Faces are requested from Google Fonts')
   assert.ok(await page.evaluate(() => document.fonts.check('16px Inter') && [...document.fonts].some(f => f.family.replaceAll('"', '') === 'Lora' && f.status === 'loaded')), 'Google Fonts faces load')
-  // Facts about the run sit under the model input; facts about the model sit with How it works; nothing is folded away.
-  assert.deepEqual(await page.locator('#model-input .input-meta').evaluate(row => [...row.children].map(e => e.id)), ['result-summary', 'detection-time'], 'Under the model input: what the crop was detected as, then its time')
-  assert.equal(await page.locator('.results-panel .results-foot > #more-matches + #save').count(), 1, 'The export sits with the matches it exports')
+  // The run's input windows fold under Model, closed at first, with their outlines on the preview. The time stays on
+  // Model's row, on the right; the JSON export sits on More matches' row, on the right.
+  assert.equal(await page.locator('.results-column > .column-head + #result-summary.input-meta').count(), 1, 'Under Matches: what the crop was detected as')
+  const endsRow = (selector, row) => page.locator(selector).evaluate((e, row) => { const box = e.closest(row).getBoundingClientRect(), own = e.getBoundingClientRect(); return own.width > 0 && Math.abs(own.right - box.right) < 1 && own.top >= box.top && own.bottom <= box.bottom }, row)
+  assert.equal(await page.locator('.source-body > #model-details > summary > .input-time:last-child > svg + #detection-time').count(), 1, 'Model’s row holds the time, after a clock')
+  assert.ok(await endsRow('#detection-time', 'summary'), 'The time ends Model’s row, folded')
+  assert.deepEqual(await page.locator('.results-panel .results-foot > *').evaluateAll(es => es.map(e => e.id)), ['more-matches', 'save'], 'Under the matches: More matches, then JSON')
+  assert.ok(await endsRow('#save', '.results-foot'), 'JSON ends More matches’ row')
+  const outlines = () => page.locator('#input-regions').evaluate(e => getComputedStyle(e).display)
+  assert.deepEqual([await page.locator('#model-details').evaluate(d => d.open), await page.locator('#model-input').isVisible(), await outlines()], [false, false, 'none'], 'Model is folded, with the outlines')
+  await page.locator('#model-details > summary').click()
+  assert.deepEqual([await page.locator('#model-details').evaluate(d => d.open), await page.locator('#model-input').isVisible(), await outlines()], [true, true, 'block'], 'Model unfolds, with the outlines')
   assert.deepEqual(await page.locator('#save').evaluate(b => [b.textContent, b.getAttribute('aria-label'), !!b.querySelector('svg')]), ['JSON', 'Download JSON', true], 'An icon and JSON; its name says what it does')
-  assert.match(await page.locator('#result-summary').textContent(), /^[^·]+, (upright|italic), Latin$/, 'The verdict is a comma list; its script a word, not an ISO 15924 code')
+  assert.match(await verdictPills(page), VERDICT, 'The verdict is one pill per label')
   assert.equal(await page.locator('#how-it-works .facts #parameters, #how-it-works .facts #device, #how-it-works .facts #catalog-size').count(), 3)
   assert.doesNotMatch(await page.locator('main').innerText(), /·/, 'Lists read with commas, not middle dots')
   assert.equal(await page.locator('details.about, #about').count(), 0)
   assert.deepEqual(await page.locator('.site-nav a').evaluateAll(links => links.map(a => [a.getAttribute('href'), a.textContent])), [['./catalogs.html', 'Catalogs']])
-  // Catalogs page: the searched catalogs as site.json ships them, then one row per other
-  // ledger entry; a ban or restriction always shows its quoted clause and where it was read; held-locally families never read as coverage.
+  // Catalogs page: one Sources table. The catalogs a search covers as site.json ships them, each downloadable; then the
+  // sources not searched, grouped. Each group folds open into its sources, sorted by the chosen column inside it. A ban or
+  // restriction always shows its quoted clause and where it was read; held-locally families never read as coverage.
   const ledgerData = await read('bench/foundries.json'), sourcesPage = await browser.newPage()
   await sourcesPage.goto(`${base}/catalogs.html`)
-  // Icon sets stay in the ledger but off the page: they are glyph collections, not fonts to find.
-  const others = ledgerData.sources.filter(s => !data.catalogs.some(c => (c.sources ?? [c.id]).includes(s.id)) && s.kind !== 'icons')
-  await sourcesPage.waitForFunction(n => document.querySelectorAll('#sources tbody tr').length === n, others.length)
-  // Included and Not included are plain titled tables, one after the other, both shown.
-  assert.deepEqual(await sourcesPage.locator('#included > h2, #sources > h2').allTextContents(), ['Included', 'Not included'])
-  assert.equal(await sourcesPage.locator('[role="tab"], [role="tabpanel"]').count(), 0)
-  const includedWidths = await sourcesPage.locator('#included thead th').evaluateAll(t => t.map(e => Math.round(e.getBoundingClientRect().width)))
-  // Sortable by any column: Families sorts by number, largest first, then reverses; sources without a count stay last.
-  const families = sourcesPage.locator('#sources').getByRole('button', { name: 'Families' }), familyColumn = () => sourcesPage.locator('#sources tbody tr').evaluateAll(rows => rows.map(r => r.lastElementChild.textContent))
-  // Approximate sizes a source advertises read ≈N; worked counts read exactly.
-  await families.click()
-  const size = s => s.work.familiesIndexed ?? s.work.familiesInventoried ?? s.familiesAvailable, shown = s => size(s) == null ? null : (s.work.familiesIndexed ?? s.work.familiesInventoried) != null ? size(s).toLocaleString('en-US') : `≈${size(s).toLocaleString('en-US')}${(s.availableUnit ?? 'families') === 'families' ? '' : ` ${s.availableUnit}`}`
-  const counted = others.filter(s => size(s) != null).toSorted((a, b) => size(b) - size(a) || a.name.localeCompare(b.name))
-  assert.deepEqual((await familyColumn()).slice(0, counted.length), counted.map(shown)); assert.ok((await familyColumn()).slice(counted.length).every(t => t === '–'))
-  assert.equal(await sourcesPage.locator('#sources th[aria-sort]').evaluate(th => [th.textContent, th.getAttribute('aria-sort')].join()), 'Families,descending')
-  // Fixed layout: sorting never moves a column, and both tables share the same widths; Source is as wide as the longest names need.
+  await sourcesPage.waitForFunction(n => document.querySelectorAll('#sources tbody tr').length >= n, data.catalogs.length + 1)
+  assert.equal(await sourcesPage.locator('#sources > h2').textContent(), 'Sources')
+  assert.equal(await sourcesPage.locator('#sources .sources-table, [role="tab"]').count(), 1, 'One table, no tabs')
+  const table = () => sourcesPage.locator('#sources tbody tr').evaluateAll(rows => rows.map(r => ({ id: r.id, member: r.classList.contains('member-row'), group: !!r.querySelector('.fold'), families: [...r.children[4].querySelectorAll(':scope > :not(.json-link)')].map(e => e.textContent).join(' '), json: r.children[4].querySelector('a[download]')?.getAttribute('href') ?? null })))
+  // Folded, the table lists the shipped catalogs in site.json's order, each with its JSON under its family count, then the unsearched groups.
+  const folded = await table()
+  assert.deepEqual(folded.slice(0, data.catalogs.length).map(r => [r.id, r.families, r.json]), data.catalogs.map(c => [c.id, c.families.toLocaleString('en-US'), c.file]))
+  assert.ok(folded.slice(data.catalogs.length).every(r => r.group && !r.json && !r.member), 'After the catalogs come the unsearched groups, folded')
+  // Unfolded, Other lists exactly the sources it groups, and the unsearched groups together hold every other source but icon sets.
+  for (const id of folded.filter(r => r.group).map(r => r.id)) await sourcesPage.locator(`#${id} .fold`).click()
+  const open = await table(), groupOf = new Map()
+  let current = null
+  for (const row of open) row.member ? groupOf.set(row.id, current) : (current = row.id)
+  assert.deepEqual(open.filter(r => groupOf.get(r.id) === 'other').map(r => r.id).toSorted(), data.catalogs.find(c => c.id === 'other').sources.toSorted())
+  const unsearched = ledgerData.sources.filter(s => !data.catalogs.some(c => (c.sources ?? [c.id]).includes(s.id)) && s.kind !== 'icons')
+  assert.deepEqual(open.filter(r => r.member && groupOf.get(r.id) !== 'other').map(r => r.id).toSorted(), unsearched.map(s => s.id).toSorted(), 'Every unsearched source sits in one group; icon sets stay off the page')
+  assert.ok(open.every(r => !r.member || !r.json), 'Only whole catalogs download')
+  // Sortable by any column inside each group: Families sorts by number, largest first, then reverses; sources without a
+  // count stay last. Approximate sizes a source advertises read ≈N; worked counts read exactly. Sorting moves no column.
+  const size = s => s.work.familiesIndexed ?? s.work.familiesInventoried ?? s.familiesAvailable, shown = s => size(s) == null ? '–' : (s.work.familiesIndexed ?? s.work.familiesInventoried) != null ? size(s).toLocaleString('en-US') : `≈${size(s).toLocaleString('en-US')}${(s.availableUnit ?? 'families') === 'families' ? '' : ` ${s.availableUnit}`}`
+  const commercial = unsearched.filter(s => groupOf.get(s.id) === 'commercial')
+  const byFamilies = dir => commercial.toSorted((a, b) => (size(a) == null) - (size(b) == null) || dir * ((size(a) ?? 0) - (size(b) ?? 0)) || a.name.localeCompare(b.name)).map(shown)
+  const order = async () => (await table()).filter(r => groupOf.get(r.id) === 'commercial').map(r => r.families)
   const widths = () => sourcesPage.locator('#sources thead th').evaluateAll(t => t.map(e => Math.round(e.getBoundingClientRect().width)))
-  // Included adds a JSON column; Source, Terms, Licence and Families keep their widths across both tables, Status gives way.
-  const before = await widths(), shared = w => [w[0], w[1], w[2], w[4]]
-  assert.deepEqual(shared(before), shared(includedWidths)); assert.equal(includedWidths.length, before.length + 1); assert.ok(before[0] > before[3], 'Source is wider than Status')
-  await families.click()
-  assert.deepEqual((await familyColumn()).slice(0, counted.length), counted.toSorted((a, b) => size(a) - size(b) || a.name.localeCompare(b.name)).map(shown))
-  assert.deepEqual(await widths(), before)
-  await sourcesPage.locator('#sources').getByRole('button', { name: 'Source' }).click()
-  assert.deepEqual(await sourcesPage.locator('#sources tbody th').allTextContents(), others.map(s => s.name).toSorted((a, b) => a.toLowerCase() < b.toLowerCase() ? -1 : a.toLowerCase() > b.toLowerCase() ? 1 : a.localeCompare(b)))
+  const before = await widths(); assert.ok(Math.max(...before.slice(1, 4)) - Math.min(...before.slice(1, 4)) <= 1, 'Terms, Licence and Status are equally wide')
+  assert.equal(await sourcesPage.locator('#sources th[aria-sort]').evaluate(th => [th.textContent, th.getAttribute('aria-sort')].join()), 'Families,descending')
+  assert.deepEqual(await order(), byFamilies(-1))
+  await sourcesPage.locator('#sources').getByRole('button', { name: 'Families' }).click()
+  assert.deepEqual(await order(), byFamilies(1)); assert.deepEqual(await widths(), before)
   // Tables end on their last row, with no rule under it.
   assert.deepEqual(await sourcesPage.locator('.sources-table tbody tr:last-child > *').evaluateAll(cells => [...new Set(cells.map(c => getComputedStyle(c).borderBottomStyle))]), ['none'])
-  // Included: every shipped catalog, largest first, with the families and faces it searches; Other names its sources.
-  const ledgerName = id => ledgerData.sources.find(s => s.id === id).name, rowName = c => c.sources ? c.name : ledgerName(c.id)
-  const faces = c => `${c.faces.toLocaleString('en-US')} ${c.faces === 1 ? 'face' : 'faces'}`
-  assert.deepEqual(await sourcesPage.locator('#included tbody tr').evaluateAll(rows => rows.map(r => [r.id, r.children[4].textContent, r.querySelector('td .detail').textContent, r.querySelector('th .detail')?.textContent ?? null, r.lastElementChild.querySelector('a[download]')?.getAttribute('href')])),
-    data.catalogs.toSorted((a, b) => b.families - a.families || rowName(a).localeCompare(rowName(b))).map(c => [c.id, c.families.toLocaleString('en-US'), faces(c), c.sources ? c.sources.map(ledgerName).join(', ') : null, c.file]))
-  assert.equal(await sourcesPage.locator('#sources a[download]').count(), 0, 'Only shipped catalogs download')
   assert.equal(await sourcesPage.locator('.site-nav [aria-current="page"]').textContent(), 'Catalogs')
-  assert.ok(await sourcesPage.locator('[data-terms="ban"], [data-terms="restricted"]').evaluateAll(marks => marks.every(m => { const d = m.closest('td').querySelector('details'); return d?.querySelector('blockquote')?.textContent && /^https?:/.test(d.querySelector('a')?.href) })), 'Every ban shows its clause and source')
+  assert.ok(await sourcesPage.locator('[data-terms="ban"], [data-terms="restricted"]').evaluateAll(marks => marks.every(m => { const td = m.closest('td'); return td.querySelector('blockquote')?.textContent && /^https?:/.test(td.querySelector('.checked a')?.href) })), 'Every ban shows its clause and source')
   assert.equal(await sourcesPage.locator('.held').evaluateAll(held => held.filter(h => !h.textContent.endsWith('held locally, not shipped')).length), 0)
+  // One pill everywhere: the verdict and a match's face share one look, in the secondary grey the sources table uses.
+  const look = ['backgroundColor', 'color', 'borderRadius', 'fontSize', 'lineHeight', 'paddingLeft']
+  const pills = await page.locator('#result-summary > .pill, .result .font-style').evaluateAll((es, look) => es.map(e => look.map(k => getComputedStyle(e)[k])), look), [allowed] = pills
+  assert.ok(pills.length > 5); for (const pill of pills) assert.deepEqual(pill, allowed)
+  assert.equal(await page.evaluate(() => { const pill = document.createElement('span'); pill.className = 'pill'; document.body.append(pill); const display = getComputedStyle(pill).display; pill.remove(); return display }), 'none', 'A face without a name shows no empty pill')
+  // The sources table has two text sizes: each cell's leading word or phrase, and small text for everything under it.
+  assert.deepEqual(await sourcesPage.locator('#sources tbody :is(th > a:not([download]), th > .fold, .cell-main), #sources tbody :is(.json-link, .detail, .held, blockquote, .checked)').evaluateAll(es => [...new Set(es.map(e => getComputedStyle(e).fontSize))].sort()), ['13px', '16px'])
+  assert.equal(await sourcesPage.locator('#sources .pill').count(), 0, 'Terms read as plain words, not pills')
+  // Each lead is one whole line, in ink: at full width no lead is cut, and at the narrowest the table keeps every terms
+  // and status word and every count. Every note shows in full; only the group rows fold.
+  const leads = () => sourcesPage.locator('#sources .cell-main').evaluateAll(es => es.map(e => e.querySelector('span') ?? e).map(e => ({ text: e.textContent, cut: e.scrollWidth > e.clientWidth + .5, column: e.closest('td').cellIndex, height: Math.round(e.closest('.cell-main').getBoundingClientRect().height), color: getComputedStyle(e.closest('.cell-main')).color })))
+  const full = await leads()
+  assert.deepEqual(full.filter(l => l.cut).map(l => l.text), [], 'At full width every lead fits its column')
+  assert.deepEqual([...new Set(full.map(l => l.height))].length, 1, 'Every lead is one line')
+  assert.deepEqual([...new Set(full.map(l => l.color))], [await sourcesPage.locator('#sources tbody th').first().evaluate(e => getComputedStyle(e).color)], 'Every lead is ink, folding or not')
+  await sourcesPage.setViewportSize({ width: 360, height: 720 })
+  assert.deepEqual((await leads()).filter(l => l.cut && l.column !== 2).map(l => l.text), [], 'Narrow, the table scrolls and keeps every terms and status word whole')
+  await sourcesPage.setViewportSize({ width: 1280, height: 720 })
+  assert.equal(await sourcesPage.locator('#sources :is(details, summary)').count(), 0, 'Notes show unfolded')
+  // A licence splits without loss or repetition: the lead is the ledger's text, or its start with the rest under it;
+  // only a lead cut mid-clause (…) repeats the whole text under it.
+  const licences = new Map(ledgerData.sources.map(s => [s.id, s.licence]))
+  for (const [id, lead, rest] of await sourcesPage.locator('#sources tbody tr:not(.group-row)').evaluateAll(rows => rows.map(r => [r.id, ...[...r.children[2].children].map(e => e.textContent)]))) {
+    const text = licences.get(id)
+    if (!text) { assert.equal(lead, '–', id); continue }
+    const upper = s => s.replace(/^./, c => c.toUpperCase())
+    if (rest == null) assert.equal(lead, upper(text), id)
+    else if (lead.endsWith('…')) assert.ok(rest === text && text.startsWith(lead.slice(0, -1)), id)
+    else assert.ok(upper(text).startsWith(lead) && text.endsWith(rest) && text.slice(lead.length, text.length - rest.length).trim().replace(/^[,:;]$/, '') === '', `${id}: ${lead} | ${rest}`)
+  }
+  // Source names link the way matched fonts do, with the same underline, and read as the name alone, without an arrow.
+  const linkLook = es => [...new Set(es.map(e => ['color', 'textDecorationLine', 'textDecorationColor', 'textUnderlineOffset'].map(k => getComputedStyle(e)[k]).join()))]
+  const [matchLink] = await page.locator('.result .font-name a').evaluateAll(linkLook)
+  assert.deepEqual(await sourcesPage.locator('#sources tbody th > a:not([download])').evaluateAll(linkLook), [matchLink])
+  assert.equal(await sourcesPage.locator('#sources tbody th > a:not([download])').evaluateAll(links => links.filter(a => /[↗↓]/.test(a.textContent)).length), 0, 'Source names carry no arrow')
+  // A catalog's size, the JSON download, sits under its family count, flush right; a group's arrow stands before its
+  // name, in the indent, so the name lines up with its sources' names.
+  assert.ok(await sourcesPage.locator('#sources tbody td:has(> .json-link)').evaluateAll(tds => tds.every(td => { const count = td.querySelector('.cell-main').getBoundingClientRect(), json = td.querySelector('.json-link').getBoundingClientRect(); return json.top >= count.bottom && Math.abs(json.right - count.right) < 1 && /^\d[\d.]* [KM]B$/.test(td.querySelector('.json-link').textContent) })), 'Each size sits under its family count')
+  assert.ok(await sourcesPage.locator('.json-link').evaluateAll(links => links.every(a => a.children.length === 2 && a.firstElementChild.tagName === 'svg' && a.firstElementChild.getAttribute('aria-hidden') === 'true')), 'A download icon leads each size')
+  assert.deepEqual(await sourcesPage.locator('#other').evaluate(row => {
+    const left = e => { const r = document.createRange(); r.selectNodeContents(e); return Math.round(r.getBoundingClientRect().left) }, fold = row.querySelector('.fold')
+    return [Math.round(fold.getBoundingClientRect().left) === Math.round(document.querySelector('#google-fonts > th > a').getBoundingClientRect().left), left(fold) === left(row.nextElementSibling.querySelector('th > a')), getComputedStyle(fold, '::after').content]
+  }), [true, true, 'none'], 'A group arrow leads in the indent; its name lines up with its sources')
+  assert.match(matchLink, /underline/)
+  assert.equal(allowed[1], await sourcesPage.locator('.sources-table tbody td').first().evaluate(e => getComputedStyle(e).color))
   await sourcesPage.close()
   assert.equal(await page.locator('#legal a[href="./catalogs.html"]').count(), 1, 'Licenses links to Catalogs')
   // Dropdowns are absolutely positioned: they keep their place against the trigger while the page scrolls.
@@ -202,16 +262,20 @@ try {
   assert.deepEqual(await page.locator('#results .result-score').allTextContents(), all.map(m => m.score.toFixed(3)))
   // The crop stays in view while the long list scrolls beside it.
   await page.locator('#results .result').nth(30).scrollIntoViewIfNeeded()
-  assert.equal(await page.locator('.source-panel').evaluate(panel => Math.round(panel.getBoundingClientRect().top)), 0, 'The input panel sticks to the top')
-  // A window shorter than the panel pins it by its bottom edge, and the verdict stays in the panel, under its windows, in view.
-  const stuck = () => page.evaluate(() => { const panel = document.querySelector('.source-panel').getBoundingClientRect(), verdict = document.querySelector('#result-summary').getBoundingClientRect(), windows = document.querySelector('#normalized').getBoundingClientRect()
-    return { bottom: Math.round(panel.bottom - innerHeight), top: Math.round(panel.top), verdict: verdict.top >= windows.bottom && verdict.bottom <= panel.bottom && verdict.bottom <= innerHeight && verdict.top >= 0 } })
+  assert.deepEqual(await page.locator('.source-panel').evaluate(panel => [Math.round(panel.querySelector('.source-body').getBoundingClientRect().top), panel.querySelector('.column-head').getBoundingClientRect().bottom < 0]), [24, true], 'The preview and model input stick a padding from the top; the Source title scrolls away')
+  // A window shorter than the preview and model input pins them by their bottom edge, a padding above it, so the model input stays in view.
+  const stuck = () => page.evaluate(() => { const panel = document.querySelector('.source-body').getBoundingClientRect(), windows = document.querySelector('#normalized').getBoundingClientRect()
+    return { bottom: Math.round(panel.bottom - innerHeight), top: Math.round(panel.top), windows: windows.top >= 0 && windows.bottom <= innerHeight } })
   await page.setViewportSize({ width: 1440, height: 560 }); await page.locator('#results .result').nth(40).scrollIntoViewIfNeeded()
-  const short = await stuck(); assert.ok(short.bottom === 0 && short.top < 0 && short.verdict, `Short window: ${JSON.stringify(short)}`)
+  const short = await stuck(); assert.ok(short.bottom === -32 && short.top < 0 && short.windows, `Short window: ${JSON.stringify(short)}`)
   await page.setViewportSize({ width: 1440, height: 1000 }); await page.locator('#results .result').nth(30).scrollIntoViewIfNeeded()
-  const tall = await stuck(); assert.ok(tall.top === 0 && tall.verdict, `Tall window: ${JSON.stringify(tall)}`)
+  const tall = await stuck(); assert.ok(tall.top === 24 && tall.windows, `Tall window: ${JSON.stringify(tall)}`)
   // Rows past the fifth preview through a subset face of their own, read-only; the refused one names its absence.
   await page.waitForFunction(() => [...document.querySelectorAll('#results .result')].slice(5).every(r => r.querySelector('.result-unavailable') || r.querySelector('.result-preview')?.style.visibility === ''))
+  // Each preview sets its line by its own font's ascent and descent, in one height, so none scrolls inside its field.
+  const previews = await page.locator('#results .result-preview').evaluateAll(inputs => inputs.map(i => [i.closest('.result').querySelector('.font-name a').textContent, i.scrollHeight > i.clientHeight, i.clientHeight]))
+  assert.deepEqual(previews.filter(p => p[1]).map(p => p[0]), [], 'No preview scrolls')
+  assert.equal(new Set(previews.map(p => p[2])).size, 1, 'Every preview has one height')
   assert.equal(await page.locator('#results .result').nth(5).locator('.result-unavailable').textContent(), 'No preview available')
   assert.ok(await page.locator('#results .result').evaluateAll(rows => rows.slice(6).every(r => r.querySelector('.result-unavailable') || (r.querySelector('.result-preview').readOnly && /^"subset-\d+"$/.test(r.querySelector('.result-preview').style.getPropertyValue('--font-specimen'))))), 'Rows past the fifth use subset faces')
   assert.ok((await page.locator('#results .font-twins').allTextContents()).every(t => t.startsWith('≈ ')), 'Twins read as ≈')
@@ -226,48 +290,57 @@ try {
   assert.ok(['matchWebgpuSeconds', 'matchCpuSeconds', 'downloadMegabytes', 'top1'].every(key => figures.some(f => f.key === key)), 'Speed, size and accuracy are bound')
   const bars = await page.locator('#how-fast .meter').evaluateAll(meters => meters.map(m => Number(m.style.getPropertyValue('--value'))))
   assert.deepEqual(bars, [data.metrics.matchWebgpuSeconds / data.metrics.matchCpuSeconds, 1], 'Time bars are drawn against the slower backend')
+  // All searches every shipped catalog as one; a Google family keeps its specimen link there. Menu rows centre their text.
+  assert.ok(await page.locator('.catalog-option').evaluateAll(options => options.every(o => getComputedStyle(o).alignItems === 'center')), 'Catalog menu rows centre their name and count')
+  await choose(page, 'all')
+  const shippedFaces = (await Promise.all(data.catalogs.map(c => read(c.file)))).flatMap(c => c.faces)
+  assert.equal(await page.locator('#catalog-size').textContent(), `All: ${new Set(shippedFaces.map(f => f.familyId)).size.toLocaleString('en-US')} families, ${shippedFaces.length.toLocaleString('en-US')} faces`)
+  await page.waitForFunction(() => document.querySelectorAll('#results .result').length >= 5)
+  assert.ok((await page.locator('#results .font-name a').first().getAttribute('href')).startsWith('https://fonts.google.com/specimen/'), 'A Google family links to its specimen under All')
+  await choose(page, 'google-fonts')
   // The comparison is a table: gpu-font counts fonts as other finders do, every shipped face, and names the scripts the model detects.
   const compared = data.catalogs.reduce((n, c) => n + c.faces, 0)
   assert.equal(await page.locator('#compare #compared-fonts').textContent(), compared.toLocaleString('en-US'))
   if (artifact.heads) assert.equal(await page.locator('#compare #compared-scripts').textContent(), String(artifact.heads.script.labels.length))
-  assert.deepEqual(await page.locator('#compare thead th').allTextContents(), ['Font finder', 'Fonts', 'Your fonts', 'Weight, italic', 'Subsets', 'Runs on', 'Open source', 'Cost'])
+  assert.deepEqual(await page.locator('#compare thead th').allTextContents(), ['Font finder', 'Fonts', 'Your fonts', 'Styles', 'Subsets', 'Runs on', 'Open source', 'Cost'])
   assert.ok(await page.locator('#compare tbody tr').evaluateAll(rows => rows.every(r => r.cells.length === 8 && r.cells[0].querySelector('.detail')?.textContent && r.cells[1].querySelector('.detail')?.textContent)), 'Each finder names its owner, and each count its sources')
-  assert.equal(await page.locator('#compare a[href="./catalogs.html#included"], #compare a[href="./catalogs.html#my-fonts"]').count(), 2)
+  assert.equal(await page.locator('#compare a[href="./catalogs.html#sources"], #compare a[href="./catalogs.html#my-fonts"]').count(), 2)
   for (const twin of await page.locator('.font-twins').all()) {
     await twin.hover(); assert.equal(await page.locator('#twins-tip').evaluate(t => t.matches(':popover-open')), true)
     assert.deepEqual(await page.locator('#twins-tip li').allTextContents(), JSON.parse(await twin.getAttribute('data-twins')), 'The tooltip lists every twin')
     await page.mouse.move(1, 1); assert.equal(await page.locator('#twins-tip').evaluate(t => t.matches(':popover-open')), false)
   }
-  assert.equal(await page.locator('.results-column > #catalog-control > .panel-head > #catalog-button').count(), 1)
-  assert.equal(await page.locator('#model-input > #normalized + .input-meta > #detection-time').count(), 1)
+  assert.equal(await page.locator('.results-column > .column-head > #matches-title + #catalog-control > #catalog-button').count(), 1, 'The catalog selector shares the Matches line')
   assert.deepEqual(await page.locator('#source-head').evaluate(h => [...h.children].filter(c => !c.matches('.sr-only')).map(c => c.id || c.className)), ['source-font', 'sample', 'source-spacer', 'draw', 'choose-image'], 'The current kind leads its name; the others follow')
   assert.equal(await page.locator('#tools').getAttribute('data-tool'), 'crop'); assert.ok(await page.locator('#undo').isDisabled())
   assert.ok(await page.locator('.pen-size').isHidden(), 'Brush size shows only with a drawing tool')
-  // Each column names itself, Source and Matches, in the same quiet label as Model input.
+  // Each column names itself, Source and Matches; Model names its folded details and Input their windows.
   assert.deepEqual(await page.locator('.workbench .column-title').evaluateAll(t => t.map(e => [e.tagName, e.textContent, e.checkVisibility()])), [['H2', 'Source', true], ['H2', 'Matches', true]])
-  assert.deepEqual(await page.locator('#model-input .panel-head > :first-child, #catalog-control .panel-head > :first-child').allTextContents(), ['Model input', 'Catalog'])
-  assert.deepEqual(await page.locator('.workbench .panel-head').evaluateAll(heads => heads.map(h => getComputedStyle(h).borderBottomStyle)), ['none', 'none', 'none'], 'Workbench heads carry no rule')
+  assert.equal(new Set(await page.locator('.column-title, .metrics h3, .qa h3').evaluateAll(es => es.map(e => ['fontFamily', 'fontSize', 'color'].map(k => getComputedStyle(e)[k]).join()))).size, 1, 'Source and Matches share the serif subtitle of Accuracy and the questions')
+  assert.deepEqual(await page.locator('#model-details > summary, #model-input .panel-head > :first-child, #catalog-control > :first-child').evaluateAll(es => es.map(e => e.firstChild.textContent)), ['Model', 'Input', 'Catalog'])
+  assert.deepEqual(await page.locator('.workbench :is(.column-head, .panel-head, .input-meta)').evaluateAll(heads => heads.map(h => getComputedStyle(h).borderBottomStyle)), ['none', 'none', 'none', 'none', 'none'], 'Workbench heads carry no rule')
   assert.equal(await page.locator('.intro').evaluate(e => getComputedStyle(e).borderBottomStyle), 'solid', 'A rule separates the introduction from the workbench')
-  assert.deepEqual(await page.locator('.workbench .panel-head > h2').evaluateAll(hs => hs.map(h => h.className)), ['sr-only'], 'Catalog is named for assistive technology only; Source and Matches are visible column titles')
+  assert.equal(await page.locator('#catalog-title').getAttribute('class'), 'sr-only', 'Catalog is named for assistive technology only; Source and Matches are visible column titles')
   assert.equal(await page.locator('#sample-label').textContent(), 'Lora')
   assert.deepEqual(await page.evaluate(() => ['source-font', 'draw', 'choose-image'].map(id => document.getElementById(id).getAttribute('aria-pressed'))), ['true', 'false', 'false'])
   const layout = await page.evaluate(() => Object.fromEntries(Object.entries({
-    source: '.source-panel > .panel-head', catalog: '#catalog-control > .panel-head', input: '#model-input > .panel-head',
-    selector: '#catalog-button', kind: '#source-font', name: '#sample', draw: '#draw', open: '#choose-image', inputs: '#normalized', summary: '#result-summary', time: '#detection-time', more: '#more-matches', stage: '#stage', match: '.result:first-child'
+    title: '.source-panel > .column-head', head: '.results-column > .column-head', source: '#source-head', verdict: '.results-column > .input-meta', model: '#model-details > summary',
+    selector: '#catalog-button', kind: '#source-font', name: '#sample', draw: '#draw', open: '#choose-image', summary: '#result-summary', time: '#detection-time', stage: '#stage', match: '.result:first-child'
   }).map(([name, query]) => {
     const rect = document.querySelector(query).getBoundingClientRect()
     return [name, { left: rect.left, right: rect.right, top: rect.top, bottom: rect.bottom }]
   })))
-  assert.ok(Math.abs(layout.source.top - layout.catalog.top) < 1, 'Both columns open on the same line')
-  assert.ok(Math.abs(layout.source.bottom - layout.catalog.bottom) < 1, 'Both column heads have the same height')
-  assert.ok(Math.abs(layout.catalog.right - layout.selector.right) < 1, 'The catalog selector ends its column')
+  // Both columns open on two rows of one height: Source over the sample row; Matches with its catalog over the verdict.
+  assert.ok(Math.abs(layout.title.top - layout.head.top) < 1 && Math.abs(layout.title.bottom - layout.head.bottom) < 1, 'Both column heads open on the same line, at one height')
+  assert.ok(Math.abs(layout.head.right - layout.selector.right) < 1, 'The catalog selector ends the Matches line')
+  assert.ok(Math.abs(layout.source.top - layout.verdict.top) < 1 && Math.abs(layout.source.bottom - layout.verdict.bottom) < 1, 'The verdict row sits level with the sample row')
+  assert.ok(Math.abs(layout.summary.right - layout.head.right) < 1, 'The verdict ends its row, on the right')
+  assert.ok(Math.abs(layout.time.right - layout.source.right) < 1, 'In Model, the time ends the source column, on the right')
   assert.ok(Math.abs(layout.source.left - layout.kind.left) < 1, 'The source switch starts its column')
-  assert.ok(Math.abs(layout.source.right - layout.open.right) < 1, 'The other kinds end the source column, level with the catalog selector')
+  assert.ok(Math.abs(layout.source.right - layout.open.right) < 1, 'The other kinds end the source column')
   assert.ok(layout.kind.right <= layout.name.left && layout.name.right <= layout.draw.left && layout.draw.right <= layout.open.left && layout.draw.top >= layout.source.top - 1 && layout.draw.bottom <= layout.source.bottom + 1, 'Aa and its name lead the line; the sheet and image kinds follow on the right')
   assert.ok(Math.abs(layout.stage.top - layout.match.top) < 1, 'The first match starts level with the preview')
-  assert.ok(layout.input.top - layout.stage.bottom < 40 && layout.summary.top >= layout.inputs.bottom, 'Model input follows the preview; the verdict sits under its windows')
-  assert.ok(Math.abs(layout.summary.top + layout.summary.bottom - layout.more.top - layout.more.bottom) < 2, 'The verdict shares a line with More matches and JSON')
-  assert.ok(Math.abs(layout.summary.left - layout.input.left) < 1 && Math.abs(layout.time.right - layout.input.right) < 1 && Math.abs(layout.time.top - layout.summary.top) < 1, 'The verdict starts its row and the time ends it')
+  assert.ok(layout.model.top - layout.stage.bottom < 40, 'Model follows the preview')
   const row = await page.locator('#normalized').evaluate(e => ({ height: e.getBoundingClientRect().height, width: e.clientWidth, windows: [...e.children].map(c => c.getBoundingClientRect().height) }))
   assert.ok(Math.abs(row.height - Math.min(96, (row.width - 24) / 8)) < .5, 'Model input keeps one height for every crop: a full-width window\'s, at most 2×')
   assert.ok(row.windows.every(h => h <= row.height + .5), 'Every window fits the row')
@@ -303,7 +376,7 @@ try {
   const custom = await read(data.catalogs[0].file)
   // Smallest compatible catalog, retaining one real vector and exact owner.
   custom.faces = custom.faces.slice(0, 1)
-  custom.vectors = { ...custom.vectors, shape: [1, 128], data: Buffer.from(custom.vectors.data, 'base64').subarray(0, 128).toString('base64'), scales: custom.vectors.scales.slice(0, 1), owners: [0] }
+  custom.vectors = { ...custom.vectors, shape: [1, 128], data: Buffer.from(custom.vectors.data, 'base64').subarray(0, rowBytes(custom.vectors)).toString('base64'), scales: custom.vectors.scales.slice(0, 1), owners: [0] }
   await page.locator('#catalog-file').setInputFiles({ name: 'myfonts.json', mimeType: 'application/json', buffer: Buffer.from(JSON.stringify(custom)) })
   await page.waitForFunction(() => document.querySelector('#catalog-label').textContent === 'myfonts.json')
   const imported = await result(page)
@@ -376,9 +449,9 @@ try {
   assert.deepEqual(await page.locator('#source-head').evaluate(h => [...h.children].map(c => c.id || c.className)), ['draw', 'sample', 'source-spacer', 'source-font', 'choose-image'], 'The sheet moves to the front while drawing')
   assert.equal(await page.evaluate(() => document.activeElement.id), 'draw', 'The moved button keeps focus')
   assert.equal(await page.locator('#tools').getAttribute('data-tool'), 'pen'); assert.equal(await page.locator('#pen-tool').getAttribute('aria-pressed'), 'true')
-  assert.equal(await page.locator('.result').count(), 0); assert.ok(await page.locator('#save').isDisabled()); assert.ok(await page.locator('#save').isHidden(), 'No matches, no export')
+  assert.equal(await page.locator('.result').count(), 0); assert.ok(await page.locator('#save').isDisabled()); assert.ok(await page.locator('#save').isHidden(), 'No matches, no export'); assert.ok(await page.locator('.input-time').isHidden(), 'No time, no clock')
   assert.equal(await page.locator('#message').textContent(), '')
-  assert.ok(await page.locator('#model-input').isVisible(), 'Model input keeps its place on an empty sheet')
+  assert.ok(await page.locator('#model-input').isVisible(), 'Unfolded Model keeps its input on an empty sheet')
   const sheet = await page.locator('#source').boundingBox(), at = (x, y) => [sheet.x + sheet.width * x, sheet.y + sheet.height * y]
   for (const [from, to] of [[[.25, .2], [.25, .8]], [[.45, .2], [.45, .8]], [[.25, .5], [.45, .5]], [[.6, .4], [.6, .8]]]) {
     await page.mouse.move(...at(...from)); await page.mouse.down(); await page.mouse.move(...at(...to), { steps: 6 }); await page.mouse.up()
@@ -411,7 +484,7 @@ try {
   // The held stylesheet would hold the load event too, so wait for the DOM instead.
   await blank.goto(base, { waitUntil: 'domcontentloaded' }); await blank.waitForSelector('body[data-ready="true"]')
   assert.equal(await blank.locator('.result, #normalized canvas').count(), 0); assert.ok(await blank.locator('#save').isDisabled())
-  assert.ok(await blank.locator('#model-input').isVisible(), 'Model input is always in place')
+  assert.ok(await blank.locator('#model-details > summary').isVisible(), 'Model is always in place')
   assert.deepEqual(await blank.locator('#input-count, #detection-time').allTextContents(), ['', ''])
   assert.ok(await blank.locator('#empty-sample').isVisible())
   assert.ok(await blank.locator('#sample').isHidden()); assert.ok(await blank.locator('#choose-image').isHidden())
@@ -469,8 +542,8 @@ try {
   await cpu.close(); assert.deepEqual(issues, [])
   // My fonts, indexed in the page as the repository indexes Google Fonts: Lora Regular's static catalog instance, drawn and
   // embedded here, must equal the shipped encoder run on the repository's stored reference windows of lora/400 (the same
-  // lines, rasterizer and preparation, pixel for pixel). The shipped rows themselves sit 0.999 away: the catalog export
-  // embeds those windows with the unquantized checkpoint, not the int8 encoder that the page and this check run.
+  // lines, rasterizer and preparation, pixel for pixel). The shipped rows sit about a hundredth away: they and the page's
+  // rows are rounded to 4 bits separately, and a catalog exported before this encoder shipped embeds the checkpoint.
   const instances = await read('.data/style/reference-instances.json').catch(() => null), myFaces = ['lora/400', 'lora/700i', 'roboto/400', 'playfairdisplay/400', 'inter/400']
   if (instances && myFaces.every(id => instances[id])) {
     // Before indexing there is no status line and no table; after, a table of families, their styles and face counts.
@@ -487,15 +560,28 @@ try {
     const indexed = readCatalog((await stored()).catalog, data), shipped = readCatalog(await read(data.catalogs[0].file), data)
     const rowsOf = (catalog, test) => catalog.owners.flatMap((owner, r) => test(catalog.faces[owner]) ? [catalog.vectors.subarray(r * 128, r * 128 + 128)] : [])
     const ours = rowsOf(indexed, f => f.family === 'Lora' && f.weight === 400 && f.style === 'normal'), theirs = rowsOf(shipped, f => f.id === 'lora/400')
-    const refs = await read('.data/style/references-browser.json'), refPixels = await readFile('.data/style/references-browser.u8')
+    // The window file is too large to read whole; each needed window is read at its offset.
+    const refs = await read('.data/style/references-browser.json'), refFile = openSync('.data/style/references-browser.u8', 'r')
+    const refPixels = w => { const bytes = Buffer.alloc(w.width * w.height); readSync(refFile, bytes, 0, bytes.length, w.offset); return bytes }
     const faceIndex = (await read('.data/style/faces.json')).faces.findIndex(f => f.id === 'lora/400')
     const expected = ['Latn-lower', 'Latn-upper'].map(kind => unit(refs.samples.flatMap((sample, i) => sample.face === faceIndex && sample.kind === kind
-      ? [embedWindows(refs.windows.filter(w => w.source === i).map(w => inferCPU(model, { width: w.width, height: w.height, pixels: Float32Array.from(refPixels.subarray(w.offset, w.offset + w.width * w.height), v => v / 255) })))] : [])
+      ? [embedWindows(refs.windows.filter(w => w.source === i).map(w => inferCPU(model, { width: w.width, height: w.height, pixels: Float32Array.from(refPixels(w), v => v / 255) })))] : [])
       .reduce((sum, e) => sum.map((v, d) => v + e[d]), new Float32Array(128))))
-    const cosine = (a, b) => a.reduce((sum, v, d) => sum + v * b[d], 0), same = ours.map((row, i) => cosine(row, expected[i])), near = ours.map(row => Math.max(...theirs.map(other => cosine(row, other))))
+    closeSync(refFile)
+    const cosine = (a, b) => a.reduce((sum, v, d) => sum + v * b[d], 0), near = ours.map(row => Math.max(...theirs.map(other => cosine(row, other))))
     assert.equal(ours.length, 2, 'Lowercase and capitals')
-    assert.ok(same.every(c => c > .9999), `Browser-indexed Lora against the encoder on the stored reference windows: ${same}`)
-    assert.ok(near.every(c => c > .998), `Browser-indexed Lora against the shipped rows: ${near}`)
+    // The browser packs its rows at 4 bits, so its integers are compared with the encoder's vector packed the same way:
+    // equal, except where a value sits on a rounding boundary and float noise tips it one step.
+    const saved = (await stored()).catalog, raw = saved.vectors, packed = unpack(Buffer.from(raw.data, 'base64'), 4, raw.shape[0] * 128)
+    const oursPacked = raw.owners.flatMap((owner, r) => { const f = saved.faces[owner]; return f.family === 'Lora' && f.weight === 400 && f.style === 'normal' ? [{ values: packed.subarray(r * 128, r * 128 + 128), scale: raw.scales[r] }] : [] })
+    expected.forEach((vector, i) => {
+      const cpu = packVectors([Array.from(vector)]), values = unpack(Buffer.from(cpu.data, 'base64'), 4, 128), mine = oursPacked[i]
+      assert.ok(Math.abs(mine.scale - cpu.scales[0]) <= cpu.scales[0] * 1e-4, `Browser-indexed Lora row ${i} scale ${mine.scale}, encoder ${cpu.scales[0]}`)
+      const steps = Array.from(values, (v, d) => Math.abs(v - mine.values[d]))
+      assert.ok(Math.max(...steps) <= 1 && steps.filter(Boolean).length <= 4, `Browser-indexed Lora row ${i} against the encoder on the stored reference windows: ${steps.filter(Boolean).length} values differ, by up to ${Math.max(...steps)} steps`)
+    })
+    // Two 4-bit roundings, the browser's and the shipped catalog's, each cost about a hundredth of cosine.
+    assert.ok(near.every(c => c > .98), `Browser-indexed Lora against the shipped rows: ${near}`)
     // Installed faces render by PostScript name, join the stored faces and preview in the results; file faces have no preview.
     if (process.platform === 'darwin') {
       await context.grantPermissions(['local-fonts'], { origin: base })

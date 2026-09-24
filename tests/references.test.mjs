@@ -4,7 +4,7 @@ import { readFile } from 'node:fs/promises'
 import { deflateSync } from 'node:zlib'
 import { LATIN, plan, packVectors, joinCatalogs } from '../src/references.mjs'
 import { readFontFile, styleOf, FONT_FILE } from '../src/font-file.mjs'
-import { readCatalog, unit } from '../src/catalog.mjs'
+import { readCatalog, unit, unpack } from '../src/catalog.mjs'
 
 // Fonts are built here from their tables, so no font file enters the repository.
 const utf16 = text => Buffer.from(text, 'utf16le').swap16()
@@ -91,12 +91,22 @@ const catalogOf = (ids, rows, owners) => ({ version: 3, kind: 'font-catalog', ..
   faces: ids.map(id => ({ id, familyId: `local:${id}`, family: id })), vectors: { ...packVectors(rows), owners } })
 const random = seed => Array.from({ length: 128 }, (_, d) => Math.sin(seed * 97 + d * 13.1))
 
-test('packed rows are int8 at one scale per row and read back within quantization', () => {
+test('packed rows are 4 bits at one scale per row, each within half a step, read back as decoded', () => {
   const rows = [1, 2, 3].map(s => Array.from(unit(random(s)))), catalog = catalogOf(['a', 'b'], rows, [0, 0, 1]), read = readCatalog(catalog, binding)
-  rows.forEach((row, r) => { const dot = row.reduce((sum, v, d) => sum + v * read.vectors[r * 128 + d], 0); assert.ok(dot > .9999, `row ${r}: ${dot}`) })
-  // Each row's largest component maps to ±127, as the repository's exporter packs it.
-  const bytes = Int8Array.from(Buffer.from(catalog.vectors.data, 'base64'))
-  for (let r = 0; r < 3; r++) assert.equal(Math.max(...bytes.subarray(r * 128, r * 128 + 128).map(Math.abs)), 127)
+  const bytes = Buffer.from(catalog.vectors.data, 'base64'), values = unpack(bytes, 4, 3 * 128)
+  assert.deepEqual([catalog.vectors.encoding, bytes.length], ['int4-base64', 3 * 64])
+  rows.forEach((row, r) => {
+    const scale = catalog.vectors.scales[r], own = values.subarray(r * 128, r * 128 + 128)
+    // The largest component maps to ±7, as the repository's exporter packs it; scales keep 6 significant digits.
+    assert.equal(Math.max(...Array.from(own, Math.abs)), 7)
+    row.forEach((v, d) => assert.ok(Math.abs(own[d] * scale - v) <= scale / 2 * (1 + 1e-5), `row ${r}, dimension ${d}`))
+    const decoded = unit(Array.from(own, q => Math.fround(q * scale)))
+    read.vectors.subarray(r * 128, r * 128 + 128).forEach((v, d) => assert.ok(Math.abs(v - decoded[d]) < 1e-6))
+  })
+  // A 4-bit stream a byte short or long is refused, as an 8-bit one is; so is an encoding nobody writes.
+  for (const data of [bytes.subarray(0, -1), Buffer.concat([bytes, Buffer.alloc(1)])]) assert.throws(() => readCatalog({ ...catalog, vectors: { ...catalog.vectors, data: data.toString('base64') } }, binding), /Truncated|Invalid vector bytes/)
+  assert.throws(() => readCatalog({ ...catalog, vectors: { ...catalog.vectors, encoding: 'int5-base64' } }, binding), /shape/)
+  assert.throws(() => joinCatalogs(...[catalog, catalog].map(c => ({ ...c, vectors: { ...c.vectors, encoding: 'int5-base64' } }))), /Unknown vector encoding/)
 })
 
 test('joining catalogs keeps every face once, the newer copy of a repeated one, with its own rows', () => {
@@ -105,9 +115,11 @@ test('joining catalogs keeps every face once, the newer copy of a repeated one, 
   const joined = joinCatalogs(first, second), read = readCatalog(joined, binding)
   assert.deepEqual(joined.faces.map(f => f.id), ['a', 'b', 'c'])
   assert.deepEqual(read.owners, [0, 1, 2])
-  // a keeps its row; b's two old rows are replaced by its one new row.
-  const direction = r => Array.from(read.vectors.subarray(r * 128, r * 128 + 128)), close = (a, b) => a.reduce((sum, v, d) => sum + v * b[d], 0) > .9999
-  assert.ok(close(direction(0), rows[0]) && close(direction(1), rows[3]) && close(direction(2), rows[4]))
+  // a keeps its row; b's two old rows are replaced by its one new row. Rows are copied as packed, bit for bit.
+  const row = (catalog, r) => Array.from(catalog.vectors.subarray(r * 128, r * 128 + 128)), a = readCatalog(first, binding), b = readCatalog(second, binding)
+  assert.deepEqual([row(read, 0), row(read, 1), row(read, 2)], [row(a, 0), row(b, 0), row(b, 1)])
+  // Rows packed at another width cannot be copied into these.
+  assert.throws(() => joinCatalogs(first, { ...second, vectors: { ...second.vectors, encoding: 'int8-base64' } }), /differently/)
 })
 
 test('font file edges: one-face collection, stored WOFF tables, no OS/2, Mac names only, truncated data', async () => {

@@ -1,4 +1,4 @@
-import { prepare } from './prepare.mjs'
+import { prepare, frame } from './prepare.mjs'
 import { prepareInput } from './input.mjs'
 
 // Experimental line preparation. Keep the deployed sampler unchanged until evaluated.
@@ -10,6 +10,16 @@ export function prepareLine(image, options = {}) {
   if (options.regions != null && (!Array.isArray(options.regions) || !options.regions.length || options.regions.length > windows || options.regions.some(points => !Array.isArray(points) || points.length !== 4 || points.some(p => !Array.isArray(p) || p.length !== 2 || !p.every(Number.isFinite))))) throw new RangeError('Invalid word regions')
   const found = prepare(image, { width: 4, height: 4, padding: 0, background })
   if (found.status !== 'ok') return { status: found.status, windows: [], angle: 0 }
+  const framed = frame(image, found.rect, background)
+  if (!framed) return prepareFound(image, found, options)
+  // Word regions move into the framed image, and every region back out of it.
+  const { x, y } = framed, regions = options.regions?.map(points => points.map(([px, py]) => [px + x, py + y]))
+  const result = prepareFound(framed.image, prepare(framed.image, { width: 4, height: 4, padding: 0, background }), { ...options, ...(regions && { regions }) })
+  return { ...result, windows: result.windows.map(window => ({ ...window, rect: framed.back(window.rect), ...(window.polygon && { polygon: window.polygon.map(([px, py]) => [px - x, py - y]) }) })) }
+}
+
+function prepareFound(image, found, options) {
+  const { width = 128, height = 48, windows = 3, background = 255, deskew = false, sampler = 'groups' } = options
   const gray = new Float32Array(image.width * image.height), border = []
   for (let y = 0; y < image.height; y++) for (let x = 0; x < image.width; x++) {
     const i = y * image.width + x, p = i * 4, a = image.data[p + 3] / 255

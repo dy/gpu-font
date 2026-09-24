@@ -4,17 +4,17 @@
     "name": "Debian font packages"
   },
   {
-    "id": "fontshare",
-    "name": "Fontshare"
-  },
-  {
-    "id": "collletttivo",
-    "name": "Collletttivo"
-  },
-  {
     "id": "other",
     "name": "Other",
     "sources": [
+      "fontsource",
+      "uncut",
+      "fontshare",
+      "collletttivo",
+      "latin-modern",
+      "tex-gyre",
+      "league-of-moveable-type",
+      "ms-corefonts",
       "ctan",
       "dejavu",
       "bitstream-vera",

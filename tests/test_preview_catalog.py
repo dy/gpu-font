@@ -1,3 +1,4 @@
+import base64
 import copy
 from pathlib import Path
 import tempfile
@@ -8,9 +9,26 @@ import numpy as np
 from scripts.preview_catalog import make_catalog, complete
 from train.encoder_catalog import read_catalog
 from train.encoder_data import save
+from train.ten_model import pack_bits
 
 
 class PreviewCatalogTests(unittest.TestCase):
+    def test_four_bit_vectors_read_as_their_values_times_their_scales(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            encoder=Path(tmp)/'encoder.json';save(encoder,{'preparation':{'width':128,'height':48,'windows':3}})
+            records=[{'id':f'r{i}{recipe}','recipeId':recipe,'faceId':f'f{i}','familyId':'a','family':'A','styleName':f'S{i}','weight':400,'slant':'upright','axes':{},'foundry':'F','sourceUrl':'https://example.test/a','scripts':['Latn']} for i in range(3) for recipe in ['words-a-v1','words-b-v1']]
+            vectors=np.random.default_rng(3).normal(size=(6,128)).astype(np.float32);a=make_catalog(records,vectors,encoder,'manifest','words')
+            eight=np.frombuffer(base64.b64decode(a['vectors']['data']),np.int8).reshape(6,128).astype(np.float32)*np.array(a['vectors']['scales'],np.float32)[:,None]
+            scales=np.abs(eight).max(1)/7;four=np.round(eight/scales[:,None]).clip(-7,7).astype(np.int8)
+            b=copy.deepcopy(a);b['vectors'].update(encoding='int4-base64',data=base64.b64encode(pack_bits(four,4)).decode(),scales=scales.tolist())
+            decoded,owners,labels=read_catalog(b,encoder)
+            # Each row is its 4-bit values times its scale, normalized; owners and labels are the 8-bit catalog's.
+            np.testing.assert_allclose(decoded*np.linalg.norm(four*scales[:,None],axis=1,keepdims=True),four*scales[:,None],rtol=1e-5,atol=1e-7)
+            self.assertEqual((owners.tolist(),labels),(lambda r:(r[1].tolist(),r[2]))(read_catalog(a,encoder)))
+            for data,message in [(b['vectors']['data'][:-4],'Truncated'),(base64.b64encode(pack_bits(four,4)+b'\0').decode(),'Truncated')]:
+                self.assertRaisesRegex(ValueError,message,read_catalog,{**b,'vectors':{**b['vectors'],'data':data}},encoder)
+            self.assertRaisesRegex(ValueError,'shape',read_catalog,{**b,'vectors':{**b['vectors'],'encoding':'int5-base64'}},encoder)
+
     def test_image_references_keep_regular_bold_italic_faces_and_exact_provenance(self):
         with tempfile.TemporaryDirectory() as tmp:
             encoder=Path(tmp)/'encoder.json';save(encoder,{'preparation':{'width':128,'height':48,'windows':3}})

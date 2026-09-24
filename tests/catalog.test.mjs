@@ -1,7 +1,7 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
 import { readFile } from 'node:fs/promises'
-import { base64, readCatalog, rankCatalog, embedWindows, preparationHash, sha256, readHeads, verdict, matchCatalog, foldTwins } from '../src/catalog.mjs'
+import { base64, readCatalog, rankCatalog, embedWindows, preparationHash, sha256, readHeads, verdict, matchCatalog, foldTwins, pack, unpack } from '../src/catalog.mjs'
 import { readNetwork, inferCPU } from '../src/network.mjs'
 
 const binding = { encoderSha256: 'encoder', preparationSha256: 'preparation' }
@@ -92,34 +92,41 @@ test('typed verdicts reproduce the head arithmetic; the script filter never retu
   delete data.faces[0].scripts  // undeclared coverage stays eligible
   assert.deepEqual(rankCatalog(vector(0, 1), readCatalog(data, binding), { script: 'Hani' }).map(m => m.face.id), ['a/regular', 'b'])
 })
-test('identical designs fold into one row per script, never by chains, under their base name', () => {
+test('kinds of one family with identical letters fold into one row per script, never by chains, under their base name', () => {
   const face = (familyId, family, twins) => ({ id: familyId + '/400', familyId, family, ...(twins ? { twins } : {}) })
   const plex = ['anuphan', 'plexkr', 'plex', 'plexar'], latin = id => ({ Latn: plex.filter(f => f !== id) })
   const faces = [face('anuphan', 'Anuphan', latin('anuphan')), face('plexkr', 'IBM Plex Sans KR', latin('plexkr')), face('plex', 'IBM Plex Sans', latin('plex')),
-    face('plexar', 'IBM Plex Sans Arabic', { ...latin('plexar'), Arab: ['kufi'] }), face('kufi', 'Kufi', { Arab: ['plexar'] }),
-    face('a', 'A', { Latn: ['b'] }), face('b', 'B', { Latn: ['a', 'c'] }), face('c', 'C', { Latn: ['b'] }), face('d', 'D')]
-  const ranked = [['anuphan', .96], ['plexkr', .95], ['plex', .94], ['a', .9], ['plexar', .89], ['kufi', .85], ['b', .8], ['c', .7], ['d', .6]].map(([id, score]) => ({ family: id, score, face: faces.find(f => f.familyId === id) }))
+    face('plexar', 'IBM Plex Sans Arabic', { ...latin('plexar'), Arab: ['kufi'] }), face('kufi', 'IBM Plex Kufi', { Arab: ['plexar'] }),
+    face('ekmukta', 'Ek Mukta', { Latn: ['mukta'] }), face('mukta', 'Mukta', { Latn: ['ekmukta', 'vaani'] }), face('vaani', 'Mukta Vaani', { Latn: ['mukta'] }), face('d', 'D')]
+  const ranked = [['anuphan', .96], ['plexkr', .95], ['plex', .94], ['ekmukta', .9], ['plexar', .89], ['kufi', .85], ['mukta', .8], ['vaani', .7], ['d', .6]].map(([id, score]) => ({ family: id, score, face: faces.find(f => f.familyId === id) }))
   const before = structuredClone(ranked), folded = foldTwins(ranked, { faces }, { script: 'Latn' })
-  assert.deepEqual(folded.map(m => [m.family, m.score, m.siblings]), [['plex', .96, ['Anuphan', 'IBM Plex Sans KR', 'IBM Plex Sans Arabic']], ['a', .9, ['B']], ['kufi', .85, []], ['c', .7, []], ['d', .6, []]])
-  assert.equal(folded[0].face.family, 'IBM Plex Sans')  // the base's own face, the group's best score
+  // Anuphan draws IBM Plex Sans's Latin letters but is a font of its own: its own row, not a twin under another name.
+  assert.deepEqual(folded.map(m => [m.family, m.score, m.siblings]), [['anuphan', .96, []], ['plex', .95, ['IBM Plex Sans KR', 'IBM Plex Sans Arabic']], ['mukta', .9, ['Ek Mukta']], ['kufi', .85, []], ['vaani', .7, []], ['d', .6, []]])
+  assert.equal(folded[1].face.family, 'IBM Plex Sans')  // the base's own face, the group's best score
   assert.deepEqual(ranked, before)
   // Twins are judged in the query's script: families sharing Latin letters stay apart for Arabic text.
-  assert.deepEqual(foldTwins(ranked, { faces }, { script: 'Arab' }).map(m => [m.family, m.siblings]).filter(([, s]) => s.length), [['plexar', ['Kufi']]])
+  assert.deepEqual(foldTwins(ranked, { faces }, { script: 'Arab' }).map(m => [m.family, m.siblings]).filter(([, s]) => s.length), [['plexar', ['IBM Plex Kufi']]])
   for (const script of [undefined, 'Hani']) assert.deepEqual(foldTwins(ranked, { faces }, { script }).map(m => m.family), ranked.map(m => m.family))
   assert.deepEqual(foldTwins([], { faces }, { script: 'Latn' }), [])
   // A limit keeps the first groups whole: a sibling ranked after the limit still joins its group.
-  assert.deepEqual(foldTwins(ranked, { faces }, { script: 'Latn', limit: 2 }).map(m => [m.family, m.siblings]), [['plex', ['Anuphan', 'IBM Plex Sans KR', 'IBM Plex Sans Arabic']], ['a', ['B']]])
+  assert.deepEqual(foldTwins(ranked, { faces }, { script: 'Latn', limit: 2 }).map(m => [m.family, m.siblings]), [['anuphan', []], ['plex', ['IBM Plex Sans KR', 'IBM Plex Sans Arabic']]])
+  // A shared generic word is no shared name: Open Sans and Noto Sans draw the same Latin letters yet stay two rows,
+  // while a name holding the other's first word folds whichever ranks first.
+  const pair = (x, y) => { const fs = [face('x', x, { Latn: ['y'] }), face('y', y, { Latn: ['x'] })]
+    return foldTwins(fs.map((f, i) => ({ family: f.familyId, score: 1 - i / 10, face: f })), { faces: fs }, { script: 'Latn' }).map(m => [m.face.family, m.siblings]) }
+  assert.deepEqual(pair('Open Sans', 'Noto Sans'), [['Open Sans', []], ['Noto Sans', []]])
+  for (const names of [['Mukta', 'Ek Mukta'], ['Ek Mukta', 'Mukta']]) assert.deepEqual(pair(...names), [['Mukta', ['Ek Mukta']]])
 })
 test('the twin index is kept per catalog and per script: A → A, A → B → A, scripts interleaved', () => {
   const face = (familyId, family, twins) => ({ id: familyId + '/400', familyId, family, ...(twins ? { twins } : {}) })
-  const a = { faces: [face('x', 'X', { Latn: ['y'] }), face('y', 'Y', { Latn: ['x'], Arab: ['z'] }), face('z', 'Z', { Arab: ['y'] })] }
-  const b = { faces: [face('x', 'X', { Latn: ['z'] }), face('y', 'Y'), face('z', 'Z', { Latn: ['x'] })] }
+  const a = { faces: [face('x', 'Sans', { Latn: ['y'] }), face('y', 'Sans Y', { Latn: ['x'], Arab: ['z'] }), face('z', 'Sans Z', { Arab: ['y'] })] }
+  const b = { faces: [face('x', 'Sans', { Latn: ['z'] }), face('y', 'Sans Y'), face('z', 'Sans Z', { Latn: ['x'] })] }
   const ranked = a.faces.map((f, i) => ({ family: f.familyId, score: 1 - i / 10, face: f }))
   const fold = (catalog, script) => foldTwins(ranked, catalog, { script }).map(m => [m.family, m.siblings])
   for (let n = 0; n < 2; n++) {
-    assert.deepEqual(fold(a, 'Latn'), [['x', ['Y']], ['z', []]])
-    assert.deepEqual(fold(a, 'Arab'), [['x', []], ['y', ['Z']]])
-    assert.deepEqual(fold(b, 'Latn'), [['x', ['Z']], ['y', []]])
+    assert.deepEqual(fold(a, 'Latn'), [['x', ['Sans Y']], ['z', []]])
+    assert.deepEqual(fold(a, 'Arab'), [['x', []], ['y', ['Sans Z']]])
+    assert.deepEqual(fold(b, 'Latn'), [['x', ['Sans Z']], ['y', []]])
     assert.deepEqual(fold(a, undefined), [['x', []], ['y', []], ['z', []]])
   }
 })
@@ -154,4 +161,37 @@ test('base64 accepts exactly padded standard base64, as the grouped pattern it r
     const text = Array.from({ length: Math.floor(next() * 13) }, () => 'AZaz09+/=-\n'[Math.floor(next() * 11)]).join('')
     assert.equal(base64(text), grouped(text), JSON.stringify(text))
   }
+})
+
+test('unionCatalogs searches read catalogs as one, owners shifted past earlier faces', async () => {
+  const { unionCatalogs, rankCatalog } = await import('../src/catalog.mjs')
+  const axis = i => { const v = new Float32Array(128); v[i] = 1; return v }
+  const read = (faces, rows, owners) => ({ faces, vectors: Float32Array.from(rows.flatMap(r => [...r])), owners, families: new Set(faces.map(f => f.familyId)).size })
+  const a = read([{ id: 'a/400', familyId: 'a', family: 'A' }], [axis(0)], [0])
+  const b = read([{ id: 'b/400', familyId: 'b', family: 'B' }, { id: 'b/700', familyId: 'b', family: 'B' }], [axis(1), axis(2)], [0, 1])
+  const all = unionCatalogs([a, b])
+  assert.deepEqual([all.faces.map(f => f.id), all.owners, all.vectors.length, all.families], [['a/400', 'b/400', 'b/700'], [0, 1, 2], 3 * 128, 2])
+  // Each part's best face wins in the union exactly as it does alone.
+  for (const [query, id] of [[axis(0), 'a/400'], [axis(1), 'b/400'], [axis(2), 'b/700']]) assert.equal(rankCatalog(query, all)[0].face.id, id)
+  // A family in two catalogs counts once; nothing joins to an empty catalog.
+  assert.equal(unionCatalogs([a, a]).families, 1)
+  assert.deepEqual(unionCatalogs([]), { faces: [], vectors: new Float32Array(0), owners: [], families: 0 })
+})
+
+test('bit packing: the Python exporter\'s streams, every width\'s extremes, partial last bytes, and nothing', () => {
+  // Nine values at each width's extremes, packed by train/ten_model.py pack_bits: the two languages share one bit order.
+  for (const [bits, stream] of [[4, 'eRBvOg0='], [6, '4QcEvycOPQ=='], [8, 'gX8AAf9+ggP9']]) {
+    const top = 2 ** (bits - 1) - 1, values = [-top, top, 0, 1, -1, top - 1, 1 - top, 3, -3], bytes = Buffer.from(stream, 'base64')
+    assert.equal(bytes.length, Math.ceil(9 * bits / 8))
+    assert.deepEqual(Array.from(unpack(bytes, bits, 9)), values)
+    assert.deepEqual(Buffer.from(pack(values, bits)).toString('base64'), stream)
+  }
+  // Every width round-trips any count; at 8 bits the stream is the int8 bytes themselves.
+  for (let bits = 2; bits <= 8; bits++) for (const count of [1, 7, 8, 9, 257]) {
+    const top = 2 ** (bits - 1) - 1, values = Array.from({ length: count }, (_, i) => (i * 7919) % (2 * top + 1) - top)
+    assert.deepEqual(Array.from(unpack(pack(values, bits), bits, count)), values, `${bits} bits, ${count} values`)
+  }
+  const bytes = Int8Array.from([-127, 5, 127, -1])
+  assert.deepEqual(pack(bytes, 8), new Uint8Array(bytes.buffer))
+  assert.deepEqual([pack([], 4).length, unpack(new Uint8Array(0), 4, 0).length], [0, 0])
 })

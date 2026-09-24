@@ -5,6 +5,32 @@ export const preparationHash = preparation => sha256(new TextEncoder().encode(JS
 // Padded standard base64; one character class scans megabytes linearly where grouped quantifiers crawl.
 export const base64 = text => text.length % 4 === 0 && /^[A-Za-z0-9+/]*={0,2}$/.test(text)
 
+// Signed integers `bits` apiece (2 to 8) in a little-endian bit stream: value i fills bits i * bits onward. At 8 bits
+// these are plain int8 bytes. Both directions stay in plain loops: they run over millions of weights.
+export function pack(values, bits) {
+  const bytes = new Uint8Array(Math.ceil(values.length * bits / 8)), mask = (1 << bits) - 1
+  for (let i = 0, bit = 0; i < values.length; i++, bit += bits) {
+    const word = (values[i] & mask) << (bit & 7)
+    bytes[bit >> 3] |= word
+    if (word > 255) bytes[(bit >> 3) + 1] |= word >> 8
+  }
+  return bytes
+}
+export function unpack(bytes, bits, count) {
+  const values = new Int8Array(count), mask = (1 << bits) - 1, sign = 1 << (bits - 1)
+  for (let i = 0, bit = 0; i < count; i++, bit += bits) {
+    const value = ((bytes[bit >> 3] | bytes[(bit >> 3) + 1] << 8) >> (bit & 7)) & mask
+    values[i] = value >= sign ? value - (1 << bits) : value
+  }
+  return values
+}
+// Catalog vectors: 128 dimensions a row, one scale per row, 8 or 4 bits a dimension.
+const VECTOR_BITS = { 'int8-base64': 8, 'int4-base64': 4 }
+export function rowBytes(vectors) {
+  if (!VECTOR_BITS[vectors?.encoding]) throw new Error('Unknown vector encoding')
+  return 128 * VECTOR_BITS[vectors.encoding] / 8
+}
+
 export function unit(values) {
   if (!values?.length || !Array.from(values).every(Number.isFinite)) throw new Error('Invalid embedding')
   const norm = Math.hypot(...values)
@@ -35,18 +61,19 @@ export function readCatalog(data, binding) {
   }
   const rows = data.version === 3 ? v?.shape?.[0] : faces.length * data.referencesPerFace
   if (!Number.isInteger(rows) || rows < faces.length || rows > 640000) throw new Error('Invalid reference count')
-  if (v?.encoding !== 'int8-base64' || JSON.stringify(v.shape) !== JSON.stringify([rows, 128])) throw new Error('Invalid vector shape')
-  if (typeof v.data !== 'string' || v.data.length > Math.ceil(rows * 128 / 3) * 4 || !base64(v.data)) throw new Error('Invalid vector bytes')
+  if (!VECTOR_BITS[v?.encoding] || JSON.stringify(v.shape) !== JSON.stringify([rows, 128])) throw new Error('Invalid vector shape')
+  const size = rows * rowBytes(v)
+  if (typeof v.data !== 'string' || v.data.length > Math.ceil(size / 3) * 4 || !base64(v.data)) throw new Error('Invalid vector bytes')
   const binary = atob(v.data), bytes = new Uint8Array(binary.length)
   for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i)
-  if (bytes.length !== rows * 128) throw new Error('Truncated or trailing vectors')
+  if (bytes.length !== size) throw new Error('Truncated or trailing vectors')
   if (!Array.isArray(v.scales) || v.scales.length !== rows || v.scales.some(s => !Number.isFinite(s) || s <= 0)) throw new Error('Invalid vector scales')
   if (!Array.isArray(v.owners) || v.owners.length !== rows || v.owners.some(i => !Number.isInteger(i) || i < 0 || i >= faces.length)) throw new Error('Invalid vector owners')
   const counts = new Uint32Array(faces.length)
   v.owners.forEach(i => counts[i]++)
   if (counts.some(n => data.version === 3 ? n < 1 : n !== data.referencesPerFace)) throw new Error('Missing catalog owner')
   // Dequantize and L2-normalize each row in place; plain loops keep per-face catalogs (tens of thousands of rows) fast.
-  const packed = new Int8Array(bytes.buffer), vectors = new Float32Array(bytes.length)
+  const packed = unpack(bytes, VECTOR_BITS[v.encoding], rows * 128), vectors = new Float32Array(rows * 128)
   for (let r = 0, o = 0; r < rows; r++, o += 128) {
     let norm = 0
     for (let d = 0; d < 128; d++) { const value = Math.fround(packed[o + d] * v.scales[r]); vectors[o + d] = value; norm += value * value }
@@ -56,6 +83,14 @@ export function readCatalog(data, binding) {
     for (let d = 0; d < 128; d++) vectors[o + d] /= norm
   }
   return { faces: faces.map(f => ({ ...f })), vectors, owners: [...v.owners], families: names.size }
+}
+
+// Read catalogs searched as one: their faces and rows in order, each row's owner shifted past the faces before it.
+export function unionCatalogs(catalogs) {
+  const faces = catalogs.flatMap(c => c.faces), vectors = new Float32Array(catalogs.reduce((n, c) => n + c.vectors.length, 0)), owners = []
+  let row = 0, base = 0
+  for (const c of catalogs) { vectors.set(c.vectors, row); row += c.vectors.length; for (const owner of c.owners) owners.push(owner + base); base += c.faces.length }
+  return { faces, vectors, owners, families: new Set(faces.map(f => f.familyId)).size }
 }
 
 // Optional typed verdicts shipped with the encoder: weight, italic, script, Google category and fine style class.
@@ -87,25 +122,28 @@ export function verdict(embedding, heads) {
     fine: ranked(heads.fine.labels, affine(heads.fine, x).map(sigmoid)) }
 }
 
-// One row per design: a family whose letters in the query's script are indistinguishable from a higher-ranked one's (the
-// catalog's per-script twins) folds into it, never by chains. A group is named by the member whose name begins the most
-// others (IBM Plex Sans, not its Thai-derived twin Anuphan) and scored by its best member, as a family is by its best face.
-// Without a script nothing folds. `limit` bounds the groups; later families still join kept ones.
+// One row per family: a family whose letters in the query's script are indistinguishable from a higher-ranked one's (the
+// catalog's per-script twins) folds into it when one name holds the other's first word (IBM Plex Sans KR under IBM Plex Sans,
+// Ek Mukta with Mukta), never by chains. Parastoo, which borrows Lora's Latin letters, is a font of its own and keeps its row.
+// A group is named by the member whose name sits inside the most others and scored by its best member, as a family is by its
+// best face. Without a script nothing folds. `limit` bounds the groups; later families still join kept ones.
 const twinIndex = new WeakMap()
 export function foldTwins(matches, catalog, { script, limit = Infinity } = {}) {
   if (!twinIndex.has(catalog)) twinIndex.set(catalog, new Map())
   const index = twinIndex.get(catalog)
   if (!index.has(script)) index.set(script, new Map(catalog.faces.filter(f => Array.isArray(f.twins?.[script])).map(f => [f.familyId, new Set(f.twins[script])])))
-  const twins = index.get(script), related = (a, b) => twins.get(a)?.has(b) || twins.get(b)?.has(a), groups = []
+  const twins = index.get(script), words = m => m.face.family.split(' ')
+  const named = (a, b) => words(b).includes(words(a)[0]) || words(a).includes(words(b)[0])
+  const related = (a, b) => (twins.get(a.family)?.has(b.family) || twins.get(b.family)?.has(a.family)) && named(a, b), groups = []
   for (const match of matches) {
-    const group = groups.find(g => related(g[0].family, match.family))
+    const group = groups.find(g => related(g[0], match))
     if (group) group.push(match)
     else if (groups.length < limit) groups.push([match])
   }
   return groups.map(group => {
-    const name = m => m.face.family, begins = m => group.filter(o => name(o).startsWith(name(m) + ' ')).length
-    const shown = group.reduce((best, m) => begins(m) > begins(best) ? m : best)
-    return { ...shown, score: group[0].score, siblings: group.filter(m => m !== shown).map(name) }
+    const padded = m => ` ${m.face.family} `, within = m => group.filter(o => padded(o).includes(padded(m))).length
+    const shown = group.reduce((best, m) => within(m) > within(best) ? m : best)
+    return { ...shown, score: group[0].score, siblings: group.filter(m => m !== shown).map(m => m.face.family) }
   })
 }
 

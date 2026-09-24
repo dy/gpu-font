@@ -13,8 +13,10 @@ CONTEXT_ARCH = 'font-conv16-32-48-64-64-v2'
 CORPUS_ARCH = 'font-conv32-64-96-128-128-v3'
 LARGE_ARCH = 'font-conv64-128-192-256-256-v4'
 WIDER_ARCH = 'font-conv96-192-288-384-384-v5'
+WIDEST_ARCH = 'font-conv128-256-384-512-512-v6'
 ARCHITECTURES = {ARCH: CHANNELS, CONTEXT_ARCH: CHANNELS + [64], CORPUS_ARCH: [1, 32, 64, 96, 128, 128],
-                 LARGE_ARCH: [1, 64, 128, 192, 256, 256], WIDER_ARCH: [1, 96, 192, 288, 384, 384]}
+                 LARGE_ARCH: [1, 64, 128, 192, 256, 256], WIDER_ARCH: [1, 96, 192, 288, 384, 384],
+                 WIDEST_ARCH: [1, 128, 256, 384, 512, 512]}
 
 
 class Classifier(nn.Module):
@@ -25,7 +27,7 @@ class Classifier(nn.Module):
         if architecture and (context or wide or large): raise ValueError('Pass an architecture or its flags, not both')
         self.architecture = architecture or (LARGE_ARCH if large else CORPUS_ARCH if wide else CONTEXT_ARCH if context else ARCH)
         if self.architecture not in ARCHITECTURES: raise ValueError('Unknown architecture')
-        self.context, self.wide, self.large = self.architecture != ARCH, self.architecture not in (ARCH, CONTEXT_ARCH), self.architecture in (LARGE_ARCH, WIDER_ARCH)
+        self.context, self.wide, self.large = self.architecture != ARCH, self.architecture not in (ARCH, CONTEXT_ARCH), self.architecture not in (ARCH, CONTEXT_ARCH, CORPUS_ARCH)
         channels = ARCHITECTURES[self.architecture]
         self.strides = STRIDES + [1] if self.context else STRIDES
         self.dilations = dilations or [1] * len(self.strides)
@@ -75,6 +77,19 @@ def widen(model,noise=0,architecture=LARGE_ARCH):
     return result.train(model.training)
 
 
+def pack_bits(values, bits):
+    """Signed integers `bits` apiece in a little-endian bit stream, value i filling bits i * bits onward, as
+    src/catalog.mjs pack() writes them. At 8 bits these are plain int8 bytes."""
+    v = np.asarray(values, np.int64).ravel() & ((1 << bits) - 1)
+    return np.packbits(((v[:, None] >> np.arange(bits)) & 1).astype(np.uint8).ravel(), bitorder='little').tobytes()
+
+
+def unpack_bits(data, bits, count):
+    if len(data) != -(-count * bits // 8): raise ValueError('Wrong packed length')
+    v = (np.unpackbits(np.frombuffer(data, np.uint8), bitorder='little')[:count * bits].reshape(count, bits).astype(np.int64) << np.arange(bits)).sum(1)
+    return np.where(v >= 1 << (bits - 1), v - (1 << bits), v).astype(np.int8)
+
+
 def load_export(artifact):
     if artifact['version'] != 1 or artifact['architecture'] not in ARCHITECTURES:
         raise ValueError('Unsupported classifier')
@@ -86,26 +101,27 @@ def load_export(artifact):
         for layer, target in zip(artifact['layers'], modules):
             if layer['shape'] != list(target.weight.shape):
                 raise ValueError('Wrong layer shape')
-            values = np.frombuffer(base64.b64decode(layer['weights'], validate=True), dtype=np.int8).reshape(len(target.weight), -1)
+            values = unpack_bits(base64.b64decode(layer['weights'], validate=True), layer.get('bits', 8), target.weight.numel()).reshape(len(target.weight), -1)
             weights = values.astype(np.float32) * np.array(layer['scale'], dtype=np.float32)[:, None]
             target.weight.copy_(torch.from_numpy(weights.reshape(layer['shape'])))
             target.bias.copy_(torch.tensor(layer['bias']))
     return model
 
 
-def export(model, fonts, preparation):
-    model = model.folded()
+def export(model, fonts, preparation, bits=8):
+    """Weights rounded per output row to `bits` (8, or 6 for the shipped style encoder: bench/style.md, Quantization)."""
+    model = model.folded(); levels = 2 ** (bits - 1) - 1
     layers = []
     restored = Classifier(len(fonts), training=False, dilations=model.dilations, architecture=model.architecture).eval()
     for source, target in zip([*model.convs, model.head], [*restored.convs, restored.head]):
         weight = source.weight.detach().numpy()
         row = weight.reshape(len(weight), -1)
-        scale = np.maximum(np.max(np.abs(row), axis=1) / 127, 1e-12).astype(np.float32)
-        quant = np.clip(np.round(row / scale[:, None]), -127, 127).astype(np.int8)
+        scale = np.maximum(np.max(np.abs(row), axis=1) / levels, 1e-12).astype(np.float32)
+        quant = np.clip(np.round(row / scale[:, None]), -levels, levels).astype(np.int8)
         decoded = quant.astype(np.float32) * scale[:, None]
         with torch.no_grad():
             target.weight.copy_(torch.from_numpy(decoded.reshape(weight.shape)))
             target.bias.copy_(source.bias)
-        layers.append({'shape': list(weight.shape), 'scale': scale.tolist(),
-                       'weights': base64.b64encode(quant.tobytes()).decode(), 'bias': source.bias.detach().tolist()})
+        layers.append({'shape': list(weight.shape), 'scale': scale.tolist(), **({'bits': bits} if bits != 8 else {}),
+                       'weights': base64.b64encode(pack_bits(quant, bits)).decode(), 'bias': source.bias.detach().tolist()})
     return {'version': 1, 'architecture': model.architecture, 'dilations': model.dilations, 'fonts': fonts, 'preparation': preparation, 'layers': layers}, restored

@@ -1,7 +1,7 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
 import { sourceCatalogs } from '../scripts/catalog-sources.mjs'
-import { readCatalog, rankCatalog } from '../src/catalog.mjs'
+import { readCatalog, rankCatalog, pack } from '../src/catalog.mjs'
 
 const binding = { encoderSha256: 'encoder', preparationSha256: 'preparation' }
 function batch(id, source, dimension) {
@@ -32,4 +32,17 @@ test('source grouping rejects conflicting identities, unknown sources and incomp
   const bad = structuredClone(a)
   bad.catalog.faces[0].referenceIds.push('other'); bad.records.push({ id: 'other', faceId: 'a', source: { key: 'myfonts' } })
   assert.throws(() => sourceCatalogs([bad], binding), /Conflicting reference sources/)
+})
+test('4-bit batches merge row by row and keep their encoding; one source packed two ways rejects', () => {
+  const four = (id, source, dimension) => {
+    const b = batch(id, source, dimension), values = new Int8Array(128); values[dimension] = 7
+    b.catalog.vectors = { ...b.catalog.vectors, encoding: 'int4-base64', data: Buffer.from(pack(values, 4)).toString('base64'), scales: [1 / 7] }
+    return b
+  }
+  const [merged] = sourceCatalogs([four('b', 'fontshare', 1), four('a', 'fontshare', 0)], binding), [eight] = sourceCatalogs([batch('b', 'fontshare', 1), batch('a', 'fontshare', 0)], binding)
+  assert.equal(merged.data.vectors.encoding, 'int4-base64')
+  assert.equal(Buffer.from(merged.data.vectors.data, 'base64').length, 2 * 64)
+  const query = new Float32Array(128); query[1] = 1
+  assert.deepEqual(rankCatalog(query, readCatalog(merged.data, binding)), rankCatalog(query, readCatalog(eight.data, binding)))
+  assert.throws(() => sourceCatalogs([four('a', 'fontshare', 0), batch('b', 'fontshare', 1)], binding), /differently/)
 })

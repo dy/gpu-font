@@ -8,8 +8,8 @@ Find the font in an image, in your browser. Crop a line of text from a screensho
 
 - Runs on the user's device, on WebGPU or the CPU: no server, no API key, the image is never uploaded.
 - Names the face, not only the family: Bold Italic, Light and so on.
-- Searches 2,004 Google Fonts families, every weight and italic, or one of four other free catalogs, 3,593 families in all.
-- Families with identical letters fold into one row: IBM Plex Sans KR and IBM Plex Sans Arabic show under IBM Plex Sans.
+- Searches 2,004 Google Fonts families, every weight and italic, or one of two other free catalogs, 3,786 families in all.
+- Kinds of one family with identical letters fold into one row: IBM Plex Sans KR and IBM Plex Sans Arabic show under IBM Plex Sans. A different font that borrows the letters, like Parastoo with Lora's Latin, keeps its own row.
 
 It is experimental: on fonts it never saw in training, the right family is in the top five 87% of the time and first 69%.
 
@@ -36,7 +36,7 @@ best.score            // 0.87
 
 - `face`: the closest face: `family`, `styleName`, `weight` (100–900), `style` (`normal` or `italic`), and `sourceUrl` outside Google Fonts.
 - `score`: similarity from -1 to 1, higher is closer.
-- `siblings`: names of families with the same letters, folded into this one.
+- `siblings`: names of same-named families with the same letters, folded into this one.
 
 `matcher.destroy()` releases the GPU.
 
@@ -64,16 +64,14 @@ A matcher searches one catalog. A catalog holds font names, links and style vect
 ```js
 import { createMatcher, catalogs } from 'gpu-font'
 
-const matcher = await createMatcher(catalogs.fontshare)
+const matcher = await createMatcher(catalogs.debian)
 ```
 
 | `catalogs.` | Families | |
 |---|---:|---|
 | `google-fonts` (default) | 2,004 | [Google Fonts](https://fonts.google.com) |
 | `debian` | 1,509 | [Debian's font packages](https://packages.debian.org/sid/fonts/) |
-| `fontshare` | 39 | [Fontshare](https://www.fontshare.com) |
-| `collletttivo` | 17 | [Collletttivo](https://www.collletttivo.it) |
-| `other` | 24 | DejaVu, Bitstream Vera, Droid, D-DIN, Velvetyne and more |
+| `other` | 273 | Sources under 100 families: Fontsource, Uncut, Fontshare, Collletttivo, Latin Modern, TeX Gyre and more |
 
 A catalog built for this model also works from its URL: `createMatcher('https://example.com/my-catalog.json')`.
 
@@ -95,12 +93,16 @@ Not yet: hand-drawn letters, icons, symbols and emoji, and matching capitals whe
 
 ## Speed and size
 
-- `createMatcher()` downloads about 6 MB, compressed: the model and the Google Fonts catalog. Debian's catalog adds 0.7 MB; the others are under 40 KB.
+- `createMatcher()` downloads about 6 MB, compressed: the model and the Google Fonts catalog. Debian's catalog adds 0.7 MB, and Other 0.35 MB.
 - With WebGPU, a match takes about 0.1 s. Without it, it runs on the CPU: about 10 s in Chromium, 12–20 s in Node. All measured on an Apple M4 Max.
 
 ## Development
 
 Running the demo, training the model and building catalogs: [development.md](https://github.com/dy/gpu-font/blob/main/development.md).
+
+## Inspired by
+
+[gpu-lexer](https://gpu-lexer.vercel.app/), [gpu-time](https://github.com/arikchakma/gpu-time), [gpu-query](https://github.com/safzanpirani/gpu-query).
 
 ## License
 

@@ -64,9 +64,9 @@ for (const file of (await readdir(files).catch(() => [])).filter(name => name.en
   if (data.encoderSha256 !== binding.encoderSha256 || data.preparationSha256 !== binding.preparationSha256) { console.log(`Skipped ${files}/${file}: built for another encoder; run scripts/catalog-files.mjs.`); continue }
   compiled.splice(0, compiled.length, ...compiled.filter(source => source.id !== id), { id, name: data.name, data })
 }
-// The menu lists the largest catalogs first. Cleared sources under ten families are searched together as Other, last:
-// a catalog of one or two families is not worth its own entry. Each face keeps the source it came from.
-const familyCount = source => new Set(source.data.faces.map(f => f.familyId)).size, SMALL = 10
+// The menu lists the largest catalogs first. Cleared sources under a hundred families are searched together as Other,
+// last: a catalog that small is not worth its own entry. Each face keeps the source it came from.
+const familyCount = source => new Set(source.data.faces.map(f => f.familyId)).size, SMALL = 100
 compiled.sort((a, b) => familyCount(b) - familyCount(a) || a.id.localeCompare(b.id))
 const cleared = compiled.filter(shippable), small = cleared.filter(source => familyCount(source) < SMALL)
 let shipped = cleared.filter(source => familyCount(source) >= SMALL)

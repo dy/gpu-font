@@ -505,7 +505,7 @@
    "score": 0.818,
    "coverage": {
     "status": "indexed",
-    "source": "other",
+    "source": "d-din",
     "via": "D-DIN",
     "match": "revival",
     "equivalents": [
@@ -787,7 +787,7 @@
    "score": 0.767,
    "coverage": {
     "status": "indexed",
-    "source": "other",
+    "source": "cc-accidenz-commons",
     "via": "CC Accidenz Commons",
     "match": "revival",
     "equivalents": [
@@ -992,7 +992,7 @@
    "score": 0.727,
    "coverage": {
     "status": "indexed",
-    "source": "other",
+    "source": "dejavu",
     "via": "DejaVu Sans",
     "match": "related"
    }
@@ -1704,7 +1704,7 @@
    "score": 0.634,
    "coverage": {
     "status": "indexed",
-    "source": "other",
+    "source": "ctan",
     "via": "Theano Didot",
     "match": "revival",
     "equivalents": [
@@ -1836,7 +1836,7 @@
    "score": 0.619,
    "coverage": {
     "status": "indexed",
-    "source": "other",
+    "source": "fixedsys-excelsior",
     "via": "Fixedsys Excelsior",
     "match": "clone",
     "equivalents": [
@@ -2098,7 +2098,7 @@
    "score": 0.599,
    "coverage": {
     "status": "indexed",
-    "source": "other",
+    "source": "bitstream-vera",
     "via": "Bitstream Vera Sans",
     "match": "same-design",
     "equivalents": [
@@ -2341,7 +2341,7 @@
    "score": 0.572,
    "coverage": {
     "status": "indexed",
-    "source": "other",
+    "source": "chicago-kare",
     "via": "Chicago Kare",
     "match": "revival",
     "equivalents": [
@@ -2502,7 +2502,7 @@
    "score": 0.559,
    "coverage": {
     "status": "indexed",
-    "source": "other",
+    "source": "copperplate-cc",
     "via": "Copperplate CC",
     "match": "revival",
     "equivalents": [
@@ -2531,7 +2531,7 @@
    "score": 0.559,
    "coverage": {
     "status": "indexed",
-    "source": "other",
+    "source": "droid",
     "via": "Droid Sans",
     "match": "same-design",
     "equivalents": [
@@ -3306,7 +3306,7 @@
    "score": 0.514,
    "coverage": {
     "status": "indexed",
-    "source": "other",
+    "source": "bitstream-vera",
     "via": "Bitstream Vera Sans Mono",
     "match": "basis",
     "equivalents": [
@@ -3858,7 +3858,7 @@
    "score": 0.497,
    "coverage": {
     "status": "indexed",
-    "source": "other",
+    "source": "ctan",
     "via": "Euler Math",
     "match": "same-design",
     "equivalents": [
@@ -4900,7 +4900,7 @@
    "score": 0.458,
    "coverage": {
     "status": "indexed",
-    "source": "other",
+    "source": "ctan",
     "via": "Theano Didot",
     "match": "exact"
    }
@@ -5518,7 +5518,7 @@
    "score": 0.439,
    "coverage": {
     "status": "indexed",
-    "source": "other",
+    "source": "ctan",
     "via": "erewhon",
     "match": "same-design",
     "equivalents": [
@@ -7849,7 +7849,7 @@
    "score": 0.401,
    "coverage": {
     "status": "indexed",
-    "source": "other",
+    "source": "ctan",
     "via": "Asana Math",
     "match": "exact"
    }
@@ -12540,7 +12540,7 @@
    "score": 0.32,
    "coverage": {
     "status": "indexed",
-    "source": "other",
+    "source": "fixedsys-excelsior",
     "via": "Fixedsys Excelsior",
     "match": "related"
    }

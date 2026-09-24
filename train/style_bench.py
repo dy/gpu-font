@@ -10,7 +10,9 @@ import hashlib
 import io
 import json
 import random
+import shutil
 import subprocess
+from collections import Counter
 from pathlib import Path
 from concurrent.futures import ProcessPoolExecutor
 
@@ -29,6 +31,7 @@ OUT = ROOT/'.data/style'
 # The plan file freezes every text, size and face; pixels then depend only on the renderer and the preparation.
 PINS = ['scripts/style-bench-browser.mjs', 'scripts/corpus-prepare.mjs', 'src/line.mjs', 'src/input.mjs', 'src/prepare.mjs', 'bench/corpus.json', 'bench/encoder-split.json']
 SEED = 20260923
+CATALOG_SEED = 20260924  # the catalog benchmark's text never repeats the frozen benchmark's
 
 
 def ordered(items, salt):
@@ -47,19 +50,32 @@ def query_text(rng, script, pool, case):
     return ''.join(rng.choices(pool, k=length))
 
 
-def plan():
-    target = OUT/'bench-plan.json'
+def plan(name='bench'):
+    """The frozen benchmark ('bench': seen, development and test families), or the catalog benchmark ('catalog'): every
+    family, fresh text, for a model trained on the whole catalog. Its test set repeats the frozen recipe; a lighter
+    validation set per family (default face, two Latin cases, one degraded copy, one other script) selects checkpoints."""
+    target = OUT/f'{name}-plan.json'
     split = read(SPLIT); inventory = read(ROOT/'bench/corpus.json'); families = [f for f in inventory['families'] if not f['excluded']]
     faces = read(OUT/'faces.json')['faces']; pools = make_pools(families, glyph_sets(families))
     groups = {'seen':ordered([f for f, r in split['families'].items() if r == 'train'], 'seen')[:300],
               'development':[f for f, r in split['families'].items() if r == 'development'], 'test':[f for f, r in split['families'].items() if r == 'test']}
+    if name == 'catalog': groups = {'test': sorted(split['families'])}
     by_family = {}
     for i, f in enumerate(faces): by_family.setdefault(f['family'], []).append(i)
-    queries = []; rng = random.Random(SEED)
+    queries = []; rng = random.Random(SEED if name == 'bench' else CATALOG_SEED)
     for role, members in groups.items():
         for family in sorted(members):
             own = pools.get(family, {})
             if not own: continue
+            if name == 'catalog':
+                default = next(i for i in by_family[family] if faces[i]['default'])
+                items = ([('Latn', 'lower'), ('Latn', 'title')] if 'Latn' in own else []) + ([(rng.choice(sorted(s for s in own if s != 'Latn')), 'native')] if len(own) > ('Latn' in own) else [])
+                for n, (script, case) in enumerate(items):
+                    value = query_text(rng, script, own[script], case); size = rng.choice([16, 20, 24, 32, 40, 48, 64])
+                    base = {'role':'validation','family':family,'face':default,'faceId':faces[default]['id'],'weight':faces[default]['weight'],'italic':faces[default]['italic'],
+                            'script':script,'case':case,'text':value,'size':size,'length':len(value)}
+                    queries.append({**base,'condition':'clean'})
+                    if n == 0: queries.append({**base,'condition':'degraded'})
             candidates = by_family[family]; default = next(i for i in candidates if faces[i]['default'])
             upright = [i for i in candidates if not faces[i]['italic']]
             bold = min(upright, key=lambda i: abs(faces[i]['weight'] - 700)) if upright else None
@@ -78,7 +94,7 @@ def plan():
                     if n == 0: queries.append({**base,'condition':'degraded'})
                     if n == 1: queries.append({**base,'condition':'dark'})
     # Chinese slice: every Hanzi family (most are Noto, kept in training by the lineage split), default face.
-    role_of = {'train':'seen','development':'development','test':'test'}
+    role_of = {'train':'seen','development':'development','test':'test'} if name == 'bench' else {r: 'test' for r in ('train', 'development', 'test')}
     for family in sorted(f for f, own in pools.items() if 'Hani' in own):
         face = next(i for i in by_family[family] if faces[i]['default'])
         for n in range(3):
@@ -89,7 +105,7 @@ def plan():
             if n == 0: queries.append({**base,'condition':'degraded'})
     data = {'pins':{p: sha(ROOT/p) for p in PINS},'facesSha256':sha(OUT/'faces.json'),'queries':queries}
     if target.exists() and read(target) != data: raise ValueError('Changed frozen benchmark plan')
-    save(target, data); print('Benchmark plan', len(queries), 'queries', {r: sum(q['role'] == r for q in queries) for r in groups}, flush=True)
+    save(target, data); print('Benchmark plan', name, len(queries), 'queries', dict(Counter(q['role'] for q in queries)), flush=True)
 
 
 def instance(face):
@@ -104,12 +120,12 @@ def instance(face):
     return str(path)
 
 
-def instances(workers, references=False):
-    """Static instances for the benchmark faces, or for every face with catalog references (browser-rendered references)."""
+def instances(workers, references=False, name='bench'):
+    """Static instances for a benchmark's faces, or for every face with catalog references (browser-rendered references)."""
     faces = read(OUT/'faces.json')['faces']
-    needed = sorted({s['face'] for s in read(OUT/'references.json')['samples']} if references else {q['face'] for q in read(OUT/'bench-plan.json')['queries']})
+    needed = sorted({s['face'] for s in read(OUT/'references.json')['samples']} if references else {q['face'] for q in read(OUT/f'{name}-plan.json')['queries']})
     with ProcessPoolExecutor(workers) as pool: paths = list(pool.map(instance, [faces[i] for i in needed], chunksize=4))
-    save(OUT/('reference-instances.json' if references else 'bench-instances.json'), {faces[i]['id']: {'path': p, 'sha256': sha(Path(p))} for i, p in zip(needed, paths)})
+    save(OUT/('reference-instances.json' if references else f'{name}-instances.json'), {faces[i]['id']: {'path': p, 'sha256': sha(Path(p))} for i, p in zip(needed, paths)})
     print('Instances', len(paths), flush=True)
 
 
@@ -123,12 +139,25 @@ def degrade(raw, width, height, condition):
     return image
 
 
-def pack():
-    data = read(OUT/'bench-plan.json')
+def stage(name):
+    """Where a benchmark's browser renders live: the pinned render script reads and writes .data/style/bench-* relative to
+    its working directory, so another benchmark runs it unchanged from a folder of its own."""
+    return ROOT if name == 'bench' else OUT/'stages'/name
+
+
+def render(name):
+    folder = stage(name)/'.data/style'; folder.mkdir(parents=True, exist_ok=True)
+    if name != 'bench':  # the frozen benchmark renders in place
+        for kind in ('plan', 'instances'): shutil.copyfile(OUT/f'{name}-{kind}.json', folder/f'bench-{kind}.json')
+    subprocess.run(['node', str(ROOT/'scripts/style-bench-browser.mjs')], cwd=stage(name), check=True)
+
+
+def pack(name='bench'):
+    data = read(OUT/f'{name}-plan.json'); rendered_at = stage(name)/'.data/style'
     for path, expected in data['pins'].items():
         if sha(ROOT/path) != expected: raise ValueError('Changed benchmark dependency: ' + path)
-    rendered = read(OUT/'bench-browser.json'); raw = (OUT/'bench-browser.u8').read_bytes()
-    if rendered['planSha256'] != sha(OUT/'bench-plan.json') or rendered['sha256'] != sha(OUT/'bench-browser.u8'): raise ValueError('Stale browser renders')
+    rendered = read(rendered_at/'bench-browser.json'); raw = (rendered_at/'bench-browser.u8').read_bytes()
+    if rendered['planSha256'] != sha(OUT/f'{name}-plan.json') or rendered['sha256'] != sha(rendered_at/'bench-browser.u8'): raise ValueError('Stale browser renders')
     images = []
     for q, r in zip(data['queries'], rendered['images']):
         image = degrade(raw[r['offset']:r['offset'] + r['width']*r['height']], r['width'], r['height'], q['condition'])
@@ -141,10 +170,11 @@ def pack():
             source = len(samples); samples.append(data['queries'][source])
             for w in items:
                 raw = base64.b64decode(w['pixels']); windows.append({'source':source,'offset':offset,'width':w['width'],'height':w['height']}); chunks.append(raw); offset += len(raw)
-    pixels = b''.join(chunks); (OUT/'bench.u8').write_bytes(pixels)
-    manifest = {'pins':data['pins'],'planSha256':sha(OUT/'bench-plan.json'),'browser':rendered['browser'],'sha256':sha(OUT/'bench.u8'),'samples':samples,'windows':windows,
-                'scope':'Frozen before style training results. Chromium canvas renders of static instances; random 5-10 character Latin strings in four cases, other-script strings, degraded and dark copies. Synthetic, not screenshots.'}
-    validate_shard(manifest, len(pixels)); save(OUT/'bench.json', manifest)
+    pixels = b''.join(chunks); (OUT/f'{name}.u8').write_bytes(pixels)
+    scope = {'bench':'Frozen before style training results. Chromium canvas renders of static instances; random 5-10 character Latin strings in four cases, other-script strings, degraded and dark copies. Synthetic, not screenshots.',
+             'catalog':'Every catalog family, fresh text (its own seed), same renderer and preparation as the frozen benchmark. Validation selects checkpoints of models trained on the whole catalog; test repeats the frozen recipe and is read once per released model. Synthetic, not screenshots.'}[name]
+    manifest = {'pins':data['pins'],'planSha256':sha(OUT/f'{name}-plan.json'),'browser':rendered['browser'],'sha256':sha(OUT/f'{name}.u8'),'samples':samples,'windows':windows,'scope':scope}
+    validate_shard(manifest, len(pixels)); save(OUT/f'{name}.json', manifest)
     print('Packed benchmark', len(samples), 'queries', len(windows), 'windows', flush=True)
 
 
@@ -184,8 +214,10 @@ def load(name='bench'):
 
 
 if __name__ == '__main__':
-    p = argparse.ArgumentParser(); p.add_argument('command', choices=['plan', 'instances', 'pack', 'sketches']); p.add_argument('--workers', type=int, default=8); p.add_argument('--references', action='store_true'); a = p.parse_args()
-    if a.command == 'plan': plan()
-    elif a.command == 'instances': instances(a.workers, a.references)
+    p = argparse.ArgumentParser(); p.add_argument('command', choices=['plan', 'instances', 'render', 'pack', 'sketches']); p.add_argument('--workers', type=int, default=8); p.add_argument('--references', action='store_true')
+    p.add_argument('--name', choices=['bench', 'catalog'], default='bench'); a = p.parse_args()
+    if a.command == 'plan': plan(a.name)
+    elif a.command == 'instances': instances(a.workers, a.references, a.name)
+    elif a.command == 'render': render(a.name)
     elif a.command == 'sketches': sketches()
-    else: pack()
+    else: pack(a.name)

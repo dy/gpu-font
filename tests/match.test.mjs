@@ -47,6 +47,6 @@ test('createMatcher names the catalog or model that failed to load', async () =>
   globalThis.fetch = async () => ({ ok: false, status: 404 })
   try {
     await assert.rejects(createMatcher('https://example.com/catalog.json'), /Cannot load https:\/\/example\.com\/catalog\.json: HTTP 404/)
-    await assert.rejects(createMatcher(catalogs.fontshare, 'https://example.com/model.json'), /Cannot load https:\/\/example\.com\/model\.json: HTTP 404/)
+    await assert.rejects(createMatcher(catalogs.other, 'https://example.com/model.json'), /Cannot load https:\/\/example\.com\/model\.json: HTTP 404/)
   } finally { globalThis.fetch = original }
 })

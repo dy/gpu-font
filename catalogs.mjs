@@ -8,7 +8,7 @@ import { readMyFonts, saveMyFonts, removeMyFonts } from './my-fonts.mjs'
 import sprae from 'https://cdn.jsdelivr.net/npm/sprae@13.9.4/dist/sprae.js'
 
 const TERMS = { permitted: 'Allowed', 'none-found': 'No restriction found', 'not-verified': 'Not verified', restricted: 'Restricted', ban: 'Forbidden', mixed: 'Mixed' }
-const WORK = { searched: 'Searched', indexed: 'Indexed', partial: 'Partly indexed', inventoried: 'Inventoried', planned: 'Planned', paused: 'Paused', 'permission-to-request': 'Permission to request', 'awaiting-permission': 'Awaiting permission', declined: 'Declined', excluded: 'Excluded' }
+const WORK = { searched: 'Searched', 'not-searched': 'Not searched', indexed: 'Indexed', partial: 'Partly indexed', inventoried: 'Inventoried', planned: 'Planned', paused: 'Paused', 'permission-to-request': 'Permission to request', 'awaiting-permission': 'Awaiting permission', declined: 'Declined', excluded: 'Excluded' }
 const $ = id => document.getElementById(id)
 const count = n => n.toLocaleString('en-US')
 const plural = (n, one, many) => `${count(n)} ${n === 1 ? one : many}`
@@ -16,35 +16,70 @@ const plural = (n, one, many) => `${count(n)} ${n === 1 ? one : many}`
 const [data, site] = await Promise.all(['./bench/foundries.json', './site.json'].map(async path => (await fetch(path)).json()))
 const tally = Object.keys(TERMS).map(status => [status, data.sources.filter(s => s.terms.status === status).length]).filter(([, n]) => n)
 $('sources-summary').textContent = `${plural(site.families, 'family', 'families')} searched from ${plural(site.catalogs.length, 'catalog', 'catalogs')}; ${plural(data.sources.length, 'source', 'sources')} checked. Terms: ${tally.map(([status, n]) => `${TERMS[status].toLowerCase()} ${count(n)}`).join(', ')}.`
-// Included sources state what the search covers, as site.json ships it; every other source, how far work has gone.
-// Small sources are searched together as Other, one row naming them all; its terms are theirs when they agree.
+// One table: the catalogs a search covers as site.json ships them, then every other source grouped by why it isn't
+// searched. Other and each group fold open into their sources; the column sort orders the sources inside each group.
 const byId = new Map(data.sources.map(s => [s.id, s])), searched = new Set(site.catalogs.flatMap(option => option.sources ?? [option.id]))
 // Each shipped catalog downloads as the JSON the search reads.
 const size = bytes => bytes >= 1e6 ? `${(bytes / 1e6).toFixed(1)} MB` : `${Math.round(bytes / 1e3)} KB`
-const included = site.catalogs.map(({ id, name, sources, families, faces, file, bytes }) => {
-  const members = (sources ?? [id]).map(id => byId.get(id)).filter(Boolean), [first] = members
-  const work = { status: 'searched', familiesIndexed: families, route: plural(faces, 'face', 'faces') }
-  const json = { file, bytes }
-  return sources ? { id, name, url: null, members: members.map(s => s.name).join(', '), licence: 'Per source', terms: members.every(s => s.terms.status === first.terms.status) ? { status: first.terms.status } : { status: 'mixed' }, work, json } : { ...first, work, json }
-}).filter(source => source.terms)
-// Icon sets are glyph collections, not fonts to find; they stay in the ledger, off the page.
-const others = data.sources.filter(s => !searched.has(s.id) && s.kind !== 'icons')
-// Both tables sort by any column; families missing sort last either way. A click on the sorted column reverses it;
-// a new column starts ascending, families descending.
+const agree = members => ({ status: members.every(s => s.terms.status === members[0].terms.status) ? members[0].terms.status : 'mixed' })
 // Families counted by the work done, else the approximate size the source advertises.
 const families = source => source.work.familiesIndexed ?? source.work.familiesInventoried ?? source.familiesAvailable ?? null
-const familiesText = source => { const n = families(source), unit = source.availableUnit ?? 'families'
-  return n == null ? '–' : (source.work.familiesIndexed ?? source.work.familiesInventoried) != null ? count(n) : `≈${count(n)}${unit === 'families' ? '' : ` ${unit}`}` }
+const shipped = site.catalogs.map(({ id, name, sources, families, faces, file, bytes }) => {
+  const work = { status: 'searched', familiesIndexed: families, route: plural(faces, 'face', 'faces') }, json = { file, bytes }
+  if (!sources) return byId.get(id) && { ...byId.get(id), work, json }
+  const members = sources.map(id => byId.get(id)).filter(Boolean).map(s => ({ ...s, work: { ...s.work, status: 'searched' } }))
+  return { id, name, url: null, members, licence: 'Per source', terms: agree(members), work, json }
+}).filter(Boolean)
+// Not searched, grouped by licence: open fonts whose terms allow collecting but aren't indexed yet; free fonts whose
+// site terms forbid collecting or are unverified; and commercial fonts (paid, subscription, rental or tied to a platform).
+// A group's families add up its members' family counts; ≈…+ where some are estimates or counted in other units.
+// Icon sets are glyph collections, not fonts to find; they stay in the ledger, off the page.
+const unsearched = data.sources.filter(s => !searched.has(s.id) && s.kind !== 'icons')
+const commercial = s => /^(commercial|subscription|rental)/i.test(s.licence ?? '') || ['retailer', 'platform'].includes(s.kind)
+const cleared = s => ['permitted', 'none-found'].includes(s.terms.status)
+const REASONS = [['open', 'Open, not searched yet', s => !commercial(s) && cleared(s)], ['free', 'Free, not cleared', s => !commercial(s) && !cleared(s)], ['commercial', 'Commercial', commercial]]
+const groups = [...shipped, ...REASONS.map(([id, name, belongs]) => {
+  const members = unsearched.filter(belongs)
+  const known = members.filter(m => (m.availableUnit ?? 'families') === 'families' && families(m) != null)
+  return { id, name, url: null, members, licence: 'Per source', terms: agree(members), work: { status: 'not-searched' },
+    familiesAvailable: known.reduce((n, m) => n + families(m), 0) || null, partial: known.length < members.length || known.some(m => m.work.familiesIndexed == null && m.work.familiesInventoried == null) }
+}).filter(group => group.members.length)]
+// A worked count reads exactly; a size the source advertises reads ≈N, with its unit under it when that is not families.
+const counted = source => (source.work.familiesIndexed ?? source.work.familiesInventoried) != null
+const familiesText = source => { const n = families(source)
+  return n == null ? '–' : counted(source) ? count(n) : `≈${count(n)}${source.partial ? '+' : ''}` }
+const familiesUnit = source => { const unit = source.availableUnit ?? 'families'
+  return families(source) == null || counted(source) || unit === 'families' ? null : unit }
+// Sorts by any column; families missing sort last either way. A click on the sorted column reverses it; a new column
+// starts ascending, families descending.
 const position = (list, value) => { const i = list.indexOf(value); return i < 0 ? list.length : i }
 const keys = { name: s => s.name.toLowerCase(), terms: s => position(Object.keys(TERMS), s.terms.status), licence: s => (s.licence ?? '').toLowerCase(), status: s => position(Object.keys(WORK), s.work.status), families }
+const sorted = (list, { key, dir }) => list.toSorted((a, b) => {
+  const x = keys[key](a), y = keys[key](b)
+  return (x == null) - (y == null) || (x < y ? -dir : x > y ? dir : 0) || a.name.localeCompare(b.name)
+})
+// Each cell leads with one line. A licence longer than its column (LEAD characters at the page's full width) leads
+// with its first clause, up to a punctuation mark or a qualifier (with, per, for), and continues under it in small text;
+// one with no clause to break at shows whole under its cut.
+const LEAD = 30
+const brief = text => {
+  if (!text) return '–'
+  let lead = text.length <= LEAD ? text : text.replace(/^(.+?)\s*(?:[,:;(]| (?:with|per|for) ).*$/s, '$1')
+  if (lead.length > LEAD) lead = `${lead.slice(0, LEAD).replace(/\s+\S*$/, '')}…`
+  return lead.replace(/^./, c => c.toUpperCase())
+}
+const rest = text => {
+  if ((text?.length ?? 0) <= LEAD) return null
+  const lead = brief(text)
+  return lead.endsWith('…') ? text : text.slice(lead.length).replace(/^\s*[,:;]?\s*/, '')
+}
 const state = sprae(document.querySelector('main'), {
-  TERMS, WORK, count, familiesText, size, included, others, mine: [],
+  TERMS, WORK, count, plural, familiesText, familiesUnit, size, groups, expanded: [], brief, rest,
+  aside: work => work.reason ?? work.route, sort: { key: 'families', dir: -1 }, mine: [],
+  // Folded groups by id; a plain list, since a store's missing keys would resolve in its parent scope.
+  rows: (groups, expanded, sort) => groups.flatMap(group => [group, ...(group.members && expanded.includes(group.id) ? sorted(group.members, sort).map(source => ({ ...source, member: true })) : [])]),
   next: (sort, key) => ({ key, dir: sort.key === key ? -sort.dir : key === 'families' ? -1 : 1 }),
-  order: (sort, key) => sort.key === key ? (sort.dir > 0 ? 'ascending' : 'descending') : null,
-  sorted: (list, { key, dir }) => list.toSorted((a, b) => {
-    const x = keys[key](a), y = keys[key](b)
-    return (x == null) - (y == null) || (x < y ? -dir : x > y ? dir : 0) || a.name.localeCompare(b.name)
-  })
+  order: (sort, key) => sort.key === key ? (sort.dir > 0 ? 'ascending' : 'descending') : null
 })
 
 // My fonts: indexed here with the site's model, kept in IndexedDB, offered in the search page's catalog menu.

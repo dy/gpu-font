@@ -10,8 +10,6 @@ const MODEL = new URL('../models/encoder/encoder.json', import.meta.url)
 export const catalogs = {
   'google-fonts': new URL('../models/encoder/google-fonts.json', import.meta.url),
   debian: new URL('../models/encoder/catalogs/debian.json', import.meta.url),
-  fontshare: new URL('../models/encoder/catalogs/fontshare.json', import.meta.url),
-  collletttivo: new URL('../models/encoder/catalogs/collletttivo.json', import.meta.url),
   other: new URL('../models/encoder/catalogs/other.json', import.meta.url)
 }
 

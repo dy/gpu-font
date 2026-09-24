@@ -17,6 +17,8 @@ button:not(:disabled):active { transform: translateY(1px); }
 h1, h2, h3, p { margin: 0; }
 h1 { line-height: 1; }
 h2 { font-size: var(--text-title); font-weight: 400; }
+/* Subtitles: one serif for the workbench columns, the measures and the questions. */
+.column-title, .metrics h3, .qa h3 { font: 400 var(--text-subtitle)/1.35 var(--font-display); color: var(--color-ink); }
 .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; border: 0; }
 .skip { position: fixed; top: var(--space-3); left: var(--space-4); background: var(--color-accent); color: var(--color-accent-ink); padding: var(--space-3); z-index: 4; clip-path: inset(50%); }
 .skip:focus { clip-path: none; }
@@ -24,19 +26,14 @@ h2 { font-size: var(--text-title); font-weight: 400; }
 /* Links: one style everywhere; navigation marks and match names drop the underline until hovered. */
 a { color: inherit; text-decoration: underline 1px var(--link-rule); text-underline-offset: var(--link-offset); }
 a:hover { text-decoration-color: currentColor; }
-.wordmark, .header-icon, .font-name a { text-decoration: none; }
-.font-name a:hover { text-decoration: underline 1px currentColor; }
+.wordmark, .header-icon { text-decoration: none; }
 
-/* Code: grey highlighting, the same in blocks and inline. */
-code { font: 400 var(--text-code)/1.6 var(--font-mono); color: var(--color-code); }
-:not(pre) > code { padding: 1px var(--space-1); background: var(--color-well); border-radius: var(--radius-panel); }
-.code { margin: var(--space-3) 0; padding: var(--space-4); font-size: var(--text-code); line-height: 1.6; overflow-x: auto; background: var(--color-well); border-radius: var(--radius-panel); }
-.code code { white-space: pre; }
-.tok-k, .tok-f { color: var(--color-ink); }
-.tok-k { font-weight: 600; }
-.tok-s { color: var(--color-muted); }
-.tok-c { color: var(--color-faint); font-style: italic; }
-.tok-p { color: var(--color-faint); }
+/* Code: inline, on grey. */
+code { padding: 1px var(--space-1); font: 400 var(--text-code)/1.6 var(--font-mono); color: var(--color-ink); background: var(--color-well); border-radius: var(--radius-panel); }
+
+/* Pills: a short label on grey, the same on every page: the verdict, a match's face, a catalog's terms. */
+.pill { display: inline-block; padding: 0 var(--space-2); border-radius: var(--radius-pill); background: var(--color-well); color: var(--color-muted); font-size: var(--text-small); line-height: 1.6; white-space: nowrap; }
+.pill:empty { display: none; }
 
 /* Popovers and tooltips share one surface. */
 .popover { position: absolute; inset: auto; margin: 0; border: 1px solid var(--color-rule); border-radius: var(--radius-popover); background: var(--color-surface); color: var(--color-ink); box-shadow: var(--shadow-popover); overflow: auto; scrollbar-width: thin; scrollbar-color: var(--color-rule) var(--color-transparent); }
@@ -71,19 +68,18 @@ code { font: 400 var(--text-code)/1.6 var(--font-mono); color: var(--color-code)
 .loader progress::-webkit-progress-value { background: currentColor; transition: width .2s linear; }
 .loader progress::-moz-progress-bar { background: currentColor; }
 .source-panel, .results-column { min-width: 0; padding-block: var(--space-6) var(--space-8); }
-/* The model input follows the preview and fills the rest of its column. */
-.source-panel { display: flex; flex-direction: column; }
-/* While More matches lists fifty, the crop and its verdict stay in view beside them. A panel taller than the window sticks
-   by its bottom edge (--panel-height, measured by app.mjs), so the verdict never scrolls away. Folded to five, both
-   columns stretch to one height, so the verdict keeps its line with More matches. */
-@media (min-width: 62rem) { .workbench:has(#more-matches[aria-expanded="true"]) .source-panel { position: sticky; top: min(0px, calc(100dvh - var(--panel-height, 0px))); align-self: start; } }
+/* The crop stays in view beside a long list of matches: the Source title scrolls away, the preview and Model stick,
+   within the column's full height, as far from the window's edges as the column's padding. Taller than the window, they
+   stick by their bottom edge (--body-height, measured by app.mjs), so an unfolded Model never scrolls away. */
+@media (min-width: 62rem) { .source-body { position: sticky; top: min(var(--space-6), calc(100dvh - var(--body-height, 0px) - var(--space-8))); } }
 .results-panel, .catalog-panel { min-width: 0; }
 /* Each block opens on one label line: label left, its controls right. Equal heights keep the columns level. */
 .panel-head { display: flex; align-items: center; justify-content: flex-end; gap: var(--space-1); min-height: var(--size-target); margin-bottom: var(--space-2); color: var(--color-muted); font-size: var(--text-small); }
 .panel-head > :first-child { margin-right: auto; }
 .panel-head h2 { font-size: inherit; }
-/* Each workbench column names itself, as Model input does: Source on the left, Matches on the right. */
-.column-title { margin-bottom: var(--space-2); color: var(--color-muted); font-size: var(--text-small); font-weight: 400; }
+/* Each workbench column opens on a row naming it: Source on the left; Matches on the right, with the
+   catalog selector on its line; under it, the verdict for the crop, on the right. */
+.column-head { display: flex; align-items: center; justify-content: space-between; gap: var(--space-4); min-height: var(--size-target); margin-bottom: var(--space-2); }
 .text-button { border: 0; background: var(--color-transparent); color: var(--color-muted); padding: var(--space-2); min-height: var(--size-target); font-size: var(--text-small); }
 .text-button:not(:disabled):hover { color: var(--color-accent); text-decoration: underline 1px currentColor; text-underline-offset: var(--link-offset); }
 .icon-button { display: grid; place-items: center; width: var(--size-target); height: var(--size-target); padding: 0; border: 0; background: var(--color-transparent); color: var(--color-muted); }
@@ -157,7 +153,7 @@ code { font: 400 var(--text-code)/1.6 var(--font-mono); color: var(--color-code)
 #replace-image { position: absolute; inset: 0; width: 100%; height: 100%; padding: 0; border: 0; background: var(--color-transparent); }
 @media (pointer: coarse) { .crop-handle { width: var(--size-target); height: var(--size-target); } .crop-handle::after { inset: 18px; } .image-viewport { padding-inline: var(--space-6); } }
 /* Phones: slimmer controls keep the source switch and name on one line. */
-@media (max-width: 24rem) { .source-panel > .panel-head .icon-button { width: var(--space-10); } .pen-size { width: var(--space-10); } }
+@media (max-width: 24rem) { .source-head .icon-button { width: var(--space-10); } .pen-size { width: var(--space-10); } }
 
 label { display: grid; gap: var(--space-1); font-size: var(--text-small); }
 input, select { width: 100%; min-width: 0; padding: var(--space-2); min-height: var(--size-target); border: 1px solid var(--color-rule); border-radius: var(--radius-control); background: var(--color-surface); color: var(--color-ink); font-size: var(--text-body); }
@@ -165,20 +161,26 @@ input, select { width: 100%; min-width: 0; padding: var(--space-2); min-height: 
 .message:empty { display: none; }
 .message[data-error] { color: var(--color-error); }
 
+/* Model: folded under the preview, as More matches unfolds the list: the input windows. Its row keeps the time on the
+   right, open or folded. Folded, the preview drops the windows' outlines too. */
+.model-details { margin-top: var(--space-5); }
+.model-details > summary { display: flex; align-items: center; gap: var(--space-1); min-height: var(--size-target); color: var(--color-muted); font-size: var(--text-small); list-style: none; }
+.model-details > summary::-webkit-details-marker { display: none; }
+.model-details > summary:hover, .model-details[open] > summary { color: var(--color-ink); }
+.model-details[open] > summary .chevron { transform: rotate(180deg); }
+.source-body:has(.model-details:not([open])) #input-regions { display: none; }
+.input-time { display: inline-flex; align-items: center; gap: var(--space-1); margin-inline-start: auto; color: var(--color-muted); font-size: var(--text-small); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.input-time:has(#detection-time:empty) { visibility: hidden; }
 /* Model input: windows are at most 128 × 48, shown at up to 2×. The row keeps one height for every crop, that of a
  * full-width window in its third, so narrow crops never move the page; each window is as large as its third and that
  * height allow, at any page width. */
-.model-input { flex: 1; display: flex; flex-direction: column; margin: var(--space-5) 0 0; container-type: inline-size; }
+.model-input { display: flex; flex-direction: column; margin: 0; container-type: inline-size; }
 .input-windows { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); align-items: start; gap: var(--space-3); --row: min(96px, (100cqi - 2 * var(--space-3)) / 8); height: var(--row); }
 .input-windows canvas { display: block; width: min(100%, var(--w) * 2px, var(--w) / var(--h) * var(--row)); height: auto; image-rendering: pixelated; outline: 1px dashed var(--color-rule); border-radius: var(--radius-panel); }
 #input-regions { position: absolute; inset: 0; pointer-events: none; }
 #input-regions span { position: absolute; border: 1px dashed var(--color-rule); }
-/* What the crop was detected as, and on the right what it cost: the column's last line, its text where a target-high
- * row centres its own, so it shares a line with More matches and JSON. */
-.input-meta { display: flex; flex-wrap: wrap; align-items: baseline; gap: 0 var(--space-4); margin-top: auto; padding: var(--space-2) 0 calc((var(--size-target) - 1.5 * var(--text-small)) / 2); }
-#result-summary { color: var(--color-muted); font-size: var(--text-small); }
-#save { margin-left: auto; }
-.input-time { min-height: 1.5em; margin-left: auto; color: var(--color-faint); font-size: var(--text-small); font-variant-numeric: tabular-nums; white-space: nowrap; }
+/* What the crop was detected as, one pill per label, on the right: level with the sample row. */
+.input-meta { display: flex; flex-wrap: wrap; align-items: center; justify-content: flex-end; gap: var(--space-1); min-height: var(--size-target); margin-bottom: var(--space-2); }
 
 /* Matches: rank width and gap together equal the preview indent. */
 .results { padding: 0; margin: 0; list-style: none; }
@@ -191,19 +193,19 @@ input, select { width: 100%; min-width: 0; padding: var(--space-2); min-height: 
 .rank { flex-shrink: 0; width: var(--space-4); color: var(--color-muted); font-size: var(--text-small); font-variant-numeric: tabular-nums; }
 .font-name { display: flex; align-items: baseline; gap: var(--space-2); font-size: var(--text-small); flex: 1; min-width: 0; }
 .font-name a { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.font-style { flex-shrink: 0; color: var(--color-faint); white-space: nowrap; }
-.font-twins { flex: 1 1 0; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--color-faint); cursor: help; }
+.font-twins { flex: 1 1 0; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--color-muted); cursor: help; }
 .font-twins:focus-visible { outline-offset: 2px; }
-.result-preview { font: 400 var(--text-preview)/1.3 var(--font-specimen); width: calc(100% - var(--space-7)); margin: var(--space-2) 0 0 var(--space-7); padding: 0; border: 0; background: var(--color-transparent); min-height: var(--space-12); text-overflow: ellipsis; }
+/* A preview's line is its font's own ascent and descent, so no font scrolls inside its field; one height keeps rows even. */
+.result-preview { font: 400 var(--text-preview)/normal var(--font-specimen); width: calc(100% - var(--space-7)); height: 1.3em; margin: var(--space-2) 0 0 var(--space-7); padding: 0; border: 0; background: var(--color-transparent); min-height: var(--space-12); text-overflow: ellipsis; }
 .result-preview:not([readonly]):hover, .result-preview:not([readonly]):focus { background: var(--color-well); }
 .result-preview:focus { outline: none; }
-/* The export sits with the matches it exports; the row waits until there are matches. */
-.results-foot { display: flex; align-items: center; gap: var(--space-4); }
+/* More matches, and the JSON export on the right, wait until there are matches. */
+.results-foot { display: flex; justify-content: space-between; align-items: center; gap: var(--space-4); }
 .results:empty + .results-foot { visibility: hidden; }
-.more-matches { display: inline-flex; align-items: center; gap: var(--space-1); padding-inline: 0; }
+.more-matches, #save { display: inline-flex; align-items: center; gap: var(--space-1); padding-inline: 0; }
 .more-matches[aria-expanded="true"] { color: var(--color-ink); }
 .more-matches[aria-expanded="true"] .chevron { transform: rotate(180deg); }
-.result-unavailable { margin: var(--space-2) 0 0 var(--space-7); color: var(--color-faint); font-size: var(--text-small); }
+.result-unavailable { margin: var(--space-2) 0 0 var(--space-7); color: var(--color-muted); font-size: var(--text-small); }
 /* Unavailable, it keeps its row, so fewer matches never move the page. */
 .more-matches[inert] { visibility: hidden; }
 /* A tooltip lists every folded family; the full ranking opens in a scrollable list. */
@@ -218,7 +220,7 @@ input, select { width: 100%; min-width: 0; padding: var(--space-2); min-height: 
 #catalog-button svg { flex-shrink: 0; }
 #catalog-label { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .catalog-menu { width: min(340px, calc(100vw - var(--space-6))); max-height: calc(100dvh - var(--space-6)); padding: var(--space-1); }
-.catalog-option { display: flex; justify-content: space-between; gap: var(--space-4); width: 100%; min-height: var(--size-target); padding: var(--space-2) var(--space-3); border: 0; border-radius: var(--radius-panel); background: var(--color-transparent); text-align: left; font-size: var(--text-small); }
+.catalog-option { display: flex; align-items: center; justify-content: space-between; gap: var(--space-4); width: 100%; min-height: var(--size-target); padding: var(--space-2) var(--space-3); border: 0; border-radius: var(--radius-panel); background: var(--color-transparent); text-align: left; font-size: var(--text-small); }
 .catalog-option:hover, .catalog-option[aria-pressed="true"] { background: var(--color-well); }
 .catalog-option:focus-visible { outline-offset: -2px; }
 .catalog-option span:last-child { color: var(--color-muted); }
@@ -232,16 +234,12 @@ input, select { width: 100%; min-width: 0; padding: var(--space-2); min-height: 
 .stacked .explanation-copy > p { max-width: var(--measure); }
 .explanation-copy { max-width: var(--measure); font-size: var(--text-small); color: var(--color-muted); }
 .explanation-copy p + p { margin-top: var(--space-3); }
-/* How to use: its text beside the code (see Split). */
-.use-text { display: grid; gap: var(--space-3); align-content: start; }
-.use-text p { max-width: var(--measure); color: var(--color-muted); font-size: var(--text-small); }
-.explanation > .code { margin: 0; align-self: start; min-width: 0; }
-/* Split: a heading with its text under it, and its figure (facts, table, bars, code) beside them, from the heading's top. */
+/* Split: a heading with its text under it, and its figure (facts, table, bars) beside them, from the heading's top. */
 .split { display: grid; gap: var(--space-5); }
 .split > :nth-child(3) { min-width: 0; margin: 0; }
-/* How it works ends on its measures: accuracy and speed side by side, bars only, on the split's two columns. */
-.metrics { display: grid; gap: var(--space-8) var(--space-14); margin-top: var(--space-6); }
-.metrics h3 { margin-bottom: var(--space-4); font: 400 var(--text-subtitle)/1.35 var(--font-display); color: var(--color-ink); }
+/* How it works: its text and the model's facts on the left; accuracy over speed on the right, bars only. */
+.metrics { display: grid; align-content: start; gap: var(--space-8); }
+.metrics h3 { margin-bottom: var(--space-4); }
 /* How does it compare: the table alone; each finder names its owner and each count its sources. A narrow screen scrolls it. */
 #compare :is(th, td) { text-align: left; }
 #compare :is(th, td) + :is(th, td) { padding-left: var(--space-5); }
@@ -249,21 +247,20 @@ input, select { width: 100%; min-width: 0; padding: var(--space-2); min-height: 
 /* Questions: short ones, text only, two to a row. */
 .questions { display: grid; gap: var(--space-8) var(--space-14); }
 .qa { display: grid; align-content: start; gap: var(--space-3); color: var(--color-muted); font-size: var(--text-small); }
-.qa h3 { font: 400 var(--text-subtitle)/1.35 var(--font-display); color: var(--color-ink); }
-.qa > p { max-width: var(--measure); }
+.qa > p { max-width: var(--measure); text-wrap: pretty; }
 /* Meters: a label over a bar and its value; --value is the fraction the bar fills. */
-.meters { display: grid; gap: var(--space-3); max-width: 28rem; margin: 0; color: var(--color-muted); font-size: var(--text-small); }
+.meters { display: grid; gap: var(--space-3); margin: 0; color: var(--color-muted); font-size: var(--text-small); }
 .meters > div { display: grid; gap: var(--space-1); }
 .meters dt { color: var(--color-ink); }
 .meter { display: grid; margin: 0; grid-template-columns: minmax(0, 1fr) 6.5em; align-items: center; gap: var(--space-3); color: var(--color-ink); text-align: right; font-variant-numeric: tabular-nums; }
 .meter::before { content: ''; height: 6px; background: linear-gradient(to right, var(--color-ink) calc(var(--value, 0) * 100%), var(--color-tint) 0); }
 
-/* Facts about the model, in How it works. */
+/* Facts about the model, under How it works' text. */
 .facts { margin: 0; }
+.explanation-copy + .facts { margin-top: var(--space-5); }
 .facts > div { display: flex; gap: var(--space-3); justify-content: space-between; border-bottom: 1px solid var(--color-rule); padding-block: var(--space-2); font-size: var(--text-small); }
 .facts dt { color: var(--color-muted); }
 .facts dd { margin: 0; text-align: right; overflow-wrap: anywhere; font-variant-numeric: tabular-nums; }
-#save { display: inline-flex; align-items: center; gap: var(--space-1); padding-inline: 0; }
 .figures { width: 100%; border-collapse: collapse; font-size: var(--text-small); font-variant-numeric: tabular-nums; }
 .figures caption { text-align: left; margin-bottom: var(--space-2); color: var(--color-muted); }
 .figures th, .figures td { padding: var(--space-2) 0; border-bottom: 1px solid var(--color-rule); text-align: right; vertical-align: baseline; font-weight: 400; }
@@ -280,16 +277,23 @@ input, select { width: 100%; min-width: 0; padding: var(--space-2); min-height: 
 .sources-table { width: 100%; min-width: 760px; border-collapse: collapse; table-layout: fixed; }
 .sources-table th, .sources-table td { padding: var(--space-4) var(--space-6) var(--space-4) 0; border-bottom: 1px solid var(--color-rule); text-align: left; vertical-align: top; font-weight: 400; }
 .sources-table thead th { padding-top: 0; color: var(--color-muted); font-size: var(--text-small); }
-.sources-table thead th:nth-child(1) { width: 30%; }
-.sources-table thead th:nth-child(2) { width: 16%; }
-.sources-table thead th:nth-child(3) { width: 22%; }
+/* Terms, Licence and Status share one width. */
+.sources-table thead th:nth-child(1) { width: 25%; }
+.sources-table thead th:is(:nth-child(2), :nth-child(3), :nth-child(4)) { width: 22%; }
 .sources-table thead th:nth-child(5) { width: 9%; }
-.sources-table thead th:nth-child(6) { width: 8%; }
+/* Narrower, the table scrolls rather than cut a terms or status word. */
+#sources .sources-table { min-width: 58rem; }
 .sources-table td, .sources-table th { overflow-wrap: anywhere; }
-.sources-table tbody th a { color: var(--color-ink); text-decoration: none; }
-.sources-table tbody th a:hover { text-decoration: underline 1px currentColor; }
+.sources-table tbody th > a { color: var(--color-ink); }
 .sources-table tbody td { color: var(--color-muted); }
-.sources-table .number { text-align: right; padding-right: 0; font-variant-numeric: tabular-nums; }
+/* Groups fold open into their sources, which sit indented under them. A group's arrow stands in the indent, before its
+   name, so the name lines up with its sources'. */
+.fold { margin-left: calc(-1 * var(--space-6)); padding: 0; border: 0; background: var(--color-transparent); color: var(--color-ink); font: inherit; text-align: left; }
+.fold::before { content: ''; display: inline-block; box-sizing: border-box; width: .4em; height: .4em; margin-right: calc(var(--space-6) - .4em); vertical-align: .15em; border-right: 1.2px solid currentColor; border-bottom: 1.2px solid currentColor; transform: rotate(-45deg); }
+.fold[aria-expanded="true"]::before { vertical-align: .3em; transform: rotate(45deg); }
+.fold:hover { text-decoration: underline 1px currentColor; text-underline-offset: var(--link-offset); }
+.sources-table :is(.member-row, .group-row) > th { padding-left: var(--space-6); }
+.sources-table .number { text-align: right; padding-right: 0; font-variant-numeric: tabular-nums; white-space: nowrap; }
 /* Sortable headers: the sorted column is ink with its direction; a template row stays hidden until sprae renders it. */
 .sort { display: inline-flex; gap: var(--space-1); padding: 0; border: 0; background: var(--color-transparent); color: inherit; font: inherit; }
 .sort:hover, [aria-sort] > .sort { color: var(--color-ink); }
@@ -298,20 +302,20 @@ input, select { width: 100%; min-width: 0; padding: var(--space-2); min-height: 
 .sources-table tr[\:each] { display: none; }
 /* Rules separate rows; the last row has none, so a table ends on its content. */
 .sources-table tbody tr:last-child > *, .figures tbody tr:last-child > *, .facts > div:last-child { border-bottom: 0; }
-.pill { display: inline-block; padding: 0 var(--space-2); border-radius: var(--radius-pill); color: var(--color-muted); font-size: var(--text-small); line-height: 1.6; white-space: nowrap; }
-.pill[data-terms="permitted"], .pill[data-terms="none-found"] { background: var(--color-well); color: var(--color-ink); }
-.pill[data-terms="restricted"], .pill[data-terms="ban"] { color: var(--color-error); }
-.status { color: var(--color-ink); }
-.held, .detail { display: block; margin-top: var(--space-1); color: var(--color-faint); font-size: var(--text-small); }
-.sources-table details { margin-top: var(--space-1); font-size: var(--text-small); }
-.sources-table summary { color: var(--color-muted); }
-.sources-table summary:hover { color: var(--color-ink); }
-.sources-table blockquote { margin: var(--space-2) 0; padding-left: var(--space-3); border-left: 2px solid var(--color-rule); color: var(--color-ink); }
-.checked { margin-top: var(--space-2); color: var(--color-faint); }
+/* Two sizes: each cell's leading word or phrase in body text and ink; its details, notes and clauses small and grey. */
+.cell-main { display: block; color: var(--color-ink); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+/* A catalog downloads from its size, under its family count, marked by a download icon. The icon is an inline
+   replaced element, so the link's underline runs under the size alone. */
+.json-link { display: inline-block; margin-top: var(--space-1); color: var(--color-muted); font-size: var(--text-small); white-space: nowrap; }
+.json-link > svg { margin-right: var(--space-1); vertical-align: -.2em; }
+.json-link:hover { color: var(--color-ink); }
+.held, .detail { display: block; margin-top: var(--space-1); color: var(--color-muted); font-size: var(--text-small); }
+.sources-table blockquote { margin: var(--space-2) 0; padding-left: var(--space-3); border-left: 2px solid var(--color-rule); color: var(--color-ink); font-size: var(--text-small); }
+.checked { display: block; margin-top: var(--space-1); color: var(--color-muted); font-size: var(--text-small); }
 
-footer { padding-block: var(--space-6) var(--space-8); display: flex; justify-content: space-between; flex-wrap: wrap; gap: var(--space-4); font-size: var(--text-small); color: var(--color-muted); }
+footer { padding-block: var(--space-6) var(--space-8); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: var(--space-4); font-size: var(--text-small); color: var(--color-muted); }
 footer a { padding-block: var(--space-3); }
-.related, .footer-links { display: flex; flex-wrap: wrap; align-items: center; column-gap: var(--space-4); }
+.footer-links { display: flex; flex-wrap: wrap; align-items: center; column-gap: var(--space-4); }
 .footer-links { margin-left: auto; }
 .footer-license { display: flex; align-items: center; min-height: var(--size-target); }
 .footer-license:hover { color: var(--color-ink); }
@@ -330,7 +334,6 @@ footer a { padding-block: var(--space-3); }
   /* Every two-column block shares one grid: two equal columns, one gap. */
   /* The figure spans both rows; the text row takes any extra height, so the text stays under its heading. */
   .split { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); grid-template-rows: auto 1fr; gap: var(--space-5) var(--space-14); }
-  .metrics { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
   .split > :nth-child(2) { grid-column: 1; }
   .split > :nth-child(3) { grid-column: 2; grid-row: 1 / span 2; }
   .questions { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }

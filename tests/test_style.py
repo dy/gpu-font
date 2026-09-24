@@ -12,7 +12,7 @@ from scripts.corpus import ROOT
 from train.style_data import Preparer, text, tensors, skeleton, sketch, COMMON
 from train.style_teacher import distances, twins, enumerate_faces
 from train.style_catalog import kinds, LATIN
-from train.style import Heads, Setup, losses, architecture_of, run_seed, CATEGORIES
+from train.style import Heads, Setup, losses, architecture_of, benchmark_of, run_seed, train, CATEGORIES
 from train.ten_model import CORPUS_ARCH, LARGE_ARCH, WIDER_ARCH
 
 
@@ -150,6 +150,15 @@ class CatalogAndLossTests(unittest.TestCase):
         self.assertEqual(run_seed('any', 20260923), 20260923)
         fake = SimpleNamespace(by_family={'a': [0], 'b': [1]}, neighbours=np.array([[1], [0]]), train=[5, 6], pools={'a': {'Latn': 'abc'}, 'b': {'Latn': 'abc'}}, faces={5: {'family': 'a'}, 6: {'family': 'b'}})
         self.assertNotEqual(Setup.plan(fake, run_seed('wider'))(), Setup.plan(fake, run_seed('plain'))())
+
+    def test_a_run_never_selects_on_families_it_trains(self):
+        # Refused before any setup: training development families and selecting on them would grade the model on its own homework.
+        with self.assertRaisesRegex(ValueError, 'catalog:validation'): train('x', ['train', 'development', 'test'], 1, 'unused.pt', 1)
+
+    def test_a_run_is_measured_where_its_families_are_held_out(self):
+        # The frozen benchmark holds out development and test families; a run that trained on either reads the catalog test.
+        self.assertEqual(benchmark_of(['train']), 'bench')
+        for roles in (['train', 'development', 'test'], ['train', 'test'], ['train', 'development']): self.assertEqual(benchmark_of(roles), 'catalog')
 
     def test_checkpoints_name_their_architecture_and_older_ones_their_flag(self):
         self.assertEqual(architecture_of({'architecture': WIDER_ARCH, 'large': True}), WIDER_ARCH)

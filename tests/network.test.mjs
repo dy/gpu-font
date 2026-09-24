@@ -2,6 +2,7 @@ import test from 'node:test'
 import assert from 'node:assert/strict'
 import { readNetwork, inferCPU, rankWindows, architecture, channels } from '../src/network.mjs'
 import { createNetworkGPU } from '../src/network-gpu.mjs'
+import { pack } from '../src/catalog.mjs'
 
 function artifact(fonts = ['inter', 'roboto']) {
   const layers = Array.from({ length: 5 }, (_, i) => {
@@ -44,6 +45,18 @@ test('packed weights preserve signed values and reject either side of the final 
     a.layers[4].weights = exact.toString('base64'); valid()
   }
   assert.deepEqual([...inferCPU(retained, input)], [1])
+})
+
+test('weights packed at fewer bits decode as the same integers at 8; a byte short or long, or a width outside 2–8, rejects', () => {
+  // Layer 0 is 16×1×3×3: 144 values, all within 6 bits.
+  const eight = artifact(['inter']), values = Array.from({ length: 144 }, (_, i) => (i * 37) % 63 - 31)
+  eight.layers[0].weights = Buffer.from(pack(values, 8)).toString('base64'); eight.layers[0].scale.fill(.25)
+  const six = structuredClone(eight), exact = Buffer.from(pack(values, 6)), with0 = layer => ({ ...six, layers: [{ ...six.layers[0], ...layer }, ...six.layers.slice(1)] })
+  Object.assign(six.layers[0], { bits: 6, weights: exact.toString('base64') })
+  assert.equal(exact.length, 108)
+  assert.deepEqual(readNetwork(six).layers[0].weights, readNetwork(eight).layers[0].weights)
+  for (const bytes of [exact.subarray(0, -1), Buffer.concat([exact, Buffer.from([0])])]) assert.throws(() => readNetwork(with0({ weights: bytes.toString('base64') })), /weight count/)
+  for (const bits of [1, 9, 6.5, '6']) assert.throws(() => readNetwork(with0({ bits })), /packed weights/)
 })
 
 test('int8 model rejects corrupt schema, tensors, labels, and floating-point overflow', () => {

@@ -54,7 +54,8 @@ export async function familyCounts() {
   // The corpus is counted by its own entries, matching the published 2,004.
   for (const family of (await read('bench/corpus.json'))?.families ?? []) if (!family.excluded) tally(indexed, 'google-fonts', family.id)
   for (const file of (await readdir(CATALOGS)).filter(name => name.endsWith('.json') && name !== 'index.json'))
-    for (const face of (await read(`${CATALOGS}/${file}`))?.faces ?? []) tally(indexed, file.slice(0, -5), face.familyId)
+    // A grouped catalogue (Other) tags each face with the source it came from; that source is the one indexed.
+    for (const face of (await read(`${CATALOGS}/${file}`))?.faces ?? []) tally(indexed, face.sourceId ?? file.slice(0, -5), face.familyId)
   for (const family of (await read('bench/open-fonts.json'))?.families ?? []) if (!family.excluded) tally(inventoried, family.source, family.family)
   const sizes = map => new Map([...map].map(([id, set]) => [id, set.size]))
   return { indexed: sizes(indexed), inventoried: sizes(inventoried) }

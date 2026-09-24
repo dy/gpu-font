@@ -1,7 +1,7 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
 import { readFile } from 'node:fs/promises'
-import { validateRegistry } from '../scripts/foundries.mjs'
+import { validateRegistry, familyCounts } from '../scripts/foundries.mjs'
 
 const entry = (patch = {}) => ({
   id: 'example', name: 'Example Foundry', url: 'https://example.invalid/', kind: 'foundry', access: 'previews',
@@ -42,4 +42,12 @@ test('an approximate size carries its unit and where it was read', () => {
   assert.equal(sized({ familiesAvailable: 5616 }).length, 1)
   assert.equal(sized({ familiesAvailable: 0, availableNote: 'x' }).length, 1)
   assert.equal(sized({ familiesAvailable: 12, availableUnit: 'glyphs', availableNote: 'x' }).length, 1)
+})
+
+test('a source folded into Other is counted under its own id, from the sourceId each of its faces carries', async () => {
+  const { indexed } = await familyCounts(), other = JSON.parse(await readFile('models/encoder/catalogs/other.json', 'utf8'))
+  const bySource = Map.groupBy(other.faces, f => f.sourceId)
+  assert.ok(bySource.size > 1 && !bySource.has(undefined), 'Every face in Other names its source')
+  for (const [source, faces] of bySource) assert.equal(indexed.get(source), new Set(faces.map(f => f.familyId)).size, source)
+  assert.equal(indexed.has('other'), false, 'Other is a group, never a source')
 })

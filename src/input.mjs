@@ -1,4 +1,4 @@
-import { prepare } from './prepare.mjs'
+import { prepare, frame } from './prepare.mjs'
 
 // Only these returned arrays are sent to inference. No display-only crop or padding.
 export function prepareInput(image, options = {}) {
@@ -6,6 +6,12 @@ export function prepareInput(image, options = {}) {
   if (!Number.isInteger(height) || height < 4 || height > 128 || !Number.isInteger(width) || width < 4 || width > 512 || !Number.isInteger(windows) || windows < 1 || windows > 3) throw new RangeError('Invalid input geometry')
   const found = prepare(image, { width: 4, height: 4, padding: 0, background })
   if (found.status !== 'ok') return { status: found.status, windows: [] }
+  // A crop that touches the text prepares as one with a margin; rects map back to the crop.
+  const framed = frame(image, found.rect, background)
+  if (framed) {
+    const result = prepareInput(framed.image, options)
+    return { ...result, windows: result.windows.map(window => ({ ...window, rect: framed.back(window.rect) })) }
+  }
   const bounds = found.rect
   const span = Math.min(bounds.width, Math.max(1, Math.round(bounds.height * width / height)))
   const count = Math.min(windows, Math.max(1, Math.ceil(bounds.width / span)))

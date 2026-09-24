@@ -85,3 +85,37 @@ test('edge-touching glyphs stay in bounds; A → A → B → blank → A owns in
   assert.deepEqual(first.pixels, copy)
   assert.deepEqual(prepare(a).pixels, copy)
 })
+test('a border along any crop edge, full or faint, on it or one row in, prepares exactly as the crop without it', () => {
+  const text = ['..........', '...#......', '...#......', '...##.....', '...#.#....', '..........']
+  const clean = prepare(fixture(text), { width: 32, height: 16 })
+  const variants = [
+    [...text, '##########'],                  // bottom
+    [...text, '++++++++++'],                  // bottom, faint
+    [...text, '..........', '##########'],    // one blank row in from the edge
+    ['##########', '##########', ...text],     // top, two rows thick
+    text.map(row => '#' + row),               // left
+    text.map(row => row + '.+'),              // right, faint, one column in
+  ]
+  // A box one pixel inside the crop, its sides crossing the rows after its top and bottom. The text sits in a crop large
+  // enough for the box's sides, short of the crop by the margin, to still ink 90% of it.
+  const blank = '....................', tall = [...Array(7).fill(blank), ...text.map(row => row + '..........'), ...Array(7).fill(blank)]
+  const cleanWide = prepare(fixture(tall), { width: 32, height: 16 })
+  const edge = '.' + '#'.repeat(22) + '.', boxed = ['.'.repeat(24), edge, ...tall.map(row => '.#' + row + '#.'), edge, '.'.repeat(24)]
+  for (const [rows, expected] of [...variants.map(rows => [rows, clean]), [boxed, cleanWide]]) {
+    const lined = prepare(fixture(rows), { width: 32, height: 16 })
+    assert.deepEqual([lined.status, lined.contrast, Array.from(lined.pixels)], [expected.status, expected.contrast, Array.from(expected.pixels)], rows.join('|'))
+  }
+})
+
+test('letters at a tight crop edge are never taken for a border', () => {
+  // A Devanagari-like headline inks the whole top row, but its stems hang from it: no background follows.
+  assert.deepEqual(prepare(fixture(['#########.', '.#..#..#..', '.#..#..#..'])).rect, { x: 0, y: 0, width: 10, height: 3 })
+  // The l of "hill" at a tight crop's side is as long as the crop and has background inside it, but runs no longer than the text.
+  assert.deepEqual(prepare(fixture(['#....#', '#....#', '###..#', '#.#..#'])).rect, { x: 0, y: 0, width: 6, height: 4 })
+  // The h of "uPcBhE" at a window's cut rises past the capitals, but at one end only.
+  assert.deepEqual(prepare(fixture(['#.....', '#..##.', '#.#..#', '#.#..#', '#..##.'])).rect, { x: 0, y: 0, width: 6, height: 5 })
+  // Dense text is not a line: a row 80% inked still sets the box.
+  assert.equal(prepare(fixture(['..........', '.########.', '.#......#.', '..........'])).rect.y, 0)
+  // A crop that holds only a line (a dash, a rule) keeps it: there is no text for it to frame.
+  assert.equal(prepare(fixture(['..........', '..........', '##########'])).status, 'ok')
+})

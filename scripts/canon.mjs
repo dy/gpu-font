@@ -176,7 +176,8 @@ async function coverage() {
   const known = []
   for (const family of (await read('bench/corpus.json'))?.families ?? []) if (!family.excluded) known.push({ name: family.family, status: 'indexed', source: 'google-fonts' })
   for (const file of (await readdir('models/encoder/catalogs')).filter(name => name.endsWith('.json') && name !== 'index.json'))
-    for (const face of (await read(`models/encoder/catalogs/${file}`))?.faces ?? []) known.push({ name: face.family, status: 'indexed', source: file.slice(0, -5) })
+    // A grouped catalogue (Other) tags each face with the source it came from.
+    for (const face of (await read(`models/encoder/catalogs/${file}`))?.faces ?? []) known.push({ name: face.family, status: 'indexed', source: face.sourceId ?? file.slice(0, -5) })
   for (const family of (await read('bench/open-fonts.json'))?.families ?? []) if (!family.excluded) known.push({ name: family.family, status: 'inventoried', source: family.source })
   // Preview captures held for private experiments, read from the capture archives themselves.
   if (PRIVATE) for (const held of await heldFamilies()) known.push({ ...held, status: 'held-locally' })

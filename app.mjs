@@ -3,7 +3,7 @@ import { prepareInput } from './src/input.mjs'
 import { prepareLine } from './src/line.mjs'
 import { readNetwork, inferCPU, rankWindows } from './src/network.mjs'
 import { createNetworkGPU } from './src/network-gpu.mjs'
-import { readCatalog, matchCatalog, foldTwins, embedWindows, sha256, preparationHash, readHeads, verdict } from './src/catalog.mjs'
+import { readCatalog, unionCatalogs, matchCatalog, foldTwins, embedWindows, sha256, preparationHash, readHeads, verdict } from './src/catalog.mjs'
 import { readMyFonts } from './my-fonts.mjs'
 
 const $ = id => document.getElementById(id)
@@ -137,7 +137,7 @@ function brushCursor() {
 }
 window.addEventListener('resize', brushCursor)
 // The input panel's height, so CSS can pin a panel taller than the window by its bottom edge while matches scroll.
-new ResizeObserver(([entry]) => entry.target.style.setProperty('--panel-height', `${entry.borderBoxSize[0].blockSize}px`)).observe(document.querySelector('.source-panel'))
+new ResizeObserver(([entry]) => entry.target.style.setProperty('--body-height', `${entry.borderBoxSize[0].blockSize}px`)).observe(document.querySelector('.source-body'))
 function startDrawing() {
   revision++; invalidate()
   const sheet = document.createElement('canvas'), c = sheet.getContext('2d')
@@ -304,7 +304,7 @@ async function analyze() {
       inputs: prepared.windows.map(input => ({ ...input, pixels: Array.from(input.pixels) })), matches }
     showInput(prepared.windows, region, sampled)
     renderResults()
-    $('result-summary').textContent = embedding ? describe(judged) : last.accepted ? 'Above threshold' : 'Below threshold'
+    showVerdict(embedding ? describe(judged) : [last.accepted ? 'Above threshold' : 'Below threshold'])
     $('detection-time').textContent = `${elapsed.toFixed(1)}ms`
     $('detection-time').title = 'Image preparation, inference and ranking'
     $('save').disabled = false
@@ -324,13 +324,13 @@ function renderResults() {
   subsetRows.clear()
   previewValid = true; $('preview-error').hidden = true
   const fragment = document.createDocumentFragment()
-  // Identical designs in the crop's script (IBM Plex Sans and its KR, Arabic… families) fold into one row; the saved result keeps every family.
+  // Kinds of one family identical in the crop's script (IBM Plex Sans and its KR, Arabic… families) fold into one row; the saved result keeps every family.
   const shown = isEncoder() ? foldTwins(last.matches, searchCatalog, { script: last.verdict?.script?.[0]?.label, limit: expanded ? LONG : SHORT }) : last.matches.slice(0, SHORT)
   for (const [i, match] of shown.entries()) {
     if (isEncoder()) { fragment.append(encoderResult(match, i)); continue }
     const font = catalog.fonts.find(f => f.id === match.family)
     const item = document.createElement('li'); item.className = 'result'
-    item.innerHTML = '<div class="result-top"><span class="rank"></span><span class="font-name"><a target="_blank" rel="noopener"></a><span class="font-style" title="Preview face; weight and style are not detected">Regular, 400</span></span><span class="result-score"></span></div><input class="result-preview" type="text" maxlength="80" spellcheck="false" autocomplete="off" aria-describedby="preview-error">'
+    item.innerHTML = '<div class="result-top"><span class="rank"></span><span class="font-name"><a target="_blank" rel="noopener"></a><span class="font-style pill" title="Preview face; weight and style are not detected">Regular, 400</span></span><span class="result-score"></span></div><input class="result-preview" type="text" maxlength="80" spellcheck="false" autocomplete="off" aria-describedby="preview-error">'
     item.querySelector('.rank').textContent = String(i + 1).padStart(2, '0')
     const score = item.querySelector('.result-score')
     score.textContent = match.score < .001 ? '<0.1%' : match.score > .999 ? '>99.9%' : `${(match.score * 100).toFixed(1)}%`
@@ -353,24 +353,30 @@ const CATEGORY = { SANS_SERIF: 'Sans serif', SERIF: 'Serif', DISPLAY: 'Display',
 const SCRIPT = new Intl.DisplayNames('en', { type: 'script' }) // Latn → Latin
 // The typed verdict for the crop itself: category, the likeliest fine class, upright or italic, script.
 function describe(judged) {
-  if (!judged) return ''
-  const fine = judged.fine[0].p >= .5 ? `, ${judged.fine[0].label.split('/').at(-1)}` : ''
-  return `${CATEGORY[judged.category[0].label] ?? judged.category[0].label}${fine}, ${judged.italic >= .5 ? 'italic' : 'upright'}, ${SCRIPT.of(judged.script[0].label)}`
+  if (!judged) return []
+  const fine = judged.fine[0].p >= .5 && judged.fine[0].label.split('/').at(-1)
+  return [CATEGORY[judged.category[0].label] ?? judged.category[0].label, fine, judged.italic >= .5 ? 'Italic' : 'Upright', SCRIPT.of(judged.script[0].label)].filter(Boolean)
 }
+// One pill per label; the spaces between them keep a screen reader from running the words together.
+const showVerdict = labels => $('result-summary').replaceChildren(...labels.flatMap((label, i) => {
+  const pill = document.createElement('span'); pill.className = 'pill'; pill.textContent = label
+  return i ? [' ', pill] : [pill]
+}))
 
 // One match on one line: rank, linked name, face, ≈ twins, score.
 function matchLine(match, index) {
   const { face, score, siblings } = match, line = document.createElement('div'); line.className = 'result-top'
-  line.innerHTML = '<span class="rank"></span><span class="font-name"><a target="_blank" rel="noopener"></a><span class="font-style"></span></span><span class="result-score"></span>'
+  line.innerHTML = '<span class="rank"></span><span class="font-name"><a target="_blank" rel="noopener"></a><span class="font-style pill"></span></span><span class="result-score"></span>'
   line.querySelector('.rank').textContent = String(index + 1).padStart(2, '0')
   const link = line.querySelector('a'); link.textContent = face.family
-  const url = face.sourceUrl || (searchCatalog.id === 'google-fonts' ? `https://fonts.google.com/specimen/${encodeURIComponent(face.family)}` : null)
+  // A Google Fonts family links to its specimen from any shipped catalog it's searched in, All included.
+  const url = face.sourceUrl || (searchCatalog.builtin && catalog.previews?.[face.familyId] ? `https://fonts.google.com/specimen/${encodeURIComponent(face.family)}` : null)
   if (url && /^https?:\/\//i.test(url)) { link.href = url; link.textContent += ' ↗' }
   const style = line.querySelector('.font-style')
   style.textContent = face.styleName || [face.style, face.weight].filter(v => v != null).join(', ')
   style.title = `Matched face${face.weight ? `, weight ${face.weight}` : ''}`
   if (siblings.length) {
-    // Folded families with identical letters: yields space first, so the matched name and face stay readable.
+    // Folded kinds of this family with identical letters: yields space first, so the matched name and face stay readable.
     const note = document.createElement('span'); note.className = 'font-twins'
     note.textContent = `≈ ${siblings[0]}${siblings.length > 1 ? ` +${siblings.length - 1}` : ''}`
     note.tabIndex = 0; note.dataset.twins = JSON.stringify(siblings); note.setAttribute('aria-label', `Same letters as ${siblings.join(', ')}`)
@@ -401,24 +407,29 @@ function encoderResult(match, index) {
   return item
 }
 
+// A shipped catalog, fetched and checked against the checksum site.json records for it.
+async function readShipped(option) {
+  const response = await fetch(option.file)
+  if (!response.ok) throw new Error('Could not load this catalog.')
+  const bytes = await response.arrayBuffer()
+  if (await sha256(bytes) !== option.sha256) throw new Error('Catalog checksum failed.')
+  return readCatalog(JSON.parse(new TextDecoder().decode(bytes)), catalog)
+}
 async function selectCatalog(option, file = null, { focus = true } = {}) {
   const version = ++catalogRevision
   $('catalog-menu').hidePopover(); if (focus) $('catalog-button').focus({ preventScroll: true })
   $('catalog-error').hidden = true; $('catalog-button').setAttribute('aria-busy', 'true')
   try {
-    let bytes
-    if (file) {
-      if (file.size > 20 * 1024 * 1024) throw new Error('Choose a catalog smaller than 20 MB.')
-      bytes = await file.arrayBuffer()
-    } else if (option.data) bytes = new TextEncoder().encode(JSON.stringify(option.data))
-    else {
-      const response = await fetch(option.file)
-      if (!response.ok) throw new Error('Could not load this catalog.')
-      bytes = await response.arrayBuffer()
-    }
-    const hash = await sha256(bytes)
-    if (option.sha256 && hash !== option.sha256) throw new Error('Catalog checksum failed.')
-    const data = readCatalog(JSON.parse(new TextDecoder().decode(bytes)), catalog)
+    let data, hash
+    if (option.parts) {
+      // All: every shipped catalog, each verified as when chosen alone, searched as one.
+      const parts = await Promise.all(option.parts.map(readShipped))
+      data = unionCatalogs(parts); hash = option.parts.map(part => part.sha256)
+    } else if (file || option.data) {
+      if (file?.size > 20 * 1024 * 1024) throw new Error('Choose a catalog smaller than 20 MB.')
+      const bytes = file ? await file.arrayBuffer() : new TextEncoder().encode(JSON.stringify(option.data))
+      hash = await sha256(bytes); data = readCatalog(JSON.parse(new TextDecoder().decode(bytes)), catalog)
+    } else { data = await readShipped(option); hash = option.sha256 }
     if (version !== catalogRevision) return
     const cached = last
     searchCatalog = { ...option, ...data, sha256: hash, builtin: !file && !option.data }
@@ -428,9 +439,9 @@ async function selectCatalog(option, file = null, { focus = true } = {}) {
       const elapsed = performance.now() - start
       last = { ...cached, matches, catalog: { id: option.id, sha256: hash }, milliseconds: elapsed, cachedEmbedding: true }
       showInput(last.inputs, last.crop, last.resolution); renderResults()
-      $('detection-time').textContent = `ranked in ${elapsed.toFixed(1)}ms`
+      $('detection-time').textContent = `Ranked in ${elapsed.toFixed(1)}ms`
       $('detection-time').title = 'Catalog ranking; image embedding reused'
-      $('result-summary').textContent = describe(last.verdict); $('save').disabled = false
+      showVerdict(describe(last.verdict)); $('save').disabled = false
     } else if (current) schedule()
   } catch (error) {
     if (version === catalogRevision) { $('catalog-error').textContent = error.message; $('catalog-error').hidden = false }
@@ -684,7 +695,9 @@ async function initialize() {
       // My fonts, indexed on the Catalogs page, join the menu once they fit this model; until then the menu links there.
       const stored = (await readMyFonts())?.catalog, mine = stored?.encoderSha256 === data.modelSha256 && stored.preparationSha256 === data.preparationSha256
         ? { id: 'my-fonts', name: 'My fonts', data: stored, families: new Set(stored.faces.map(f => f.familyId)).size } : null
-      const options = mine ? [...data.catalogs, mine] : data.catalogs
+      // All searches every shipped catalog at once; it loads them when chosen.
+      const all = { id: 'all', name: 'All', families: data.families, parts: data.catalogs }
+      const options = [all, ...data.catalogs, ...(mine ? [mine] : [])]
       $('catalog-list').replaceChildren(...options.map(option => {
         const button = document.createElement('button'); button.className = 'catalog-option'; button.dataset.catalog = option.id
         const label = document.createElement('span'), count = document.createElement('span')

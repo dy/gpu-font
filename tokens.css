@@ -34,9 +34,6 @@
   --radius-popover: 6px;
   --radius-pill: 999px;
 
-  /* Tertiary text: face labels, twin notes, code comments. AA on every ground: 4.6:1 on the well, 5:1 on paper. */
-  --color-faint: oklch(53% 0 0);
-  --color-code: oklch(34% 0 0);
   --shadow-popover: 0 10px 32px var(--color-shadow);
 
   --font-mono: ui-monospace, 'SF Mono', SFMono-Regular, Menlo, Consolas, monospace;

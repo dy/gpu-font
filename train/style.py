@@ -26,7 +26,7 @@ from train.style_teacher import glyph_sets, teacher, OUT as STYLE
 from train.style_catalog import load as load_references, vectors as reference_vectors
 from train.style_bench import load as load_bench
 from train.ten import batch
-from train.ten_model import Classifier, export, widen, CORPUS_ARCH, LARGE_ARCH, WIDER_ARCH
+from train.ten_model import Classifier, export, pack_bits, widen, ARCHITECTURES, CORPUS_ARCH, LARGE_ARCH
 
 DIMENSIONS = 128
 CATEGORIES = ['SANS_SERIF', 'SERIF', 'DISPLAY', 'HANDWRITING', 'MONOSPACE']
@@ -91,6 +91,16 @@ def references(model, source='pillow', device='mps'):
 def architecture_of(state):
     """A checkpoint's encoder architecture; runs before architectures were recorded kept a `large` flag."""
     return state.get('architecture') or (LARGE_ARCH if state.get('large') else CORPUS_ARCH)
+
+
+def benchmark_of(roles):
+    """Where a run is measured: the frozen benchmark holds out its development and test families, so a run that trained
+    on either is read on the catalog benchmark's test role instead, fresh text for every family."""
+    return 'catalog' if {'development', 'test'} & set(roles) else 'bench'
+
+
+def run_benchmark(run):
+    return benchmark_of(read(ROOT/'.data/style'/run/'progress.json')['roles'])
 
 
 def embed_manifest(model, manifest, pixels, sources, device='mps'):
@@ -249,7 +259,7 @@ def evaluate(model, heads, setup, roles, device='mps', name='bench', source='pil
             top = np.argsort(-sc, kind='stable')[:5]
             twin = [(j == t) or (D[t, j] < setup.floor) for j in top]
             face = faces[int(keys[best[n, top[0]]][0])]
-            rows.append({'filtered':filtered,'role':s['role'],'script':s['script'],'case':s['case'],'condition':s['condition'],'slice':s.get('slice','main'),
+            rows.append({'filtered':filtered,'role':s['role'],'script':s['script'],'case':s['case'],'condition':s['condition'],'slice':s.get('slice','main'),'size':s['size'],
                          'long':s['length'] >= 8,'top1':top[0] == t,'top5':t in top,'twin1':twin[0],'twin5':any(twin),
                          'style20':float(np.mean([rank_of[t, j] <= 20 for j in top if j != t])) if np.isfinite(D[t]).sum() > 100 else None,
                          'far':bool(any(rank_of[t, j] > 200 for j in top)) if np.isfinite(D[t]).sum() > 100 else None,
@@ -273,7 +283,7 @@ def evaluate(model, heads, setup, roles, device='mps', name='bench', source='pil
     for filtered in (False, True) if verdict is not None else (False,):
         base = [r for r in rows if r['filtered'] == filtered]; name = 'scriptFiltered' if filtered else 'unfiltered'
         groups = {'all': base}
-        for key in ['role', 'script', 'case', 'condition', 'slice', 'long', 'style']:
+        for key in ['role', 'script', 'case', 'condition', 'slice', 'long', 'size', 'style']:
             for value in sorted({str(r[key]) for r in base}): groups[f'{key}/{value}'] = [r for r in base if str(r[key]) == value]
         for tag in setup.fine + sorted(set().union(*setup.themes.values())): groups['tag' + tag] = [r for r in base if tag in r['tags']]
         for role in sorted({r['role'] for r in base}):
@@ -287,7 +297,11 @@ def run_seed(run, seed=None):
     return zlib.crc32(run.encode()) if seed is None else seed
 
 
-def train(run, roles, steps, warm, workers, check=2500, architecture=CORPUS_ARCH, lr=2e-4, drawn=0.0, pairs=0.0, seed=None):
+def train(run, roles, steps, warm, workers, check=2500, architecture=CORPUS_ARCH, lr=2e-4, drawn=0.0, pairs=0.0, seed=None, select='bench:development'):
+    """`select` names the benchmark and role that pick checkpoints: the frozen benchmark's development families, or the
+    catalog benchmark's validation set (fresh text for every family) when the whole catalog trains. `none` saves the end."""
+    bench_name, select_role = select.split(':') if select != 'none' else (None, None)
+    if (bench_name, select_role) == ('bench', 'development') and 'development' in roles: raise ValueError('Development families train here: select on catalog:validation')
     seed = run_seed(run, seed); device = 'mps'; torch.manual_seed(seed); out = ROOT/'.data/style'/run; out.mkdir(parents=True, exist_ok=True)
     if (out/'progress.json').exists(): raise ValueError('Existing style run: ' + run)
     setup = Setup(roles, device)
@@ -315,7 +329,7 @@ def train(run, roles, steps, warm, workers, check=2500, architecture=CORPUS_ARCH
     history = []; best = -1; start = time.perf_counter(); running = {}
     def checkpoint(step):
         nonlocal best
-        report = evaluate(model, heads, setup, ['development'], source='browser')  # the shipped Chromium references
+        report = evaluate(model, heads, setup, [select_role], name=bench_name, source='browser')  # the shipped Chromium references
         dev = report['scriptFiltered']['all']; value = dev['twin5']; drawn_result = None
         if drawn:  # a run that learns drawings selects on drawings too: their top-5 category agreement, development queries only
             drawn_result = evaluate(model, heads, setup, ['development'], name='bench-sketch', source='browser')['scriptFiltered']['all']; value = (value + drawn_result['category'])/2
@@ -324,11 +338,11 @@ def train(run, roles, steps, warm, workers, check=2500, architecture=CORPUS_ARCH
             best = value
             torch.save({'state':{k: v.detach().cpu().clone() for k, v in model.state_dict().items()},'heads':{k: v.detach().cpu().clone() for k, v in heads.state_dict().items()},
                         'proxies':proxies.detach().cpu().clone(),'step':step,'pins':pins,'scripts':setup.scripts,'fine':setup.fine,'architecture':architecture}, out/'best.pt')
-        save(out/'progress.json', {'run':run,'roles':roles,'steps':steps,'warm':str(warm),'lr':lr,'pairs':pairs,'seed':seed,'architecture':architecture,'pins':pins,'history':history,'best':best})
-        print(f'check {step}: dev twin-top5 {dev["twin5"]:.4f} top1 {dev["twin1"]:.4f} style20 {dev.get("style20", 0):.3f} far {dev.get("far", 0):.3f} '
+        save(out/'progress.json', {'run':run,'roles':roles,'steps':steps,'warm':str(warm),'lr':lr,'pairs':pairs,'seed':seed,'architecture':architecture,'select':select,'pins':pins,'history':history,'best':best})
+        print(f'check {step}: {select_role} twin-top5 {dev["twin5"]:.4f} top1 {dev["twin1"]:.4f} style20 {dev.get("style20", 0):.3f} far {dev.get("far", 0):.3f} '
               f'weightErr {dev.get("headWeightError", 0):.0f} italic {dev.get("headItalic", 0):.3f} script {dev.get("headScript", 0):.3f}' + (f' sketch twin-top5 {drawn_result["twin5"]:.4f} category {drawn_result["category"]:.4f} selection {value:.4f}' if drawn_result else '') + f' ({time.perf_counter() - start:.0f}s)', flush=True)
     try:
-        if 'development' not in roles: checkpoint(0)
+        if select_role: checkpoint(0)
         for step in range(1, steps + 1):
             views = next(stream) + chromium.sample(mix, 32); model.train(); heads.train()
             pixels, sizes, owners = tensors(views, device)
@@ -339,8 +353,8 @@ def train(run, roles, steps, warm, workers, check=2500, architecture=CORPUS_ARCH
             for k, v in [*parts.items(), ('accuracy', accuracy)]: running[k] = running.get(k, 0) + v.detach()
             if step % 500 == 0:  # one device sync per report, not per step
                 print(f'step {step}: ' + ' '.join(f'{k} {float(v)/500:.3f}' for k, v in running.items()) + f' ({time.perf_counter() - start:.0f}s)', flush=True); running = {}
-            if step % check == 0 and 'development' not in roles: checkpoint(step)
-        if 'development' in roles:
+            if step % check == 0 and select_role: checkpoint(step)
+        if not select_role:
             torch.save({'state':{k: v.detach().cpu().clone() for k, v in model.state_dict().items()},'heads':{k: v.detach().cpu().clone() for k, v in heads.state_dict().items()},
                         'proxies':proxies.detach().cpu().clone(),'step':steps,'pins':pins,'scripts':setup.scripts,'fine':setup.fine,'architecture':architecture}, out/'best.pt')
             save(out/'progress.json', {'run':run,'roles':roles,'steps':steps,'warm':str(warm),'pins':pins,'history':[],'best':None})
@@ -372,17 +386,22 @@ def samples(model, heads, setup, device='mps', source='pillow'):
     return result
 
 
-def load_run(run, device='mps'):
+def load_run(run, device='mps', exported=False):
+    """A run's best checkpoint, or with `exported` the encoder as shipped (encoder.json: folded, weights rounded as the
+    page reads them), so reported accuracy is the page's."""
     state = torch.load(ROOT/'.data/style'/run/'best.pt', map_location='cpu', weights_only=False)
-    model = Classifier(DIMENSIONS, architecture=architecture_of(state), dilations=[1, 1, 2, 2, 1]); model.load_state_dict(state['state'])
+    if exported:
+        from train.encoder import load_encoder
+        model = load_encoder(ROOT/'.data/style'/run/'encoder.json')
+    else: model = Classifier(DIMENSIONS, architecture=architecture_of(state), dilations=[1, 1, 2, 2, 1]); model.load_state_dict(state['state'])
     heads = Heads(state['scripts'], state['fine']); heads.load_state_dict(state['heads'])
     return model.to(device).eval(), heads.to(device).eval(), state
 
 
 def export_run(run):
-    """Int8 encoder in the browser's existing format; the typed heads travel in the same file as small float layers."""
+    """Encoder with 6-bit weights (bench/style.md, Quantization); the typed heads travel in the same file as small float layers."""
     model, heads, state = load_run(run, 'cpu')
-    artifact, _ = export(model.train(), [str(i) for i in range(DIMENSIONS)], read(ROOT/'models/encoder/encoder.json')['preparation'])
+    artifact, _ = export(model.train(), [str(i) for i in range(DIMENSIONS)], read(ROOT/'models/encoder/encoder.json')['preparation'], bits=6)
     del artifact['fonts']; artifact.update(kind='font-encoder', dimensions=DIMENSIONS, normalization='l2')
     layers = {k: v.numpy() for k, v in state['heads'].items()}
     layer = lambda name: {'weights': np.round(layers[name + '.weight'], 6).tolist(), 'bias': np.round(layers[name + '.bias'], 6).tolist()}
@@ -395,12 +414,13 @@ def export_run(run):
 def export_catalog(run, source='pillow'):
     """Per-face Google Fonts catalog (version 3): every face with its references, weight, style and script coverage.
     Default faces list, per script, the families whose letters there are indistinguishable from their own (closer than 95%
-    of one face's re-renders), so the page shows one row per design: IBM Plex Sans KR folds under IBM Plex Sans for Latin,
+    of one face's re-renders), so the page folds kinds of one family into a row: IBM Plex Sans KR under IBM Plex Sans for Latin,
     while Noto Sans Arabic and Noto Kufi Arabic, which share Latin letters, stay apart for Arabic. Accuracy credits only
     the stricter median twins."""
     import base64
     from train.encoder_catalog import preparation_hash, read_catalog
-    encoder = ROOT/'.data/style'/run/'encoder.json'; model, _, _ = load_run(run); vectors, keys = references(model, source)
+    encoder = ROOT/'.data/style'/run/'encoder.json'; model, _, _ = load_run(run, exported=True); vectors, keys = references(model, source)
+    sizes = sorted({s.get('size', 48) for name in {'pillow': ['references'], 'browser': ['references-browser'], 'mixed': ['references', 'references-browser']}[source] for s in load_references(name)[0]['samples']})
     inventory = read(ROOT/'bench/corpus.json'); by_id = {f['id']: f for f in inventory['families'] if not f['excluded']}
     faces = read(STYLE/'faces.json')['faces']; noise = read(STYLE/'noise-floor.json')['p95']
     chosen = sorted({f for f, _ in keys}, key=lambda i: (faces[i]['family'], faces[i]['italic'], faces[i]['weight'])); index = {f: n for n, f in enumerate(chosen)}
@@ -422,11 +442,12 @@ def export_catalog(run, source='pillow'):
         if i in twins: entry['twins'] = twins[i]
         entries.append(entry)
     if sorted(e['familyId'] for e in entries if e.get('default')) != sorted({e['familyId'] for e in entries}): raise ValueError('Every family needs exactly one default face')
-    rows = vectors/np.linalg.norm(vectors, axis=1, keepdims=True); scales = np.maximum(np.abs(rows).max(1)/127, 1e-12)
-    packed = np.round(rows/scales[:, None]).clip(-127, 127).astype(np.int8)
+    # Four bits a dimension rank as well as eight (bench/style.md, Quantization) at half the download.
+    rows = vectors/np.linalg.norm(vectors, axis=1, keepdims=True); scales = np.maximum(np.abs(rows).max(1)/7, 1e-12)
+    packed = np.round(rows/scales[:, None]).clip(-7, 7).astype(np.int8)
     catalog = {'version':3,'kind':'font-catalog','encoderSha256':sha(encoder),'preparationSha256':preparation_hash(read(encoder)['preparation']),
-               'dimensions':DIMENSIONS,'sourceCommit':inventory['commit'],'referenceMethod':f'faces-cases-scripts-{source}','faces':entries,
-               'vectors':{'encoding':'int8-base64','shape':list(packed.shape),'data':base64.b64encode(packed.tobytes()).decode(),
+               'dimensions':DIMENSIONS,'sourceCommit':inventory['commit'],'referenceMethod':f'faces-cases-scripts-{source}-{"-".join(map(str, sizes))}','faces':entries,
+               'vectors':{'encoding':'int4-base64','shape':list(packed.shape),'data':base64.b64encode(pack_bits(packed, 4)).decode(),
                           'scales':[float(f'{v:.6g}') for v in scales],'owners':[index[f] for f, _ in keys]}}
     target = ROOT/'.data/style'/run/'google-fonts.json'; save(target, catalog)
     decoded, owners, labels = read_catalog(read(target), encoder)
@@ -448,21 +469,31 @@ def compare_references(run):
     return chosen
 
 
+SCOPES = {'bench': 'Frozen Chromium benchmark (seen, development-selection and held-out test families) against per-face references of all 2,004 families.',
+          'catalog': 'Catalog benchmark, test role: every family, on text never used in training or selection, against per-face references of all 2,004 families.'}
+DEMO_SCOPES = {'bench': '5–10 character Chromium crops of 300 unseen Google Fonts families (all conditions and scripts; identical designs counted)',
+               'catalog': '5–10 character Chromium crops of every Google Fonts family, on text it never trained on (all conditions and scripts; identical designs counted)'}
+
+
 def final(runs, source='pillow'):
-    """Frozen benchmark: style runs against the interim and the previous encoder, same per-face catalog of all families."""
+    """The runs' benchmark (run_benchmark: frozen, or the catalog test for runs trained on every family), them against the
+    interim and the previous encoder, same per-face catalog of all families. The sketch slice draws development and test
+    families, which a whole-catalog run has seen clean: for it the figure bounds drawings from above only."""
     from train.encoder import load_encoder
-    setup = Setup(['train']); roles = ['seen', 'development', 'test']; reports = {}
+    benchmarks = {run: run_benchmark(run) for run in runs}
+    if len(set(benchmarks.values())) != 1: raise ValueError('Runs measured on different benchmarks: ' + str(benchmarks))
+    name = benchmarks[runs[0]]; roles = ['seen', 'development', 'test'] if name == 'bench' else ['test']
+    setup = Setup(['train']); reports = {}
+    measure = lambda model, heads: {'results': evaluate(model, heads, setup, roles, name=name, source=source), 'samples': samples(model, heads, setup, source=source),
+                                    'sketch': evaluate(model, heads, setup, ['development', 'test'], name='bench-sketch', source=source)}
     for run in runs:
-        model, heads, state = load_run(run)
-        reports[run] = {'run': run, 'step': state['step'], 'architecture': architecture_of(state), 'results': evaluate(model, heads, setup, roles, source=source),
-                        'samples': samples(model, heads, setup, source=source), 'sketch': evaluate(model, heads, setup, ['development', 'test'], name='bench-sketch', source=source)}
-    for name, path in [('interim', ROOT/'.data/encoder/case-refine/encoder.json'), ('previous', ROOT/'.data/encoder/retrieval-refine/encoder.json')]:
-        encoder = load_encoder(path).to('mps')
-        reports[name] = {'encoderSha256': sha(path), 'results': evaluate(encoder, None, setup, roles, source=source), 'samples': samples(encoder, None, setup, source=source),
-                         'sketch': evaluate(encoder, None, setup, ['development', 'test'], name='bench-sketch', source=source)}
-    save(ROOT/'bench/style-quality.json', {'benchmarkSha256': sha(STYLE/'bench.json'), 'sketchSha256': sha(STYLE/'bench-sketch.json'), 'referenceSource': source,
-         'referencesSha256': {name: sha(STYLE/f'{name}.json') for name in ['references', 'references-browser'] if (STYLE/f'{name}.json').exists()}, 'reports': reports,
-         'scope': 'Frozen Chromium benchmark (seen, development-selection and held-out test families) against per-face references of all 2,004 families. Twins: pairwise letter-by-letter distance below the renderer noise median. Synthetic, not screenshots.'})
+        model, heads, state = load_run(run, exported=True)
+        reports[run] = {'run': run, 'step': state['step'], 'architecture': architecture_of(state), 'encoderSha256': sha(ROOT/'.data/style'/run/'encoder.json'), **measure(model, heads)}
+    for label, path in [('interim', ROOT/'.data/encoder/case-refine/encoder.json'), ('previous', ROOT/'.data/encoder/retrieval-refine/encoder.json')]:
+        reports[label] = {'encoderSha256': sha(path), **measure(load_encoder(path).to('mps'), None)}
+    save(ROOT/'bench/style-quality.json', {'benchmark': name, 'benchmarkSha256': sha(STYLE/f'{name}.json'), 'sketchSha256': sha(STYLE/'bench-sketch.json'), 'referenceSource': source,
+         'referencesSha256': {label: sha(STYLE/f'{label}.json') for label in ['references', 'references-browser'] if (STYLE/f'{label}.json').exists()}, 'reports': reports,
+         'scope': SCOPES[name] + ' Twins: pairwise letter-by-letter distance below the renderer noise median. Synthetic, not screenshots.'})
     return reports
 
 
@@ -470,42 +501,44 @@ def breakdown(run):
     """Held-out families by requirement: length, Google category and style tag against every reference; capitals searched
     among lowercase references only and the reverse; other scripts among Latin only. The shipped catalog holds every case
     and script, so the cross rows measure what a catalog with fewer references still finds."""
-    setup = Setup(['train']); model, heads, _ = load_run(run); keep = lambda r: {k: r[k] for k in ['count', 'twin5', 'twin1', 'top5', 'top1'] if k in r}
-    full = evaluate(model, heads, setup, ['test'], source='browser')['scriptFiltered']
+    setup = Setup(['train']); model, heads, _ = load_run(run, exported=True); keep = lambda r: {k: r[k] for k in ['count', 'twin5', 'twin1', 'top5', 'top1'] if k in r}
+    name = run_benchmark(run); full = evaluate(model, heads, setup, ['test'], name=name, source='browser')['scriptFiltered']
     groups = {k: keep(v) for k, v in full.items() if k.split('/')[0] in ('long', 'case', 'script', 'slice', 'style', 'tag')}; cross = {}
-    for name, kinds, group in [('capitalsFromLowercase', {'Latn-lower'}, 'case/upper'), ('lowercaseFromCapitals', {'Latn-upper'}, 'case/lower'),
+    for label, kinds, group in [('capitalsFromLowercase', {'Latn-lower'}, 'case/upper'), ('lowercaseFromCapitals', {'Latn-upper'}, 'case/lower'),
                                ('otherScriptsFromLatin', {'Latn-lower', 'Latn-upper'}, 'case/native'), ('hanziFromLatin', {'Latn-lower', 'Latn-upper'}, 'slice/hanzi')]:
-        cross[name] = {'references': sorted(kinds), 'queries': group, **keep(evaluate(model, heads, setup, ['test'], source='browser', kinds=kinds)['scriptFiltered'][group])}
-        print(name, cross[name], flush=True)
-    save(ROOT/'bench/style-breakdown.json', {'run': run, 'encoderSha256': sha(ROOT/'.data/style'/run/'encoder.json'), 'benchmarkSha256': sha(STYLE/'bench.json'),
+        cross[label] = {'references': sorted(kinds), 'queries': group, **keep(evaluate(model, heads, setup, ['test'], name=name, source='browser', kinds=kinds)['scriptFiltered'][group])}
+        print(label, cross[label], flush=True)
+    save(ROOT/'bench/style-breakdown.json', {'run': run, 'encoderSha256': sha(ROOT/'.data/style'/run/'encoder.json'), 'benchmark': name, 'benchmarkSha256': sha(STYLE/f'{name}.json'),
          'referencesSha256': sha(STYLE/'references-browser.json'), 'groups': groups, 'cross': cross,
-         'scope': 'Held-out test families, frozen Chromium benchmark, script-aware search; twin5/twin1 credit identical designs as the main report does. Tags: Google style tags weighted at least 50.'})
+         'scope': {'bench': 'Held-out test families, frozen Chromium benchmark', 'catalog': 'Every family on text never trained on, catalog benchmark test role'}[name]
+                  + ', script-aware search; twin5/twin1 credit identical designs as the main report does. Tags: Google style tags weighted at least 50.'})
     return groups, cross
 
 
 def deploy(run):
     """Ship the selected run: encoder (with heads), checkpoint and per-face catalog into models/encoder; the demo's
-    accuracy line reads the held-out test slice of the frozen benchmark, bound to these exact bytes."""
+    accuracy line reads the test role of the run's benchmark from the final report, bound to these exact bytes."""
     import shutil
-    source = ROOT/'.data/style'/run; target = ROOT/'models/encoder'; report = read(ROOT/'bench/style-quality.json')
-    if run not in report['reports']: raise ValueError('Run missing from the final report')
+    source = ROOT/'.data/style'/run; target = ROOT/'models/encoder'; report = read(ROOT/'bench/style-quality.json'); name = run_benchmark(run)
+    if run not in report['reports'] or report.get('benchmark', 'bench') != name: raise ValueError('Run missing from the final report of its benchmark')
+    if report['reports'][run]['encoderSha256'] != sha(source/'encoder.json'): raise ValueError('The final report measured another export of this run')
     for name in ['encoder.json', 'google-fonts.json', 'best.pt']: shutil.copyfile(source/name, target/name)
     test = report['reports'][run]['results']['scriptFiltered']['role/test']
     # The page quotes these; bench/style-breakdown.json adds held-out case and script figures.
     report['demo'] = {'encoderSha256':sha(target/'encoder.json'),'catalogSha256':sha(target/'google-fonts.json'),
                       'metrics':{'top1':test['twin1'],'top5Accuracy':test['twin5'],'faceWeightError':test.get('faceWeightError'),'faceItalic':test.get('faceItalic'),
                                  'drawnTop5':report['reports'][run]['sketch']['scriptFiltered']['all']['twin5'],
-                                 'scope':'5–10 character Chromium crops of 300 unseen Google Fonts families (all conditions and scripts; identical designs counted)'}}
+                                 'scope':DEMO_SCOPES[name]}}
     save(ROOT/'bench/style-quality.json', report); print('Deployed', run, report['demo'], flush=True)
 
 
 if __name__ == '__main__':
     p = argparse.ArgumentParser(); p.add_argument('command', choices=['train', 'export', 'catalog', 'final', 'deploy', 'compare', 'breakdown']); p.add_argument('--run', default='evaluation')
-    p.add_argument('--roles', default='train'); p.add_argument('--steps', type=int, default=30000); p.add_argument('--workers', type=int, default=12); p.add_argument('--check', type=int, default=2500); p.add_argument('--large', action='store_true'); p.add_argument('--wider', action='store_true'); p.add_argument('--lr', type=float, default=2e-4); p.add_argument('--drawn', type=float, default=0.0); p.add_argument('--pairs', type=float, default=0.0); p.add_argument('--seed', type=int); p.add_argument('--source', choices=['pillow', 'browser', 'mixed'], default='pillow')
+    p.add_argument('--roles', default='train'); p.add_argument('--steps', type=int, default=30000); p.add_argument('--workers', type=int, default=12); p.add_argument('--check', type=int, default=2500); p.add_argument('--architecture', choices=list(ARCHITECTURES), default=CORPUS_ARCH); p.add_argument('--lr', type=float, default=2e-4); p.add_argument('--drawn', type=float, default=0.0); p.add_argument('--pairs', type=float, default=0.0); p.add_argument('--seed', type=int); p.add_argument('--select', default='bench:development'); p.add_argument('--source', choices=['pillow', 'browser', 'mixed'], default='pillow')
     p.add_argument('--warm', default=str(ROOT/'.data/encoder/case-refine/best.pt')); a = p.parse_args()
     torch.set_num_threads(4)
     if not torch.backends.mps.is_available(): raise ValueError('MPS unavailable')
-    if a.command == 'train': train(a.run, a.roles.split(','), a.steps, a.warm, a.workers, a.check, WIDER_ARCH if a.wider else LARGE_ARCH if a.large else CORPUS_ARCH, a.lr, a.drawn, a.pairs, a.seed)
+    if a.command == 'train': train(a.run, a.roles.split(','), a.steps, a.warm, a.workers, a.check, a.architecture, a.lr, a.drawn, a.pairs, a.seed, a.select)
     elif a.command == 'export': export_run(a.run)
     elif a.command == 'catalog': export_catalog(a.run, source=a.source)
     elif a.command == 'compare': compare_references(a.run)

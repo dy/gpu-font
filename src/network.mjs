@@ -1,15 +1,16 @@
-import { base64 } from './catalog.mjs'
+import { base64, unpack } from './catalog.mjs'
 
 export const architecture = 'font-conv16-32-48-64-v1'
 export const contextArchitecture = 'font-conv16-32-48-64-64-v2'
 export const corpusArchitecture = 'font-conv32-64-96-128-128-v3'
 export const largeArchitecture = 'font-conv64-128-192-256-256-v4'
 export const widerArchitecture = 'font-conv96-192-288-384-384-v5'
+export const widestArchitecture = 'font-conv128-256-384-512-512-v6'
 export const channels = [1, 16, 32, 48, 64]
 export const strides = [1, 2, 2, 2]
 // Channels per layer for each supported architecture; every one but the first adds a stride-1 context layer.
 const shapes = new Map([[architecture, channels], [contextArchitecture, [...channels, 64]], [corpusArchitecture, [1, 32, 64, 96, 128, 128]],
-  [largeArchitecture, [1, 64, 128, 192, 256, 256]], [widerArchitecture, [1, 96, 192, 288, 384, 384]]])
+  [largeArchitecture, [1, 64, 128, 192, 256, 256]], [widerArchitecture, [1, 96, 192, 288, 384, 384]], [widestArchitecture, [1, 128, 256, 384, 512, 512]]])
 
 export function readNetwork(artifact) {
   if (artifact?.version !== 1 || !shapes.has(artifact.architecture)) throw new Error('Unsupported font classifier')
@@ -32,12 +33,15 @@ export function readNetwork(artifact) {
     if (JSON.stringify(layer.shape) !== JSON.stringify(shape)) throw new Error('Invalid layer shape')
     const [rows] = shape, count = shape.reduce((a, b) => a * b, 1)
     if (!Array.isArray(layer.scale) || layer.scale.length !== rows || layer.scale.some(s => !Number.isFinite(s) || s <= 0) || !Array.isArray(layer.bias) || layer.bias.length !== rows || !layer.bias.every(Number.isFinite)) throw new Error('Invalid layer values')
-    if (typeof layer.weights !== 'string' || !base64(layer.weights)) throw new Error('Invalid packed weights')
-    const binary = atob(layer.weights)
-    if (binary.length !== count) throw new Error('Invalid weight count')
-    // Plain loop: per-element callbacks cost ~100 ms on a million-weight encoder.
-    const weights = new Float32Array(count), per = count / rows
-    for (let n = 0; n < count; n++) { const byte = binary.charCodeAt(n); weights[n] = (byte > 127 ? byte - 256 : byte) * layer.scale[Math.floor(n / per)] }
+    // Weights are packed `bits` apiece, 8 unless the layer says fewer.
+    const bits = layer.bits ?? 8
+    if (!Number.isInteger(bits) || bits < 2 || bits > 8 || typeof layer.weights !== 'string' || !base64(layer.weights)) throw new Error('Invalid packed weights')
+    const binary = atob(layer.weights), bytes = new Uint8Array(binary.length)
+    if (binary.length !== Math.ceil(count * bits / 8)) throw new Error('Invalid weight count')
+    // Plain loops: per-element callbacks cost ~100 ms on a million-weight encoder.
+    for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i)
+    const values = unpack(bytes, bits, count), weights = new Float32Array(count), per = count / rows
+    for (let n = 0; n < count; n++) weights[n] = values[n] * layer.scale[Math.floor(n / per)]
     const bias = Float32Array.from(layer.bias)
     if (!weights.every(Number.isFinite) || !bias.every(Number.isFinite)) throw new Error('Weight overflow')
     return { shape, weights, bias }

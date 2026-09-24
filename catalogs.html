@@ -20,10 +20,10 @@
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 32 32%22%3E%3Crect width=%2232%22 height=%2232%22 rx=%226%22 fill=%22%23222%22/%3E%3Ctext x=%2216%22 y=%2222%22 font-family=%22Georgia,serif%22 font-size=%2216%22 fill=%22%23fff%22 text-anchor=%22middle%22%3EAa%3C/text%3E%3C/svg%3E">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <script type="importmap">{"imports":{"./my-fonts.mjs":"./my-fonts.mjs?v=d075f19d67","./src/catalog.mjs":"./src/catalog.mjs?v=64a49b0317","./src/font-file.mjs":"./src/font-file.mjs?v=f6be447519","./src/input.mjs":"./src/input.mjs?v=6499378ce1","./src/line.mjs":"./src/line.mjs?v=e35378b08a","./src/match.mjs":"./src/match.mjs?v=bdf85950a6","./src/network-gpu.mjs":"./src/network-gpu.mjs?v=fa27d23620","./src/network.mjs":"./src/network.mjs?v=f20e703399","./src/prepare.mjs":"./src/prepare.mjs?v=c48ce58778","./src/references.mjs":"./src/references.mjs?v=cb7c792ce7"}}</script>
+  <script type="importmap">{"imports":{"./my-fonts.mjs":"./my-fonts.mjs?v=d075f19d67","./src/catalog.mjs":"./src/catalog.mjs?v=734bee841e","./src/font-file.mjs":"./src/font-file.mjs?v=f6be447519","./src/input.mjs":"./src/input.mjs?v=2cf5262269","./src/line.mjs":"./src/line.mjs?v=8d5dd4c551","./src/match.mjs":"./src/match.mjs?v=ce4f30166a","./src/network-gpu.mjs":"./src/network-gpu.mjs?v=fa27d23620","./src/network.mjs":"./src/network.mjs?v=03778f9887","./src/prepare.mjs":"./src/prepare.mjs?v=1f8d1989f4","./src/references.mjs":"./src/references.mjs?v=49638eb038"}}</script>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter&family=Source+Serif+4&display=swap">
-  <link rel="stylesheet" href="./tokens.css?v=887bf6e761">
-  <link rel="stylesheet" href="./style.css?v=7000961b31">
+  <link rel="stylesheet" href="./tokens.css?v=aa4aae7c63">
+  <link rel="stylesheet" href="./style.css?v=21abbd5f25">
 </head>
 <body>
   <a class="skip" href="#my-fonts">Skip to catalogs</a>
@@ -60,42 +60,36 @@
         </table>
       </div>
     </section>
-    <section id="included" class="stacked" aria-labelledby="included-title">
-      <h2 id="included-title">Included</h2>
-      <div class="table-scroll" :scope="{ list: included, sort: { key: 'families', dir: -1 }, json: true }" :html="document.getElementById('source-table')"></div>
-    </section>
     <section id="sources" class="stacked" aria-labelledby="sources-title">
-      <h2 id="sources-title">Not included</h2>
-      <div class="table-scroll" :scope="{ list: others, sort: { key: 'status', dir: 1 }, json: false }" :html="document.getElementById('source-table')"></div>
+      <h2 id="sources-title">Sources</h2>
+      <div class="table-scroll">
+        <table class="sources-table">
+          <thead><tr>
+            <th scope="col" :aria-sort="order(sort, 'name')"><button class="sort" :onclick="sort = next(sort, 'name')">Source</button></th>
+            <th scope="col" :aria-sort="order(sort, 'terms')"><button class="sort" :onclick="sort = next(sort, 'terms')">Terms</button></th>
+            <th scope="col" :aria-sort="order(sort, 'licence')"><button class="sort" :onclick="sort = next(sort, 'licence')">Licence</button></th>
+            <th scope="col" :aria-sort="order(sort, 'status')"><button class="sort" :onclick="sort = next(sort, 'status')">Status</button></th>
+            <th scope="col" class="number" :aria-sort="order(sort, 'families')"><button class="sort" :onclick="sort = next(sort, 'families')">Families</button></th>
+          </tr></thead>
+          <tbody>
+            <tr :each="source in rows(groups, expanded, sort)" :id="source.id" :class="source.member ? 'member-row' : source.members ? 'group-row' : null">
+              <th scope="row">
+                <button class="fold" :if="source.members" :aria-expanded="String(expanded.includes(source.id))" :onclick="expanded = expanded.includes(source.id) ? expanded.filter(id => id !== source.id) : [...expanded, source.id]" :text="source.name"></button>
+                <a :else :href="source.url" target="_blank" rel="noopener" :text="source.name"></a>
+                <span class="detail" :if="source.members" :text="plural(source.members.length, 'source', 'sources')"></span>
+              </th>
+              <td><span class="cell-main" :data-terms="source.terms.status" :text="TERMS[source.terms.status] ?? source.terms.status"></span><blockquote :if="source.terms.quote" :text="source.terms.quote"></blockquote><span class="detail" :if="source.terms.note" :text="source.terms.note"></span><span class="checked" :if="source.terms.quote || source.terms.note"><a :if="source.terms.url" :href="source.terms.url" target="_blank" rel="noopener">Terms</a><span :text="source.terms.url ? `, read ${source.terms.checked}` : `Checked ${source.terms.checked}`"></span></span></td>
+              <td><span class="cell-main" :text="brief(source.licence)" :title="source.licence"></span><span class="detail" :if="rest(source.licence)" :text="rest(source.licence)"></span></td>
+              <td><span class="cell-main" :text="WORK[source.work.status] ?? source.work.status"></span><span class="held" :if="source.work.familiesHeldLocally" :text="`${count(source.work.familiesHeldLocally)} held locally, not shipped`"></span><span class="detail" :if="aside(source.work)" :text="aside(source.work)"></span></td>
+              <td class="number" :title="source.availableNote"><span class="cell-main" :text="familiesText(source)"></span><span class="detail" :if="familiesUnit(source)" :text="familiesUnit(source)"></span><a class="json-link" :if="source.json" :href="source.json.file" download title="Download the catalog as JSON" :aria-label="`Download the ${source.name} catalog, ${size(source.json.bytes)} JSON`"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4v11M7.5 10.5 12 15l4.5-4.5M6 19h12"/></svg><span :text="size(source.json.bytes)"></span></a></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
     </section>
-    <template id="source-table">
-    <table class="sources-table">
-      <thead><tr>
-        <th scope="col" :aria-sort="order(sort, 'name')"><button class="sort" :onclick="sort = next(sort, 'name')">Source</button></th>
-        <th scope="col" :aria-sort="order(sort, 'terms')"><button class="sort" :onclick="sort = next(sort, 'terms')">Terms</button></th>
-        <th scope="col" :aria-sort="order(sort, 'licence')"><button class="sort" :onclick="sort = next(sort, 'licence')">Licence</button></th>
-        <th scope="col" :aria-sort="order(sort, 'status')"><button class="sort" :onclick="sort = next(sort, 'status')">Status</button></th>
-        <th scope="col" class="number" :aria-sort="order(sort, 'families')"><button class="sort" :onclick="sort = next(sort, 'families')">Families</button></th>
-        <th scope="col" class="number" :if="json">JSON</th>
-      </tr></thead>
-      <tbody>
-        <tr :each="source in sorted(list, sort)" :id="source.id">
-          <th scope="row"><a :href="source.url" target="_blank" rel="noopener" :text="source.name"></a><span class="detail" :if="source.members" :text="source.members"></span></th>
-          <td>
-            <span class="pill" :data-terms="source.terms.status" :text="TERMS[source.terms.status] ?? source.terms.status"></span>
-            <details :if="source.terms.quote || source.terms.note"><summary :text="source.terms.quote ? 'Clause' : 'Note'"></summary><blockquote :if="source.terms.quote" :text="source.terms.quote"></blockquote><p :if="source.terms.note" :text="source.terms.note"></p><p class="checked"><a :if="source.terms.url" :href="source.terms.url" target="_blank" rel="noopener">Terms</a><span :text="source.terms.url ? `, read ${source.terms.checked}` : `Checked ${source.terms.checked}`"></span></p></details>
-          </td>
-          <td :text="source.licence ?? '–'"></td>
-          <td><span class="status" :text="WORK[source.work.status] ?? source.work.status"></span><span class="held" :if="source.work.familiesHeldLocally" :text="`${count(source.work.familiesHeldLocally)} held locally, not shipped`"></span><span class="detail" :if="source.work.reason || source.work.route" :text="source.work.reason ?? source.work.route"></span></td>
-          <td class="number" :text="familiesText(source)" :title="source.availableNote"></td>
-          <td class="number" :if="json"><a :href="source.json.file" download :text="size(source.json.bytes)"></a></td>
-        </tr>
-      </tbody>
-    </table>
-    </template>
   </main>
-  <footer><div class="related"><span>Inspired by</span><a href="https://gpu-lexer.vercel.app/">gpu-lexer</a><a href="https://github.com/arikchakma/gpu-time">gpu-time</a><a href="https://github.com/safzanpirani/gpu-query">gpu-query</a></div><div class="footer-links"><a class="footer-license" href="https://github.com/dy/gpu-font/blob/main/LICENSE" rel="license">MIT</a><a class="footer-icon omkara" href="https://github.com/krishnized/license" aria-label="Krishnized license" title="Krishnized license"><span aria-hidden="true">ॐ</span></a></div></footer>
+  <footer><p class="credit">Made by <a href="https://github.com/dy">dy</a>.</p><div class="footer-links"><a class="footer-license" href="https://github.com/dy/gpu-font/blob/main/LICENSE" rel="license">MIT</a><a class="footer-icon omkara" href="https://github.com/krishnized/license" aria-label="Krishnized license" title="Krishnized license"><span aria-hidden="true">ॐ</span></a></div></footer>
 
-  <script type="module" src="./catalogs.mjs?v=d90d7f8ab9"></script>
+  <script type="module" src="./catalogs.mjs?v=d519918446"></script>
 </body>
 </html>
