@@ -348,7 +348,10 @@
           "date": "2026-09-23",
           "event": "Surveyed; ~46,000 styles with mixed licences"
         }
-      ]
+      ],
+      "familiesAvailable": 40000,
+      "availableUnit": "fonts",
+      "availableNote": "No official figure published (DaFont is on the do-not-fetch list and its FAQ states no total). Third-party citations range widely, from ~30,000 to 80,000; 'almost 40,000 fonts' is the figure most consistently repeated across independent review sources circa 2024-2025. (search result: https://www.dafont.com/), 2026-09-24"
     },
     {
       "id": "dejavu",
@@ -1020,7 +1023,10 @@
           "date": "2026-09-23",
           "event": "Icon probe: 75% exact top-1 with the text encoder; needs glyph mode"
         }
-      ]
+      ],
+      "familiesAvailable": 2500,
+      "availableUnit": "icons",
+      "availableNote": "\"over 2,500 glyphs in a single font file with various design options\" (a separate mention on the same page notes default settings load \"3,800+ icons\" once style/weight variants are counted). (own site: https://developers.google.com/fonts/docs/material_symbols), 2026-09-24"
     },
     {
       "id": "font-awesome",
@@ -1042,7 +1048,10 @@
           "date": "2026-09-23",
           "event": "Used in the icon probe"
         }
-      ]
+      ],
+      "familiesAvailable": 1000,
+      "availableUnit": "icons",
+      "availableNote": "\"1,000+ Free Icons\", a stated minimum, on https://fontawesome.com/start, 2026-09-24"
     },
     {
       "id": "bootstrap-icons",
@@ -1064,7 +1073,10 @@
           "date": "2026-09-23",
           "event": "Used in the icon probe"
         }
-      ]
+      ],
+      "familiesAvailable": 2000,
+      "availableUnit": "icons",
+      "availableNote": "\"Free, high quality, open source icon library with over 2,000 icons.\" (own site: https://icons.getbootstrap.com/), 2026-09-24"
     },
     {
       "id": "phosphor",
@@ -1086,7 +1098,10 @@
           "date": "2026-09-23",
           "event": "Used in the icon probe"
         }
-      ]
+      ],
+      "familiesAvailable": 1512,
+      "availableUnit": "icons",
+      "availableNote": "Consistently cited across current third-party sources as \"1,512 icons\" in 6 weights (Thin, Light, Regular, Bold, Fill, Duotone). Phosphor's own GitHub homepage README says \"1,248 icons and counting\" but appears to be an older/unsynced snapshot; phosphoricons.com itself did not return a numeric statement to WebFetch. (search result: https://phosphoricons.com/), 2026-09-24"
     },
     {
       "id": "tabler-icons",
@@ -1108,7 +1123,10 @@
           "date": "2026-09-23",
           "event": "Surveyed; ~6,200 icons"
         }
-      ]
+      ],
+      "familiesAvailable": 6220,
+      "availableUnit": "icons",
+      "availableNote": "\"A complete icon set with 6220 icons featuring perfect line weights and spacing - ready for Figma, apps, and design systems.\" (own site: https://tabler.io/icons), 2026-09-24"
     },
     {
       "id": "remix-icon",
@@ -1130,7 +1148,10 @@
           "date": "2026-09-23",
           "event": "Surveyed"
         }
-      ]
+      ],
+      "familiesAvailable": 3200,
+      "availableUnit": "icons",
+      "availableNote": "\"3200+ icons are all elaborately crafted so that they are born with the genes of readability, consistency, and perfect pixels.\" (own site: https://github.com/Remix-Design/RemixIcon), 2026-09-24"
     },
     {
       "id": "smufl",
@@ -1152,7 +1173,10 @@
           "date": "2026-09-23",
           "event": "Surveyed; notes and symbols never entered training"
         }
-      ]
+      ],
+      "familiesAvailable": 41,
+      "availableUnit": "fonts",
+      "availableNote": "Counted 41 distinct SMuFL-compliant font families listed on the SMuFL fonts page (Bravura, Petaluma, November, Leland, Sebastian, Eugene, six Finale fonts, ~19 Norfonts titles, LS Iris, eight Music Type Foundry 'MTF-' fonts, Leipzig, etc.). (own site: https://www.smufl.org/fonts/), 2026-09-24"
     },
     {
       "id": "openmoji",
@@ -1174,7 +1198,10 @@
           "date": "2026-09-23",
           "event": "Surveyed; colour fonts need a colour branch"
         }
-      ]
+      ],
+      "familiesAvailable": 4495,
+      "availableUnit": "icons",
+      "availableNote": "\"4495 Emojis - So far more than four thousand emojis over many categories have been designed\" (own site: https://openmoji.org/), 2026-09-24"
     },
     {
       "id": "ms-corefonts",
@@ -1222,7 +1249,10 @@
           "date": "2026-09-23",
           "event": "About 4,000 faces on this Mac; excluded while focusing on permissive fonts"
         }
-      ]
+      ],
+      "familiesAvailable": 1690,
+      "availableUnit": "fonts",
+      "availableNote": "1,387 installed or downloadable plus 303 document-support fonts listed on \"Fonts included with macOS Sequoia\", https://support.apple.com/en-us/120414, counted 2026-09-24"
     },
     {
       "id": "windows",
@@ -1244,7 +1274,10 @@
           "date": "2026-09-23",
           "event": "Surveyed; Segoe UI, Calibri, Cascadia and others"
         }
-      ]
+      ],
+      "familiesAvailable": 63,
+      "availableUnit": "families",
+      "availableNote": "Manually counted 63 distinct entries in the 'Family' column of the main table on Microsoft's Windows 11 font list (the fonts that ship by default). This excludes the separate 'Feature on Demand (FOD)' supplemental script-pack tables further down the same page (Arabic, Bangla, Devanagari, Hebrew, Japanese, Korean, Thai, etc. script packs), which are optional add-ons, not part of the base shipped li"
     },
     {
       "id": "myfonts",
@@ -1271,7 +1304,10 @@
           "date": "2026-09-23",
           "event": "Permission request drafted"
         }
-      ]
+      ],
+      "familiesAvailable": 300000,
+      "availableUnit": "fonts",
+      "availableNote": "\"MyFonts has over 300,000 fonts in its marketplace\" (recurring figure across multiple independent marketplace-review sources; myfonts.com is on the do-not-fetch list so this could not be checked against MyFonts' own copy). (search result: https://www.myfonts.com/), 2026-09-24"
     },
     {
       "id": "adobe-fonts",
@@ -1322,7 +1358,10 @@
           "date": "2026-09-23",
           "event": "Surveyed; permission request drafted"
         }
-      ]
+      ],
+      "familiesAvailable": 7000,
+      "availableUnit": "families",
+      "availableNote": "\"nearly 7,000 worry-free font families\" attributed to Fontspring's own 'All Fonts Available from Fontspring' (A-Z) page in search-result summaries; direct WebFetch of fontspring.com was blocked (403), so this is relayed via search snippet, not directly read from the page. (A separate, larger '69,000+ fonts from 540+ foundries' figure from a third-party source appears to count individual styles, no"
     },
     {
       "id": "creative-market",
@@ -1346,7 +1385,10 @@
           "date": "2026-09-23",
           "event": "Surveyed"
         }
-      ]
+      ],
+      "familiesAvailable": 510000,
+      "availableUnit": "fonts",
+      "availableNote": "\"Here you'll find more than 510,000 typefaces, each created by independent artists from around the world.\" (Creative Market uses 'typefaces' loosely for individual font products, not distinct type-design families, so this is recorded as a fonts count, not a families count.) (own site: https://creativemarket.com/fonts), 2026-09-24"
     },
     {
       "id": "youworkforthem",
@@ -1370,7 +1412,10 @@
           "date": "2026-09-23",
           "event": "Surveyed; ~30,000 product pages"
         }
-      ]
+      ],
+      "familiesAvailable": 250000,
+      "availableUnit": "fonts",
+      "availableNote": "\"250,000+ fonts\" for print, web and branding, per YouWorkForThem's own site copy as relayed in search results (direct WebFetch of youworkforthem.com was blocked, 403). A LinkedIn company page cites a slightly higher '257,000+ fonts.' (search result: https://www.youworkforthem.com/fonts), 2026-09-24"
     },
     {
       "id": "future-fonts",
@@ -1584,7 +1629,10 @@
           "date": "2026-09-23",
           "event": "Surveyed"
         }
-      ]
+      ],
+      "familiesAvailable": 25,
+      "availableUnit": "families",
+      "availableNote": "Counted 25 distinct typeface families listed under \"All Families\" on OH no Type Co.'s own fonts page (Beastly, Camelion, Casserole, Cheee, Compadre, Coniferous, Covik, Degular, Eckmannpsych, Forevs, Hobeaux, Hobeaux Rococeaux, Irregardless, Montreuil, Obviously, Ohno Blazeface, Ohno Casual, Ohno Fatface, Ohno Softie, Polymath, Regrets, Retail, Swear, Viktor Script, Vulf, Yumex). (own site: https:/"
     },
     {
       "id": "production-type",
@@ -1606,7 +1654,10 @@
           "date": "2026-09-23",
           "event": "Surveyed"
         }
-      ]
+      ],
+      "familiesAvailable": 80,
+      "availableUnit": "families",
+      "availableNote": "\"Explore 80+ typefaces by Production Type, offering over 800 font styles of all types: serif, sans serif, monospace, variable...\" (own site: https://productiontype.com/), 2026-09-24"
     },
     {
       "id": "displaay",
@@ -1653,7 +1704,10 @@
           "date": "2026-09-23",
           "event": "Surveyed; Aeonik"
         }
-      ]
+      ],
+      "familiesAvailable": 10,
+      "availableUnit": "families",
+      "availableNote": "Own site's \"Our Typefaces\" section states \"10\", listing: Aeonik Family, RM Family, Lock Family, Altform, Ambit, Coanda, Scandium, Orbikular, Gridular, Betatron. (own site: https://cotypefoundry.com/about), 2026-09-24"
     },
     {
       "id": "house-industries",
@@ -1725,7 +1779,10 @@
           "date": "2026-09-23",
           "event": "Surveyed"
         }
-      ]
+      ],
+      "familiesAvailable": 27,
+      "availableUnit": "families",
+      "availableNote": "\"Monotype partners with Sharp Type to add 27 font families to library\" — Monotype's official announcement of acquiring Sharp Type's retail library (Feb 2024, marketed as 'Season One'). This is not the full current Sharp Type catalog: the foundry has continued releasing further typefaces ('Season Two') since. (reference: https://www.creativeboom.com/news/monotype-partners-with-sharp-type-to-add-27-"
     },
     {
       "id": "lineto",
@@ -1825,7 +1882,10 @@
           "date": "2026-09-23",
           "event": "Surveyed"
         }
-      ]
+      ],
+      "familiesAvailable": 25,
+      "availableUnit": "families",
+      "availableNote": "At least 25 distinct families documented on Fonts In Use's Frere-Jones Type foundry page (Interstate, Garage Gothic, Mallory, Nobel, Exchange, Griffith Gothic, Retina, Magnet Headline, Hightower, Niagara, Cafeteria, Empirica, Grand Central, Conductor, Magnet Standard, Asphalt, Community Gothic, Constrictor, Epitaph, Reiner Script, Armada, Bosca, Citadel Inline, Edgar, Essex Market); the list is tr"
     },
     {
       "id": "typotheque",
