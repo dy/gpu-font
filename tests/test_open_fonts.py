@@ -7,7 +7,7 @@ from pathlib import Path
 from fontTools.fontBuilder import FontBuilder
 from fontTools.pens.ttGlyphPen import TTGlyphPen
 
-from scripts.open_fonts import MANIFEST, ROOT, colour_letters, debian_licences, family_name, is_font, members, name_key, one_format, symbol_encoded
+from scripts.open_fonts import MANIFEST, ROOT, colour_letters, debian_licences, family_name, is_font, members, name_key, one_format, split_collections, symbol_encoded
 
 
 def build(folder, names, coloured=()):
@@ -130,6 +130,15 @@ class DebianPackage(unittest.TestCase):
             self.assertEqual(debian_licences(b'no machine-readable fields'), 'see the package copyright file')
 
 
+class DebianSkip(unittest.TestCase):
+    def test_bitmap_noto_and_tex_live_extras_are_skipped_but_its_two_font_packages_are_taken(self):
+        from scripts.open_fonts import DEBIAN_SKIP
+        taken = ['fonts-dejavu', 'fonts-wqy-zenhei', 'texlive-fonts-extra', 'texlive-fonts-recommended']
+        skipped = ['xfonts-base', 'fonts-noto-cjk', 'texlive-fonts-extra-doc', 'texlive-fonts-recommended-doc', 'texlive-latex-base']
+        self.assertEqual([name for name in taken if DEBIAN_SKIP.match(name)], [])
+        self.assertEqual([name for name in skipped if not DEBIAN_SKIP.match(name)], [])
+
+
 class ClaimOrder(unittest.TestCase):
     def test_rights_holders_then_fontshare_then_catalogues(self):
         from scripts.open_fonts import CATALOGUES, SOURCES, claim_order
@@ -138,6 +147,21 @@ class ClaimOrder(unittest.TestCase):
         self.assertTrue(all(source not in CATALOGUES for source in order[:fontshare]))
         self.assertTrue(all(source in CATALOGUES for source in order[fontshare + 1:]))
         self.assertEqual(len(order), len(SOURCES) + 1)
+
+
+class SplitCollections(unittest.TestCase):
+    def test_a_collection_becomes_its_fonts_and_plain_files_pass_through(self):
+        import io
+        from fontTools.ttLib import TTCollection, TTFont
+        with tempfile.TemporaryDirectory() as folder:
+            collection = TTCollection()
+            collection.fonts = [TTFont(build(folder, ['A', 'B'])), TTFont(build(folder, ['uni0041', 'uni0042']))]
+            data = io.BytesIO(); collection.save(data)
+            out = list(split_collections([('x/Pair.ttc', data.getvalue()), ('x/Lone.ttf', b'\x00\x01\x00\x00'), ('x/Bad.ttc', b'ttcf broken')]))
+            self.assertEqual([name for name, _ in out], ['x/Pair-0.ttf', 'x/Pair-1.ttf', 'x/Lone.ttf'])
+            for index, (name, content) in enumerate(out[:2]):
+                path = Path(folder) / f'split-{index}.ttf'; path.write_bytes(content)
+                self.assertEqual(family_name(path), 'Test')
 
 
 class OneFormat(unittest.TestCase):

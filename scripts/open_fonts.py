@@ -111,9 +111,10 @@ FONTSOURCE_API = 'https://api.fontsource.org/v1/fonts'
 FONTSOURCE_SKIP = {'blackout-two-am'}
 # Debian admits only fonts under free licences and records each licence in the package's
 # copyright file. Every font package in its archive, after every rights holder's own release;
-# X11 bitmap fonts are not OpenType, Noto is Google Fonts' own, TeX Live's fonts are CTAN's.
+# X11 bitmap fonts are not OpenType, and Noto is Google Fonts' own. TeX Live's two font packages
+# carry CTAN's OpenType and TrueType fonts.
 DEBIAN = 'https://deb.debian.org/debian/'
-DEBIAN_SKIP = re.compile(r'^(xfonts-|fonts-noto|texlive-)')
+DEBIAN_SKIP = re.compile(r'^(xfonts-|fonts-noto|texlive-(?!fonts-(extra|recommended)$))')
 # Catalogues gather other people's releases. A family goes to the first source that claims it:
 # rights holders' own releases, then Fontshare's library, then catalogues, then Debian and Fontsource.
 CATALOGUES = {'uncut', 'fontlibrary'}
@@ -254,6 +255,18 @@ def claim_order(specs):
     return [*(spec for spec in specs if spec['source'] not in CATALOGUES), FONTSHARE, *(spec for spec in specs if spec['source'] in CATALOGUES)]
 
 
+def split_collections(members):
+    """A collection file (.ttc) holds several fonts; each becomes a font file of its own."""
+    from fontTools.ttLib import TTCollection
+    for name, content in members:
+        if content[:4] != b'ttcf': yield name, content; continue
+        try: fonts = TTCollection(io.BytesIO(content)).fonts
+        except Exception: continue  # a damaged collection yields nothing
+        for index, font in enumerate(fonts):
+            out = io.BytesIO(); font.save(out)
+            yield f"{PurePosixPath(name).with_suffix('')}-{index}{'.otf' if font.sfntVersion == 'OTTO' else '.ttf'}", out.getvalue()
+
+
 def one_format(members):
     """A style shipped as both Foo.otf and Foo.ttf is one face: the OpenType file is kept."""
     ranked = sorted(members, key=lambda pair: (PurePosixPath(pair[0]).suffix.lower() != '.otf', pair[0]))
@@ -275,7 +288,7 @@ def debian_sources():
         field = dict(re.findall(r'^([A-Za-z0-9-]+): (.*)$', block, re.M))
         if field.get('Section') != 'fonts' or DEBIAN_SKIP.match(field.get('Package', '')): continue
         yield {'source': 'debian', 'url': DEBIAN + field['Filename'], 'sha256': field['SHA256'], 'format': 'deb',
-               'licence': 'see the package copyright file', 'include': r'usr/share/fonts/(truetype|opentype)/.+\.(ttf|otf)$'}
+               'licence': 'see the package copyright file', 'include': r'usr/share/(fonts|texlive/texmf-dist/fonts)/(truetype|opentype)/.+\.(ttf|otf|ttc)$'}
 
 
 def debian_licences(copyright):
@@ -352,8 +365,8 @@ def main():
                 key = f"{url}#{spec['commit']}" if 'commit' in spec else url
                 try:
                     data, digest = fetch(url, pins.get(key) or spec.get('sha256'), spec.get('commit'))
-                    wanted = one_format([(name, content) for name, content in members(data, url, spec.get('format'))
-                                         if re.search(spec['include'], name, re.I) or LICENCE_NAMES.search(name)])
+                    wanted = one_format(split_collections((name, content) for name, content in members(data, url, spec.get('format'))
+                                                          if re.search(spec['include'], name, re.I) or LICENCE_NAMES.search(name)))
                 except (OSError, ValueError, subprocess.CalledProcessError) as error:
                     # Curated sources fail loudly; one of Debian's hundreds of packages is reported and skipped.
                     if spec.get('format') != 'deb': raise

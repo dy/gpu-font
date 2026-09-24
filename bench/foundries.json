@@ -50,7 +50,7 @@
       "work": {
         "status": "indexed",
         "route": "files from the public catalogue API, kept local; built into a catalogue from those files",
-        "familiesIndexed": 65
+        "familiesIndexed": 39
       },
       "log": [
         {
@@ -89,8 +89,7 @@
       },
       "work": {
         "status": "indexed",
-        "route": "pinned commits of the foundry's GitLab and GitHub repositories and its designers' own; bench/open-releases.json lists each family and every one left out",
-        "familiesIndexed": 62
+        "route": "pinned commits of the foundry's GitLab and GitHub repositories and its designers' own; bench/open-releases.json lists each family and every one left out"
       },
       "log": [
         {
@@ -240,9 +239,9 @@
         "note": "Debian admits only freely licensed fonts and records each licence in the package's copyright file, which is kept with every family."
       },
       "work": {
-        "status": "inventoried",
-        "route": "every package in the fonts section of Debian's archive, pinned to the SHA-256 its index publishes; families a rights holder publishes are taken from the rights holder",
-        "familiesInventoried": 1597
+        "status": "indexed",
+        "route": "every package in the fonts section of Debian's archive, TeX Live's two font packages (CTAN's OpenType and TrueType fonts) included, pinned to the SHA-256 its index publishes; collections split into their fonts; families a rights holder publishes are taken from the rights holder",
+        "familiesIndexed": 1509
       },
       "log": [
         {
@@ -252,6 +251,10 @@
         {
           "date": "2026-09-24",
           "event": "Inventoried: 1849 families from Debian (1815 usable), the rest left to Google Fonts and to rights holders' own releases"
+        },
+        {
+          "date": "2026-09-24",
+          "event": "TeX Live's font packages and font collections (.ttc) added: 675 families from CTAN, 30 from collections"
         }
       ],
       "familiesAvailable": 2075,

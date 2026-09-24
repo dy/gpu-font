@@ -9,15 +9,17 @@
   "https://fonts.google.com/metadata/fonts"
  ],
  "coverage": {
-  "indexed (clone)": 10,
-  "indexed": 544,
-  "missing": 378,
-  "indexed (revival)": 11,
-  "indexed (related family)": 18,
-  "indexed (same-design)": 17,
-  "inventoried (clone)": 4,
-  "inventoried": 7,
-  "inventoried (related family)": 10,
+  "indexed (clone)": 9,
+  "indexed": 545,
+  "missing": 377,
+  "indexed (revival)": 10,
+  "indexed (related family)": 21,
+  "indexed (same-design)": 9,
+  "inventoried (clone)": 5,
+  "inventoried (revival)": 1,
+  "inventoried": 8,
+  "inventoried (related family)": 8,
+  "inventoried (same-design)": 6,
   "indexed (basis)": 1
  },
  "typefaces": [
@@ -39,14 +41,14 @@
    "score": 0.994,
    "coverage": {
     "status": "indexed",
-    "source": "other",
-    "via": "Nimbus Sans",
+    "source": "tex-gyre",
+    "via": "TeX Gyre Heros",
     "match": "clone",
     "equivalents": [
      {
       "family": "Nimbus Sans",
       "relation": "clone",
-      "status": "indexed",
+      "status": "inventoried",
       "evidence": "https://github.com/ArtifexSoftware/urw-base35-fonts/blob/20200910/fontconfig/urw-nimbus-sans.conf"
      },
      {
@@ -84,7 +86,7 @@
      {
       "family": "Liberation Serif",
       "relation": "metric-compatible",
-      "status": "indexed",
+      "status": "inventoried",
       "evidence": "https://en.wikipedia.org/wiki/Liberation_fonts"
      },
      {
@@ -145,7 +147,7 @@
      {
       "family": "Liberation Sans",
       "relation": "metric-compatible",
-      "status": "indexed",
+      "status": "inventoried",
       "evidence": "https://en.wikipedia.org/wiki/Liberation_fonts"
      },
      {
@@ -329,14 +331,14 @@
    "score": 0.896,
    "coverage": {
     "status": "indexed",
-    "source": "other",
-    "via": "Nimbus Mono PS",
+    "source": "tex-gyre",
+    "via": "TeX Gyre Cursor",
     "match": "clone",
     "equivalents": [
      {
       "family": "Nimbus Mono PS",
       "relation": "clone",
-      "status": "indexed",
+      "status": "inventoried",
       "evidence": "https://github.com/ArtifexSoftware/urw-base35-fonts/blob/20200910/fontconfig/urw-nimbus-mono-ps.conf"
      },
      {
@@ -606,14 +608,14 @@
    "score": 0.797,
    "coverage": {
     "status": "indexed",
-    "source": "other",
-    "via": "P052",
+    "source": "tex-gyre",
+    "via": "TeX Gyre Pagella",
     "match": "clone",
     "equivalents": [
      {
       "family": "P052",
       "relation": "clone",
-      "status": "indexed",
+      "status": "inventoried",
       "evidence": "https://github.com/ArtifexSoftware/urw-base35-fonts/blob/20200910/fontconfig/urw-p052.conf"
      },
      {
@@ -821,7 +823,7 @@
    },
    "score": 0.765,
    "coverage": {
-    "status": "inventoried",
+    "status": "indexed",
     "source": "debian",
     "via": "Caslon",
     "match": "exact",
@@ -946,8 +948,8 @@
    "score": 0.738,
    "coverage": {
     "status": "indexed",
-    "source": "other",
-    "via": "Liberation Mono",
+    "source": "debian",
+    "via": "Liberation Sans Narrow",
     "match": "related"
    }
   },
@@ -1014,15 +1016,15 @@
    },
    "score": 0.726,
    "coverage": {
-    "status": "indexed",
-    "source": "other",
+    "status": "inventoried",
+    "source": "railway-sans",
     "via": "Railway",
     "match": "revival",
     "equivalents": [
      {
       "family": "Railway",
       "relation": "revival",
-      "status": "indexed",
+      "status": "inventoried",
       "evidence": "https://github.com/googlefonts/railway-sans"
      },
      {
@@ -1059,7 +1061,7 @@
      {
       "family": "Linux Biolinum O",
       "relation": "inspired",
-      "status": "indexed",
+      "status": "inventoried",
       "evidence": "https://en.wikipedia.org/wiki/Linux_Libertine"
      },
      {
@@ -1311,21 +1313,21 @@
    },
    "score": 0.673,
    "coverage": {
-    "status": "indexed",
-    "source": "other",
-    "via": "Linux Libertine O",
-    "match": "same-design",
+    "status": "inventoried",
+    "source": "fontlibrary",
+    "via": "Linux Libertine",
+    "match": "exact",
     "equivalents": [
      {
       "family": "Linux Libertine O",
       "relation": "same-design",
-      "status": "indexed",
+      "status": "inventoried",
       "evidence": "https://sourceforge.net/projects/linuxlibertine/"
      },
      {
       "family": "Linux Biolinum O",
       "relation": "same-design",
-      "status": "indexed",
+      "status": "inventoried",
       "evidence": "https://sourceforge.net/projects/linuxlibertine/"
      }
     ]
@@ -1554,51 +1556,51 @@
    },
    "score": 0.648,
    "coverage": {
-    "status": "indexed",
-    "source": "other",
+    "status": "inventoried",
+    "source": "roadgeek",
     "via": "Roadgeek 2014 Series B",
     "match": "clone",
     "equivalents": [
      {
       "family": "Roadgeek 2014 Series B",
       "relation": "clone",
-      "status": "indexed",
+      "status": "inventoried",
       "evidence": "https://github.com/sammdot/roadgeek-fonts"
      },
      {
       "family": "Roadgeek 2014 Series C",
       "relation": "clone",
-      "status": "indexed",
+      "status": "inventoried",
       "evidence": "https://github.com/sammdot/roadgeek-fonts"
      },
      {
       "family": "Roadgeek 2014 Series D",
       "relation": "clone",
-      "status": "indexed",
+      "status": "inventoried",
       "evidence": "https://github.com/sammdot/roadgeek-fonts"
      },
      {
       "family": "Roadgeek 2014 Series E",
       "relation": "clone",
-      "status": "indexed",
+      "status": "inventoried",
       "evidence": "https://github.com/sammdot/roadgeek-fonts"
      },
      {
       "family": "Roadgeek 2014 Series EM",
       "relation": "clone",
-      "status": "indexed",
+      "status": "inventoried",
       "evidence": "https://github.com/sammdot/roadgeek-fonts"
      },
      {
       "family": "Roadgeek 2014 Series EEM",
       "relation": "clone",
-      "status": "indexed",
+      "status": "inventoried",
       "evidence": "https://github.com/sammdot/roadgeek-fonts"
      },
      {
       "family": "Roadgeek 2014 Series F",
       "relation": "clone",
-      "status": "indexed",
+      "status": "inventoried",
       "evidence": "https://github.com/sammdot/roadgeek-fonts"
      },
      {
@@ -1678,8 +1680,8 @@
    },
    "score": 0.637,
    "coverage": {
-    "status": "indexed",
-    "source": "other",
+    "status": "inventoried",
+    "source": "opendyslexic",
     "via": "OpenDyslexic",
     "match": "exact"
    }
@@ -1752,15 +1754,15 @@
    },
    "score": 0.628,
    "coverage": {
-    "status": "indexed",
-    "source": "other",
+    "status": "inventoried",
+    "source": "ocr-skala",
     "via": "OCR B",
     "match": "exact",
     "equivalents": [
      {
       "family": "OCR B",
       "relation": "clone",
-      "status": "indexed",
+      "status": "inventoried",
       "evidence": "https://tsukurimashou.org/ocr.php.en"
      }
     ]
@@ -1885,7 +1887,7 @@
    "coverage": {
     "status": "inventoried",
     "source": "debian",
-    "via": "Font Awesome 6 Free Solid",
+    "via": "Font Awesome 5 Free",
     "match": "related"
    }
   },
@@ -1975,14 +1977,14 @@
    "score": 0.612,
    "coverage": {
     "status": "indexed",
-    "source": "other",
-    "via": "URW Gothic",
+    "source": "tex-gyre",
+    "via": "TeX Gyre Adventor",
     "match": "clone",
     "equivalents": [
      {
       "family": "URW Gothic",
       "relation": "clone",
-      "status": "indexed",
+      "status": "inventoried",
       "evidence": "https://github.com/ArtifexSoftware/urw-base35-fonts/blob/20200910/fontconfig/urw-gothic.conf"
      },
      {
@@ -2011,15 +2013,15 @@
    },
    "score": 0.607,
    "coverage": {
-    "status": "indexed",
-    "source": "other",
+    "status": "inventoried",
+    "source": "ocr-skala",
     "via": "OCR A",
     "match": "exact",
     "equivalents": [
      {
       "family": "OCR A",
       "relation": "clone",
-      "status": "indexed",
+      "status": "inventoried",
       "evidence": "https://tsukurimashou.org/ocr.php.en"
      }
     ]
@@ -2266,15 +2268,15 @@
    },
    "score": 0.576,
    "coverage": {
-    "status": "indexed",
-    "source": "other",
+    "status": "inventoried",
+    "source": "gnu-unifont",
     "via": "Unifont",
     "match": "same-design",
     "equivalents": [
      {
       "family": "Unifont",
       "relation": "same-design",
-      "status": "indexed",
+      "status": "inventoried",
       "evidence": "https://unifoundry.com/unifont/"
      }
     ]
@@ -2412,27 +2414,27 @@
    },
    "score": 0.564,
    "coverage": {
-    "status": "indexed",
-    "source": "other",
+    "status": "inventoried",
+    "source": "gnu-freefont",
     "via": "FreeSerif",
     "match": "same-design",
     "equivalents": [
      {
       "family": "FreeSerif",
       "relation": "same-design",
-      "status": "indexed",
+      "status": "inventoried",
       "evidence": "https://www.gnu.org/software/freefont/"
      },
      {
       "family": "FreeSans",
       "relation": "same-design",
-      "status": "indexed",
+      "status": "inventoried",
       "evidence": "https://www.gnu.org/software/freefont/"
      },
      {
       "family": "FreeMono",
       "relation": "same-design",
-      "status": "indexed",
+      "status": "inventoried",
       "evidence": "https://www.gnu.org/software/freefont/"
      }
     ]
@@ -2935,14 +2937,14 @@
    "score": 0.527,
    "coverage": {
     "status": "indexed",
-    "source": "other",
-    "via": "Junicode VF",
-    "match": "same-design",
+    "source": "debian",
+    "via": "Junicode",
+    "match": "exact",
     "equivalents": [
      {
       "family": "Junicode VF",
       "relation": "same-design",
-      "status": "indexed",
+      "status": "inventoried",
       "evidence": "https://github.com/psb1558/Junicode-font"
      }
     ]
@@ -3620,14 +3622,14 @@
    "score": 0.504,
    "coverage": {
     "status": "indexed",
-    "source": "other",
-    "via": "URW Bookman",
+    "source": "tex-gyre",
+    "via": "TeX Gyre Bonum",
     "match": "clone",
     "equivalents": [
      {
       "family": "URW Bookman",
       "relation": "clone",
-      "status": "indexed",
+      "status": "inventoried",
       "evidence": "https://github.com/ArtifexSoftware/urw-base35-fonts/blob/20200910/fontconfig/urw-bookman.conf"
      },
      {
@@ -4068,8 +4070,8 @@
    },
    "score": 0.485,
    "coverage": {
-    "status": "indexed",
-    "source": "other",
+    "status": "inventoried",
+    "source": "urw-base35",
     "via": "Nimbus Sans",
     "match": "exact"
    }
@@ -4538,27 +4540,27 @@
    },
    "score": 0.467,
    "coverage": {
-    "status": "indexed",
-    "source": "other",
+    "status": "inventoried",
+    "source": "hershey",
     "via": "AVHershey Simplex",
     "match": "same-design",
     "equivalents": [
      {
       "family": "AVHershey Simplex",
       "relation": "same-design",
-      "status": "indexed",
+      "status": "inventoried",
       "evidence": "https://github.com/scruss/AVHershey-OTF"
      },
      {
       "family": "AVHershey Duplex",
       "relation": "same-design",
-      "status": "indexed",
+      "status": "inventoried",
       "evidence": "https://github.com/scruss/AVHershey-OTF"
      },
      {
       "family": "AVHershey Complex",
       "relation": "same-design",
-      "status": "indexed",
+      "status": "inventoried",
       "evidence": "https://github.com/scruss/AVHershey-OTF"
      }
     ]
@@ -4802,15 +4804,15 @@
    },
    "score": 0.46,
    "coverage": {
-    "status": "indexed",
-    "source": "other",
+    "status": "inventoried",
+    "source": "urw-base35",
     "via": "Nimbus Roman",
     "match": "same-design",
     "equivalents": [
      {
       "family": "Nimbus Roman",
       "relation": "same-design",
-      "status": "indexed",
+      "status": "inventoried",
       "evidence": "https://github.com/ArtifexSoftware/urw-base35-fonts/blob/20200910/fontconfig/urw-fallback-backwards.conf"
      }
     ]
@@ -5424,7 +5426,7 @@
      {
       "family": "Liberation Mono",
       "relation": "metric-compatible",
-      "status": "indexed",
+      "status": "inventoried",
       "evidence": "https://en.wikipedia.org/wiki/Liberation_fonts"
      },
      {
@@ -5785,14 +5787,14 @@
    "score": 0.433,
    "coverage": {
     "status": "indexed",
-    "source": "other",
-    "via": "Z003",
+    "source": "tex-gyre",
+    "via": "TeX Gyre Chorus",
     "match": "clone",
     "equivalents": [
      {
       "family": "Z003",
       "relation": "clone",
-      "status": "indexed",
+      "status": "inventoried",
       "evidence": "https://github.com/ArtifexSoftware/urw-base35-fonts/blob/20200910/fontconfig/urw-z003.conf"
      },
      {
@@ -6175,15 +6177,15 @@
    },
    "score": 0.427,
    "coverage": {
-    "status": "indexed",
-    "source": "other",
+    "status": "inventoried",
+    "source": "ubuntu-titling",
     "via": "Ubuntu-Title",
     "match": "same-design",
     "equivalents": [
      {
       "family": "Ubuntu-Title",
       "relation": "same-design",
-      "status": "indexed",
+      "status": "inventoried",
       "evidence": "https://packages.debian.org/sid/fonts-ubuntu-title"
      }
     ]
@@ -6227,8 +6229,8 @@
    },
    "score": 0.426,
    "coverage": {
-    "status": "indexed",
-    "source": "other",
+    "status": "inventoried",
+    "source": "sil",
     "via": "Doulos SIL",
     "match": "exact"
    }
@@ -6461,7 +6463,7 @@
    },
    "score": 0.424,
    "coverage": {
-    "status": "inventoried",
+    "status": "indexed",
     "source": "debian",
     "via": "Tiresias LPfont",
     "match": "related"
@@ -6564,8 +6566,8 @@
    "score": 0.422,
    "coverage": {
     "status": "indexed",
-    "source": "google-fonts",
-    "via": "Darker Grotesque",
+    "source": "debian",
+    "via": "Grotesque BRK",
     "match": "related"
    }
   },
@@ -6585,8 +6587,8 @@
    "score": 0.422,
    "coverage": {
     "status": "inventoried",
-    "source": "fontlibrary",
-    "via": "Aardvark Fixed",
+    "source": "debian",
+    "via": "ALM Fixed",
     "match": "related"
    }
   },
@@ -7063,15 +7065,15 @@
    },
    "score": 0.415,
    "coverage": {
-    "status": "indexed",
-    "source": "other",
+    "status": "inventoried",
+    "source": "urw-base35",
     "via": "Nimbus Mono PS",
     "match": "same-design",
     "equivalents": [
      {
       "family": "Nimbus Mono PS",
       "relation": "same-design",
-      "status": "indexed",
+      "status": "inventoried",
       "evidence": "https://github.com/ArtifexSoftware/urw-base35-fonts/blob/20200910/fontconfig/urw-fallback-backwards.conf"
      }
     ]
@@ -8133,7 +8135,10 @@
    },
    "score": 0.397,
    "coverage": {
-    "status": "missing"
+    "status": "inventoried",
+    "source": "debian",
+    "via": "WenQuanYi Zen Hei",
+    "match": "related"
    }
   },
   {
@@ -8250,7 +8255,7 @@
    },
    "score": 0.395,
    "coverage": {
-    "status": "inventoried",
+    "status": "indexed",
     "source": "debian",
     "via": "Stereofidelic",
     "match": "exact"
@@ -8491,7 +8496,7 @@
    },
    "score": 0.391,
    "coverage": {
-    "status": "inventoried",
+    "status": "indexed",
     "source": "debian",
     "via": "Aharoni CLM",
     "match": "related"
@@ -9486,7 +9491,7 @@
    },
    "score": 0.374,
    "coverage": {
-    "status": "inventoried",
+    "status": "indexed",
     "source": "debian",
     "via": "NK57 Monospace",
     "match": "related"
@@ -9592,14 +9597,14 @@
    "score": 0.372,
    "coverage": {
     "status": "indexed",
-    "source": "other",
-    "via": "C059",
+    "source": "tex-gyre",
+    "via": "TeX Gyre Schola",
     "match": "clone",
     "equivalents": [
      {
       "family": "C059",
       "relation": "clone",
-      "status": "indexed",
+      "status": "inventoried",
       "evidence": "https://github.com/ArtifexSoftware/urw-base35-fonts/blob/20200910/fontconfig/urw-c059.conf"
      },
      {
@@ -10026,7 +10031,7 @@
    },
    "score": 0.367,
    "coverage": {
-    "status": "inventoried",
+    "status": "indexed",
     "source": "debian",
     "via": "Chandas",
     "match": "exact"
@@ -11567,7 +11572,7 @@
    },
    "score": 0.339,
    "coverage": {
-    "status": "inventoried",
+    "status": "indexed",
     "source": "debian",
     "via": "Awami Nastaliq",
     "match": "exact"
@@ -19653,7 +19658,7 @@
    },
    "score": 0.186,
    "coverage": {
-    "status": "inventoried",
+    "status": "indexed",
     "source": "debian",
     "via": "Century Catalogue",
     "match": "exact"
