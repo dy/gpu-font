@@ -18,7 +18,8 @@ raw/
 *.jpg
 *.jpeg
 *.webp
-# The link preview is the one image the site serves; scripts/og.mjs renders it.
+# The images the site serves: the link preview (scripts/og.mjs) and a 64-pixel picture of each face (scripts/previews.py).
 !/og.png
+!/previews/**/*.webp
 *.pt
 /promo

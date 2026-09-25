@@ -60,15 +60,15 @@ for (const compiled of await compiledFolders('.data/catalogs')) {
   const data = await read(path)
   sources.push({ catalog: data, records })
 }
-// Captured specimens stay local and never ship. Only the derived catalogs (names, links, vectors) are
-// committed; local captures refresh them, and a fresh clone builds from the committed copies.
+// Captures stay local. The derived catalogs (names, links, vectors) are committed, with a 64-pixel black-and-white picture of
+// each face in previews/ (scripts/previews.py); local captures refresh them, and a fresh clone builds from the committed copies.
 // A source ships only when bench/foundries.json records its terms as permitting collection or stating nothing
 // against it; banned, restricted, unverified and unlisted sources are derived into .data and stay there.
 const derived = 'models/encoder/catalogs', withheld = '.data/catalogs/withheld'
 const ledger = new Map((await read('bench/foundries.json')).sources.map(source => [source.id, source]))
 // A grouped catalog ships only when every source in it would ship alone.
-// A source whose terms do not permit collection can still ship by a recorded decision in the ledger (`decision.ship`): names, links
-// and style vectors only, no images or files, taken down on the source's request. The terms status stays as found.
+// A source whose terms do not permit collection can still ship by a recorded decision in the ledger (`decision.ship`): names, links,
+// style vectors and preview pictures, no font files, taken down on the source's request. The terms status stays as found.
 const shippable = ({ id, sources = [id] }) => sources.every(id => ['permitted', 'none-found'].includes(ledger.get(id)?.terms?.status) || ledger.get(id)?.decision?.ship === true)
 const compiled = sourceCatalogs(sources, binding).filter(source => source.id !== 'google-fonts') // Google is indexed in full above.
 // Catalogs built from pinned font files (scripts/catalog-files.mjs) supersede capture-built ones of the same source.

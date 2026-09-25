@@ -5,6 +5,7 @@ import { readNetwork, inferCPU, rankWindows } from './src/network.mjs'
 import { createNetworkGPU } from './src/network-gpu.mjs'
 import { readCatalog, unionCatalogs, subsetCatalog, matchCatalog, foldTwins, embedWindows, sha256, preparationHash, readHeads, verdict, writeStyle, readStyle } from './src/catalog.mjs'
 import { readMyFonts } from './my-fonts.mjs'
+import { previewPath } from './previews.mjs'
 
 const $ = id => document.getElementById(id)
 // The address the page opened with: ?catalog= names what to search, ?style= a shared crop's style, ?embed shows the
@@ -183,11 +184,15 @@ function googleCss({ family, weight = 400, style = 'normal' }) {
   const axes = style === 'italic' ? `:ital,wght@1,${weight}` : weight === 400 ? '' : `:wght@${weight}`
   return `https://fonts.googleapis.com/css2?family=${encodeURIComponent(family).replaceAll('%20', '+')}${axes}&display=block`
 }
+// A face loaded from a file or by local name takes a CSS identifier of its own: `specimen-` and its key, every other
+// character escaped by its code. FontFace hands back any other name quoted (local:Georgia, a file's address), and quoted
+// again it names no font, so the preview would fall back to another face.
+const specimenFamily = key => `specimen-${key.replace(/[^A-Za-z0-9-]/g, c => `_${c.charCodeAt(0).toString(16)}_`)}`
 async function loadFont(key, face) {
   if (!face) throw new Error('Font is absent from this catalog')
-  const src = face.file ? `url("${face.file}")` : face.local && `local("${face.local}")`
+  const src = face.file ? `url("${face.file}")` : face.local && `local("${face.local}")`, family = specimenFamily(key)
   if (!fonts.has(key)) fonts.set(key, (src
-    ? new FontFace(`specimen-${key}`, src, { weight: String(face.weight ?? 400), style: face.style ?? 'normal' }).load().then(loaded => { document.fonts.add(loaded); return loaded.family })
+    ? new FontFace(family, src, { weight: String(face.weight ?? 400), style: face.style ?? 'normal' }).load().then(loaded => { document.fonts.add(loaded); return family })
     : new Promise((resolve, reject) => document.head.append(Object.assign(document.createElement('link'), { rel: 'stylesheet', href: googleCss(face), onload: resolve, onerror: () => reject(new Error(`Google Fonts does not serve ${face.family}`)) })))
       .then(() => document.fonts.load(`${face.style ?? 'normal'} ${face.weight ?? 400} 16px "${face.family}"`))
       .then(loaded => { if (!loaded.length) throw new Error(`Google Fonts does not serve ${face.family}`); return face.family })
@@ -346,7 +351,7 @@ function renderResults() {
     preview.value = previewText
     preview.setAttribute('aria-label', `Preview ${font.name}`)
     if (i === 0) preview.id = 'preview-text'
-    preview.style.setProperty('--font-specimen', `"specimen-${font.id}"`)
+    preview.style.setProperty('--font-specimen', `"${specimenFamily(font.id)}"`)
     fragment.append(item)
   }
   $('results').replaceChildren(fragment)
@@ -394,23 +399,40 @@ function matchLine(match, index) {
 }
 function encoderResult(match, index) {
   const { face } = match, item = document.createElement('li'); item.className = 'result'
-  item.append(matchLine(match, index))
-  const preview = searchCatalog.builtin ? catalog.previews[face.familyId] : face.local ? { latin: true } : null
-  if (preview) {
-    // Never display a fallback face as if it were a matching specimen.
-    const input = document.createElement('input'); input.className = 'result-preview'; input.type = 'text'; input.maxLength = 80
-    input.spellcheck = false; input.autocomplete = 'off'; input.style.visibility = 'hidden' // Keeps its row while the font loads.
-    input.setAttribute('aria-label', `Preview ${face.family}`); input.setAttribute('aria-describedby', 'preview-error')
-    input.readOnly = !preview.latin; input.value = preview.latin ? previewText : preview.sampleText
-    input.style.fontWeight = face.weight ?? 400; input.style.fontStyle = face.style ?? 'normal'
-    if (!index && preview.latin) input.id = 'preview-text'
-    item.append(input)
-    const subset = index >= SHORT && !face.local && !face.file
-    if (subset) { input.readOnly = true; input.tabIndex = -1; if (preview.latin) subsetRows.set(input, face) }
-    ;(subset ? subsetFont(face, input.value) : loadFont(face.id, face)).then(family => { input.style.setProperty('--font-specimen', `"${family}"`); input.style.visibility = '' })
-      .catch(() => { const note = document.createElement('p'); note.className = 'result-unavailable'; note.textContent = 'No preview available'; input.replaceWith(note) })
-  }
+  item.append(matchLine(match, index), previewElement(face, previewSources(face), index))
   return item
+}
+// Where a match can be seen, in order: its own font setting the preview text (Google Fonts, or installed), else the
+// picture stored with the site for every other face of a shipped catalog.
+function previewSources(face) {
+  const google = searchCatalog.builtin && catalog.previews[face.familyId]
+  return google ? [{ text: google }] : face.local ? [{ text: { latin: true } }] : searchCatalog.builtin ? [{ stored: face.id }] : []
+}
+// The first source that shows: one that fails to load gives way to the next, the last to a note. Never a fallback face
+// displayed as if it were a matching specimen.
+function previewElement(face, [candidate, ...rest], index) {
+  const next = element => () => { if (element.isConnected) element.replaceWith(previewElement(face, rest, index)) }
+  if (!candidate) {
+    const note = document.createElement('p'); note.className = 'result-unavailable'; note.textContent = 'No preview available'
+    return note
+  }
+  if (candidate.stored) {
+    const image = new Image(); image.className = 'result-image'; image.alt = `Preview of ${face.family}`; image.loading = 'lazy'; image.decoding = 'async'
+    image.addEventListener('error', next(image)); previewPath(candidate.stored).then(path => { image.src = path })
+    return image
+  }
+  const { text } = candidate
+  const input = document.createElement('input'); input.className = 'result-preview'; input.type = 'text'; input.maxLength = 80
+  input.spellcheck = false; input.autocomplete = 'off'; input.style.visibility = 'hidden' // Keeps its row while the font loads.
+  input.setAttribute('aria-label', `Preview ${face.family}`); input.setAttribute('aria-describedby', 'preview-error')
+  input.readOnly = !text.latin; input.value = text.latin ? previewText : text.sampleText
+  input.style.fontWeight = face.weight ?? 400; input.style.fontStyle = face.style ?? 'normal'
+  if (!index && text.latin) input.id = 'preview-text'
+  const subset = index >= SHORT && !face.local && !face.file
+  if (subset) { input.readOnly = true; input.tabIndex = -1; if (text.latin) subsetRows.set(input, face) }
+  ;(subset ? subsetFont(face, input.value) : loadFont(face.id, face)).then(family => { input.style.setProperty('--font-specimen', `"${family}"`); input.style.visibility = '' })
+    .catch(next(input))
+  return input
 }
 
 // A shipped catalog, fetched and checked against the checksum site.json records for it.

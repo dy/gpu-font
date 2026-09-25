@@ -1,0 +1,117 @@
+{
+ "height": 64,
+ "text": "Quiet rivers flow",
+ "catalogs": {
+  "dafont": {
+   "faces": 34975,
+   "pictures": 34973,
+   "bytes": 25832886
+  },
+  "adobe-fonts": {
+   "faces": 4788,
+   "pictures": 4787,
+   "bytes": 5684302
+  },
+  "debian": {
+   "faces": 4296,
+   "pictures": 4285,
+   "bytes": 3461536
+  },
+  "fontlibrary": {
+   "faces": 3977,
+   "pictures": 3971,
+   "bytes": 3046078
+  },
+  "other": {
+   "faces": 1796,
+   "pictures": 1795,
+   "bytes": 1338658
+  }
+ },
+ "missing": [
+  {
+   "id": "adobe-fonts:face:moolong-candle-variable/zhqp-n4-wght400",
+   "reason": "ValueError: draws nothing"
+  },
+  {
+   "id": "dafont:face:brains",
+   "reason": "ValueError: draws nothing"
+  },
+  {
+   "id": "dafont:face:hornettio",
+   "reason": "ValueError: draws nothing"
+  },
+  {
+   "id": "debian-cmu-classical-serif/cmunci",
+   "reason": "no source picture or file"
+  },
+  {
+   "id": "debian-cmu-serif-extra/cmunbl",
+   "reason": "no source picture or file"
+  },
+  {
+   "id": "debian-cmu-serif-extra/cmunrb",
+   "reason": "no source picture or file"
+  },
+  {
+   "id": "debian-cmu-serif-extra/cmunsl",
+   "reason": "no source picture or file"
+  },
+  {
+   "id": "debian-cmu-serif-upright-italic/cmunui",
+   "reason": "no source picture or file"
+  },
+  {
+   "id": "debian-font-awesome-7-brands/FontAwesome7Brands-Regular-400",
+   "reason": "no source picture or file"
+  },
+  {
+   "id": "debian-font-awesome-7-free/FontAwesome7Free-Regular-400",
+   "reason": "no source picture or file"
+  },
+  {
+   "id": "debian-font-awesome-7-free/FontAwesome7Free-Solid-900",
+   "reason": "no source picture or file"
+  },
+  {
+   "id": "debian-im-fell-flowers-1/FeFlow1",
+   "reason": "ValueError: draws nothing"
+  },
+  {
+   "id": "debian-ipaexmincho/ipaexm",
+   "reason": "no source picture or file"
+  },
+  {
+   "id": "debian-ume-p-gothic-s4/ume-pgs4",
+   "reason": "OSError: invalid opcode"
+  },
+  {
+   "id": "fontlibrary-bilboinc/BilboINC",
+   "reason": "no source picture or file"
+  },
+  {
+   "id": "fontlibrary-bilboinc/bilboinc-webfont",
+   "reason": "no source picture or file"
+  },
+  {
+   "id": "fontlibrary-fifteentwenty/FifteenTwentyUltraLight",
+   "reason": "ValueError: draws nothing"
+  },
+  {
+   "id": "fontlibrary-fifteentwenty/FifteenTwentyUltraLight-Oblique",
+   "reason": "ValueError: draws nothing"
+  },
+  {
+   "id": "fontlibrary-xw-zar/XW Zar ",
+   "reason": "OSError: execution context too long"
+  },
+  {
+   "id": "fontlibrary-xw-zar/XW Zar Bd",
+   "reason": "OSError: execution context too long"
+  },
+  {
+   "id": "fontshare-kohinoor-zerone/one",
+   "reason": "ValueError: draws nothing"
+  }
+ ]
+}

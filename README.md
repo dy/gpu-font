@@ -86,7 +86,7 @@ A catalog fits only the model that built it: `createMatcher` refuses one whose `
 
 ## Offline
 
-Everything the matcher needs ships in the package: the model, the catalogs and the modules, read from the package's own files, so `createMatcher()` works with no network once installed, in Node or bundled. The page needs the network only for previews, which it draws with fonts from Google Fonts; matching itself runs in the browser and sends nothing.
+Everything the matcher needs ships in the package: the model, the catalogs and the modules, read from the package's own files, so `createMatcher()` works with no network once installed, in Node or bundled. The page needs the network only for previews, which it draws with fonts from Google Fonts or shows as small pictures stored with the site; matching itself runs in the browser and sends nothing.
 
 ## Share and embed
 

@@ -9,7 +9,7 @@
     },
     {
       "id": "dafont",
-      "sha256": "503abac51aa471dd4561e190c37be7d52ba0ac339a3ba5b91c922a26477b1c3e",
+      "sha256": "a952e34105dff8178042ae973d1b6eb86bde8b318b51a9bbbe27bace227912ee",
       "families": 34975,
       "faces": 34975
     },
@@ -33,14 +33,14 @@
     },
     {
       "id": "other",
-      "sha256": "ed99674b45530b888e57c444f60edd280cb0c238ae1d52bc0a93eef4e28fb3ae",
-      "families": 379,
-      "faces": 1570
+      "sha256": "84a826ce1534dfbbf9b254e99e97bcfef2a8b3496cdbd3480ff14a6ea1de6917",
+      "families": 489,
+      "faces": 1796
     }
   ],
   "cpuError": 1.1175870895385742e-7,
   "gpuError": 1.6391277313232422e-7,
-  "detectionMilliseconds": 37.69999980926514,
+  "detectionMilliseconds": 63.19999980926514,
   "checks": [
     "native CPU/PyTorch/WebGPU projections",
     "exact displayed tensors and input stats",
@@ -53,10 +53,11 @@
     "image button/switch/replacement",
     "crop, pencil and eraser tools on any source, exact undo, brush size and cursor",
     "twin tooltip and the list grown to 50 with subset previews",
+    "stored previews and their fallback",
     "token contrast, links, popovers, code, section and question layout, dropdowns follow scroll",
     "no captured specimens shipped",
     "only cleared sources shipped",
-    "no fonts or images served; fonts from Google",
+    "no fonts served, images only stored previews; fonts from Google",
     "catalogs page",
     "my fonts: browser-indexed Lora equals the encoder on stored references, join, installed faces, previews, removal",
     "Aa returns to the last sample",

@@ -196,6 +196,9 @@ input, select { width: 100%; min-width: 0; padding: var(--space-2); min-height: 
 .result-preview { font: 400 var(--text-preview)/normal var(--font-specimen); width: calc(100% - var(--space-7)); height: 1.3em; margin: var(--space-2) 0 0 var(--space-7); padding: 0; border: 0; background: var(--color-transparent); min-height: var(--space-12); text-overflow: ellipsis; }
 .result-preview:not([readonly]):hover, .result-preview:not([readonly]):focus { background: var(--color-well); }
 .result-preview:focus { outline: none; }
+/* A stored picture of the face stands where the preview text would: the same row height, its line the text's size, cut at
+   the right as a long text is rather than shrunk, its white ground multiplied into the page's. */
+.result-image { --row: max(calc(var(--text-preview) * 1.3), var(--space-12)); display: block; box-sizing: border-box; height: var(--row); max-width: calc(100% - var(--space-7)); padding-block: calc((var(--row) - var(--text-preview)) / 2); margin: var(--space-2) 0 0 var(--space-7); object-fit: cover; object-position: left center; mix-blend-mode: multiply; }
 /* More matches, and the link and JSON export on the right, wait until there are matches. */
 .results-foot { display: flex; justify-content: space-between; align-items: center; gap: var(--space-4); }
 .results:empty + .results-foot { visibility: hidden; }

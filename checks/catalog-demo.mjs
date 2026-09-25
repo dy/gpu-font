@@ -5,11 +5,14 @@ import { execFileSync } from 'node:child_process'
 import { chromium } from 'playwright'
 import { readCatalog, subsetCatalog, matchCatalog, foldTwins, embedWindows, unit, rowBytes, unpack, readHeads, verdict, writeStyle, readStyle } from '../src/catalog.mjs'
 import { packVectors } from '../src/references.mjs'
+import { previewPath } from '../previews.mjs'
 import { readNetwork, inferCPU } from '../src/network.mjs'
 
 const read = async p => JSON.parse(await readFile(p, 'utf8'))
 // The site runs from the repository: site.json names the model and catalogs in place.
 const data = await read('site.json'), artifact = await read(data.model), model = readNetwork(artifact)
+// Faces scripts/previews.py found nothing to draw for; every other non-Google face has a picture stored with the site.
+const pictureless = new Set((await read('bench/previews.json')).missing.map(m => m.id))
 // Shipped distinct families and catalogs, fixed at load; accuracy is not credited to a selected or imported catalog.
 const expectedIntro = [`Finds the closest of ${data.families.toLocaleString('en-US')} font families, from ${data.catalogs.length} catalogs, to any line of text.`,
   `Experimental: on rendered crops of every Google Fonts family, on text it never trained on, it names the right family first ${(data.metrics.top1 * 100).toFixed(1)}% of the time.`]
@@ -63,9 +66,16 @@ async function verify(page, value, option) {
   const ms = value.milliseconds.toFixed(1)
   assert.equal(await page.locator('#detection-time').textContent(), value.cachedEmbedding ? `Ranked in ${ms}ms` : `${ms}ms`, 'A catalog switch says it only re-ranked')
 }
+// What a row's preview settled on: the image it shows, its font, or its note; null while one is still loading.
+const previewState = row => {
+  const image = row.querySelector('.result-image'), input = row.querySelector('.result-preview'), note = row.querySelector('.result-unavailable')
+  // A font is the family the field renders in: a name CSS cannot read leaves the page's own font there.
+  return image ? (image.complete && image.naturalWidth ? `image ${image.src}` : null) : input ? (input.style.visibility === '' ? `font ${getComputedStyle(input).fontFamily.replaceAll('"', '')}` : null) : note?.textContent ?? null
+}
 try {
   const page = await browser.newPage({ viewport: { width: 1440, height: 1000 } })
   page.on('pageerror', e => issues.push(e.message))
+  await page.addInitScript(`globalThis.previewState = ${previewState}`)  // the page's own copy, for the checks below
   await page.goto(base); await page.waitForFunction(() => document.body.dataset.ready === 'true')
   const original = await result(page)
   assert.equal(original.backend, 'WebGPU'); await verify(page, original, data.catalogs[0])
@@ -135,9 +145,10 @@ try {
   // A grouped catalog (Other) is cleared only when every source in it is.
   assert.deepEqual(data.catalogs.filter(option => !(option.sources?.map(s => s.id) ?? [option.id]).every(cleared)).map(option => option.id), [], 'Every shipped catalog has cleared terms or a recorded decision')
   assert.equal(data.catalogs.at(-1).id, 'other', 'Small sources are searched together as Other, last in the menu'); assert.ok(data.catalogs.every(c => c.sources || c.families >= 100))
-  // Nothing heavy ships: fonts come from Google Fonts, and the page asks its own origin for no font or image.
+  // No font ships: fonts come from Google Fonts. The only images the page asks its own origin for are stored previews.
   const own = new URL(base).host, fetched = await page.evaluate(() => performance.getEntriesByType('resource').map(r => r.name))
-  assert.deepEqual(fetched.filter(u => new URL(u).host === own && /\.(ttf|otf|woff2?|png|jpe?g|webp)(\?|$)/.test(u)), [], 'No font or image is served by the site')
+  assert.deepEqual(fetched.filter(u => new URL(u).host === own && /\.(ttf|otf|woff2?)(\?|$)/.test(u)), [], 'No font is served by the site')
+  assert.deepEqual(fetched.filter(u => new URL(u).host === own && /\.(png|jpe?g|webp)(\?|$)/.test(u) && !/\/previews\/[0-9a-f]{2}\/[0-9a-f]{14}\.webp$/.test(u)), [], 'The site serves no image but stored previews')
   assert.ok(fetched.some(u => u.startsWith('https://fonts.googleapis.com/css2?family=Lora')), 'Faces are requested from Google Fonts')
   assert.ok(await page.evaluate(() => document.fonts.check('16px Inter') && [...document.fonts].some(f => f.family.replaceAll('"', '') === 'Lora' && f.status === 'loaded')), 'Google Fonts faces load')
   // The run's input windows fold under Model, closed at first, with their outlines on the preview. The time stays on
@@ -366,9 +377,19 @@ try {
       assert.equal(await page.locator('.result-preview').count(), 0)
       assert.equal(await page.locator('.reference-preview').count(), 0, 'Captured specimens are never shipped')
       assert.ok((await page.locator('.result .font-name a').evaluateAll(links => links.map(a => a.href))).every(href => /^https:\/\//.test(href)), 'Each match links to its source instead')
+      // Each match shows the picture of its face stored with the site, or says it has none.
+      const faces = foldTwins(value.matches, readCatalog(await read(option.file), data), { script: value.verdict?.script?.[0]?.label, limit: 5 }).map(m => m.face)
+      await page.waitForFunction(() => [...document.querySelectorAll('#results .result')].every(previewState))
+      assert.deepEqual(await page.locator('#results .result').evaluateAll(rows => rows.map(previewState)), await Promise.all(faces.map(async f => pictureless.has(f.id) ? 'No preview available' : `image ${base}/${await previewPath(f.id)}`)), option.id)
     }
   }
   assert.deepEqual((await result(page)).matches, original.matches)
+  // A stored picture that fails to load gives way to the note, never to an empty row.
+  await page.route('**/previews/**', route => route.fulfill({ status: 404, body: '' }))
+  await choose(page, 'dafont'); await result(page)
+  await page.waitForFunction(() => [...document.querySelectorAll('#results .result')].every(previewState))
+  assert.deepEqual(await page.locator('#results .result').evaluateAll(rows => rows.map(previewState)), Array(5).fill('No preview available'))
+  await page.unroute('**/previews/**'); await choose(page, data.catalogs[0].id)
   // Failed imports preserve the selected catalog and current answer.
   for (const payload of ['{', '{}', JSON.stringify({ ...await read(data.catalogs[0].file), encoderSha256: 'wrong' })]) {
     await page.locator('#catalog-file').setInputFiles({ name: 'bad.json', mimeType: 'application/json', buffer: Buffer.from(payload) })
@@ -385,6 +406,7 @@ try {
   assert.deepEqual(await intro(page), expectedIntro, 'Importing a custom catalog changes neither the shipped figures nor the benchmark')
   assert.equal(imported.matches.length, 1); assert.equal(imported.matches[0].family, custom.faces[0].familyId)
   assert.equal(await page.locator('.result-preview, .reference-preview').count(), 0, 'Imported metadata must not claim a local specimen')
+  assert.equal(await page.locator('#results .result').evaluate(previewState), 'No preview available', 'An imported face has no stored picture, and says so')
   await choose(page, data.catalogs[0].id)
   // A slow response cannot replace a later catalog choice.
   if (data.catalogs.length > 1) {
@@ -654,6 +676,8 @@ try {
     if (process.platform === 'darwin') {
       await search.waitForFunction(() => [...document.querySelectorAll('#results .result-preview')].some(p => p.style.visibility === ''))
       assert.deepEqual(await search.locator('#results .result').evaluateAll(rows => rows.filter(r => r.querySelector('.result-preview')).map(r => r.querySelector('.font-name a').textContent)), ['Georgia'])
+      // The installed face renders by a family CSS can read (its key, local:…, escaped), not the page's own font.
+      assert.match(await search.locator('#results .result-preview').first().evaluate(input => getComputedStyle(input).fontFamily), /^"?specimen-local_3a_Georgia/)
     }
     await search.close()
     await mine.locator('#my-fonts-remove').click(); await mine.waitForFunction(() => !document.querySelector('.my-fonts-table') && document.querySelector('#my-fonts-stored').hidden)
@@ -664,7 +688,7 @@ try {
     await context.close()
   } else console.log('My fonts differential skipped: no local catalog instances in .data/style')
   const report = { encoderSha256: data.encoderSha256, catalogs: data.catalogs.map(o => ({ id: o.id, sha256: o.sha256, families: o.families, faces: o.faces })), cpuError, gpuError,
-    detectionMilliseconds: original.milliseconds, checks: ['native CPU/PyTorch/WebGPU projections', 'exact displayed tensors and input stats', 'catalog A → A → B → A', 'cached embedding reuse', 'one-face JSON import', 'invalid imports preserve result', 'stale catalog response', 'resolution and crop round trip', 'image button/switch/replacement', 'crop, pencil and eraser tools on any source, exact undo, brush size and cursor', 'twin tooltip and the list grown to 50 with subset previews', 'token contrast, links, popovers, code, section and question layout, dropdowns follow scroll', 'no captured specimens shipped', 'only cleared sources shipped', 'no fonts or images served; fonts from Google', 'catalogs page', 'my fonts: browser-indexed Lora equals the encoder on stored references, join, installed faces, previews, removal', 'Aa returns to the last sample', 'narrow crop keeps layout', 'share links: address, copy, reopen, re-rank; one source alone; embed; unreadable and other-model links', 'my fonts download', 'removal requests', 'empty image/sample entry', 'corrupt image recovery', 'keyboard and responsive selectors', 'image before initial catalog', 'CPU fallback'],
+    detectionMilliseconds: original.milliseconds, checks: ['native CPU/PyTorch/WebGPU projections', 'exact displayed tensors and input stats', 'catalog A → A → B → A', 'cached embedding reuse', 'one-face JSON import', 'invalid imports preserve result', 'stale catalog response', 'resolution and crop round trip', 'image button/switch/replacement', 'crop, pencil and eraser tools on any source, exact undo, brush size and cursor', 'twin tooltip and the list grown to 50 with subset previews', 'stored previews and their fallback', 'token contrast, links, popovers, code, section and question layout, dropdowns follow scroll', 'no captured specimens shipped', 'only cleared sources shipped', 'no fonts served, images only stored previews; fonts from Google', 'catalogs page', 'my fonts: browser-indexed Lora equals the encoder on stored references, join, installed faces, previews, removal', 'Aa returns to the last sample', 'narrow crop keeps layout', 'share links: address, copy, reopen, re-rank; one source alone; embed; unreadable and other-model links', 'my fonts download', 'removal requests', 'empty image/sample entry', 'corrupt image recovery', 'keyboard and responsive selectors', 'image before initial catalog', 'CPU fallback'],
     scope: 'Runtime correctness and UI lifecycle only; not recognition accuracy.' }
   await writeFile('bench/catalog-demo.json', JSON.stringify(report, null, 2) + '\n'); console.log(report)
 } finally { await browser.close() }

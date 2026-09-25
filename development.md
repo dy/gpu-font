@@ -10,11 +10,12 @@
 
 ## Run the demo
 
-The page runs straight from the repository, as [GitHub Pages](https://dy.github.io/gpu-font/) serves it: no build and no font files. It reads the model and catalogs from `models/encoder/` and loads every font from Google Fonts.
+The page runs straight from the repository, as [GitHub Pages](https://dy.github.io/gpu-font/) serves it: no build and no font files. It reads the model and catalogs from `models/encoder/`, the other catalogs' match previews from `previews/`, and loads every font from Google Fonts.
 
 ```sh
 npm run demo          # http://localhost:4179
 node scripts/og.mjs   # og.png, the link preview, captured from the running page
+node scripts/python.mjs scripts/previews.py   # previews/, a 64-pixel picture of each shipped face, after demo:build
 ```
 
 `npm run demo:build` refreshes `site.json` (catalog list, checksums, byte sizes, measured figures) after the model or a catalog changes. WebGPU needs localhost or HTTPS.
@@ -50,7 +51,7 @@ A catalog is a JSON file of reference vectors, bound to the exact model that mad
 
 - **Google Fonts**: every family except color, emoji and letterless ones, from Chromium renders of each face.
 - **Other free sources** (Fontsource, Fontshare, Uncut, Velvetyne and more; each under its own licence): `node scripts/catalog-files.mjs` indexes the font files pinned in `bench/open-fonts.json`, in Chromium, with the same builder My fonts uses. Only names, links and vectors are committed; the fonts stay in `.data/`.
-- Sources without verified permission (currently MyFonts and Adobe Fonts) are built locally and never shipped. `catalogs.html` shows each source's terms.
+- Sources without verified permission ship only by a decision recorded in `bench/foundries.json` (DaFont, Adobe Fonts); MyFonts stays local. `catalogs.html` shows each source's terms.
 
 A new shipped catalog also needs its entry in `catalogs` (`src/match.mjs`) and its id in `src/match.d.ts`; the tests fail until both list it.
 

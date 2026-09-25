@@ -1,0 +1,108 @@
+"""The previews stored with the site: a 64-pixel black-and-white picture of every face of a shipped catalog but Google
+Fonts' (whose faces the page sets in their own font), filed under the SHA-1 of the face id as previews.mjs finds it, so
+no catalog carries an address. DaFont's faces are the site's own stored preview of the font's name; Adobe Fonts' are the
+tester capture of a word line; every other face is its pinned font file setting the page's preview text, or the letters
+it has. Pictures of faces no longer shipped are removed; faces with nothing to draw are listed in bench/previews.json.
+
+    python scripts/previews.py
+"""
+import hashlib, io, json, os
+from multiprocessing import Pool
+from pathlib import Path
+from PIL import Image, ImageDraw, ImageFont, ImageOps
+from fontTools.ttLib import TTFont
+
+ROOT = Path(__file__).resolve().parents[1]
+OUT, REPORT = ROOT / 'previews', ROOT / 'bench/previews.json'
+HEIGHT, WIDTH, MARGIN = 64, 1280, .12  # a row's line at 2x; wider than any row is never seen; white above and below the ink
+TEXT = 'Quiet rivers flow'  # the page's preview text
+ADOBE = ROOT / '.data/previews/catalog-v1/adobe-fonts-snapshot'
+RECIPES = ['words-a-v1', 'words-b-v1', 'latin-lower-v1', 'latin-upper-v1', 'provided-v1', 'digits-v1']  # the line shown, first found
+
+
+def path(face_id):
+    digest = hashlib.sha1(face_id.encode()).hexdigest()
+    return OUT / digest[:2] / f'{digest[2:16]}.webp'
+
+
+def sources():
+    """Each face id's picture: ('image', file, crop box or None) for a captured one, ('font', file, weight, italic) for a file."""
+    found = {}
+    for manifest in (ROOT / '.data/previews/dafont-archives').glob('*/manifest.jsonl'):
+        for record in map(json.loads, manifest.open()):
+            found[record['faceId']] = ('image', str(manifest.parent / record['image']['path']), None)
+    captures = {}
+    for record in map(json.loads, (ADOBE / 'manifest.jsonl').open()):
+        captures.setdefault(record['faceId'], {})[record['recipeId']] = record
+    for face_id, lines in captures.items():
+        recipe = next((r for r in RECIPES if r in lines), None)
+        if not recipe: continue
+        record = lines[recipe]; g = record['region']
+        found[face_id] = ('image', str(ADOBE / record['image']['path']), (g['x'], g['y'], g['x'] + g['width'], g['y'] + g['height']))
+    inventory = json.loads((ROOT / 'bench/open-fonts.json').read_text())
+    for family in inventory['families']:
+        for face in family['faces']:  # the id scripts/catalog-files.mjs gives it
+            found[f"{family['id']}/{face['path'].split('/')[-1].rsplit('.', 1)[0]}"] = ('font', str(ROOT / inventory['store'] / face['path']), face['weight'], face['italic'])
+    return found
+
+
+def line(font_file, weight, italic):
+    """The preview text set in the face: the capitals, or the letters it has, when it lacks the lowercase."""
+    cmap = TTFont(font_file, lazy=True, fontNumber=0).getBestCmap() or {}
+    has = lambda text: all(ord(c) in cmap for c in text if c != ' ')
+    text = next((t for t in (TEXT, TEXT.upper()) if has(t)), None) or ''.join(c for c in 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789' if ord(c) in cmap)[:16]
+    if not text: raise ValueError('no Latin letters')
+    font = ImageFont.truetype(font_file, 96)
+    try:  # a variable font at the face's weight, and italic where it has the axis
+        axes = font.get_variation_axes()
+        font.set_variation_by_axes([min(max(weight if a['name'] in (b'Weight', 'Weight') else 1 if italic and a['name'] in (b'Italic', 'Italic') else a['default'], a['minimum']), a['maximum']) for a in axes])
+    except OSError: pass
+    ascent, descent = font.getmetrics()
+    canvas = Image.new('L', (int(font.getlength(text)) + 192, 3 * (ascent + descent)), 255)
+    ImageDraw.Draw(canvas).text((96, ascent + descent + ascent), text, font=font, fill=0, anchor='ls')
+    return canvas
+
+
+def picture(item):
+    face_id, source = item
+    try:
+        if source[0] == 'image':
+            image = Image.open(source[1]).convert('L')
+            if source[2]: image = image.crop(source[2])
+        else: image = line(*source[1:])
+        ink = image.point(lambda v: 255 if v < 128 else 0).getbbox()
+        if not ink: raise ValueError('draws nothing')
+        # The ink with a margin: letters fill about four fifths of the height, whatever the face's line box (Zapfino's is vast).
+        margin = max(2, round((ink[3] - ink[1]) * MARGIN))
+        image = ImageOps.expand(image, margin, fill=255).crop((ink[0], ink[1], ink[2] + 2 * margin, ink[3] + 2 * margin))
+        image = image.resize((max(1, round(image.width * HEIGHT / image.height)), HEIGHT), Image.LANCZOS)
+        image = image.crop((0, 0, min(image.width, WIDTH), HEIGHT)).point(lambda v: 255 if v >= 128 else 0)
+        data = io.BytesIO(); image.save(data, 'WEBP', lossless=True, quality=100, method=6)
+        target = path(face_id); target.parent.mkdir(parents=True, exist_ok=True)
+        if not target.exists() or target.read_bytes() != data.getvalue(): target.write_bytes(data.getvalue())
+        return face_id, len(data.getvalue()), None
+    except Exception as error: return face_id, 0, f'{type(error).__name__}: {error}'
+
+
+def main():
+    site = json.loads((ROOT / 'site.json').read_text())
+    shipped = {option['id']: [face['id'] for face in json.loads((ROOT / option['file']).read_text())['faces']] for option in site['catalogs'] if option['id'] != 'google-fonts'}
+    found = sources()
+    missing = [{'id': face_id, 'reason': 'no source picture or file'} for ids in shipped.values() for face_id in ids if face_id not in found]
+    todo = [(face_id, found[face_id]) for ids in shipped.values() for face_id in ids if face_id in found]
+    with Pool(os.cpu_count()) as pool: done = pool.map(picture, todo, chunksize=64)
+    missing += [{'id': face_id, 'reason': reason} for face_id, _, reason in done if reason]
+    kept = {path(face_id) for face_id, _, reason in done if not reason}
+    stale = [file for file in OUT.glob('*/*.webp') if file not in kept]
+    for file in stale: file.unlink()
+    for folder in OUT.glob('*'):
+        if folder.is_dir() and not any(folder.iterdir()): folder.rmdir()
+    sizes = {face_id: size for face_id, size, reason in done if not reason}
+    report = {'height': HEIGHT, 'text': TEXT, 'catalogs': {catalog: {'faces': len(ids), 'pictures': sum(i in sizes for i in ids), 'bytes': sum(sizes.get(i, 0) for i in ids)} for catalog, ids in shipped.items()},
+              'missing': sorted(missing, key=lambda m: m['id'])}
+    REPORT.write_text(json.dumps(report, indent=1, ensure_ascii=False) + '\n')
+    print(json.dumps({k: v for k, v in report.items() if k != 'missing'}, indent=1), f'\n{len(missing)} faces without a picture; {len(stale)} stale pictures removed')
+
+
+if __name__ == '__main__':
+    main()
