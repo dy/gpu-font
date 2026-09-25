@@ -4,43 +4,31 @@
  "catalogs": {
   "dafont": {
    "faces": 34975,
-   "pictures": 34973,
-   "bytes": 25832886
+   "pictures": 34975,
+   "bytes": 25834362
   },
   "adobe-fonts": {
    "faces": 4788,
-   "pictures": 4787,
-   "bytes": 5684302
+   "pictures": 4788,
+   "bytes": 5685594
   },
   "debian": {
    "faces": 4296,
-   "pictures": 4285,
-   "bytes": 3461536
+   "pictures": 4287,
+   "bytes": 3464682
   },
   "fontlibrary": {
    "faces": 3977,
-   "pictures": 3971,
-   "bytes": 3046078
+   "pictures": 3973,
+   "bytes": 3047432
   },
   "other": {
    "faces": 1796,
-   "pictures": 1795,
-   "bytes": 1338658
+   "pictures": 1796,
+   "bytes": 1338680
   }
  },
  "missing": [
-  {
-   "id": "adobe-fonts:face:moolong-candle-variable/zhqp-n4-wght400",
-   "reason": "ValueError: draws nothing"
-  },
-  {
-   "id": "dafont:face:brains",
-   "reason": "ValueError: draws nothing"
-  },
-  {
-   "id": "dafont:face:hornettio",
-   "reason": "ValueError: draws nothing"
-  },
   {
    "id": "debian-cmu-classical-serif/cmunci",
    "reason": "no source picture or file"
@@ -74,16 +62,8 @@
    "reason": "no source picture or file"
   },
   {
-   "id": "debian-im-fell-flowers-1/FeFlow1",
-   "reason": "ValueError: draws nothing"
-  },
-  {
    "id": "debian-ipaexmincho/ipaexm",
    "reason": "no source picture or file"
-  },
-  {
-   "id": "debian-ume-p-gothic-s4/ume-pgs4",
-   "reason": "OSError: invalid opcode"
   },
   {
    "id": "fontlibrary-bilboinc/BilboINC",
@@ -95,23 +75,11 @@
   },
   {
    "id": "fontlibrary-fifteentwenty/FifteenTwentyUltraLight",
-   "reason": "ValueError: draws nothing"
+   "reason": "ValueError: its outlines enclose next to no area: lines to be stroked, which no browser draws"
   },
   {
    "id": "fontlibrary-fifteentwenty/FifteenTwentyUltraLight-Oblique",
-   "reason": "ValueError: draws nothing"
-  },
-  {
-   "id": "fontlibrary-xw-zar/XW Zar ",
-   "reason": "OSError: execution context too long"
-  },
-  {
-   "id": "fontlibrary-xw-zar/XW Zar Bd",
-   "reason": "OSError: execution context too long"
-  },
-  {
-   "id": "fontshare-kohinoor-zerone/one",
-   "reason": "ValueError: draws nothing"
+   "reason": "ValueError: its outlines enclose next to no area: lines to be stroked, which no browser draws"
   }
  ]
 }

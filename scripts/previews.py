@@ -9,7 +9,7 @@ it has. Pictures of faces no longer shipped are removed; faces with nothing to d
 import hashlib, io, json, os
 from multiprocessing import Pool
 from pathlib import Path
-from PIL import Image, ImageDraw, ImageFont, ImageOps
+from PIL import Image, ImageDraw, ImageFilter, ImageFont, ImageOps
 from fontTools.ttLib import TTFont
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -46,21 +46,52 @@ def sources():
     return found
 
 
-def line(font_file, weight, italic):
-    """The preview text set in the face: the capitals, or the letters it has, when it lacks the lowercase."""
-    cmap = TTFont(font_file, lazy=True, fontNumber=0).getBestCmap() or {}
-    has = lambda text: all(ord(c) in cmap for c in text if c != ' ')
-    text = next((t for t in (TEXT, TEXT.upper()) if has(t)), None) or ''.join(c for c in 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789' if ord(c) in cmap)[:16]
-    if not text: raise ValueError('no Latin letters')
-    font = ImageFont.truetype(font_file, 96)
+def cut(image, faint):
+    """The level below which a pixel is ink: the middle, 128, for black ink. A faint face, one that reaches no pixel darker
+    than that (a colour font captured in greys, strokes finer than a pixel), keeps every mark clearly darker than white:
+    anything in the darker five sixths from its darkest pixel to white."""
+    darkest = image.getextrema()[0]
+    return darkest + (255 - darkest) * 5 / 6 if faint else 128
+
+
+def unhinted(font_file):
+    """The font without its TrueType hinting programs, which FreeType fails to run in a few files (Ume P Gothic S4, XW Zar)
+    and which change nothing at this size."""
+    font = TTFont(font_file)
+    for tag in ('fpgm', 'prep', 'cvt ', 'hdmx', 'VDMX', 'LTSH'):
+        if tag in font: del font[tag]
+    if 'glyf' in font:
+        for name in font.getGlyphOrder(): font['glyf'][name].removeHinting()
+    data = io.BytesIO(); font.save(data); data.seek(0)
+    return data
+
+
+def setting(source, text, weight, italic, size):
+    font = ImageFont.truetype(source, size)
     try:  # a variable font at the face's weight, and italic where it has the axis
         axes = font.get_variation_axes()
         font.set_variation_by_axes([min(max(weight if a['name'] in (b'Weight', 'Weight') else 1 if italic and a['name'] in (b'Italic', 'Italic') else a['default'], a['minimum']), a['maximum']) for a in axes])
     except OSError: pass
-    ascent, descent = font.getmetrics()
-    canvas = Image.new('L', (int(font.getlength(text)) + 192, 3 * (ascent + descent)), 255)
-    ImageDraw.Draw(canvas).text((96, ascent + descent + ascent), text, font=font, fill=0, anchor='ls')
+    # Room by the size, not the face's line box, which some faces leave empty (IM Fell Flowers) and swashes overrun.
+    canvas = Image.new('L', (int(font.getlength(text)) + 4 * size, 5 * size), 255)
+    ImageDraw.Draw(canvas).text((2 * size, 3 * size), text, font=font, fill=0, anchor='ls')
     return canvas
+
+
+def line(font_file, weight, italic, size=96):
+    """The preview text set in the face, and whether it is faint: the capitals, or the letters it has, when it lacks the
+    lowercase. A face whose strokes are finer than a pixel at this size (Kohinoor Zerone One) is set four times larger; one
+    still faint there has outlines that enclose next to no area, lines to be stroked (FifteenTwenty UltraLight), which no
+    browser draws either."""
+    with TTFont(font_file, lazy=True, fontNumber=0) as font: cmap = font.getBestCmap() or {}
+    has = lambda text: all(ord(c) in cmap for c in text if c != ' ')
+    text = next((t for t in (TEXT, TEXT.upper()) if has(t)), None) or ''.join(c for c in 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789' if ord(c) in cmap)[:16]
+    if not text: raise ValueError('no Latin letters')
+    try: canvas = setting(font_file, text, weight, italic, size)
+    except OSError: canvas = setting(unhinted(font_file), text, weight, italic, size)  # hinting FreeType cannot run
+    if canvas.getextrema()[0] < 128: return canvas, size > 96
+    if size < 384: return line(font_file, weight, italic, 4 * size)[0], True
+    raise ValueError('its outlines enclose next to no area: lines to be stroked, which no browser draws')
 
 
 def picture(item):
@@ -69,14 +100,18 @@ def picture(item):
         if source[0] == 'image':
             image = Image.open(source[1]).convert('L')
             if source[2]: image = image.crop(source[2])
-        else: image = line(*source[1:])
-        ink = image.point(lambda v: 255 if v < 128 else 0).getbbox()
+            faint = image.getextrema()[0] >= 128
+        else: image, faint = line(*source[1:])
+        level = cut(image, faint); ink = image.point(lambda v: 255 if v < level else 0).getbbox()
         if not ink: raise ValueError('draws nothing')
         # The ink with a margin: letters fill about four fifths of the height, whatever the face's line box (Zapfino's is vast).
         margin = max(2, round((ink[3] - ink[1]) * MARGIN))
         image = ImageOps.expand(image, margin, fill=255).crop((ink[0], ink[1], ink[2] + 2 * margin, ink[3] + 2 * margin))
+        if faint:  # its strokes thickened by the reduction to come, so each keeps at least a pixel
+            image = image.filter(ImageFilter.MinFilter(2 * round(image.height / HEIGHT / 2) + 1))
         image = image.resize((max(1, round(image.width * HEIGHT / image.height)), HEIGHT), Image.LANCZOS)
-        image = image.crop((0, 0, min(image.width, WIDTH), HEIGHT)).point(lambda v: 255 if v >= 128 else 0)
+        image = image.crop((0, 0, min(image.width, WIDTH), HEIGHT)); level = cut(image, faint)
+        image = image.point(lambda v: 255 if v >= level else 0)
         data = io.BytesIO(); image.save(data, 'WEBP', lossless=True, quality=100, method=6)
         target = path(face_id); target.parent.mkdir(parents=True, exist_ok=True)
         if not target.exists() or target.read_bytes() != data.getvalue(): target.write_bytes(data.getvalue())
