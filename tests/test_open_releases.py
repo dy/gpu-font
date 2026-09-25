@@ -120,6 +120,12 @@ class SharedRepository(unittest.TestCase):
         self.assertEqual(row['include'], r'^[^/]+/MetaAccanthis/[^/]+\.otf$')
         self.assertEqual(whole['include'], r'^[^/]+/Big/[^/]+\.otf$')
 
+    def test_a_folder_link_with_a_space_names_the_folder_with_the_space(self):
+        paths = ['fonts/Big/A.otf', 'fonts/Big/B.otf', 'fonts/Old Round/fonts/OldRound.otf', 'fonts/Old Round/LICENCE.txt']
+        with mock.patch.object(open_releases, 'remote', return_value=('c0ffee', paths, 'https://gitlab.com/Luuse/foundry/fonts.luuse.git', None)):
+            row = open_releases.pin({'source': 'luuse', 'family': 'Old Round', 'repo': 'https://gitlab.com/Luuse/foundry/fonts.luuse/-/tree/main/fonts/Old%20Round'})
+        self.assertEqual(row['include'], r'^[^/]+/fonts/Old\ Round/fonts/[^/]+\.otf$')
+
     def test_a_github_folder_link_and_a_branch_link_without_a_folder(self):
         paths = ['Big/A.ttf', 'Big/B.ttf', 'FairfaxHD/FairfaxHD.ttf', 'FairfaxHD/OFL.txt']
         with mock.patch.object(open_releases, 'github', return_value=('c0ffee', paths, 'https://github.com/k/relay/archive/c0ffee.zip', None)) as api:

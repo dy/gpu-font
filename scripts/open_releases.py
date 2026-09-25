@@ -85,7 +85,7 @@ def pin(row):
     commit, paths, url, licence = github(repo, row.get('branch')) if link.netloc == 'github.com' else remote(link.netloc, repo)
     # A link into a folder (GitHub's …/tree/main/Family, GitLab's …/-/tree/main/Family) names one family of a shared repository.
     inside = re.search(r'/tree/[^/]+/(.+?)/?$', link.path)
-    if inside: paths = [path for path in paths if path.startswith(inside.group(1) + '/')]
+    if inside: paths = [path for path in paths if path.startswith(urllib.parse.unquote(inside.group(1)) + '/')]  # fonts/Old%20Round is fonts/Old Round
     row = {**row, 'commit': commit, **({'repoLicence': licence} if licence else {})}
     choice = choose(paths)
     if not choice: return {**row, 'unusable': 'no OpenType or TrueType files outside web builds and sources'}

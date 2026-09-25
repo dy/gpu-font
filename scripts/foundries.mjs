@@ -61,6 +61,17 @@ export async function familyCounts() {
   return { indexed: sizes(indexed), inventoried: sizes(inventoried) }
 }
 
+/** A source's status and count, from its families in a shipped catalogue (`indexed`) and in the open-font inventory:
+ *  a shipped catalogue makes a source indexed, an inventory alone makes a planned source inventoried. */
+export function settle(work, indexed, inventoried) {
+  delete work.familiesIndexed; delete work.familiesInventoried; delete work.familiesHeldLocally
+  if (indexed && ['planned', 'inventoried', 'partial'].includes(work.status)) work.status = 'indexed'
+  else if (inventoried && work.status === 'planned') work.status = 'inventoried'
+  if (['indexed', 'partial'].includes(work.status) && indexed) work.familiesIndexed = indexed
+  else if (work.status === 'inventoried' && inventoried) work.familiesInventoried = inventoried
+  return work
+}
+
 async function main() {
   const registry = JSON.parse(await readFile(REGISTRY, 'utf8'))
   const problems = validateRegistry(registry)
@@ -68,12 +79,7 @@ async function main() {
   if (process.argv.includes('--check')) return console.log(`${registry.sources.length} sources valid`)
   const { indexed, inventoried } = await familyCounts()
   // A shipped catalogue is what makes a source indexed; private captures never enter this public registry.
-  for (const source of registry.sources) {
-    delete source.work.familiesIndexed; delete source.work.familiesInventoried; delete source.work.familiesHeldLocally
-    if (indexed.has(source.id) && ['planned', 'inventoried', 'partial'].includes(source.work.status)) source.work.status = 'indexed'
-    if (['indexed', 'partial'].includes(source.work.status) && indexed.has(source.id)) source.work.familiesIndexed = indexed.get(source.id)
-    else if (source.work.status === 'inventoried' && inventoried.has(source.id)) source.work.familiesInventoried = inventoried.get(source.id)
-  }
+  for (const source of registry.sources) settle(source.work, indexed.get(source.id), inventoried.get(source.id))
   registry.updated = new Date().toISOString().slice(0, 10)
   await writeFile(REGISTRY, JSON.stringify(registry, null, 2) + '\n')
   for (const source of registry.sources)

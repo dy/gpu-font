@@ -1,7 +1,7 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
 import { readFile } from 'node:fs/promises'
-import { validateRegistry, familyCounts } from '../scripts/foundries.mjs'
+import { validateRegistry, familyCounts, settle } from '../scripts/foundries.mjs'
 
 const entry = (patch = {}) => ({
   id: 'example', name: 'Example Foundry', url: 'https://example.invalid/', kind: 'foundry', access: 'previews',
@@ -50,4 +50,13 @@ test('a source folded into Other is counted under its own id, from the sourceId 
   assert.ok(bySource.size > 1 && !bySource.has(undefined), 'Every face in Other names its source')
   for (const [source, faces] of bySource) assert.equal(indexed.get(source), new Set(faces.map(f => f.familyId)).size, source)
   assert.equal(indexed.has('other'), false, 'Other is a group, never a source')
+})
+
+test('a shipped catalogue makes a source indexed; an inventory alone makes a planned one inventoried', () => {
+  assert.deepEqual(settle({ status: 'planned' }, undefined, 73), { status: 'inventoried', familiesInventoried: 73 })
+  assert.deepEqual(settle({ status: 'planned' }, 60, 73), { status: 'indexed', familiesIndexed: 60 })
+  assert.deepEqual(settle({ status: 'inventoried', familiesInventoried: 9 }, 12, 14), { status: 'indexed', familiesIndexed: 12 })
+  assert.deepEqual(settle({ status: 'planned' }, undefined, undefined), { status: 'planned' })  // nothing collected yet
+  assert.deepEqual(settle({ status: 'excluded', reason: 'terms' }, undefined, 5), { status: 'excluded', reason: 'terms' })  // a verdict is never overridden
+  assert.deepEqual(settle({ status: 'indexed', familiesIndexed: 4 }, undefined, undefined), { status: 'indexed' })  // a stale count is dropped
 })

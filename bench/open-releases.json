@@ -297195,9 +297195,12 @@
    "family": "Verily Serif Mono",
    "page": "https://usemodify.com/fonts/verily-serif-mono/",
    "licence": "Bitstream Vera License",
-   "licenceEvidence": "fontsquirrel.com/fonts/Verily-Serif-Mono EULA tab: \"Bitstream Vera License v1.00\"",
-   "url": "https://www.fontsquirrel.com/fonts/download/Verily-Serif-Mono",
-   "include": "\\.(otf|ttf)$"
+   "licenceEvidence": "the font's own licence: \"Copyright (c) 2003 by Bitstream, Inc. ... Permission is hereby granted, free of charge\" (the Bitstream Vera licence), \"Modification and conversion to monospace Copyright (c) 2006 by Stephen G. Hartke\"; usemodify.com/fonts/verily-serif-mono/: \"License: Bitstream Vera Fonts Copyright\". The file is the page's own, since Font Squirrel's terms ban automated downloads",
+   "include": "\\.ttf$",
+   "files": [
+    "https://usemodify.com/site/assets/files/1156/verilyserifmono-webfont.ttf"
+   ],
+   "folder": "verily-serif-mono"
   },
   {
    "source": "use-and-modify",
@@ -298506,162 +298509,606 @@
    "commit": "e4b81241e8c7269a91c0bd865cf5c9e7208fbada",
    "url": "https://github.com/kreativekorp/open-relay/archive/e4b81241e8c7269a91c0bd865cf5c9e7208fbada.zip",
    "include": "^[^/]+/KreativeSquare/[^/]+\\.ttf$"
-  }
- ],
- "excluded": [
-  {
-   "source": "velvetyne",
-   "family": "Marcel",
-   "reason": "licence not verified"
-  },
-  {
-   "source": "velvetyne",
-   "family": "Bianzhidai",
-   "reason": "licence not verified"
-  },
-  {
-   "source": "velvetyne",
-   "family": "Ouvrieres",
-   "reason": "licence not verified"
-  },
-  {
-   "source": "velvetyne",
-   "family": "Hyper Scrypt",
-   "reason": "licence not verified"
-  },
-  {
-   "source": "velvetyne",
-   "family": "Terminal Grotesque",
-   "reason": "licence not verified"
-  },
-  {
-   "source": "velvetyne",
-   "family": "Tiny",
-   "reason": "licence not verified"
-  },
-  {
-   "source": "velvetyne",
-   "family": "Fengardo Neue",
-   "reason": "no repository found"
-  },
-  {
-   "source": "uncut",
-   "family": "Utara",
-   "reason": "files.cargocollective.com robots.txt disallows all crawling"
-  },
-  {
-   "source": "uncut",
-   "family": "LC Mogi",
-   "reason": "files.cargocollective.com robots.txt disallows all crawling"
-  },
-  {
-   "source": "uncut",
-   "family": "BDO Grotesk",
-   "reason": "files.cargocollective.com robots.txt disallows all crawling"
-  },
-  {
-   "source": "uncut",
-   "family": "Honey",
-   "reason": "designer site robots.txt names AI agents"
-  },
-  {
-   "source": "uncut",
-   "family": "CAT Eckmann",
-   "reason": "peter-wiegel.de robots.txt disallows /Fonts/"
-  },
-  {
-   "source": "uncut",
-   "family": "Fibel Nord",
-   "reason": "peter-wiegel.de robots.txt disallows /Fonts/"
-  },
-  {
-   "source": "uncut",
-   "family": "CAT Neuzeit",
-   "reason": "peter-wiegel.de robots.txt disallows /Fonts/"
-  },
-  {
-   "source": "uncut",
-   "family": "Reglo",
-   "reason": "osp.kitchen robots.txt names AI agents"
   },
   {
    "source": "uncut",
    "family": "Alfphabet",
-   "reason": "osp.kitchen robots.txt names AI agents"
+   "page": "https://github.com/osp/osp.foundry.alfphabet",
+   "licence": "OFL-1.1",
+   "licenceEvidence": "osp/osp.foundry.alfphabet OFL-1.1.txt",
+   "repo": "https://github.com/osp/osp.foundry.alfphabet",
+   "commit": "1bd2113ec6adc4e97e7f9e8e5aa40d62cda3030d",
+   "url": "https://github.com/osp/osp.foundry.alfphabet/archive/1bd2113ec6adc4e97e7f9e8e5aa40d62cda3030d.zip",
+   "include": "^[^/]+/[^/]+\\.ttf$"
   },
   {
    "source": "uncut",
    "family": "Logisoso",
-   "reason": "osp.kitchen robots.txt names AI agents"
+   "page": "https://gitlab.constantvzw.org/osp/foundry.logisoso",
+   "licence": "GPL-2.0 with font exception",
+   "licenceEvidence": "osp/osp.foundry.logisoso COPYING.txt: \"released under the GPL v2 with font exception\"",
+   "repo": "https://gitlab.constantvzw.org/osp/foundry.logisoso",
+   "commit": "76d9f66e7458591904ddd661c625adf9a7d776ca",
+   "unusable": "no OpenType or TrueType files outside web builds and sources"
   },
   {
    "source": "uncut",
    "family": "Libertinage",
-   "reason": "osp.kitchen robots.txt names AI agents"
+   "page": "https://gitlab.constantvzw.org/osp/foundry.libertinage",
+   "licence": "OFL-1.1",
+   "licenceEvidence": "OSP foundry.libertinage OFL-1.1.txt",
+   "repo": "https://gitlab.constantvzw.org/osp/foundry.libertinage",
+   "commit": "16a2be056daa9e6d07182d16d72e63c26d5e97a4",
+   "url": "https://gitlab.constantvzw.org/osp/foundry.libertinage.git",
+   "include": "^[^/]+/fonts/[^/]+\\.ttf$",
+   "format": "git"
   },
   {
-   "source": "uncut",
-   "family": "Gemini",
-   "reason": "licence-unclear: Raw HTML has no links (Readymag SPA); rendered with a browser to find the real \"Download\" button, which opens a Google Drive folder (not a s"
+   "source": "use-and-modify",
+   "family": "Work Avec",
+   "page": "https://gitlab.constantvzw.org/osp/foundry.work-avec",
+   "licence": "OFL-1.1",
+   "licenceEvidence": "OSP foundry.work-avec README: \"Work Avec is released under the OFL 1.1\"",
+   "repo": "https://gitlab.constantvzw.org/osp/foundry.work-avec",
+   "commit": "1feaf402adc8e5b5743c2613cecb22fb1fb86505",
+   "url": "https://gitlab.constantvzw.org/osp/foundry.work-avec.git",
+   "include": "^[^/]+/fonts/[^/]+\\.ttf$",
+   "format": "git"
   },
   {
-   "source": "uncut",
-   "family": "Slibinas",
-   "reason": "no-direct-download: Same behance.net platform-wide HTTP 429 bot/rate-limit wall as Boris and FUNGIS (both /robots.txt and the gallery page itself); retried once"
+   "source": "velvetyne",
+   "family": "Hyper Scrypt",
+   "page": "https://velvetyne.fr/fonts/hyper-scrypt/",
+   "licence": "OFL-1.1",
+   "licenceEvidence": "velvetyne.fr/fonts/hyper-scrypt/: \"SIL Open Font License, Version 1.1\"",
+   "repo": "https://gitlab.com/StudioTriple/Hyper-Scrypt",
+   "commit": "d7c8bc9029a886755095de92d3509ecb016ce788",
+   "url": "https://gitlab.com/StudioTriple/Hyper-Scrypt.git",
+   "include": "^[^/]+/fonts/[^/]+\\.otf$",
+   "format": "git"
   },
   {
-   "source": "uncut",
-   "family": "Queering",
-   "reason": "no-direct-download: Licence is clearly OFL-1.1 and price is confirmed $0 (\"Queering Free\", Subtotal: $0 in the Squarespace cart), but the page's Download link ("
+   "source": "velvetyne",
+   "family": "Ouvrieres",
+   "page": "https://velvetyne.fr/fonts/ouvrieres/",
+   "licence": "OFL-1.1",
+   "licenceEvidence": "velvetyne.fr/fonts/ouvrieres/: \"SIL Open Font License, Version 1.1\"",
+   "repo": "https://github.com/laureazz/Ouvrieres",
+   "commit": "c9dcaf19aba4cdba208211ce6a57fb3da0b50617",
+   "repoLicence": "NOASSERTION",
+   "url": "https://github.com/laureazz/Ouvrieres/archive/c9dcaf19aba4cdba208211ce6a57fb3da0b50617.zip",
+   "include": "^[^/]+/otf/[^/]+\\.otf$"
   },
   {
-   "source": "uncut",
-   "family": "Cakra",
-   "reason": "dead-link: cakra.oomtype.com serves an invalid, self-signed TLS certificate (curl error 60: \"SSL certificate problem: self signed certificate\"). Did no"
+   "source": "velvetyne",
+   "family": "Bianzhidai",
+   "page": "https://github.com/sdfggvfvj/bianzhidai",
+   "licence": "OFL-1.1",
+   "licenceEvidence": "sdfggvfvj/bianzhidai readme: \"previously released under the SIL Open Font License 1.1 ... Prior downloads under the SIL OFL 1.1 remain valid\"; pinned to e6e7fc0 (2024-01-16), before the relicensing",
+   "repo": "https://github.com/sdfggvfvj/bianzhidai",
+   "branch": "e6e7fc0caed4f527a9f74f849354984d0d285365",
+   "commit": "e6e7fc0caed4f527a9f74f849354984d0d285365",
+   "url": "https://github.com/sdfggvfvj/bianzhidai/archive/e6e7fc0caed4f527a9f74f849354984d0d285365.zip",
+   "include": "^[^/]+/fonts/OTF/[^/]+\\.otf$"
   },
   {
    "source": "uncut",
    "family": "Getai Grotesk Display",
-   "reason": "no-direct-download: Licence confirmed as OFL on the designer's own page, but the only download mechanism is an Easy Digital Downloads \"Pay As You Wish\" button t"
+   "page": "https://uncut.wtf/display/getai-grotesk-display/",
+   "licence": "OFL-1.1",
+   "licenceEvidence": "designer download (deathoftypography.com) LICENSE OFL .txt: \"licensed under the SIL Open Font License, Version 1.1\"",
+   "url": "manual/DT-Getai-Grotesk-20220614T031232Z-001-lewipy.zip",
+   "include": "\\.otf$"
+  },
+  {
+   "source": "uncut",
+   "family": "Queering",
+   "page": "https://uncut.wtf/display/queering/",
+   "licence": "OFL-1.1",
+   "licenceEvidence": "Uncut and adamnac.com/queering: OFL-1.1, free; the file's licence note: \"License: Open Source / OFL\"",
+   "url": "manual/queering-font.zip",
+   "include": "\\.otf$"
+  },
+  {
+   "source": "uncut",
+   "family": "Gemini",
+   "page": "https://uncut.wtf/display/gemini/",
+   "licence": "OFL-1.1 (per Uncut; the files state none)",
+   "licenceEvidence": "uncut.wtf/display/gemini/ lists it under SIL Open Font License 1.1; the designer page (hiyaaaaa.com/gemini) links a Google Drive folder, downloaded by hand",
+   "url": "manual/gemini.zip",
+   "include": "\\.woff2$"
+  },
+  {
+   "source": "death-of-typography",
+   "family": "DT Octopia Neue",
+   "page": "https://deathoftypography.com/",
+   "licence": "OFL-1.1",
+   "licenceEvidence": "OFL.txt in the foundry's download: \"Copyright (c) 2026, Death of Typography and Yellow Octopus Pte. Ltd., with Reserved Font Name \\\"DT Octopia Neue\\\"\"",
+   "url": "manual/DT-Octopia-Neue-20260921T083628Z-1-001.zip",
+   "include": "\\.otf$"
+  },
+  {
+   "source": "use-and-modify",
+   "family": "Glacier",
+   "page": "https://usemodify.com/fonts/glacier/",
+   "licence": "OFL-1.1",
+   "licenceEvidence": "gitlab.com/quentinjuhel/glacier README: \"Glacier est distribuer sour licence SIL Open Font License v1.1\"",
+   "repo": "https://gitlab.com/quentinjuhel/glacier",
+   "commit": "64555dad457e3c9c319e2b03e8c21971ce55bbd3",
+   "url": "https://gitlab.com/quentinjuhel/glacier.git",
+   "include": "^[^/]+/OTF/[^/]+\\.otf$",
+   "format": "git"
+  },
+  {
+   "source": "use-and-modify",
+   "family": "PropCourier Sans",
+   "page": "https://usemodify.com/fonts/prop-courier-sans/",
+   "licence": "GPL-2.0 with font exception",
+   "licenceEvidence": "PropCourierSans-Bold.ttf name ID 13: \"released under the GPL v2 with font exception\" (Use & Modify says OFL; the font is followed)",
+   "repo": "https://gitlab.com/libregraphicsmag/propcouriersans",
+   "commit": "45d943aa3acdeb38636cb2e3aa3c24151e8a712a",
+   "url": "https://gitlab.com/libregraphicsmag/propcouriersans.git",
+   "include": "^[^/]+/[^/]+\\.ttf$",
+   "format": "git"
   },
   {
    "source": "uncut",
    "family": "Destra",
-   "reason": "licence-unclear: uncut.wtf claims OFL-1.1 but nothing on the designer's own page or inside the font files corroborates any licence. Direct download confirmed"
-  },
-  {
-   "source": "uncut",
-   "family": "Boris",
-   "reason": "no-direct-download: behance.net returned HTTP 429 \"The maximum number of requests has been exceeded\" for both /robots.txt and the gallery page itself, on first "
-  },
-  {
-   "source": "uncut",
-   "family": "FUNGIS",
-   "reason": "no-direct-download: Same behance.net platform-wide HTTP 429 bot/rate-limit wall as Slibinas and Boris; not retried further."
-  },
-  {
-   "source": "uncut",
-   "family": "Dauphine",
-   "reason": "licence-unclear: uncut.wtf's original download URL (esad-gv.fr/media/images/Identite/ÉSAD••_Dauphine_DEF.zip) now 404s; found live replacement TTFs (Dauphine"
+   "page": "https://fonderiz.fr/destra/",
+   "licence": "unknown (Uncut lists OFL-1.1; neither the designer nor the files state a licence)",
+   "licenceEvidence": "uncut.wtf lists SIL OFL 1.1; fonderiz.fr/destra/ and destra.zip state none",
+   "url": "https://fonderiz.fr/site/assets/files/1020/destra.zip",
+   "include": "\\.otf$"
   },
   {
    "source": "uncut",
    "family": "Paragon",
-   "reason": "licence-unclear: Same designer (Cédric Rossignol-Brunet) and site template as Destra (also licence-unclear) and Monor (resolved OFL via its Bold weight's met"
+   "page": "https://fonderiz.fr/paragon/",
+   "licence": "unknown (Uncut lists OFL-1.1; neither the designer nor the files state a licence)",
+   "licenceEvidence": "uncut.wtf lists SIL OFL 1.1; fonderiz.fr/paragon/ and paragon.zip state none",
+   "url": "https://fonderiz.fr/site/assets/files/1021/paragon.zip",
+   "include": "\\.otf$"
+  },
+  {
+   "source": "use-and-modify",
+   "family": "W droge",
+   "page": "https://usemodify.com/fonts/w-droge/",
+   "licence": "unknown (Use & Modify lists OFL-1.1; neither the designer nor the files state a licence)",
+   "licenceEvidence": "usemodify.com lists SIL OFL 1.1; OSP's repository, README and font state none",
+   "repo": "https://gitlab.constantvzw.org/osp/foundry.w-droge",
+   "commit": "cda599737af2eb04d1eb310b41520ce322400add",
+   "url": "https://gitlab.constantvzw.org/osp/foundry.w-droge.git",
+   "include": "^[^/]+/fonts/[^/]+\\.ttf$",
+   "format": "git"
+  },
+  {
+   "source": "velvetyne",
+   "family": "Marcel",
+   "page": "https://github.com/velvetyne/marcel",
+   "licence": "unknown (published by Velvetyne, whose catalogue is OFL; the repository states none)",
+   "licenceEvidence": "built with fontmake 3.12.1 from velvetyne/marcel Marcel.ufo at 99bdee3c6fde062b58b9554ef46bef5cadaf1817; no compiled release exists",
+   "url": "manual/built/Marcel.otf",
+   "include": "\\.otf$"
+  },
+  {
+   "source": "github",
+   "family": "Fengardo Redux",
+   "page": "https://github.com/loicsander/Fengardo-Redux",
+   "licence": "MIT",
+   "licenceEvidence": "the designer's own repository, MIT per GitHub. It holds only UFO sources: built with fontmake 3.12.1 at 669c006acdf903a2d797215bed792e9ca5bb5ac9, dropping three alternates whose base glyphs the sources no longer have (questiondownsmall; parenleftinferior, parenrightinferior)",
+   "files": [
+    "manual/built/140614_FengardoRedux_Regular 2.otf",
+    "manual/built/130227_FengardoRedux_Italic 1.otf",
+    "manual/built/140615_FengardoRedux_Black 2.otf"
+   ],
+   "format": "file",
+   "folder": "fengardo-redux",
+   "include": "\\.otf$"
+  },
+  {
+   "source": "use-and-modify",
+   "family": "APL333",
+   "page": "https://usemodify.com/fonts/apl333/",
+   "licence": "Public Domain",
+   "licenceEvidence": "usemodify.com/fonts/apl333/ License: \"Public Domain\"; downloaded from its home, apl385.com (no robots.txt)",
+   "url": "https://apl385.com/fonts/apl333.zip",
+   "include": "\\.ttf$"
+  },
+  {
+   "source": "use-and-modify",
+   "family": "JRUG PUNK",
+   "page": "https://usemodify.com/fonts/jrug-punk/",
+   "licence": "Apache-2.0 (per Use & Modify; the font says \"FRE\")",
+   "licenceEvidence": "usemodify.com/fonts/jrug-punk/ License: \"Apache License, Version 2.0\"; the file taken from OSP's work.permanent at 6af7016ffbd92026502fe57743cc4898f0dc0561 (layouts/quentin/fonts), its name table: \"Copyright (c) 2013 by JO 753\"",
+   "url": "manual/JRUG PUNK.ttf",
+   "include": "\\.ttf$"
+  },
+  {
+   "source": "peter-wiegel",
+   "family": "CAT Eckmann",
+   "page": "http://www.peter-wiegel.de/eckmann.html",
+   "licence": "OFL-1.1",
+   "licenceEvidence": "Eckmann.zip: \"Open Font License.txt\"; the font: \"This Font is under SIL Open Font License\"",
+   "url": "http://www.peter-wiegel.de/Fonts/Eckmann.zip",
+   "include": "\\.ttf$"
+  },
+  {
+   "source": "peter-wiegel",
+   "family": "Indira K",
+   "page": "http://www.peter-wiegel.de/IndiraK.html",
+   "licence": "OFL-1.1",
+   "licenceEvidence": "Indira_K.zip: OFL.txt",
+   "url": "http://www.peter-wiegel.de/Fonts/Indira_K.zip",
+   "include": "\\.ttf$"
+  },
+  {
+   "source": "peter-wiegel",
+   "family": "Alte DIN 1451 Mittelschrift",
+   "page": "http://www.peter-wiegel.de/alteDin1451.html",
+   "licence": "expired copyright, as the font states (the 1931 DIN 1451 design)",
+   "licenceEvidence": "din1451alt.ttf name ID 13: \"expired\"; the zip has no licence file",
+   "url": "http://www.peter-wiegel.de/Fonts/Din1451altTT.zip",
+   "include": "\\.ttf$"
+  },
+  {
+   "source": "peter-wiegel",
+   "family": "DIN 1451 fette Breitschrift 1936",
+   "page": "http://www.peter-wiegel.de/",
+   "licence": "OFL-1.1",
+   "licenceEvidence": "DIN1451breit.zip: \"Open Font License.txt\"",
+   "url": "http://www.peter-wiegel.de/Fonts/DIN1451breit.zip",
+   "include": "\\.ttf$"
+  },
+  {
+   "source": "peter-wiegel",
+   "family": "DIN 1451 4H",
+   "page": "http://www.peter-wiegel.de/",
+   "licence": "GPL or OFL-1.1",
+   "licenceEvidence": "DIN1451_4H_08.87.ttf name ID 13: \"GPL- General Public License AND OFL-Open Font License\"",
+   "url": "http://www.peter-wiegel.de/Fonts/DIN1451_4H_08.87.zip",
+   "include": "\\.ttf$"
+  },
+  {
+   "source": "peter-wiegel",
+   "family": "CAT Neuzeit",
+   "page": "https://www.peter-wiegel.de/CAT_Neuzeit.html",
+   "licence": "GPL or OFL-1.1",
+   "licenceEvidence": "CATNeuzeit.zip: \"Open Font License.txt\"; the fonts' name ID 13: \"GPL- General Public License AND OFL-Open Font License\"",
+   "url": "http://www.peter-wiegel.de/Fonts/CATNeuzeit.zip",
+   "include": "\\.ttf$"
+  },
+  {
+   "source": "uncut",
+   "family": "Honey",
+   "page": "https://www.onlyanother.co/honey",
+   "licence": "OFL-1.1",
+   "licenceEvidence": "onlyanother.co/honey: \"LICENSE-TYPE: Open source (OFL)\", released as \"a free, open source font\"",
+   "url": "https://www.onlyanother.co/s/Honey-Demo-Light.zip",
+   "include": "\\.(otf|ttf)$"
+  },
+  {
+   "source": "uncut",
+   "family": "Slibinas",
+   "page": "https://uncut.wtf/display/slibinas/",
+   "licence": "OFL-1.1 (per Uncut; the font's own licence field: \"Whatever, just don't sell it :)\")",
+   "licenceEvidence": "uncut.wtf/display/slibinas/ lists it under SIL Open Font License 1.1; the file, downloaded by hand from the designer's Behance gallery (behance.net/gallery/139952349), names no copyright holder",
+   "url": "manual/Slibinas.otf",
+   "include": "\\.otf$"
+  },
+  {
+   "source": "uncut",
+   "family": "Boris",
+   "page": "https://uncut.wtf/display/boris/",
+   "licence": "OFL-1.1",
+   "licenceEvidence": "\"OpenSource License\" in the designer's download (behance.net/gallery/129274943, by Giulia Boggio): the SIL Open Font License 1.1 text; Uncut and Use & Modify list it under the same",
+   "url": "manual/Boris - Free.zip",
+   "include": "\\.otf$"
+  },
+  {
+   "source": "uncut",
+   "family": "FUNGIS",
+   "page": "https://uncut.wtf/sans-serif/fungis/",
+   "licence": "OFL-1.1 (per Uncut; the designer grants free use, alteration and redistribution)",
+   "licenceEvidence": "READ ME in the designer's download (behance.net/gallery/119722547, Milena Leimig, 2021): \"These fonts are free for personal and commercial use. Feel free to alter and redistribute this font.\"",
+   "url": "manual/FUNGIS.rar",
+   "include": "/OpenType-PS/[^/]+\\.otf$"
   },
   {
    "source": "uncut",
    "family": "Times Dot",
-   "reason": "no-direct-download: librarystack.org's post about Times Dot (a library/reading-list style site) has no download link, only a description and a link to the desig"
+   "page": "https://uncut.wtf/serif/times-dot/",
+   "licence": "OFL-1.1 (per Uncut; the files are Adobe's Times, \"Copyright (c) 1985, 1987, 1989, 1990 Adobe Systems\", with enlarged i and j dots)",
+   "licenceEvidence": "uncut.wtf/serif/times-dot/ lists it under SIL Open Font License 1.1; librarystack.org/times-dot/ offers no file, so the three faces are the designer's own webfonts as laurelschwulst.com served them, archived by the Wayback Machine on 2014-01-13",
+   "files": [
+    "https://web.archive.org/web/20140113115948id_/http://laurelschwulst.com/style/timesdotrom-webfont.ttf",
+    "https://web.archive.org/web/20140113115653id_/http://laurelschwulst.com/style/times_dot-italic-webfont.ttf",
+    "https://web.archive.org/web/20140113120023id_/http://laurelschwulst.com/style/timesdotbol-webfont.ttf"
+   ],
+   "folder": "times-dot",
+   "include": "\\.ttf$"
   },
+  {
+   "source": "use-and-modify",
+   "family": "Ark-es Typeface",
+   "page": "https://usemodify.com/fonts/ark-typeface/",
+   "licence": "OFL-1.1 (per its licence file; the fonts' own licence field says \"for personal use only\")",
+   "licenceEvidence": "\"ARK-ES Open Font License.txt\" in the designer's download: \"Copyright (c) January 2020, Eddie Stuart hello@stued.io, with Reserved Font Name: ARK-ES. ARK-ES font family is an open-source font\"; the name table: \"Personal License Agreement. ARK-ES font family is for personal use only\"",
+   "url": "manual/ARK_ES.zip",
+   "include": "/Desktop/[^/]+\\.otf$"
+  },
+  {
+   "source": "use-and-modify",
+   "family": "Fivo Sans Modern",
+   "page": "https://usemodify.com/fonts/fivo-sans-modern/",
+   "licence": "OFL-1.1",
+   "licenceEvidence": "OFL.txt in the designer's download: \"Copyright 2017 Alexander Slobzheninov (www.behance.net/slobzheninov) This Font Software is licensed under the SIL Open Font License, Version 1.1.\"",
+   "url": "manual/FivoSansModern.zip",
+   "include": "\\.otf$"
+  },
+  {
+   "source": "use-and-modify",
+   "family": "Lucette",
+   "page": "https://usemodify.com/fonts/lucette/",
+   "licence": "OFL-1.1",
+   "licenceEvidence": "LICENSE.rtf in the download: \"Copyright (c) 2020, YANN LINGUINOU (www.yann.linguinou.com ...), with Reserved Font Name Lucette. This Font Software is licensed under the SIL Open Font License, Version 1.1.\"",
+   "url": "manual/Lucette.zip",
+   "include": "/otf/[^/]+\\.otf$"
+  },
+  {
+   "source": "use-and-modify",
+   "family": "Écrou",
+   "page": "https://usemodify.com/fonts/ecrou/",
+   "licence": "CC-BY-SA (version unstated)",
+   "licenceEvidence": "usemodify.com/fonts/ecrou/: \"Designed by: Guillaume Santial ... License: CC BY SA\"; the font's licence field: \"CC BY-SA\"",
+   "url": "manual/ecrou-Regular.otf",
+   "include": "\\.otf$"
+  },
+  {
+   "source": "use-and-modify",
+   "family": "CP Mono",
+   "page": "https://usemodify.com/fonts/cp-mono/",
+   "licence": "CC-BY-3.0-DE",
+   "licenceEvidence": "usemodify.com/fonts/cp-mono/ as captured on 2015-05-14 (web.archive.org/web/20150514084255/http://usemodify.com/fonts/cp-mono/): \"Designed by: Tino Meinert Graham Smith ... License: CC BY 3.0 DE\", showing these five files; the page has been blank since; the fonts: \"Copyright (c) 2009 by Tino Meinert\"",
+   "files": [
+    "https://usemodify.com/site/assets/files/1180/cpmono_v07_black-webfont.ttf",
+    "https://usemodify.com/site/assets/files/1180/cpmono_v07_bold-webfont.ttf",
+    "https://usemodify.com/site/assets/files/1180/cpmono_v07_extralight-webfont.ttf",
+    "https://usemodify.com/site/assets/files/1180/cpmono_v07_light-webfont.ttf",
+    "https://usemodify.com/site/assets/files/1180/cpmono_v07_plain-webfont.ttf"
+   ],
+   "folder": "cp-mono",
+   "include": "\\.ttf$"
+  },
+  {
+   "source": "republish",
+   "family": "Finesse",
+   "page": "https://republi.sh/",
+   "licence": "OFL-1.1 (per its specimen, which elsewhere says \"Only Finesse Oblique is released under SIL Open Font License\"; the fonts say \"All rights reserved\")",
+   "licenceEvidence": "republi.sh/wp-content/uploads/2020/08/Finesse-specimen-v2.0.pdf, page 29: the whole family under the SIL Open Font License; the fonts: \"Copyright (c) 2020 by Behalf Studio. All rights reserved.\"",
+   "url": "https://republi.sh/wp-content/uploads/2020/08/Finesse-v2.0.zip",
+   "include": "/Fonts/[^/]+\\.otf$"
+  },
+  {
+   "source": "use-and-modify",
+   "family": "Galgo Condensed",
+   "page": "https://www.giuliaboggio.xyz/fonts/galgo-condensed",
+   "licence": "OFL-1.1",
+   "licenceEvidence": "the designer, Giulia Boggio, by email on 2026-09-25: \"yes yes Galgo is under SIL\"; the designer's download (galgo.zip, kept in .data/manual): \"GALGO\" OPEN FONT LICENSE and a readme, \"Galgo Condensed (Open Source Typeface) ... Please credit @bojjoe/Giulia B.\", so the family links to the designer's page. Every copy found is the one face, Galgo Medium: the designer's 2021 build (355 characters, Latin), Befonts' copy of it as OpenType (564, with Cyrillic; galgo-condensed-font.zip), and the 2023 revision Use & Modify serves (512, with Cyrillic), which is the file taken",
+   "files": [
+    "https://usemodify.com/site/assets/files/1509/galgo-medium.ttf"
+   ],
+   "folder": "galgo-condensed",
+   "include": "\\.ttf$"
+  },
+  {
+   "source": "luuse",
+   "family": "Arkdes Hershey",
+   "page": "https://gitlab.com/Luuse/foundry/fonts.luuse/-/tree/main/fonts/Arkdes-Hershey",
+   "licence": "OFL-1.1",
+   "licenceEvidence": "fonts/Arkdes-Hershey/LICENCE.txt in Luuse's own repository (fonts.luuse.io: \"you can download our fonts on Gitlab\"): \"Copyright (c) 2023, Luuse (https://luuse.io/), with Reserved Font Name Arkdes-Hershey.\", the SIL Open Font License 1.1 text",
+   "repo": "https://gitlab.com/Luuse/foundry/fonts.luuse/-/tree/main/fonts/Arkdes-Hershey",
+   "commit": "b753e94cced0ccf659a2200fd590a0d2a9896739",
+   "url": "https://gitlab.com/Luuse/foundry/fonts.luuse.git",
+   "include": "^[^/]+/fonts/Arkdes\\-Hershey/fonts/[^/]+\\.otf$",
+   "format": "git"
+  },
+  {
+   "source": "luuse",
+   "family": "Autopia",
+   "page": "https://gitlab.com/Luuse/foundry/fonts.luuse/-/tree/main/fonts/Autopia",
+   "licence": "OFL-1.1",
+   "licenceEvidence": "fonts/Autopia/LICENCE.txt in Luuse's own repository (fonts.luuse.io: \"you can download our fonts on Gitlab\"): \"Copyright (c) 2014, Antoine Gelgon (https://antoinegelgon.be/), with Reserved Font Name Autopia.\", the SIL Open Font License 1.1 text",
+   "repo": "https://gitlab.com/Luuse/foundry/fonts.luuse/-/tree/main/fonts/Autopia",
+   "commit": "b753e94cced0ccf659a2200fd590a0d2a9896739",
+   "url": "https://gitlab.com/Luuse/foundry/fonts.luuse.git",
+   "include": "^[^/]+/fonts/Autopia/fonts/[^/]+\\.otf$",
+   "format": "git"
+  },
+  {
+   "source": "luuse",
+   "family": "Career",
+   "page": "https://gitlab.com/Luuse/foundry/fonts.luuse/-/tree/main/fonts/Career",
+   "licence": "OFL-1.1",
+   "licenceEvidence": "fonts/Career/LICENCE.txt in Luuse's own repository (fonts.luuse.io: \"you can download our fonts on Gitlab\"): \"Copyright (c) 2015, Antoine Gelgon (https://antoinegelgon.be/), with Reserved Font Name Career.\", the SIL Open Font License 1.1 text",
+   "repo": "https://gitlab.com/Luuse/foundry/fonts.luuse/-/tree/main/fonts/Career",
+   "commit": "b753e94cced0ccf659a2200fd590a0d2a9896739",
+   "url": "https://gitlab.com/Luuse/foundry/fonts.luuse.git",
+   "include": "^[^/]+/fonts/Career/fonts/[^/]+\\.otf$",
+   "format": "git"
+  },
+  {
+   "source": "luuse",
+   "family": "Caudex rect",
+   "page": "https://gitlab.com/Luuse/foundry/fonts.luuse/-/tree/main/fonts/Caudex-rect",
+   "licence": "OFL-1.1",
+   "licenceEvidence": "fonts/Caudex-rect/LICENSE.txt in Luuse's own repository (fonts.luuse.io: \"you can download our fonts on Gitlab\"): \"Copyright (c) 2011 Hjort Nidudsson with Reserved Font Name Caudex, 2019 Luuse (https://luuse.io/), with Reserved Font Name Caudex-rect.\", the SIL Open Font License 1.1 text",
+   "repo": "https://gitlab.com/Luuse/foundry/fonts.luuse/-/tree/main/fonts/Caudex-rect",
+   "commit": "b753e94cced0ccf659a2200fd590a0d2a9896739",
+   "url": "https://gitlab.com/Luuse/foundry/fonts.luuse.git",
+   "include": "^[^/]+/fonts/Caudex\\-rect/fonts/[^/]+\\.otf$",
+   "format": "git"
+  },
+  {
+   "source": "luuse",
+   "family": "Hershey Noailles",
+   "page": "https://gitlab.com/Luuse/foundry/fonts.luuse/-/tree/main/fonts/Hershey-Noailles",
+   "licence": "OFL-1.1",
+   "licenceEvidence": "fonts/Hershey-Noailles/LICENCE.txt in Luuse's own repository (fonts.luuse.io: \"you can download our fonts on Gitlab\"): \"Copyright (c) 2017, Luuse\", the SIL Open Font License 1.1 text",
+   "repo": "https://gitlab.com/Luuse/foundry/fonts.luuse/-/tree/main/fonts/Hershey-Noailles",
+   "commit": "b753e94cced0ccf659a2200fd590a0d2a9896739",
+   "url": "https://gitlab.com/Luuse/foundry/fonts.luuse.git",
+   "include": "^[^/]+/fonts/Hershey\\-Noailles/fonts/[^/]+\\.otf$",
+   "format": "git"
+  },
+  {
+   "source": "luuse",
+   "family": "Living Uncut Sans",
+   "page": "https://gitlab.com/Luuse/foundry/fonts.luuse/-/tree/main/fonts/Living-Uncut-Sans",
+   "licence": "OFL-1.1",
+   "licenceEvidence": "fonts/Living-Uncut-Sans/LICENSE.txt in Luuse's own repository (fonts.luuse.io: \"you can download our fonts on Gitlab\"): \"Copyright (c) 2025, Luuse (https://luuse.io/), with Reserved Font Name Living-Uncut-Sans.\", the SIL Open Font License 1.1 text",
+   "repo": "https://gitlab.com/Luuse/foundry/fonts.luuse/-/tree/main/fonts/Living-Uncut-Sans",
+   "commit": "b753e94cced0ccf659a2200fd590a0d2a9896739",
+   "url": "https://gitlab.com/Luuse/foundry/fonts.luuse.git",
+   "include": "^[^/]+/fonts/Living\\-Uncut\\-Sans/fonts/[^/]+\\.otf$",
+   "format": "git"
+  },
+  {
+   "source": "luuse",
+   "family": "Manifont Grotesk",
+   "page": "https://gitlab.com/Luuse/foundry/fonts.luuse/-/tree/main/fonts/Manifont-Grotesk",
+   "licence": "OFL-1.1",
+   "licenceEvidence": "fonts/Manifont-Grotesk/LICENSE.txt in Luuse's own repository (fonts.luuse.io: the SIL Open Font License 1.1 text",
+   "repo": "https://gitlab.com/Luuse/foundry/fonts.luuse/-/tree/main/fonts/Manifont-Grotesk",
+   "commit": "b753e94cced0ccf659a2200fd590a0d2a9896739",
+   "url": "https://gitlab.com/Luuse/foundry/fonts.luuse.git",
+   "include": "^[^/]+/fonts/Manifont\\-Grotesk/fonts/[^/]+\\.ttf$",
+   "format": "git"
+  },
+  {
+   "source": "luuse",
+   "family": "Meta Old French",
+   "page": "https://gitlab.com/Luuse/foundry/fonts.luuse/-/tree/main/fonts/Meta-Old-French",
+   "licence": "OFL-1.1",
+   "licenceEvidence": "fonts/Meta-Old-French/LICENCE.txt in Luuse's own repository (fonts.luuse.io: \"you can download our fonts on Gitlab\"): \"Copyright (c) 2021, Luuse (https://luuse.io/), with Reserved Font Names 'Meta Old French'\", the SIL Open Font License 1.1 text",
+   "repo": "https://gitlab.com/Luuse/foundry/fonts.luuse/-/tree/main/fonts/Meta-Old-French",
+   "commit": "b753e94cced0ccf659a2200fd590a0d2a9896739",
+   "url": "https://gitlab.com/Luuse/foundry/fonts.luuse.git",
+   "include": "^[^/]+/fonts/Meta\\-Old\\-French/fonts/[^/]+\\.otf$",
+   "format": "git"
+  },
+  {
+   "source": "luuse",
+   "family": "OCR 75",
+   "page": "https://gitlab.com/Luuse/foundry/fonts.luuse/-/tree/main/fonts/OCR-75",
+   "licence": "OFL-1.1",
+   "licenceEvidence": "fonts/OCR-75/LICENSE.txt in Luuse's own repository (fonts.luuse.io: \"you can download our fonts on Gitlab\"): \"Copyright (c) 2023, Luuse (https://luuse.io/), with Reserved Font Name OCR-75.\", the SIL Open Font License 1.1 text",
+   "repo": "https://gitlab.com/Luuse/foundry/fonts.luuse/-/tree/main/fonts/OCR-75",
+   "commit": "b753e94cced0ccf659a2200fd590a0d2a9896739",
+   "url": "https://gitlab.com/Luuse/foundry/fonts.luuse.git",
+   "include": "^[^/]+/fonts/OCR\\-75/fonts/[^/]+\\.otf$",
+   "format": "git"
+  },
+  {
+   "source": "luuse",
+   "family": "OCR PBI",
+   "page": "https://gitlab.com/Luuse/foundry/fonts.luuse/-/tree/main/fonts/OCR-PBI",
+   "licence": "OFL-1.1",
+   "licenceEvidence": "fonts/OCR-PBI/LICENCE.txt in Luuse's own repository (fonts.luuse.io: \"you can download our fonts on Gitlab\"): \"Copyright (c) 2015, Antoine Gelgon, Lise Brosseau\", the SIL Open Font License 1.1 text",
+   "repo": "https://gitlab.com/Luuse/foundry/fonts.luuse/-/tree/main/fonts/OCR-PBI",
+   "commit": "b753e94cced0ccf659a2200fd590a0d2a9896739",
+   "url": "https://gitlab.com/Luuse/foundry/fonts.luuse.git",
+   "include": "^[^/]+/fonts/OCR\\-PBI/fonts/[^/]+\\.otf$",
+   "format": "git"
+  },
+  {
+   "source": "luuse",
+   "family": "Old Round",
+   "page": "https://gitlab.com/Luuse/foundry/fonts.luuse/-/tree/main/fonts/Old%20Round",
+   "licence": "OFL-1.1",
+   "licenceEvidence": "fonts/Old Round/LICENCE.txt in Luuse's own repository (fonts.luuse.io: \"you can download our fonts on Gitlab\"): \"Copyright (c) 2015, Luuse\", the SIL Open Font License 1.1 text",
+   "repo": "https://gitlab.com/Luuse/foundry/fonts.luuse/-/tree/main/fonts/Old%20Round",
+   "commit": "b753e94cced0ccf659a2200fd590a0d2a9896739",
+   "url": "https://gitlab.com/Luuse/foundry/fonts.luuse.git",
+   "include": "^[^/]+/fonts/Old\\ Round/fonts/[^/]+\\.otf$",
+   "format": "git"
+  },
+  {
+   "source": "luuse",
+   "family": "Para Rubber",
+   "page": "https://gitlab.com/Luuse/foundry/fonts.luuse/-/tree/main/fonts/Para%20Rubber",
+   "licence": "OFL-1.1",
+   "licenceEvidence": "fonts/Para Rubber/LICENCE.txt in Luuse's own repository (fonts.luuse.io: \"you can download our fonts on Gitlab\"): \"Copyright (c) 2019, Luuse, https://luuse.io/\", the SIL Open Font License 1.1 text",
+   "repo": "https://gitlab.com/Luuse/foundry/fonts.luuse/-/tree/main/fonts/Para%20Rubber",
+   "commit": "b753e94cced0ccf659a2200fd590a0d2a9896739",
+   "url": "https://gitlab.com/Luuse/foundry/fonts.luuse.git",
+   "include": "^[^/]+/fonts/Para\\ Rubber/fonts/[^/]+\\.otf$",
+   "format": "git"
+  },
+  {
+   "source": "luuse",
+   "family": "PostGil",
+   "page": "https://gitlab.com/Luuse/foundry/fonts.luuse/-/tree/main/fonts/PostGil",
+   "licence": "OFL-1.1",
+   "licenceEvidence": "fonts/PostGil/LICENCE.txt in Luuse's own repository (fonts.luuse.io: \"you can download our fonts on Gitlab\"): \"Copyright (c) 2023, Luuse (https://luuse.io/), with Reserved Font Names 'postGill'\", the SIL Open Font License 1.1 text",
+   "repo": "https://gitlab.com/Luuse/foundry/fonts.luuse/-/tree/main/fonts/PostGil",
+   "commit": "b753e94cced0ccf659a2200fd590a0d2a9896739",
+   "url": "https://gitlab.com/Luuse/foundry/fonts.luuse.git",
+   "include": "^[^/]+/fonts/PostGil/fonts/[^/]+\\.otf$",
+   "format": "git"
+  },
+  {
+   "source": "luuse",
+   "family": "RobotoAP",
+   "page": "https://gitlab.com/Luuse/foundry/fonts.luuse/-/tree/main/fonts/RobotoAP",
+   "licence": "Apache-2.0",
+   "licenceEvidence": "fonts/RobotoAP/LICENSE.txt in Luuse's own repository (fonts.luuse.io: the Apache License 2.0 text",
+   "repo": "https://gitlab.com/Luuse/foundry/fonts.luuse/-/tree/main/fonts/RobotoAP",
+   "commit": "b753e94cced0ccf659a2200fd590a0d2a9896739",
+   "url": "https://gitlab.com/Luuse/foundry/fonts.luuse.git",
+   "include": "^[^/]+/fonts/RobotoAP/fonts/[^/]+\\.otf$",
+   "format": "git"
+  },
+  {
+   "source": "luuse",
+   "family": "Selectric",
+   "page": "https://gitlab.com/Luuse/foundry/fonts.luuse/-/tree/main/fonts/Selectric",
+   "licence": "OFL-1.1",
+   "licenceEvidence": "fonts/Selectric/LICENCE.txt in Luuse's own repository (fonts.luuse.io: \"you can download our fonts on Gitlab\"): \"Copyright (c) 2015, Leonard Mabille (leomabille@gmail.com), with Reserved Font Names 'SelectricMono'\", the SIL Open Font License 1.1 text",
+   "repo": "https://gitlab.com/Luuse/foundry/fonts.luuse/-/tree/main/fonts/Selectric",
+   "commit": "b753e94cced0ccf659a2200fd590a0d2a9896739",
+   "url": "https://gitlab.com/Luuse/foundry/fonts.luuse.git",
+   "include": "^[^/]+/fonts/Selectric/fonts/[^/]+\\.otf$",
+   "format": "git"
+  },
+  {
+   "source": "luuse",
+   "family": "WAT",
+   "page": "https://gitlab.com/Luuse/foundry/fonts.luuse/-/tree/main/fonts/WAT",
+   "licence": "OFL-1.1",
+   "licenceEvidence": "fonts/WAT/LICENCE.txt in Luuse's own repository (fonts.luuse.io: \"you can download our fonts on Gitlab\"): \"Copyright (c) 2023, Luuse (https://luuse.io/), with Reserved Font Names 'WAT'\", the SIL Open Font License 1.1 text",
+   "repo": "https://gitlab.com/Luuse/foundry/fonts.luuse/-/tree/main/fonts/WAT",
+   "commit": "b753e94cced0ccf659a2200fd590a0d2a9896739",
+   "url": "https://gitlab.com/Luuse/foundry/fonts.luuse.git",
+   "include": "^[^/]+/fonts/WAT/fonts/[^/]+\\.otf$",
+   "format": "git"
+  },
+  {
+   "source": "luuse",
+   "family": "Walking OCR",
+   "page": "https://gitlab.com/Luuse/foundry/fonts.luuse/-/tree/main/fonts/Walking-OCR",
+   "licence": "OFL-1.1",
+   "licenceEvidence": "fonts/Walking-OCR/LICENCE.txt in Luuse's own repository (fonts.luuse.io: \"you can download our fonts on Gitlab\"): \"Copyright (c) 2022, Luuse (luuse.io|contact@luuse.io>),\", the SIL Open Font License 1.1 text",
+   "repo": "https://gitlab.com/Luuse/foundry/fonts.luuse/-/tree/main/fonts/Walking-OCR",
+   "commit": "b753e94cced0ccf659a2200fd590a0d2a9896739",
+   "url": "https://gitlab.com/Luuse/foundry/fonts.luuse.git",
+   "include": "^[^/]+/fonts/Walking\\-OCR/fonts/[^/]+\\.otf$",
+   "format": "git"
+  }
+ ],
+ "excluded": [
   {
    "source": "fontlibrary",
    "family": "V9Blog - chuyên trang tin tức thể thao tổng hợp",
-   "reason": "licence on the page: none (page removed by the site)"
-  },
-  {
-   "source": "fontlibrary",
-   "family": "Carlito",
    "reason": "licence on the page: none (page removed by the site)"
   },
   {
@@ -298690,93 +299137,8 @@
   },
   {
    "source": "use-and-modify",
-   "family": "Alte DIN 1451",
-   "reason": "peter-wiegel.de robots.txt disallows /Fonts/"
-  },
-  {
-   "source": "use-and-modify",
-   "family": "Indira K",
-   "reason": "peter-wiegel.de robots.txt disallows /Fonts/"
-  },
-  {
-   "source": "use-and-modify",
-   "family": "TGL",
-   "reason": "peter-wiegel.de robots.txt disallows /Fonts/"
-  },
-  {
-   "source": "use-and-modify",
-   "family": "W droge",
-   "reason": "osp.kitchen robots.txt names AI agents"
-  },
-  {
-   "source": "use-and-modify",
-   "family": "Work Avec",
-   "reason": "osp.kitchen robots.txt names AI agents"
-  },
-  {
-   "source": "use-and-modify",
-   "family": "Ark-es Typeface",
-   "reason": "download only through Fontesk, whose terms ban collection"
-  },
-  {
-   "source": "use-and-modify",
-   "family": "Fivo Sans Modern",
-   "reason": "download only on Behance, which refuses bots with HTTP 429"
-  },
-  {
-   "source": "use-and-modify",
-   "family": "Galgo Condensed",
-   "reason": "the designer offers only a trial, despite the OFL listed on Use & Modify"
-  },
-  {
-   "source": "use-and-modify",
-   "family": "Glacier",
-   "reason": "the designer page returns 404"
-  },
-  {
-   "source": "use-and-modify",
-   "family": "Lucette",
-   "reason": "no download link on the designer page"
-  },
-  {
-   "source": "use-and-modify",
-   "family": "Écrou",
-   "reason": "no download link on the designer page"
-  },
-  {
-   "source": "use-and-modify",
-   "family": "APL333",
-   "reason": "aplwiki.com refuses automated requests (HTTP 403)"
-  },
-  {
-   "source": "use-and-modify",
-   "family": "Boris",
-   "reason": "the linked zip returns 404"
-  },
-  {
-   "source": "use-and-modify",
-   "family": "JRUG PUNK",
-   "reason": "the archived page (web.archive.org) links no font file"
-  },
-  {
-   "source": "use-and-modify",
-   "family": "CP Mono",
-   "reason": "Use & Modify gives no link or licence"
-  },
-  {
-   "source": "use-and-modify",
    "family": "Didot",
-   "reason": "Use & Modify gives no link or licence"
-  },
-  {
-   "source": "use-and-modify",
-   "family": "PropCourier Sans",
-   "reason": "its only link is on Gitorious, shut down in 2015"
-  },
-  {
-   "source": "republish",
-   "family": "Finesse",
-   "reason": "its own specimen contradicts itself on the licence ('Only Finesse Oblique is released under SIL Open Font License', and on page 29 the whole family), and republi.sh offers no download; only aggregators do"
+   "reason": "never published: Use & Modify's page has said \"This font is not public yet\" since its first capture (2015-09-08), and no Didot file appears among the site's archived uploads"
   }
  ]
 }

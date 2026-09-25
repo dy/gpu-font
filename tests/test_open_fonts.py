@@ -102,6 +102,52 @@ class StoredFont(unittest.TestCase):
                 open_fonts.STORE, open_fonts.corpus.request = store, request
 
 
+class ArchiveCache(unittest.TestCase):
+    save = Path.write_bytes
+
+    @staticmethod
+    def killed(path, data):
+        """Path.write_bytes in a process killed mid-write: part of the file lands, then nothing more runs."""
+        ArchiveCache.save(path, data[:4]); raise KeyboardInterrupt
+
+    def test_a_run_killed_while_saving_a_download_leaves_no_half_archive_to_trust(self):
+        import scripts.open_fonts as open_fonts
+        from unittest import mock
+        with tempfile.TemporaryDirectory() as folder, mock.patch.object(open_fonts, 'STORE', Path(folder)), mock.patch('time.sleep'), \
+             mock.patch.object(open_fonts.corpus, 'request', return_value=b'PK whole archive') as request:
+            with mock.patch.object(Path, 'write_bytes', self.killed), self.assertRaises(KeyboardInterrupt): open_fonts.fetch('https://host/a.zip', None)
+            self.assertEqual(open_fonts.fetch('https://host/a.zip', None)[0], b'PK whole archive')  # the next run downloads it again, whole
+            self.assertEqual(open_fonts.fetch('https://host/a.zip', None)[0], b'PK whole archive')  # and then reads it from the cache
+            self.assertEqual(request.call_count, 2)
+            self.assertEqual(len(list((Path(folder) / '.archives').iterdir())), 1)  # no partial file left beside it
+
+    def test_a_font_from_an_api_killed_while_saving_is_downloaded_again(self):
+        import scripts.open_fonts as open_fonts
+        from unittest import mock
+        with tempfile.TemporaryDirectory() as folder, mock.patch.object(open_fonts, 'STORE', Path(folder)), mock.patch('time.sleep'), \
+             mock.patch.object(open_fonts.corpus, 'request', return_value=b'OTTO whole font') as request:
+            with mock.patch.object(Path, 'write_bytes', self.killed), self.assertRaises(KeyboardInterrupt): open_fonts.stored_font('a/A.otf', 'https://cdn/A.otf')
+            self.assertEqual(open_fonts.stored_font('a/A.otf', 'https://cdn/A.otf'), b'OTTO whole font')
+            self.assertEqual(request.call_count, 2)
+            self.assertEqual(sorted(path.name for path in (Path(folder) / 'a').iterdir()), ['A.otf'])
+
+
+class ManualFile(unittest.TestCase):
+    def test_a_file_collected_by_hand_is_read_in_place_and_pinned_by_its_hash(self):
+        import hashlib, scripts.open_fonts as open_fonts
+        with tempfile.TemporaryDirectory() as folder:
+            (Path(folder) / '.data/manual').mkdir(parents=True); (Path(folder) / '.data/manual/a.zip').write_bytes(b'PK font')
+            root, open_fonts.ROOT = open_fonts.ROOT, Path(folder)
+            try:
+                digest = hashlib.sha256(b'PK font').hexdigest()
+                self.assertEqual(open_fonts.fetch('manual/a.zip', None), (b'PK font', digest))
+                self.assertEqual(open_fonts.fetch('manual/a.zip', digest), (b'PK font', digest))
+                with self.assertRaisesRegex(ValueError, 'changed since it was pinned'): open_fonts.fetch('manual/a.zip', '0' * 64)
+                with self.assertRaisesRegex(FileNotFoundError, 'collected by hand'): open_fonts.fetch('manual/gone.zip', None)
+                with self.assertRaisesRegex(ValueError, 'must stay inside'): open_fonts.fetch('manual/../secret.txt', None)  # the listing is data, not a path to trust
+            finally: open_fonts.ROOT = root
+
+
 class Members(unittest.TestCase):
     def test_a_loose_file_is_its_own_member_named_without_query(self):
         self.assertEqual(list(members(b'font', 'https://host/fonts/FSEX302.ttf?raw=1', 'file')), [('FSEX302.ttf', b'font')])
@@ -122,6 +168,22 @@ class Members(unittest.TestCase):
         self.assertEqual(dict(members(tarred.getvalue(), 'https://host/release.zip', None)), files)  # named zip, but a tar
         self.assertEqual(list(members(b'OTTOa', 'https://host/fonts/A.otf?dl=1')), [('A.otf', b'OTTOa')])
         self.assertEqual(list(members(b'wOF2a', 'https://host/A.woff2')), [('A.woff2', b'wOF2a')])  # decode_webfonts unpacks it next
+
+    def test_rar_and_7zip_archives_are_read_by_bsdtar(self):
+        import struct, zlib
+        files = {'X/A.ttf': b'\x00\x01\x00\x00a', 'X/OFL.txt': b'licence'}
+        # A RAR 4 archive storing the files uncompressed: marker, archive header, one header per file, end block (RAR technote).
+        block = lambda kind, flags, body: (lambda head: struct.pack('<H', zlib.crc32(head) & 0xFFFF) + head)(struct.pack('<BHH', kind, flags, 7 + len(body)) + body)
+        rar = b'Rar!\x1a\x07\x00' + block(0x73, 0, bytes(6))
+        for name, content in files.items():
+            rar += block(0x74, 0x8000, struct.pack('<IIBIIBBHI', len(content), len(content), 0, zlib.crc32(content), 0x21, 20, 0x30, len(name), 0x20) + name.encode()) + content
+        rar += block(0x7B, 0x4000, b'')
+        self.assertEqual(dict(members(rar, 'https://www.behance.net/download/FUNGIS.rar')), files)
+        with self.assertRaises(subprocess.CalledProcessError): list(members(rar[:40], 'https://host/cut-short.rar'))  # a listed row reports and skips it
+        with tempfile.TemporaryDirectory() as folder:
+            for name, content in files.items(): (Path(folder) / name).parent.mkdir(exist_ok=True); (Path(folder) / name).write_bytes(content)
+            seven = subprocess.run(['bsdtar', '--format', '7zip', '-cf', '-', '-C', folder, 'X/A.ttf', 'X/OFL.txt'], check=True, capture_output=True).stdout
+        self.assertEqual(dict(members(seven, 'https://host/release')), files)
 
     def test_a_web_page_or_an_empty_download_is_neither_archive_nor_font(self):
         with self.assertRaisesRegex(ValueError, r"cm-web-fonts/: neither an archive nor a font, but b'<!DOCTYPE html>"):
@@ -182,6 +244,28 @@ class ClaimOrder(unittest.TestCase):
         specs = [{'source': 'github'}, {'source': 'fontlibrary'}, {'source': 'velvetyne'}, {'source': 'use-and-modify'}, {'source': 'dejavu'}]
         order = [spec['source'] for spec in claim_order(specs, [{'source': 'debian'}])]
         self.assertEqual(order, ['velvetyne', 'dejavu', 'fontshare', 'fontlibrary', 'use-and-modify', 'debian', 'github'])
+        without = [spec['source'] for spec in claim_order(specs, [{'source': 'debian'}], long_tail=False)]
+        self.assertEqual(without, order[:-1])  # everything else, in the same order
+
+
+class LongTailCopies(unittest.TestCase):
+    RAW = 'https://raw.githubusercontent.com/a/b/c0ffee/fonts/'
+    held = staticmethod(lambda key: key in {'playfairdisplay', 'inter'})
+
+    def test_a_file_named_after_a_held_family_or_patched_by_nerd_fonts_is_a_copy(self):
+        from scripts.open_fonts import copied
+        for name in ['PlayfairDisplay-BoldItalic.ttf', 'PlayfairDisplay%5Bwght%5D.ttf', 'playfair_display.otf?raw=1', 'inter.ttf',
+                     'IosevkaSS10NerdFont-Bold.ttf', 'Hack Regular Nerd Font Complete Mono.ttf', 'JetBrainsMonoNLNerdFontPropo-Italic.ttf']:
+            self.assertTrue(copied(self.RAW + name, self.held), name)
+        for name in ['Mine-Regular.ttf', 'c.ttf', 'Interstate-Bold.otf', 'PlayfairDisplaySC.ttf']:  # a name only starting like a held one is not it
+            self.assertFalse(copied(self.RAW + name, self.held), name)
+
+    def test_a_row_keeps_its_own_fonts_and_their_licence_and_drops_a_row_of_copies_whole(self):
+        from scripts.open_fonts import long_tail_files
+        row = lambda *names: {'include': r'\.(otf|ttf)$', 'files': [self.RAW + name for name in names]}
+        self.assertEqual(long_tail_files(row('PlayfairDisplay-Bold.ttf', 'OFL.txt'), self.held), [])
+        self.assertEqual(long_tail_files(row('Mine-Regular.ttf', 'PlayfairDisplay-Bold.ttf', 'OFL.txt'), self.held), [self.RAW + 'Mine-Regular.ttf', self.RAW + 'OFL.txt'])
+        self.assertEqual(long_tail_files(row('OFL.txt'), self.held), [])  # a licence alone is nothing to inventory
 
 
 class SplitCollections(unittest.TestCase):

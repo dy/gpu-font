@@ -1,6 +1,6 @@
 {
  "version": 1,
- "updated": "2026-09-24",
+ "updated": "2026-09-25",
  "purpose": "Every font source considered: what it offers, its licence, what its terms allow, and where work with it stands. Work never proceeds against a written ban without recorded permission.",
  "sources": [
   {
@@ -50,7 +50,7 @@
    "work": {
     "status": "indexed",
     "route": "files from the public catalogue API, kept local; built into a catalogue from those files",
-    "familiesIndexed": 39
+    "familiesIndexed": 65
    },
    "log": [
     {
@@ -90,7 +90,7 @@
    "work": {
     "status": "indexed",
     "route": "pinned commits of the foundry's GitLab and GitHub repositories and its designers' own; bench/open-releases.json lists each family and every one left out",
-    "familiesIndexed": 3
+    "familiesIndexed": 67
    },
    "log": [
     {
@@ -155,14 +155,14 @@
    "work": {
     "status": "indexed",
     "route": "pinned commits of the collective's GitHub repositories",
-    "familiesIndexed": 17,
     "permission": {
      "grantedBy": "Luigi, Collletttivo Libera Tipografia",
      "date": "2026-09-25",
      "via": "email reply to a request",
      "scope": "indexing its typefaces in gpu-font",
      "condition": "link each typeface to www.collletttivo.it/typefaces/<slug>"
-    }
+    },
+    "familiesIndexed": 17
    },
    "log": [
     {
@@ -195,7 +195,7 @@
    "work": {
     "status": "indexed",
     "route": "families resolved to their designers' repositories or sites and pinned; bench/open-releases.json lists each one and every family left out",
-    "familiesIndexed": 62
+    "familiesIndexed": 76
    },
    "log": [
     {
@@ -205,6 +205,10 @@
     {
      "date": "2026-09-23",
      "event": "163 families listed: the rest come through Google Fonts, Fontsource, Velvetyne and Collletttivo, or are pinned from designers' repositories and sites. 38 left out, each with its reason: no licence or a non-open one, a robots.txt that excludes AI agents, or no direct download"
+    },
+    {
+     "date": "2026-09-25",
+     "event": "None left out now: Slibinas, Boris and FUNGIS taken from the designers' Behance downloads, collected by hand; Times Dot from the designer's own webfonts, archived by the Wayback Machine; Cakra held from its designers' repository"
     }
    ]
   },
@@ -224,7 +228,7 @@
    "work": {
     "status": "indexed",
     "route": "its own (non-Google) fonts from the public API, pinned to each npm release; a family its foundry publishes is taken from the foundry",
-    "familiesIndexed": 79
+    "familiesIndexed": 61
    },
    "log": [
     {
@@ -253,7 +257,7 @@
    "work": {
     "status": "indexed",
     "route": "every package in the fonts section of Debian's archive, TeX Live's two font packages (CTAN's OpenType and TrueType fonts) included, pinned to the SHA-256 its index publishes; collections split into their fonts; families a rights holder publishes are taken from the rights holder",
-    "familiesIndexed": 1509
+    "familiesIndexed": 2174
    },
    "log": [
     {
@@ -343,9 +347,9 @@
     "note": "No robots.txt and no terms page found. Each family's licence is read from its own page; some zips carry no licence file, so the page is the record."
    },
    "work": {
-    "status": "inventoried",
+    "status": "indexed",
     "route": "every family page read at 1.8-second spacing; each openly licensed family's zip downloaded once and pinned",
-    "familiesInventoried": 1315
+    "familiesIndexed": 1226
    },
    "log": [
     {
@@ -419,7 +423,7 @@
    "decision": {
     "ship": true,
     "date": "2026-09-25",
-    "note": "Shipped at the maintainer's decision, 2026-09-25: names, links and style vectors from the site's own preview images, no images or files kept in the release; the catalog comes down at DaFont's request."
+    "note": "Shipped at the maintainer's decision, 2026-09-25: names, links and style vectors from the site's own preview images, and a 64-pixel black-and-white copy of each preview; no font files; the catalog comes down at DaFont's request."
    }
   },
   {
@@ -651,20 +655,24 @@
    "url": "https://www.luuse.io/",
    "kind": "foundry",
    "access": "files",
-   "licence": "not stated",
+   "licence": "per family, in each family's folder: OFL-1.1, and Apache-2.0 for RobotoAP",
    "terms": {
-    "checked": "2026-09-24",
+    "checked": "2026-09-25",
     "status": "none-found",
-    "note": "The collective disbanded in 2025; its font archive is marked as in progress and states no licence."
+    "note": "The collective disbanded in 2025; fonts.luuse.io says \"you can download our fonts on Gitlab\", where each family's folder carries its licence."
    },
    "work": {
     "status": "planned",
-    "route": "once the archive states its licences"
+    "route": "each family's folder in Luuse's own fonts.luuse repository on GitLab, pinned to a commit"
    },
    "log": [
     {
      "date": "2026-09-24",
      "event": "Surveyed; no licence stated yet"
+    },
+    {
+     "date": "2026-09-25",
+     "event": "fonts.luuse.io now points to GitLab: 17 families pinned from their folders (16 OFL, RobotoAP Apache-2.0), 12 of them new; Gap Sans, with no licence there, stays with Uncut, and the template folder is not a font"
     }
    ]
   },
@@ -681,8 +689,9 @@
     "note": "Vietnamese open-source fonts, self-hosted; no restriction in robots.txt."
    },
    "work": {
-    "status": "planned",
-    "route": "pinned downloads"
+    "status": "indexed",
+    "route": "pinned downloads",
+    "familiesIndexed": 5
    },
    "familiesAvailable": 5,
    "availableUnit": "families",
@@ -691,6 +700,10 @@
     {
      "date": "2026-09-24",
      "event": "Surveyed: 5 families"
+    },
+    {
+     "date": "2026-09-25",
+     "event": "All 5 families pinned to their release zips, Finesse included"
     }
    ]
   },
@@ -708,8 +721,9 @@
     "quote": "All our fonts are released under the WTFPL license"
    },
    "work": {
-    "status": "planned",
-    "route": "pinned downloads; Garamon(d/t) already comes through Uncut"
+    "status": "indexed",
+    "route": "pinned downloads; Garamon(d/t) already comes through Uncut",
+    "familiesIndexed": 6
    },
    "familiesAvailable": 7,
    "availableUnit": "families",
@@ -734,12 +748,13 @@
     "note": "A link directory; files live with their designers, each licence checked there."
    },
    "work": {
-    "status": "planned",
-    "route": "each family resolved to its designer's release, like Uncut; bench/open-releases.json lists each one and every family left out"
+    "status": "indexed",
+    "route": "each family resolved to its designer's release, like Uncut; bench/open-releases.json lists each one and every family left out",
+    "familiesIndexed": 73
    },
-   "familiesAvailable": 400,
+   "familiesAvailable": 197,
    "availableUnit": "families",
-   "availableNote": "about 400 typefaces listed on https://usemodify.com/, 2026-09-24",
+   "availableNote": "197 typefaces listed on https://usemodify.com/, 2026-09-25",
    "log": [
     {
      "date": "2026-09-24",
@@ -748,6 +763,14 @@
     {
      "date": "2026-09-25",
      "event": "Its list holds 197 typefaces, not the 400 first estimated: 163 are already held (135 under the same name, 28 under a longer one, such as DejaVu Sans), 16 more are pinned to their designers' repositories and downloads, and 18 are left out, each with its reason: a robots.txt that excludes us, only a trial, or no working link"
+    },
+    {
+     "date": "2026-09-25",
+     "event": "Ark-es, Fivo Sans Modern, Lucette and Écrou taken from downloads collected by hand; CP Mono from the site's own files, identified by its 2015 page. 2 left out: Galgo Condensed (only a trial) and Didot (never published)"
+    },
+    {
+     "date": "2026-09-25",
+     "event": "Galgo Condensed taken: its designer confirmed the SIL Open Font License by email; the one face the site serves for now, the whole family from the designer"
     }
    ]
   },
@@ -848,7 +871,8 @@
    },
    "work": {
     "status": "indexed",
-    "route": "pinned official archive, inventoried like the Google corpus; built into a catalogue from those files"
+    "route": "pinned official archive, inventoried like the Google corpus; built into a catalogue from those files",
+    "familiesIndexed": 3
    },
    "log": [
     {
@@ -874,7 +898,8 @@
    },
    "work": {
     "status": "indexed",
-    "route": "pinned official archive, inventoried like the Google corpus; built into a catalogue from those files"
+    "route": "pinned official archive, inventoried like the Google corpus; built into a catalogue from those files",
+    "familiesIndexed": 3
    },
    "log": [
     {
@@ -900,7 +925,8 @@
    },
    "work": {
     "status": "indexed",
-    "route": "pinned official archive, inventoried like the Google corpus; built into a catalogue from those files"
+    "route": "pinned official archive, inventoried like the Google corpus; built into a catalogue from those files",
+    "familiesIndexed": 9
    },
    "log": [
     {
@@ -1034,7 +1060,8 @@
    },
    "work": {
     "status": "indexed",
-    "route": "pinned release, inventoried like the Google corpus; built into a catalogue from those files"
+    "route": "pinned release, inventoried like the Google corpus; built into a catalogue from those files",
+    "familiesIndexed": 6
    },
    "log": [
     {
@@ -1060,7 +1087,8 @@
    },
    "work": {
     "status": "indexed",
-    "route": "pinned release, inventoried like the Google corpus; built into a catalogue from those files"
+    "route": "pinned release, inventoried like the Google corpus; built into a catalogue from those files",
+    "familiesIndexed": 1
    },
    "log": [
     {
@@ -1086,7 +1114,8 @@
    },
    "work": {
     "status": "indexed",
-    "route": "pinned releases of families Google Fonts lacks"
+    "route": "pinned releases of families Google Fonts lacks",
+    "familiesIndexed": 1
    },
    "log": [
     {
@@ -1112,7 +1141,8 @@
    },
    "work": {
     "status": "indexed",
-    "route": "pinned release, inventoried like the Google corpus; built into a catalogue from those files"
+    "route": "pinned release, inventoried like the Google corpus; built into a catalogue from those files",
+    "familiesIndexed": 1
    },
    "log": [
     {
@@ -1138,7 +1168,8 @@
    },
    "work": {
     "status": "indexed",
-    "route": "pinned release, inventoried like the Google corpus; built into a catalogue from those files"
+    "route": "pinned release, inventoried like the Google corpus; built into a catalogue from those files",
+    "familiesIndexed": 3
    },
    "log": [
     {
@@ -1164,7 +1195,8 @@
    },
    "work": {
     "status": "indexed",
-    "route": "pinned release, inventoried like the Google corpus; built into a catalogue from those files"
+    "route": "pinned release, inventoried like the Google corpus; built into a catalogue from those files",
+    "familiesIndexed": 1
    },
    "log": [
     {
@@ -1219,7 +1251,8 @@
    },
    "work": {
     "status": "indexed",
-    "route": "pinned release, inventoried like the Google corpus; built into a catalogue from those files"
+    "route": "pinned release, inventoried like the Google corpus; built into a catalogue from those files",
+    "familiesIndexed": 2
    },
    "log": [
     {
@@ -1272,7 +1305,8 @@
    },
    "work": {
     "status": "indexed",
-    "route": "pinned release, inventoried like the Google corpus; built into a catalogue from those files"
+    "route": "pinned release, inventoried like the Google corpus; built into a catalogue from those files",
+    "familiesIndexed": 1
    },
    "log": [
     {
@@ -1379,7 +1413,8 @@
    },
    "work": {
     "status": "indexed",
-    "route": "pinned release, inventoried like the Google corpus; built into a catalogue from those files"
+    "route": "pinned release, inventoried like the Google corpus; built into a catalogue from those files",
+    "familiesIndexed": 7
    },
    "log": [
     {
@@ -1432,7 +1467,8 @@
    },
    "work": {
     "status": "indexed",
-    "route": "pinned release, inventoried like the Google corpus; built into a catalogue from those files"
+    "route": "pinned release, inventoried like the Google corpus; built into a catalogue from those files",
+    "familiesIndexed": 1
    },
    "log": [
     {
@@ -1458,7 +1494,8 @@
    },
    "work": {
     "status": "inventoried",
-    "route": "pinned release; glyphs are pictures, not letters, so text catalogues skip it until recognition matches symbols"
+    "route": "pinned release; glyphs are pictures, not letters, so text catalogues skip it until recognition matches symbols",
+    "familiesInventoried": 3
    },
    "log": [
     {
@@ -1487,7 +1524,8 @@
    },
    "work": {
     "status": "inventoried",
-    "route": "pinned release; glyphs are pictures, not letters, so text catalogues skip it until recognition matches symbols"
+    "route": "pinned release; glyphs are pictures, not letters, so text catalogues skip it until recognition matches symbols",
+    "familiesInventoried": 2
    },
    "log": [
     {
@@ -1574,7 +1612,8 @@
    },
    "work": {
     "status": "inventoried",
-    "route": "pinned release; glyphs are pictures, not letters, so text catalogues skip it until recognition matches symbols"
+    "route": "pinned release; glyphs are pictures, not letters, so text catalogues skip it until recognition matches symbols",
+    "familiesInventoried": 1
    },
    "log": [
     {
@@ -1632,7 +1671,8 @@
    },
    "work": {
     "status": "inventoried",
-    "route": "pinned release; glyphs are pictures, not letters, so text catalogues skip it until recognition matches symbols"
+    "route": "pinned release; glyphs are pictures, not letters, so text catalogues skip it until recognition matches symbols",
+    "familiesInventoried": 1
    },
    "log": [
     {
@@ -1813,7 +1853,7 @@
    "decision": {
     "ship": true,
     "date": "2026-09-25",
-    "note": "Shipped at the maintainer's decision, 2026-09-25: names, links and style vectors from the specimen pages, no images or files kept in the release; the catalog comes down at Adobe's request."
+    "note": "Shipped at the maintainer's decision, 2026-09-25: names, links and style vectors from the specimen pages, and a 64-pixel black-and-white picture of each face from them; no font files; the catalog comes down at Adobe's request."
    }
   },
   {
@@ -2484,6 +2524,57 @@
     {
      "date": "2026-09-23",
      "event": "Surveyed; vintage revivals"
+    }
+   ]
+  },
+  {
+   "id": "death-of-typography",
+   "name": "Death of Typography (DOT)",
+   "url": "https://deathoftypography.com/",
+   "kind": "foundry",
+   "access": "files",
+   "licence": "OFL-1.1 (per family)",
+   "terms": {
+    "checked": "2026-09-25",
+    "status": "not-verified",
+    "note": "Families downloaded by hand from the foundry's own pay-what-you-want downloads, each with its OFL.txt."
+   },
+   "work": {
+    "status": "planned",
+    "route": "files collected by hand into .data/manual"
+   },
+   "log": [
+    {
+     "date": "2026-09-25",
+     "event": "DT Getai Grotesk Display (listed by Uncut) and DT Octopia Neue collected by hand, both OFL"
+    }
+   ]
+  },
+  {
+   "id": "peter-wiegel",
+   "name": "Peter Wiegel (CAT Fonts)",
+   "url": "https://www.peter-wiegel.de/",
+   "kind": "foundry",
+   "access": "files",
+   "licence": "OFL-1.1 or GPL, per family",
+   "terms": {
+    "checked": "2026-09-25",
+    "status": "none-found",
+    "note": "robots.txt's only group names Mediapartners-Google and Browsershots; its Disallow: /Fonts/ binds those two, no other agent. The earlier reading of it as closing /Fonts/ to every crawler was wrong."
+   },
+   "work": {
+    "status": "indexed",
+    "route": "the designer's own zips at peter-wiegel.de/Fonts/",
+    "familiesIndexed": 7
+   },
+   "log": [
+    {
+     "date": "2026-09-25",
+     "event": "Six families from the designer's own zips: CAT Eckmann, CAT Neuzeit, Indira K, Alte DIN 1451 Mittelschrift and two DIN 1451 cuts"
+    },
+    {
+     "date": "2026-09-25",
+     "event": "robots.txt re-read: /Fonts/ is closed only to Mediapartners-Google and Browsershots, not to other agents"
     }
    ]
   }

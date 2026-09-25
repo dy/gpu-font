@@ -6,7 +6,8 @@ face_info, so scripts, letters, exclusions and the normal-face choice mean the
 same thing here as for Google Fonts, and the catalogue compiler reads both alike.
 Files stay local under .data/fonts-open; bench/open-fonts.json pins the archives.
 
-    python scripts/open_fonts.py            download (verifying pins) and inventory
+    python scripts/open_fonts.py                        download (verifying pins) and inventory
+    python scripts/open_fonts.py --without-long-tail    the same without GitHub's long tail, recorded as longTail: false
 """
 import hashlib, io, json, re, subprocess, sys, tarfile, urllib.parse, zipfile
 from pathlib import Path, PurePosixPath
@@ -144,11 +145,15 @@ DEBIAN_SKIP = re.compile(r'^(xfonts-|fonts-noto|texlive-(?!fonts-(extra|recommen
 # long tail of GitHub repositories (some mirror others' fonts), then Fontsource.
 CATALOGUES = {'uncut', 'fontlibrary', 'use-and-modify'}
 LONG_TAIL = {'github'}
+# The long tail is mostly copies: coursework committing Google Fonts' files, and Nerd Fonts patches (another family
+# with icons added). Its rows list their files, so a copy is recognised by its file name and never downloaded.
+NERD_FONT = re.compile(r'nerd.?font', re.I)
 FONTSHARE = {'source': 'fontshare'}  # stands for Fontshare's API in the claiming order
 # A font is known by its signature, not its name: repositories also commit macOS "._" forks,
 # Git LFS pointers and HTML error pages under font extensions.
 SFNT = (b'OTTO', b'\x00\x01\x00\x00', b'true', b'ttcf')
 WEBFONT = (b'wOFF', b'wOF2')  # compressed for browsers; decode_webfonts unpacks them
+LIBARCHIVE = (b'Rar!', b'7z\xbc\xaf')  # RAR and 7-Zip archives, which only bsdtar reads here
 is_font = lambda content: content[:4] in SFNT
 LICENCE_NAMES = re.compile(r'(^|/)(LICEN[CS]E|COPYING|COPYRIGHT|OFL|GUST-FONT-LICENSE|README)[^/]*$', re.I)
 
@@ -162,10 +167,20 @@ def name_key(value):
     return re.sub(r'[^a-z0-9]', '', value.lower())
 
 
+def keep(path, data):
+    """Written aside and renamed: a run killed mid-write leaves no half file for the next run to trust."""
+    part = path.with_suffix(path.suffix + '.part'); part.write_bytes(data); part.replace(path)
+
+
 def fetch(url, pinned, commit=None):
     """Download once; a pinned archive must match its recorded hash byte for byte.
-    With a commit, `url` is a git repository and the archive is that commit, made by git."""
-    cache = STORE / '.archives' / hashlib.sha1(f'{url}#{commit or ""}'.encode()).hexdigest()
+    With a commit, `url` is a git repository and the archive is that commit, made by git.
+    A `manual/…` address is a file a person downloaded into .data/manual, pinned the same way."""
+    # A file collected by hand sits in .data/manual under its `manual/` address and is its own cache.
+    manual = url.startswith('manual/')
+    cache = ROOT / '.data' / url if manual else STORE / '.archives' / hashlib.sha1(f'{url}#{commit or ""}'.encode()).hexdigest()
+    if manual and not cache.resolve().is_relative_to((ROOT / '.data/manual').resolve()): raise ValueError(f'{url}: a manual address must stay inside .data/manual')
+    if manual and not cache.exists(): raise FileNotFoundError(f'{cache}: collected by hand, so it cannot be downloaded; put it back in .data/manual')
     if not cache.exists():
         cache.parent.mkdir(parents=True, exist_ok=True)
         if commit:
@@ -173,10 +188,11 @@ def fetch(url, pinned, commit=None):
             with tempfile.TemporaryDirectory() as folder:
                 subprocess.run(['git', 'clone', '--quiet', '--filter=blob:none', '--no-checkout', url, folder], check=True, capture_output=True)
                 prefix = f"{PurePosixPath(url).stem}-{commit}/"
-                cache.write_bytes(subprocess.run(['git', '-C', folder, 'archive', '--format=zip', f'--prefix={prefix}', commit], check=True, capture_output=True).stdout)
+                data = subprocess.run(['git', '-C', folder, 'archive', '--format=zip', f'--prefix={prefix}', commit], check=True, capture_output=True).stdout
         else:
             import time
-            cache.write_bytes(corpus.request(url)); time.sleep(1)  # one download a second, whatever the host
+            data = corpus.request(url); time.sleep(1)  # one download a second, whatever the host
+        keep(cache, data)
     data = cache.read_bytes(); digest = hashlib.sha256(data).hexdigest()
     if pinned and pinned != digest:
         raise ValueError(f'Archive changed since it was pinned: {url}')
@@ -184,11 +200,11 @@ def fetch(url, pinned, commit=None):
 
 
 def members(data, url, format=None):
-    """(path, bytes) for every file in a zip, tar, cabinet or Debian archive, or the file itself."""
+    """(path, bytes) for every file in a zip, tar, RAR, 7-Zip, cabinet or Debian archive, or the file itself."""
     if format == 'file':
         yield urllib.parse.unquote(PurePosixPath(url.split('?')[0]).name), data  # MaterialSymbols[FILL,…].ttf, not %5B…
         return
-    if format in ('cab', 'deb'):  # libarchive's bsdtar reads cabinet installers and a .deb's ar wrapper
+    if format in ('cab', 'deb') or data[:4] in LIBARCHIVE:  # libarchive's bsdtar reads cabinet installers, a .deb's ar wrapper, RAR and 7-Zip
         import tempfile
         with tempfile.TemporaryDirectory() as folder:
             archive, out = Path(folder) / 'archive', Path(folder) / 'out'
@@ -262,7 +278,7 @@ def stored_font(relative, url):
     target = STORE / relative
     if target.exists(): return target.read_bytes()
     if not is_font(content := corpus.request(url)): print(f'{relative}: not an OpenType or TrueType font; style skipped'); return None
-    target.parent.mkdir(parents=True, exist_ok=True); target.write_bytes(content); time.sleep(0.2)
+    target.parent.mkdir(parents=True, exist_ok=True); keep(target, content); time.sleep(0.2)
     return content
 
 
@@ -282,11 +298,25 @@ def fontshare_groups(google_names):
                                  'extra': {'sourceUrl': f"https://www.fontshare.com/fonts/{font['slug']}", 'sourceId': font['id']}}
 
 
-def claim_order(specs, debian=()):
+def copied(url, held):
+    """Whether a font file, by its name alone, is a Nerd Fonts patch or a copy of a family `held(name_key)` says is held:
+    PlayfairDisplay-BoldItalic.ttf, PlayfairDisplay[wght].ttf and playfair_display.otf name Playfair Display."""
+    stem = PurePosixPath(urllib.parse.unquote(url.split('?')[0])).stem
+    return bool(NERD_FONT.search(stem)) or held(name_key(re.split(r'[-\[]', stem)[0]))  # Family-Style, Family[axes]
+
+
+def long_tail_files(spec, held):
+    """The files of a long-tail row worth downloading: its fonts that are not copies, and its licences only beside one."""
+    font = lambda url: re.search(spec['include'], PurePosixPath(url.split('?')[0]).name, re.I)
+    kept = [url for url in spec['files'] if font(url) and not copied(url, held)]
+    return [url for url in spec['files'] if url in kept or (kept and not font(url))]
+
+
+def claim_order(specs, debian=(), long_tail=True):
     """Rights holders' own releases, Fontshare's library, the catalogues, Debian, then GitHub's long tail."""
     tier = lambda source: 2 if source in CATALOGUES else 3 if source in LONG_TAIL else 0
     return [*(spec for spec in specs if tier(spec['source']) == 0), FONTSHARE, *(spec for spec in specs if tier(spec['source']) == 2),
-            *debian, *(spec for spec in specs if tier(spec['source']) == 3)]
+            *debian, *(spec for spec in specs if tier(spec['source']) == 3 and long_tail)]
 
 
 def split_collections(members):
@@ -385,10 +415,10 @@ def family_name(path):
         return None
 
 
-def main():
+def main(long_tail=True):
     previous = json.loads(MANIFEST.read_text()) if MANIFEST.exists() else {'archives': []}
     pins = {entry['url']: entry['sha256'] for entry in previous.get('archives', []) if 'sha256' in entry}
-    archives, groups = [], {}
+    archives, groups, copies = [], {}, 0
     owners, elsewhere = {}, {}  # a family belongs to the first source that lists it: foundries before catalogues
     original_source_path = corpus.source_path
     corpus.source_path = lambda path: STORE / path  # face_info reads our store, not the Google cache
@@ -400,14 +430,16 @@ def main():
     def add(source, name, group):
         groups.setdefault((source, name_key(name)), {**group, 'name': name, 'items': []})['items'].extend(group['items'])
     try:
-        for spec in claim_order(SOURCES, list(debian_sources())):
+        for spec in claim_order(SOURCES, list(debian_sources()), long_tail):
             if spec is FONTSHARE:
                 for name, group in fontshare_groups(google_names):
                     if claim('fontshare', name): add('fontshare', name, group)
                 archives.append({'source': 'fontshare', 'url': FONTSHARE_API, 'licence': 'per family (ITF Free Font License or OFL-1.1)'})
                 continue
-            licences = []
-            for url in spec.get('files') or [spec['url']]:  # an archive, or loose files pinned one by one
+            licences, files = [], spec.get('files') or [spec['url']]
+            if spec['source'] in LONG_TAIL and 'files' in spec:
+                copies += len(files) - len(files := long_tail_files(spec, lambda key: key in google_names or key in owners))
+            for url in files:  # an archive, or loose files pinned one by one
                 key = f"{url}#{spec['commit']}" if 'commit' in spec else url
                 try:
                     data, digest = fetch(url, pins.get(key) or spec.get('sha256'), spec.get('commit'))
@@ -470,7 +502,7 @@ def main():
     if len(set(ids)) != len(ids): raise ValueError('Duplicate family ids')
     result = {'version': 1, 'store': '.data/fonts-open',
               'scope': 'Openly licensed families outside Google Fonts, from pinned releases. Same family and face semantics as bench/corpus.json; one normal face selected per family; exclusions explicit. `letters` counts the letters per script; the letters themselves are in .data/fonts-open/alphabets.json, rebuilt with the files.',
-              'archives': archives, 'fontFiles': sum(len(f['faces']) for f in families), 'families': families}
+              'longTail': long_tail, 'archives': archives, 'fontFiles': sum(len(f['faces']) for f in families), 'families': families}
     MANIFEST.write_text(json.dumps(result, ensure_ascii=False, separators=(',', ':')) + '\n')
     (STORE / 'alphabets.json').write_text(json.dumps(alphabet_store, ensure_ascii=False, separators=(',', ':')) + '\n')
     counts = {}
@@ -478,7 +510,8 @@ def main():
     for source, (ok, excluded) in counts.items(): print(f'{source}: {ok} families{f", {excluded} excluded" if excluded else ""}')
     for source, names in in_google.items(): print(f'{source}: left to Google Fonts: {", ".join(names)}')
     for source, names in elsewhere.items(): print(f'{source}: left to an earlier source: {", ".join(sorted(names))}')
+    if copies: print(f'long tail: {copies} files not downloaded, named as Nerd Fonts patches or copies of families already held')
 
 
 if __name__ == '__main__':
-    main()
+    main(long_tail='--without-long-tail' not in sys.argv)
