@@ -32,7 +32,7 @@ test('the DaFont crops are integer boxes inside their pictures, and every skip g
 })
 test('bench/finders.json has a place for exactly the finders the page compares, in its order, and gpu-font answers every crop', async () => {
   const html = await readFile(new URL('../index.html', import.meta.url), 'utf8'), table = html.match(/<section id="compare"[\s\S]*?<\/section>/)[0]
-  const page = [...table.matchAll(/<th scope="row"><a [^>]*>([^<]+)<\/a>/g)].map(m => m[1])
+  const page = [...table.matchAll(/<th scope="row"><a [^>]*>(?:<img [^>]*>)?([^<]+)<\/a>/g)].map(m => m[1])
   const { finders, images } = JSON.parse(await readFile(new URL('../bench/finders.json', import.meta.url)))
   assert.ok(page.length >= 2); assert.deepEqual(Object.keys(finders), page)
   for (const finder of Object.values(finders)) assert.ok(finder.how.length > 10)

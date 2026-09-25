@@ -17,7 +17,11 @@ const source = $('source'), ctx = source.getContext('2d', { willReadFrequently: 
 let model, heads = null, catalog, gpu, gpuReason = '', current = null, crop = null, last = null
 let revision = 0, analysis = 0, dragging = null, armed = null
 let scheduled = 0, running = false, pending = false
-let previewText = 'Quiet rivers flow', previewValid = true
+// The sample the page opens with, and the text every sample and preview draws until edited.
+const SAMPLE = 'lora', TEXT = 'Quiet rivers flow'
+let previewText = TEXT, previewValid = true
+// Preview text the previews accept: up to 80 printable ASCII characters, but ~ and ^.
+const validText = text => text.length <= 80 && /^[\x20-\x7e]+$/.test(text) && !/[~^]/.test(text)
 let searchCatalog = null, catalogRevision = 0
 // More matches grows the list in place, with previews, from the top five to the top fifty.
 const SHORT = 5, LONG = 50
@@ -114,7 +118,7 @@ function setImage(image, name, known = null, drawing = false) {
 }
 // Pencil and eraser edit any source; strokes replay over an untouched copy, so undo is exact.
 const pen = { size: 12 }
-let lastFont = 'lora', tool = 'crop', edits = { base: null, strokes: [] }
+let lastFont = SAMPLE, tool = 'crop', edits = { base: null, strokes: [] }
 function penSize() {
   const input = $('pen-size'); pen.size = Number(input.value)
   input.parentElement.style.setProperty('--fill', `${(input.value - input.min) / (input.max - input.min) * 100}%`)
@@ -236,7 +240,7 @@ async function sample(id) {
     c.fillStyle = '#000000'; c.font = `56px "${family}"`
     c.fillText(text, pad + m.actualBoundingBoxLeft, pad + m.actualBoundingBoxAscent)
     // Sample rendering is training evidence: exact monochrome, independent of UI tokens.
-    setImage(canvas, `${font.name} sample`, id)
+    setImage(canvas, `${font.name} sample`, id); current.text = text
   } catch (error) {
     if (version === revision) message(error.message, true)
   }
@@ -435,32 +439,47 @@ function previewElement(face, [candidate, ...rest], index) {
   return input
 }
 
-// A shipped catalog, fetched and checked against the checksum site.json records for it.
-async function readShipped(option) {
-  const response = await fetch(option.file)
-  if (!response.ok) throw new Error('Could not load this catalog.')
-  const bytes = await response.arrayBuffer()
-  if (await sha256(bytes) !== option.sha256) throw new Error('Catalog checksum failed.')
-  return readCatalog(JSON.parse(new TextDecoder().decode(bytes)), catalog)
+// Shipped catalogs, each fetched once, checked against the checksum site.json records for it and read: switching back
+// is instant, and All reuses the ones already read. `received` counts bytes as they arrive, or a read catalog's size.
+const shipped = new Map()
+function readShipped(option, received) {
+  if (shipped.has(option.file)) return shipped.get(option.file).then(data => { received(option.bytes); return data })
+  const reading = download(option.file, received, 'Could not load this catalog.').then(async bytes => {
+    if (await sha256(bytes) !== option.sha256) throw new Error('Catalog checksum failed.')
+    return readCatalog(JSON.parse(new TextDecoder().decode(bytes)), catalog)
+  })
+  shipped.set(option.file, reading); reading.catch(() => shipped.delete(option.file))
+  return reading
 }
+// The catalog being loaded: the address names it before it lands, so a reload in between asks for it again.
+let loading = null
 async function selectCatalog(option, file = null, { focus = true } = {}) {
   const version = ++catalogRevision
   $('catalog-menu').hidePopover(); if (focus) $('catalog-button').focus({ preventScroll: true })
   $('catalog-error').hidden = true; $('catalog-button').setAttribute('aria-busy', 'true')
+  // The matches wait behind a loader, as the matcher waits for the model: the bytes received of the files the catalog needs.
+  const files = option.parts ?? (option.group ? [option.group] : file || option.data ? [] : [option]), total = files.reduce((n, f) => n + f.bytes, 0), bar = $('catalog-loading')
+  let got = 0
+  const received = n => {
+    if (version !== catalogRevision) return
+    got += n; bar.value = got; $('catalog-loading-percent').textContent = `${Math.floor(got / total * 100)}%`
+  }
+  if (total) { bar.max = total; received(0) } else { bar.removeAttribute('value'); $('catalog-loading-percent').textContent = '' }
+  $('catalog-loading-name').textContent = option.name; loading = option; $('results-panel').setAttribute('aria-busy', 'true'); shareable()
   try {
     let data, hash
     if (option.parts) {
       // All: every shipped catalog, each verified as when chosen alone, searched as one.
-      const parts = await Promise.all(option.parts.map(readShipped))
+      const parts = await Promise.all(option.parts.map(part => readShipped(part, received)))
       data = unionCatalogs(parts); hash = option.parts.map(part => part.sha256)
     } else if (option.group) {
       // One source of a grouped catalog (Other), searched alone: its faces, which name their source.
-      data = subsetCatalog(await readShipped(option.group), face => face.sourceId === option.id); hash = option.group.sha256
+      data = subsetCatalog(await readShipped(option.group, received), face => face.sourceId === option.id); hash = option.group.sha256
     } else if (file || option.data) {
       if (file?.size > 20 * 1024 * 1024) throw new Error('Choose a catalog smaller than 20 MB.')
       const bytes = file ? await file.arrayBuffer() : new TextEncoder().encode(JSON.stringify(option.data))
       hash = await sha256(bytes); data = readCatalog(JSON.parse(new TextDecoder().decode(bytes)), catalog)
-    } else { data = await readShipped(option); hash = option.sha256 }
+    } else { data = await readShipped(option, received); hash = option.sha256 }
     if (version !== catalogRevision) return
     const cached = last
     searchCatalog = { ...option, ...data, sha256: hash, builtin: !file && !option.data }
@@ -477,13 +496,19 @@ async function selectCatalog(option, file = null, { focus = true } = {}) {
     } else if (current) schedule()
   } catch (error) {
     if (version === catalogRevision) { $('catalog-error').textContent = error.message; $('catalog-error').hidden = false }
-  } finally { if (version === catalogRevision) $('catalog-button').removeAttribute('aria-busy') }
+  } finally {
+    if (version === catalogRevision) { loading = null; $('catalog-button').removeAttribute('aria-busy'); $('results-panel').removeAttribute('aria-busy') }
+  }
 }
 function intro(lead, top1, scope) {
   $('intro-lead').textContent = lead
   $('intro-scope').textContent = `Experimental: on ${scope}, it names the right family first ${(top1 * 100).toFixed(1)}% of the time.`
 }
+// A shipped catalog shows its source's favicon; All, Other, My fonts and an opened file show the catalog icon.
+const layers = $('catalog-button').querySelector('.catalog-icon').cloneNode(true)
+const iconOf = option => option.icon ? Object.assign(new Image(16, 16), { className: 'favicon', src: option.icon, alt: '' }) : layers.cloneNode(true)
 function updateCatalogLabel() {
+  $('catalog-button').firstElementChild.replaceWith(iconOf(searchCatalog))
   $('catalog-label').textContent = searchCatalog.name
   $('catalog-size').textContent = `${searchCatalog.name}: ${searchCatalog.families.toLocaleString()} families, ${searchCatalog.faces.length.toLocaleString()} faces`
   for (const button of $('catalog-list').children) button.setAttribute('aria-pressed', String(button.dataset.catalog === searchCatalog.id))
@@ -539,8 +564,8 @@ function followText(text) {
   subsetTimer = setTimeout(() => { for (const [input, face] of subsetRows) subsetFont(face, text).then(family => { if (!input.isConnected || previewText !== text) return; input.style.setProperty('--font-specimen', `"${family}"`); input.value = text }).catch(() => {}) }, 250)
 }
 function updatePreview(input) {
-  const text = input.value.trim() || 'Quiet rivers flow'
-  previewValid = /^[\x20-\x7e]+$/.test(text) && !/[~^]/.test(text)
+  const text = input.value.trim() || TEXT
+  previewValid = validText(text)
   $('preview-error').hidden = previewValid
   input.setAttribute('aria-invalid', String(!previewValid))
   if (!previewValid) return
@@ -698,12 +723,18 @@ $('save').addEventListener('click', () => {
   const a = document.createElement('a'); a.href = url; a.download = 'gpu-font-result.json'; a.click()
   setTimeout(() => URL.revokeObjectURL(url), 1000)
 })
-// The address of the matches on show, which opens them again: ?style= is the crop's style, the 128 numbers the model
-// reads from it and never its pixels; ?catalog= the catalog they were ranked in, unless the default or an opened file.
+// A font sample as drawn: not cropped, drawn over or resampled.
+const whole = () => !!current?.known && !current.strokes && $('resolution').value === '100' && crop.x === 0 && crop.y === 0 && crop.width === source.width && crop.height === source.height
+// The address of what is on show, which opens it again. A whole font sample is its font, ?sample=, and its text, ?text=,
+// unless the default: it draws again exactly, and the page's own sample needs neither. Any other source is its crop's
+// style, ?style=, the numbers the model reads from it and never its pixels. ?catalog= is the catalog searched or being
+// loaded, unless the default or an opened file.
 function address({ embed = embedded } = {}) {
-  const url = new URL(location.href), query = url.searchParams
-  if (searchCatalog.id !== catalog.catalogs[0].id && searchCatalog.id !== 'custom') query.set('catalog', searchCatalog.id); else query.delete('catalog')
-  if (last?.embedding) query.set('style', writeStyle(last.embedding, catalog.modelSha256)); else query.delete('style')
+  const url = new URL(location.href), query = url.searchParams, set = (key, value) => value ? query.set(key, value) : query.delete(key)
+  const id = loading?.id ?? searchCatalog.id, named = whole() && (current.known !== SAMPLE || current.text !== TEXT)
+  set('catalog', id !== catalog.catalogs[0].id && id !== 'custom' && id)
+  set('sample', named && current.known); set('text', named && current.text !== TEXT && current.text)
+  set('style', !whole() && last?.embedding && writeStyle(last.embedding, catalog.modelSha256))
   if (!embed) query.delete('embed')
   return url.href
 }
@@ -729,17 +760,43 @@ $('copy-link').addEventListener('click', async () => {
   button.lastChild.textContent = done ? 'Copied' : 'Copy failed'; button.setAttribute('aria-label', done ? 'Link copied' : 'Copy failed')
   clearTimeout(copied); copied = setTimeout(() => { button.lastChild.textContent = 'Link'; button.setAttribute('aria-label', 'Copy link') }, 2000)
 })
-// A shared link's matches: its style ranked in this page's catalog. The image stays with whoever shared it.
+// A shared link's matches: its style ranked in this page's catalog. The image stays with whoever shared it. Returns why
+// it can't show them, if it can't.
 function showShared(text) {
   let style
-  try { style = readStyle(text) } catch { message('This link’s matches can’t be read.', true); return }
-  if (!catalog.modelSha256.startsWith(style.model)) { message('This link comes from another version of the model, so its matches can’t be shown.', true); return }
+  try { style = readStyle(text) } catch { return 'This link’s matches can’t be read.' }
+  if (!catalog.modelSha256.startsWith(style.model)) return 'This link comes from another version of the model, so its matches can’t be shown.'
   const judged = heads ? verdict(style.embedding, heads) : null
   last = { shared: true, mode: 'encoder', embedding: Array.from(style.embedding), verdict: judged, catalog: { id: searchCatalog.id, sha256: searchCatalog.sha256 }, scoreType: 'cosine', matches: matchCatalog(style.embedding, searchCatalog, judged) }
   renderResults(); showVerdict(labelsFor(judged, last.matches)); shareable()
   message('Matches from a shared link: it holds the crop’s style, not its image.')
+  return ''
+}
+// Opens what the address names: a font sample, else a shared style, else the page's own sample. A link it can't show
+// says why over that sample, so the page never opens empty.
+async function restore() {
+  const id = params.get('sample'), text = params.get('text') ?? TEXT, shared = !id && isEncoder() && params.has('style')
+  const failure = shared ? showShared(params.get('style')) : id && !sampleFont(id) ? `No font sample “${id}”.` : ''
+  if (shared && !failure) return
+  if (validText(text)) previewText = text
+  const version = revision + 1
+  await sample(sampleFont(id) ? id : SAMPLE)
+  if (failure && version === revision) message(failure, true)
 }
 window.addEventListener('pagehide', () => { invalidate(); gpu?.destroy() })
+// Tabs: a click, or an arrow key on a focused tab, shows its panel. The others stay in place, inert and unseen, so the
+// block keeps the height of its tallest panel.
+for (const list of document.querySelectorAll('[role="tablist"]')) {
+  const tabs = [...list.querySelectorAll('[role="tab"]')]
+  const select = tab => tabs.forEach(each => { const on = each === tab; each.setAttribute('aria-selected', String(on)); each.tabIndex = on ? 0 : -1; $(each.getAttribute('aria-controls')).inert = !on })
+  list.addEventListener('click', event => { const tab = event.target.closest('[role="tab"]'); if (tab) select(tab) })
+  list.addEventListener('keydown', event => {
+    const at = tabs.indexOf(document.activeElement), to = { ArrowLeft: at - 1, ArrowRight: at + 1, Home: 0, End: tabs.length - 1 }[event.key]
+    if (at < 0 || to === undefined) return
+    const tab = tabs[(to + tabs.length) % tabs.length]
+    event.preventDefault(); select(tab); tab.focus()
+  })
+}
 
 // Counts a download's bytes as they arrive: decompressed, as site.json sizes them (Content-Length is the gzip size).
 async function download(path, received, failure = `Could not load ${path}.`) {
@@ -763,7 +820,8 @@ async function initialize() {
       if (await preparationHash(artifact.preparation) !== data.preparationSha256) throw new Error('Preparation checksum failed.')
       const bytes = await catalogBytes, hash = await sha256(bytes)
       if (hash !== option.sha256) throw new Error('Catalog checksum failed.')
-      searchCatalog = { ...option, ...readCatalog(JSON.parse(new TextDecoder().decode(bytes)), data), builtin: true }
+      const first = readCatalog(JSON.parse(new TextDecoder().decode(bytes)), data)
+      shipped.set(option.file, Promise.resolve(first)); searchCatalog = { ...option, ...first, builtin: true }
       $('catalog-control').hidden = false
       // My fonts, indexed on the Catalogs page, join the menu once they fit this model; until then the menu links there.
       const stored = (await readMyFonts())?.catalog, mine = stored?.encoderSha256 === data.modelSha256 && stored.preparationSha256 === data.preparationSha256
@@ -774,22 +832,23 @@ async function initialize() {
       $('catalog-list').replaceChildren(...options.map(option => {
         const button = document.createElement('button'); button.className = 'catalog-option'; button.dataset.catalog = option.id
         const label = document.createElement('span'), count = document.createElement('span')
-        label.textContent = option.name; count.textContent = option.families.toLocaleString()
-        button.append(label, count); button.addEventListener('click', () => selectCatalog(option)); return button
+        label.className = 'catalog-name'; label.textContent = option.name; count.textContent = option.families.toLocaleString()
+        button.append(iconOf(option), label, count); button.addEventListener('click', () => selectCatalog(option)); return button
       }))
       $('add-my-fonts').hidden = !!mine
       updateCatalogLabel()
       // A link can name the catalog to search, ?catalog=my-fonts, or one source of a grouped catalog, ?catalog=collletttivo.
       const sources = data.catalogs.flatMap(group => (group.sources ?? []).map(source => ({ ...source, group })))
       const id = params.get('catalog'), wanted = [...options, ...sources].find(each => each.id === id)
-      if (wanted && wanted !== option) await selectCatalog(wanted, null, { focus: false })
+      // It loads behind its own loader while the page opens its source; the matches rank again once it lands.
+      if (wanted && wanted !== option) selectCatalog(wanted, null, { focus: false })
       else if (id && !wanted) { $('catalog-error').textContent = `${id === 'my-fonts' ? 'My fonts aren’t indexed in this browser' : `No catalog “${id}”`}; searching ${option.name}.`; $('catalog-error').hidden = false }
       // An embed searches the catalog its link names; its label stays, as a plain name.
       if (embedded) { $('catalog-button').disabled = true; $('catalog-button').removeAttribute('aria-label') }
       // Shipped catalogs, not the selected or imported one.
       // Fractions read as percentages; data-format names the rest. A .meter draws its fraction as a bar, or a time
       // against the slowest time beside it.
-      const formats = { number: v => String(Math.round(v)), seconds: v => `${v < 1 ? v.toFixed(2) : Math.round(v)} s`, megabytes: v => `${Math.round(v)} MB` }
+      const formats = { number: v => Math.round(v).toLocaleString('en-US'), seconds: v => `${v < 1 ? v.toFixed(2) : Math.round(v)} s`, megabytes: v => `${Math.round(v)} MB` }
       for (const figure of document.querySelectorAll('[data-metric]')) {
         const value = data.metrics[figure.dataset.metric], format = figure.dataset.format
         figure.textContent = formats[format]?.(value) ?? `${(value * 100).toFixed(1)}%`
@@ -824,10 +883,9 @@ async function initialize() {
         $('accuracy').querySelector('tbody').append(row)
       }
     }
-    $('parameters').textContent = `${data.parameters.toLocaleString()} parameters, int8 weights`
+    $('parameters').textContent = `${data.parameters.toLocaleString()} parameters, ${(data.weightBits ?? [8]).join('/')}-bit weights`
     $('workbench').removeAttribute('aria-busy'); document.body.dataset.ready = 'true'
-    if (revision === 0 && isEncoder() && params.has('style')) showShared(params.get('style'))
-    else if (revision === 0) await sample('lora')
+    if (revision === 0) await restore()
     else if (current) { invalidate(true); schedule() }
   } catch (error) {
     $('workbench').removeAttribute('aria-busy'); $('backend').textContent = 'Model unavailable'; message(error.message, true)

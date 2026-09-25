@@ -63,4 +63,6 @@
   --space-12: 48px;
   --space-14: 56px;
   --size-target: 44px;
+  /* A source's favicon, at the size of the text beside it. */
+  --size-favicon: 16px;
 }

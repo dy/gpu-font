@@ -337,6 +337,7 @@
  "catalogs": "All: every shipped catalog searched as one.",
  "browser": "151.0.7922.34",
  "adapter": "apple metal-3",
+ "encoderSha256": "f57d7254b01360c6faa09df9fbb83960692d2733c1d7df8ff0d9959a37adcdc5",
  "date": "2026-09-25",
  "gpuFont": {
   "requests": 151,

@@ -90,7 +90,7 @@ Everything the matcher needs ships in the package: the model, the catalogs and t
 
 ## Share and embed
 
-The page's address holds the matches on show: `?style=` is the crop's style, the 128 numbers the model reads from it, never its pixels, and `?catalog=` the catalog searched. Copy the address, or press Link under the matches, to share them. A link made with another model says so instead of showing matches.
+The page's address holds what is on show. A font sample is its font, `?sample=`, and its text, `?text=`; any other source is `?style=`, the crop's style, the numbers the model reads from it, never its pixels; `?catalog=` is the catalog searched. Copy the address, or press Link under the matches, to share them. A link made with another model says so over the page's own sample.
 
 `?catalog=` takes `all`, `google-fonts`, `debian`, `fontlibrary`, `dafont`, `adobe-fonts`, `other`, `my-fonts`, or one source inside Other, such as `collletttivo` or `fontshare`. With `embed`, the page shows the matcher alone, searching only that catalog, to put on your own site:
 

@@ -18,14 +18,14 @@
   <meta property="og:image:alt" content="“Find the font in an image” beside a cropped line of text and its closest fonts, ranked">
   <meta name="twitter:card" content="summary_large_image">
   <script type="application/ld+json">{"@context":"https://schema.org","@type":"WebApplication","name":"gpu-font","url":"https://dy.github.io/gpu-font/","description":"Crop a line of text and get the closest fonts from Google Fonts, DaFont, Adobe Fonts, Debian, Font Library and more, with their weight and italic.","image":"https://dy.github.io/gpu-font/og.png","applicationCategory":"DesignApplication","operatingSystem":"Any","browserRequirements":"Requires JavaScript; runs on WebGPU, or on the CPU without it","isAccessibleForFree":true,"offers":{"@type":"Offer","price":"0","priceCurrency":"USD"},"license":"https://github.com/dy/gpu-font/blob/main/LICENSE","sameAs":"https://github.com/dy/gpu-font"}</script>
-  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 32 32%22%3E%3Crect width=%2232%22 height=%2232%22 rx=%226%22 fill=%22%23222%22/%3E%3Ctext x=%2216%22 y=%2222%22 font-family=%22Georgia,serif%22 font-size=%2216%22 fill=%22%23fff%22 text-anchor=%22middle%22%3EAa%3C/text%3E%3C/svg%3E">
+  <link rel="icon" href="./favicons/gpu-font.svg" type="image/svg+xml">
   <script>if (new URLSearchParams(location.search).has('embed')) { document.documentElement.dataset.embed = ''; document.head.append(Object.assign(document.createElement('base'), { target: '_blank' })) }</script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <script type="importmap">{"imports":{"./crop.mjs":"./crop.mjs?v=550aca56ca","./my-fonts.mjs":"./my-fonts.mjs?v=d075f19d67","./previews.mjs":"./previews.mjs?v=328028ead8","./src/catalog.mjs":"./src/catalog.mjs?v=2e88db909a","./src/input.mjs":"./src/input.mjs?v=2cf5262269","./src/line.mjs":"./src/line.mjs?v=8d5dd4c551","./src/network-gpu.mjs":"./src/network-gpu.mjs?v=2330f1934b","./src/network.mjs":"./src/network.mjs?v=2af6a9d6db","./src/prepare.mjs":"./src/prepare.mjs?v=f4a0b31a2a"}}</script>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter&family=Source+Serif+4&display=swap">
-  <link rel="stylesheet" href="./tokens.css?v=aa4aae7c63">
-  <link rel="stylesheet" href="./style.css?v=bd8c8147f0">
+  <link rel="stylesheet" href="./tokens.css?v=ea64f7eff0">
+  <link rel="stylesheet" href="./style.css?v=088c014bcc">
 </head>
 <body>
   <a class="skip" href="#workbench">Skip to workbench</a>
@@ -103,7 +103,8 @@
         <div id="result-summary" class="input-meta" role="status" title="Detected style"></div>
         <p id="catalog-error" class="message" data-error role="status" hidden></p>
 
-        <section class="results-panel" aria-labelledby="matches-title">
+        <section id="results-panel" class="results-panel" aria-labelledby="matches-title">
+          <div class="loader"><span aria-hidden="true">Loading <span id="catalog-loading-name"></span> <span id="catalog-loading-percent"></span></span><progress id="catalog-loading" aria-label="Loading the catalog"></progress></div>
           <p id="preview-error" class="message" data-error role="status" hidden>These font previews don’t support this character.</p>
           <div id="twins-tip" class="popover twins-tip" popover="manual" role="tooltip"></div>
           <ol id="results" class="results" aria-label="Ranked font matches" aria-describedby="score-note"></ol>
@@ -131,11 +132,37 @@
         </div>
         <div class="metrics">
           <div id="how-accurate">
-            <h3>Accuracy</h3>
-            <dl class="meters">
-              <div><dt>1st result</dt><dd class="meter" data-metric="top1">–</dd></div>
-              <div><dt>Top 5</dt><dd class="meter" data-metric="top5Accuracy">–</dd></div>
-            </dl>
+            <div class="metric-head">
+              <h3>Accuracy</h3>
+              <div class="tabs" role="tablist" aria-label="Accuracy on">
+                <button id="rendered-tab" role="tab" aria-selected="true" aria-controls="rendered-accuracy">Rendered</button>
+                <button id="photos-tab" role="tab" aria-selected="false" aria-controls="photos-accuracy" tabindex="-1">Photos</button>
+                <button id="requests-tab" role="tab" aria-selected="false" aria-controls="requests-accuracy" tabindex="-1">Requests</button>
+              </div>
+            </div>
+            <div class="tab-panels">
+              <div id="rendered-accuracy" role="tabpanel" aria-labelledby="rendered-tab">
+                <dl class="meters">
+                  <div><dt>1st result</dt><dd class="meter" data-metric="top1">–</dd></div>
+                  <div><dt>Top 5</dt><dd class="meter" data-metric="top5Accuracy">–</dd></div>
+                </dl>
+                <p class="meters-note"><span data-metric="renderedCount" data-format="number">–</span> crops of 5–10 characters in every Google Fonts family, drawn by Chrome, on text it never trained on. Searched in Google Fonts.</p>
+              </div>
+              <div id="photos-accuracy" role="tabpanel" aria-labelledby="photos-tab" inert>
+                <dl class="meters">
+                  <div><dt>1st result</dt><dd class="meter" data-metric="photosTop1">–</dd></div>
+                  <div><dt>Top 5</dt><dd class="meter" data-metric="photosTop5">–</dd></div>
+                </dl>
+                <p class="meters-note"><span data-metric="photosCount" data-format="number">–</span> photos of a word printed or painted on walls and objects, from <a href="https://github.com/whatfontis/WhatFontIs-Bench">WhatFontIs-Bench</a>. Searched in all catalogs.</p>
+              </div>
+              <div id="requests-accuracy" role="tabpanel" aria-labelledby="requests-tab" inert>
+                <dl class="meters">
+                  <div><dt>1st result</dt><dd class="meter" data-metric="requestsTop1">–</dd></div>
+                  <div><dt>Top 5</dt><dd class="meter" data-metric="requestsTop5">–</dd></div>
+                </dl>
+                <p class="meters-note"><span data-metric="requestsCount" data-format="number">–</span> “What font is this?” posts on the <a href="https://www.dafont.com/forum/">DaFont forum</a> with an answer the forum confirmed, cropped by hand. Searched in all catalogs.</p>
+              </div>
+            </div>
           </div>
           <div id="how-fast">
             <h3>Speed</h3>
@@ -185,17 +212,17 @@
     </section>
     <section id="compare" class="stacked" aria-labelledby="compare-title">
       <h2 id="compare-title">Alternatives</h2>
-      <div class="table-scroll"><table class="figures">
-        <thead><tr><th scope="col">Font finder</th><th scope="col">Fonts</th><th scope="col">Your fonts</th><th scope="col">Styles</th><th scope="col">Subsets</th><th scope="col">Runs on</th><th scope="col">Open source</th><th scope="col">Cost</th></tr></thead>
+      <div class="table-scroll"><table class="figures matchers">
+        <thead><tr><th scope="col">Matcher</th><th scope="col">Fonts</th><th scope="col">Your fonts</th><th scope="col">Styles</th><th scope="col">Subsets</th><th scope="col">Runs on</th><th scope="col">Open source</th><th scope="col">Cost</th></tr></thead>
         <tbody>
-          <tr><th scope="row"><a href="https://www.whatfontis.com/">WhatFontIs</a><span class="detail">WhatFontIs Com SRL</span></th><td>1,200,000+<span class="detail">Free and commercial, many vendors</span></td><td>–</td><td>–</td><td>Latin</td><td>Server</td><td>No</td><td>5 a day free, paid PRO</td></tr>
-          <tr><th scope="row"><a href="https://www.myfonts.com/pages/whatthefont">WhatTheFont</a><span class="detail">MyFonts</span></th><td>400,000+<span class="detail"><a href="https://www.myfonts.com/pages/about">MyFonts</a></span></td><td>–</td><td>–</td><td>–</td><td>Server, web and apps</td><td>No</td><td>Free</td></tr>
-          <tr><th scope="row"><a href="https://font-finder.org/">Font Finder</a><span class="detail">Owner not stated</span></th><td>50,000+<span class="detail">Web, system and commercial fonts</span></td><td>–</td><td>–</td><td>–</td><td>Windows app, server</td><td>No</td><td>Free</td></tr>
-          <tr><th scope="row"><a href="https://helpx.adobe.com/photoshop/desktop/text-typography/select-manage-fonts/match-fonts.html">Photoshop Match Font</a><span class="detail">Adobe</span></th><td>30,000+<span class="detail"><a href="https://fonts.adobe.com/about">Adobe Fonts</a></span></td><td>Installed</td><td>–</td><td>Latin, Japanese</td><td>Desktop app</td><td>No</td><td>Subscription</td></tr>
-          <tr><th scope="row"><a href="https://github.com/mixfont/lens">Lens</a><span class="detail">Mixfont</span></th><td>5,000+<span class="detail">Google Fonts and other open fonts</span></td><td>–</td><td>Weight, italic</td><td>–</td><td>Local Python, or hosted</td><td>Non‑commercial</td><td>Free non‑commercial, paid API</td></tr>
-          <tr><th scope="row"><a href="https://www.serbyte.net/what-the-google-font">What the Google Font</a><span class="detail">Serbyte Development</span></th><td>2,000+<span class="detail">Google Fonts families</span></td><td>–</td><td>–</td><td>–</td><td>Server, web and Chrome extension</td><td>No</td><td>Free, unlimited</td></tr>
-          <tr><th scope="row"><a href="https://www.fontsquirrel.com/matcherator">Matcherator</a><span class="detail">Font Squirrel</span></th><td>Not stated<span class="detail"><a href="https://www.fontsquirrel.com/faq">Font Squirrel, Fontspring, MyFonts</a></span></td><td>–</td><td>–</td><td>–</td><td>Server</td><td>No</td><td>Free</td></tr>
-          <tr><th scope="row"><a href="https://github.com/dy/gpu-font">gpu-font</a><span class="detail">dy</span></th><td><span id="compared-fonts">–</span><span class="detail">Google Fonts, Debian, Fontshare and more</span></td><td><a href="./catalogs.html#my-fonts">Installed, folders</a></td><td>Weight, italic</td><td id="compared-scripts">–</td><td>Browser, WebGPU or CPU</td><td>MIT</td><td>Free</td></tr>
+          <tr><th scope="row"><a href="https://www.whatfontis.com/"><img class="favicon" src="./favicons/www.whatfontis.com.png" alt="" width="16" height="16">WhatFontIs</a><span class="detail">WhatFontIs Com SRL</span></th><td>1,200,000+<span class="detail">Free and commercial, many vendors</span></td><td>–</td><td>–</td><td>Latin</td><td>Server</td><td>No</td><td>5 a day free<span class="detail">Paid PRO</span></td></tr>
+          <tr><th scope="row"><a href="https://www.myfonts.com/pages/whatthefont"><img class="favicon" src="./favicons/www.myfonts.com.png" alt="" width="16" height="16">WhatTheFont</a><span class="detail">MyFonts</span></th><td>400,000+<span class="detail"><a href="https://www.myfonts.com/pages/about">MyFonts</a></span></td><td>–</td><td>–</td><td>–</td><td>Server<span class="detail">Web and apps</span></td><td>No</td><td>Free</td></tr>
+          <tr><th scope="row"><a href="https://font-finder.org/"><img class="favicon" src="./favicons/font-finder.org.png" alt="" width="16" height="16">Font Finder</a><span class="detail">Owner not stated</span></th><td>50,000+<span class="detail">Web, system and commercial fonts</span></td><td>–</td><td>–</td><td>–</td><td>Windows app<span class="detail">Server</span></td><td>No</td><td>Free</td></tr>
+          <tr><th scope="row"><a href="https://helpx.adobe.com/photoshop/desktop/text-typography/select-manage-fonts/match-fonts.html"><img class="favicon" src="./favicons/helpx.adobe.com.png" alt="" width="16" height="16">Photoshop Match Font</a><span class="detail">Adobe</span></th><td>30,000+<span class="detail"><a href="https://fonts.adobe.com/about">Adobe Fonts</a></span></td><td>Installed</td><td>–</td><td>Latin, Japanese</td><td>Desktop app</td><td>No</td><td>Subscription</td></tr>
+          <tr><th scope="row"><a href="https://github.com/mixfont/lens"><img class="favicon" src="./favicons/mixfont.com.png" alt="" width="16" height="16">Lens</a><span class="detail">Mixfont</span></th><td>5,000+<span class="detail">Google Fonts and other open fonts</span></td><td>–</td><td>Weight, italic</td><td>–</td><td>Local Python, or hosted</td><td>Non‑commercial</td><td>Free non‑commercial<span class="detail">Paid API</span></td></tr>
+          <tr><th scope="row"><a href="https://www.serbyte.net/what-the-google-font"><img class="favicon" src="./favicons/www.serbyte.net.png" alt="" width="16" height="16">What the Google Font</a><span class="detail">Serbyte Development</span></th><td>2,000+<span class="detail">Google Fonts families</span></td><td>–</td><td>–</td><td>–</td><td>Server<span class="detail">Web and Chrome extension</span></td><td>No</td><td>Free<span class="detail">Unlimited</span></td></tr>
+          <tr><th scope="row"><a href="https://www.fontsquirrel.com/matcherator"><img class="favicon" src="./favicons/www.fontsquirrel.com.png" alt="" width="16" height="16">Matcherator</a><span class="detail">Font Squirrel</span></th><td>Not stated<span class="detail"><a href="https://www.fontsquirrel.com/faq">Font Squirrel, Fontspring, MyFonts</a></span></td><td>–</td><td>–</td><td>–</td><td>Server</td><td>No</td><td>Free</td></tr>
+          <tr><th scope="row"><a href="https://github.com/dy/gpu-font"><img class="favicon" src="./favicons/gpu-font.svg" alt="" width="16" height="16">gpu-font</a><span class="detail">dy</span></th><td><span id="compared-fonts">–</span><span class="detail">Google Fonts, DaFont and more</span></td><td><a href="./catalogs.html#my-fonts">Installed, folders</a></td><td>Weight, italic</td><td id="compared-scripts">–</td><td>Browser<span class="detail">WebGPU or CPU</span></td><td>MIT</td><td>Free</td></tr>
         </tbody></table></div>
     </section>
 
@@ -211,6 +238,6 @@
   <footer><p class="credit">Made by <a href="https://github.com/dy">dy</a>.</p><div class="footer-links"><a class="footer-license" href="https://github.com/dy/gpu-font/blob/main/LICENSE" rel="license">MIT</a><a class="footer-icon omkara" href="https://github.com/krishnized/license" aria-label="Krishnized license" title="Krishnized license"><span aria-hidden="true">ॐ</span></a></div></footer>
 
 
-  <script type="module" src="./app.mjs?v=36d02cd55f"></script>
+  <script type="module" src="./app.mjs?v=68f5658a33"></script>
 </body>
 </html>

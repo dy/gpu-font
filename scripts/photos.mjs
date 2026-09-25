@@ -30,7 +30,7 @@ const TYPES = { '.jpg': 'image/jpeg', '.jpeg': 'image/jpeg', '.png': 'image/png'
 
 // items: [{ path, box: [x0, y0, x1, y1] }] in image pixels, end exclusive. Returns, per item, { status, ms, rows }: up to
 // `limit` rows best first, each { family, name, siblings, score, weight, style } (the matched face). `ms` runs from the
-// image bytes to the ranked rows.
+// image bytes to the ranked rows; `encoderSha256` names the model that read them.
 export async function matchPhotos(items, { limit = 20, log = console.log } = {}) {
   const browser = await chromium.launch({ channel: 'chromium', args: ['--enable-unsafe-webgpu', ...(process.platform === 'darwin' ? ['--use-angle=metal'] : [])] })
   try {
@@ -41,9 +41,9 @@ export async function matchPhotos(items, { limit = 20, log = console.log } = {})
       await route.fulfill({ contentType: TYPES[extname(item.path).toLowerCase()] || 'application/octet-stream', body: await readFile(item.path) })
     })
     await page.goto('http://localhost:4179/photos')
-    const adapter = await page.evaluate(async () => {
+    const { adapter, encoderSha256 } = await page.evaluate(async () => {
       const adapter = await navigator.gpu?.requestAdapter()
-      if (!adapter) return null
+      if (!adapter) return {}
       const { createEncoder, catalogs } = await import('/src/match.mjs'), c = await import('/src/catalog.mjs'), { prepareLine } = await import('/src/line.mjs')
       const encoder = await createEncoder()
       const catalog = c.unionCatalogs(await Promise.all(Object.values(catalogs).map(async url => c.readCatalog(await (await fetch(url)).json(), encoder.binding))))
@@ -59,7 +59,7 @@ export async function matchPhotos(items, { limit = 20, log = console.log } = {})
         return { status, ms: performance.now() - start, rows: rows.map(r => ({ family: r.family, name: r.face.family, siblings: r.siblings, score: r.score, weight: r.face.weight, style: r.face.style })) }
       }
       const info = adapter.info || {}
-      return [info.vendor, info.architecture, info.description].filter(Boolean).join(' ') || 'WebGPU'
+      return { adapter: [info.vendor, info.architecture, info.description].filter(Boolean).join(' ') || 'WebGPU', encoderSha256: encoder.binding.encoderSha256 }
     })
     // On the CPU a match takes about ten seconds: a whole set would take hours, so stop instead.
     if (!adapter) throw new Error('No WebGPU adapter in Chromium')
@@ -69,6 +69,6 @@ export async function matchPhotos(items, { limit = 20, log = console.log } = {})
       results.push(await page.evaluate(([i, box, limit]) => window.photo(`/photo/${i}`, box, limit), [i, item.box, limit]))
       if ((i + 1) % 250 === 0) log(`${i + 1} / ${items.length}`)
     }
-    return { browser: browser.version(), adapter, results }
+    return { browser: browser.version(), adapter, encoderSha256, results }
   } finally { await browser.close() }
 }

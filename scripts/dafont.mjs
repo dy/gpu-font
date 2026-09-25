@@ -37,7 +37,7 @@ const cropped = indexed.filter(t => crops[t.task_id]), uncut = indexed.filter(t 
 if (uncut.length) console.log(`${uncut.length} indexed requests have no crop in bench/dafont-crops.json: ${uncut.length > 40 ? uncut.slice(0, 40).map(t => t.task_id).join(' ') + ' …' : uncut.map(t => t.task_id).join(' ')}`)
 if (!cropped.length) process.exit()
 for (const t of cropped) t.path = `${ROOT}/images/${t.task_id}${new URL(t.img_url).pathname.match(/\.\w+$/)[0]}`, await fetched(t.img_url, t.path)
-const { browser, adapter, results } = await matchPhotos(cropped.map(t => ({ path: t.path, box: crops[t.task_id] })))
+const { browser, adapter, encoderSha256, results } = await matchPhotos(cropped.map(t => ({ path: t.path, box: crops[t.task_id] })))
 const ours = cropped.map((t, i) => ({ task: t.task_id, font: t.identified_font, ...(results[i].status !== 'ok' && { status: results[i].status }), rank: rankOf(results[i].rows, t.identified_font), first: results[i].rows[0]?.name ?? null,
   score: results[i].rows[0] ? Math.round(results[i].rows[0].score * 1e3) / 1e3 : null, rows: results[i].rows }))
 const share = (list, test) => list.length ? Math.round(1e4 * list.filter(test).length / list.length) / 1e4 : null
@@ -56,7 +56,7 @@ await writeFile('bench/dafont.json', JSON.stringify({
   source: { benchmark: 'https://github.com/MaxHalford/llm-font-recognition', commit: COMMIT, forum: 'https://www.dafont.com/forum/?f=1' },
   coverage, crop: rule, skipped: Object.keys(skipped).length,
   rule: 'Right when the forum\'s answer, compared without case or punctuation, names a row the page shows or a family folded into it; chatbots by the same comparison.',
-  catalogs: 'All: every shipped catalog searched as one.', browser, adapter, date: new Date().toISOString().slice(0, 10),
+  catalogs: 'All: every shipped catalog searched as one.', browser, adapter, encoderSha256, date: new Date().toISOString().slice(0, 10),
   gpuFont: scores(ours), chatbots,
   requests: ours.map(({ rows, ...r }) => r)
 }, null, 1) + '\n')

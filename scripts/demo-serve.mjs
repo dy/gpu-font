@@ -4,7 +4,7 @@ import { resolve, extname, sep } from 'node:path'
 
 // The site is the repository root, as GitHub Pages serves it; --dist serves the legacy classifier build.
 const root = await realpath(process.argv.includes('--dist') ? 'dist' : '.').catch(() => { throw new Error('Run npm run demo:build -- --hundred first') })
-const types = { '.html': 'text/html', '.css': 'text/css', '.mjs': 'text/javascript', '.json': 'application/json', '.ttf': 'font/ttf', '.png': 'image/png' }
+const types = { '.html': 'text/html', '.css': 'text/css', '.mjs': 'text/javascript', '.json': 'application/json', '.ttf': 'font/ttf', '.png': 'image/png', '.svg': 'image/svg+xml' }
 const server = createServer(async (req, res) => {
   try {
     if (!['GET', 'HEAD'].includes(req.method)) { res.writeHead(405).end(); return }

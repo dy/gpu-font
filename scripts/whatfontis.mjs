@@ -37,7 +37,7 @@ export async function whatfontisSet() {
 
 async function main() {
   const { labels, indexed: images, fonts } = await whatfontisSet()
-  const { browser, adapter, results } = await matchPhotos(images)
+  const { browser, adapter, encoderSha256, results } = await matchPhotos(images)
   const scored = images.map((image, i) => ({ ...image, ...results[i], rank: rankOf(results[i].rows, image.truth.family) }))
   const share = (list, test) => Math.round(1e4 * list.filter(test).length / list.length) / 1e4
   const summary = list => ({ images: list.length, fonts: new Set(list.map(s => s.truth.family)).size,
@@ -49,7 +49,7 @@ async function main() {
       images: labels.length, fonts: fonts.length, indexed: { images: images.length, fonts: new Set(images.map(i => i.truth.family)).size } },
     rule: 'Right when the true family, or a family the page folds into that row, is among the first rows the page shows (5); any weight counts, as in the set\'s own results.',
     crop: 'The set\'s crop_box, the same for every finder.',
-    catalogs: 'All: every shipped catalog searched as one.', browser, adapter, date: new Date().toISOString().slice(0, 10),
+    catalogs: 'All: every shipped catalog searched as one.', browser, adapter, encoderSha256, date: new Date().toISOString().slice(0, 10),
     timeMs: { median: at(0.5), p95: at(0.95), from: 'image bytes to ranked rows, warm' },
     // Crops preparation turned away before the model: no answer at all.
     unread: Object.fromEntries([...new Set(scored.map(s => s.status))].filter(s => s !== 'ok').map(s => [s, scored.filter(x => x.status === s).length])),

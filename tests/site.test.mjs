@@ -65,3 +65,24 @@ test('per-script accuracy on the page comes from the shipped breakdown', async (
   const { metrics } = JSON.parse(await readFile('site.json', 'utf8')), { groups } = JSON.parse(await readFile('bench/style-breakdown.json', 'utf8'))
   assert.deepEqual([metrics.latinTop5, metrics.cyrillicTop5, metrics.arabicTop5], ['script/Latn', 'script/Cyrl', 'script/Arab'].map(key => groups[key].twin5))
 })
+
+// Favicons are stored with the site, one PNG per host (scripts/favicons.mjs): each a page names and each a catalog shows.
+test('every favicon a page or catalog names is stored with the site', async () => {
+  const site = JSON.parse(await readFile('site.json', 'utf8')), pages = await Promise.all(['index.html', 'catalogs.html'].map(page => readFile(page, 'utf8')))
+  const named = [...new Set([...pages.flatMap(html => [...html.matchAll(/"\.\/(favicons\/[^"]+)"/g)].map(m => m[1])), ...site.catalogs.map(c => c.icon).filter(Boolean)])]
+  assert.ok(named.length > site.catalogs.length)
+  for (const path of named) {
+    const bytes = await readFile(path)
+    assert.ok(path.endsWith('.svg') ? bytes.toString('utf8').startsWith('<svg') : bytes.toString('latin1', 1, 4) === 'PNG', path)
+  }
+})
+
+// Accuracy on pictures people bring is quoted only from reports of the shipped encoder: WhatFontIs-Bench's final part and
+// the hand-cropped DaFont forum requests, both searched as the page's All.
+test('photo and forum accuracy on the page come from reports of the shipped encoder', async () => {
+  const site = JSON.parse(await readFile('site.json', 'utf8')), { metrics } = site
+  const photos = JSON.parse(await readFile('bench/whatfontis.json', 'utf8')), requests = JSON.parse(await readFile('bench/dafont.json', 'utf8'))
+  assert.deepEqual([photos.encoderSha256, requests.encoderSha256], [site.encoderSha256, site.encoderSha256])
+  assert.deepEqual([metrics.photosTop1, metrics.photosTop5, metrics.photosCount], [photos.results.final.top1, photos.results.final.top5, photos.results.final.images])
+  assert.deepEqual([metrics.requestsTop1, metrics.requestsTop5, metrics.requestsCount], [requests.gpuFont.top1, requests.gpuFont.top5, requests.gpuFont.requests])
+})

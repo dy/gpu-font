@@ -6,6 +6,7 @@ import { readNetwork } from '../src/network.mjs'
 import { readCatalog, preparationHash } from '../src/catalog.mjs'
 import { sourceCatalogs } from './catalog-sources.mjs'
 import { joinCatalogs } from '../src/references.mjs'
+import { catalogIcon } from './favicons.mjs'
 
 const hash = bytes => createHash('sha256').update(bytes).digest('hex')
 const read = async path => JSON.parse(await readFile(path, 'utf8'))
@@ -105,6 +106,11 @@ for (const source of compiled.filter(source => !shippable(source))) console.log(
 // A grouped catalog names each source in it, so a link can search one alone: ?catalog=collletttivo.
 const named = id => ({ id, name: ledger.get(id)?.name.replace(/\s*\(.*\)$/, '') ?? id })
 for (const source of shipped) await addCatalog(source.id, source.name, `${derived}/${source.id}.json`, source.sources?.map(named))
+// The menu marks each catalog with its source's favicon, once scripts/favicons.mjs has fetched it.
+for (const option of options) {
+  const icon = catalogIcon(ledger.get(option.id)?.url)
+  if (icon && await access(icon).then(() => true, () => false)) option.icon = icon
+}
 const measured = await read('bench/encoder-test.json')
 let metrics = measured.encoderSha256 === binding.encoderSha256 && measured.catalogSha256 === options[0].sha256 ? measured.results.groups['split/test'] : null
 for (const file of ['bench/encoder-recovery-quality.json', 'bench/encoder-quality.json']) {
@@ -113,8 +119,10 @@ for (const file of ['bench/encoder-recovery-quality.json', 'bench/encoder-qualit
   if (quality.encoderSha256 === binding.encoderSha256 && quality.catalogSha256 === options[0].sha256) metrics = quality.historical['split/test']
 }
 if (!metrics && await access('bench/style-quality.json').then(() => true, () => false)) {
-  const quality = (await read('bench/style-quality.json')).demo
-  if (quality?.encoderSha256 === binding.encoderSha256 && quality.catalogSha256 === options[0].sha256) metrics = quality.metrics
+  const { demo: quality, reports } = await read('bench/style-quality.json')
+  // With the number of crops the test read, from the final report of the same encoder.
+  const count = Object.values(reports).find(report => report.encoderSha256 === binding.encoderSha256)?.results.scriptFiltered['role/test'].count
+  if (quality?.encoderSha256 === binding.encoderSha256 && quality.catalogSha256 === options[0].sha256 && count) metrics = { ...quality.metrics, renderedCount: count }
 }
 if (!metrics) throw new Error('Changed encoder/catalog evaluation')
 // Held-out case and script figures (train.style breakdown): every reference, then capitals, lowercase or other scripts against fewer.
@@ -123,11 +131,17 @@ if (breakdown.encoderSha256 !== binding.encoderSha256) throw new Error('Changed 
 metrics = { ...metrics, latinTop5: groups['script/Latn'].twin5, cyrillicTop5: groups['script/Cyrl'].twin5, arabicTop5: groups['script/Arab'].twin5, otherScriptTop5: groups['case/native'].twin5, hanziTop5: groups['slice/hanzi'].twin5,
   capitalsFromLowercaseTop5: cross.capitalsFromLowercase.twin5, lowercaseFromCapitalsTop5: cross.lowercaseFromCapitals.twin5,
   otherScriptsFromLatinTop5: cross.otherScriptsFromLatin.twin5, hanziFromLatinTop5: cross.hanziFromLatin.twin5 }
+// Pictures people bring, searched as the page's All (scripts/whatfontis.mjs, scripts/dafont.mjs): WhatFontIs-Bench photographs,
+// its final part, fonts never used to select the model; and DaFont forum requests with a confirmed answer, cropped by hand.
+const photos = await read('bench/whatfontis.json'), requests = await read('bench/dafont.json')
+for (const [name, report] of [['whatfontis', photos], ['dafont', requests]]) if (report.encoderSha256 !== binding.encoderSha256) throw new Error(`Changed encoder ${name} report; run scripts/${name}.mjs`)
+metrics = { ...metrics, photosTop1: photos.results.final.top1, photosTop5: photos.results.final.top5, photosCount: photos.results.final.images,
+  requestsTop1: requests.gpuFont.top1, requestsTop5: requests.gpuFont.top5, requestsCount: requests.gpuFont.requests }
 // Speed and download (checks/encoder.mjs): one whole match on WebGPU and on the CPU, and the gzipped model and Google catalog.
 const runtime = await read('bench/style-runtime.json'), measuredFiles = new Map(runtime.payload.map(file => [file.path, file]))
 if (runtime.encoderSha256 !== binding.encoderSha256 || measuredFiles.get(modelPath)?.sha256 !== binding.encoderSha256 || measuredFiles.get(options[0].file)?.sha256 !== options[0].sha256 || !runtime.match?.cpuMs) throw new Error('Changed encoder/catalog runtime; run checks/encoder.mjs')
 metrics = { ...metrics, matchWebgpuSeconds: runtime.match.webgpuMs / 1000, matchCpuSeconds: runtime.match.cpuMs / 1000,
   downloadMegabytes: (measuredFiles.get(modelPath).gzipBytes + measuredFiles.get(options[0].file).gzipBytes) / 1e6 }
 await writeFile('site.json', JSON.stringify({ ...binding, modelSha256: binding.encoderSha256, model: modelPath, modelBytes: bytes.length, fonts, catalogs: options, families: families.size, previews,
-  parameters: model.layers.reduce((sum, l) => sum + l.weights.length + l.bias.length, 0), metrics }) + '\n')
+  parameters: model.layers.reduce((sum, l) => sum + l.weights.length + l.bias.length, 0), weightBits: [...new Set(artifact.layers.map(l => l.bits ?? 8))].sort((a, b) => a - b), metrics }) + '\n')
 console.log(`Wrote site.json: ${options.map(o => `${o.name} (${o.families})`).join(', ')}. Fonts load from Google Fonts.`)
