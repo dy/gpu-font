@@ -1,5 +1,13 @@
 # Development
 
+## Before a pull request
+
+- `npm test`: the JavaScript suite (also run by CI on every push) and the Python suite.
+- `npm run stamp` after changing a page, stylesheet or module, so the pages pin the new content.
+- `node checks/catalog-demo.mjs` with `npm run demo` running, after changing the page or the matcher: the browser suite.
+- A model or catalog change goes through `node checks/encoder.mjs` and `npm run demo:build`, which rebind `site.json`; the figures in README and bench come from those files, never by hand.
+- Benchmarks are frozen: a change to a pinned preparation file needs the byte-for-byte check and a `repins` entry (bench/style.md).
+
 ## Run the demo
 
 The page runs straight from the repository, as [GitHub Pages](https://dy.github.io/gpu-font/) serves it: no build and no font files. It reads the model and catalogs from `models/encoder/` and loads every font from Google Fonts.
@@ -38,7 +46,7 @@ On the page:
 
 ## Catalogs
 
-A catalog is a JSON file of reference vectors, bound to the exact model that made them. Retraining the model means reindexing every catalog.
+A catalog is a JSON file of reference vectors, bound to the exact model that made them. Retraining the model means reindexing every catalog, and publishing a new minor version: users pin `^0.x`, so their own catalogs keep loading until they upgrade. Share links (`?style=`) carry the model's first 8 hex digits and stop showing matches under a new model.
 
 - **Google Fonts**: every family except color, emoji and letterless ones, from Chromium renders of each face.
 - **Other free sources** (Fontsource, Fontshare, Uncut, Velvetyne and more; each under its own licence): `node scripts/catalog-files.mjs` indexes the font files pinned in `bench/open-fonts.json`, in Chromium, with the same builder My fonts uses. Only names, links and vectors are committed; the fonts stay in `.data/`.
@@ -65,5 +73,6 @@ npm publish
 ## More
 
 - [bench/style.md](bench/style.md): the current encoder, its benchmark and results.
+- [bench/photos.md](bench/photos.md): photos, real forum requests and the shared font-finder set.
 - [todo.md](todo.md): what's next. [research.md](research.md): background.
 - Earlier experiments, not shipped: [ten fonts](bench/ten.md), [a hundred fonts](bench/hundred.md), [weight and italic](bench/faces.md), [deskew](bench/preparation.md), [retrieval pilot](bench/report.md).

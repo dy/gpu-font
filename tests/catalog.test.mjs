@@ -1,7 +1,7 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
 import { readFile } from 'node:fs/promises'
-import { base64, readCatalog, rankCatalog, embedWindows, preparationHash, sha256, readHeads, verdict, matchCatalog, foldTwins, pack, unpack } from '../src/catalog.mjs'
+import { base64, readCatalog, rankCatalog, embedWindows, preparationHash, sha256, readHeads, verdict, matchCatalog, foldTwins, pack, unpack, writeStyle, readStyle } from '../src/catalog.mjs'
 import { readNetwork, inferCPU } from '../src/network.mjs'
 
 const binding = { encoderSha256: 'encoder', preparationSha256: 'preparation' }
@@ -68,7 +68,7 @@ test('variable references keep distinct scripts and require every face to own a 
 })
 test('typed verdicts reproduce the head arithmetic; the script filter never returns a face lacking the script', () => {
   const zero = () => Array(128).fill(0), row = (d, v) => { const r = zero(); r[d] = v; return r }
-  const artifact = { heads: {
+  const artifact = { dimensions: 128, heads: {
     weight: { weights: [row(0, 1)], bias: [0], scale: 300, offset: 400 }, italic: { weights: [row(1, 2)], bias: [0] },
     script: { weights: [row(0, 1), row(1, 1)], bias: [0, 0], labels: ['Latn', 'Hani'] },
     category: { weights: [row(0, 1), zero()], bias: [0, 0], labels: ['SANS_SERIF', 'SERIF'] },
@@ -140,15 +140,15 @@ test('source embedding averages normalized windows, retaining direction rather t
 test('frozen Google catalog binds native encoder outputs and Python preparation hash without synthetic font labels', async () => {
   const bytes = await readFile('models/encoder/encoder.json'), artifact = JSON.parse(bytes), data = JSON.parse(await readFile('models/encoder/google-fonts.json'))
   const model = readNetwork(artifact)
-  assert.equal(model.fonts, null); assert.equal(model.outputs, 128)
+  assert.equal(model.fonts, null); assert.equal(model.outputs, artifact.dimensions); assert.equal(data.dimensions, artifact.dimensions)
   const binding = { encoderSha256: await sha256(bytes), preparationSha256: await preparationHash(artifact.preparation) }
   const catalog = readCatalog(data, binding)
   assert.equal(catalog.families, 2004)
   const input = { width: 1, height: 1, pixels: new Float32Array([0]) }
-  const a = inferCPU(model, input); assert.equal(a.length, 128)
+  const a = inferCPU(model, input); assert.equal(a.length, artifact.dimensions)
   assert.deepEqual(inferCPU(model, input), a)
   assert.throws(() => readNetwork({ ...artifact, fonts: ['fake'] }), /encoder/)
-  for (const change of [{ dimensions: 64 }, { normalization: 'none' }]) assert.throws(() => readNetwork({ ...artifact, ...change }))
+  for (const change of [{ dimensions: artifact.dimensions * 2 }, { normalization: 'none' }]) assert.throws(() => readNetwork({ ...artifact, ...change }))
 })
 
 test('base64 accepts exactly padded standard base64, as the grouped pattern it replaced', () => {
@@ -166,7 +166,7 @@ test('base64 accepts exactly padded standard base64, as the grouped pattern it r
 test('unionCatalogs searches read catalogs as one, owners shifted past earlier faces', async () => {
   const { unionCatalogs, rankCatalog } = await import('../src/catalog.mjs')
   const axis = i => { const v = new Float32Array(128); v[i] = 1; return v }
-  const read = (faces, rows, owners) => ({ faces, vectors: Float32Array.from(rows.flatMap(r => [...r])), owners, families: new Set(faces.map(f => f.familyId)).size })
+  const read = (faces, rows, owners) => ({ faces, vectors: Float32Array.from(rows.flatMap(r => [...r])), owners, families: new Set(faces.map(f => f.familyId)).size, dimensions: 128 })
   const a = read([{ id: 'a/400', familyId: 'a', family: 'A' }], [axis(0)], [0])
   const b = read([{ id: 'b/400', familyId: 'b', family: 'B' }, { id: 'b/700', familyId: 'b', family: 'B' }], [axis(1), axis(2)], [0, 1])
   const all = unionCatalogs([a, b])
@@ -175,7 +175,66 @@ test('unionCatalogs searches read catalogs as one, owners shifted past earlier f
   for (const [query, id] of [[axis(0), 'a/400'], [axis(1), 'b/400'], [axis(2), 'b/700']]) assert.equal(rankCatalog(query, all)[0].face.id, id)
   // A family in two catalogs counts once; nothing joins to an empty catalog.
   assert.equal(unionCatalogs([a, a]).families, 1)
-  assert.deepEqual(unionCatalogs([]), { faces: [], vectors: new Float32Array(0), owners: [], families: 0 })
+  assert.deepEqual(unionCatalogs([]), { faces: [], vectors: new Float32Array(0), owners: [], families: 0, dimensions: undefined })
+})
+
+test('subsetCatalog keeps the accepted faces with their own rows, owners renumbered, and ranks them as the whole would', async () => {
+  const { subsetCatalog } = await import('../src/catalog.mjs')
+  const axis = i => { const v = new Float32Array(128); v[i] = 1; return v }
+  const faces = [{ id: 'a/400', familyId: 'a', family: 'A', sourceId: 'x' }, { id: 'b/400', familyId: 'b', family: 'B', sourceId: 'y' }, { id: 'a/700', familyId: 'a', family: 'A', sourceId: 'x' }]
+  const whole = { faces, vectors: Float32Array.from([axis(0), axis(1), axis(2), axis(3)].flatMap(r => [...r])), owners: [0, 1, 2, 2], families: 2, dimensions: 128 }
+  const before = structuredClone(whole), x = subsetCatalog(whole, f => f.sourceId === 'x')
+  assert.deepEqual(whole, before, 'The whole catalog is left as it was')
+  assert.deepEqual([x.faces.map(f => f.id), x.owners, x.families], [['a/400', 'a/700'], [0, 1, 1], 1])
+  assert.deepEqual(x.vectors, Float32Array.from([axis(0), axis(2), axis(3)].flatMap(r => [...r])))
+  for (const [query, id] of [[axis(0), 'a/400'], [axis(3), 'a/700']]) assert.equal(rankCatalog(query, x)[0].face.id, id)
+  assert.deepEqual(rankCatalog(axis(1), x).map(m => m.family), ['a'], 'Faces left out never rank')
+  assert.deepEqual(subsetCatalog(whole, () => false), { faces: [], vectors: new Float32Array(0), owners: [], families: 0, dimensions: 128 })
+  assert.deepEqual(subsetCatalog(whole, () => true), whole, 'Keeping every face is the same catalog')
+  assert.deepEqual(subsetCatalog(x, f => f.id === 'a/700'), subsetCatalog(whole, f => f.id === 'a/700'), 'A subset of a subset is the subset of the whole')
+})
+
+test('a style link: 180 URL-safe characters that decode to the same direction and re-encode to themselves', async () => {
+  const { writeStyle, readStyle, unit } = await import('../src/catalog.mjs')
+  const model = '62e556d8b0a34aa18618cc9ddaa34a632f49117480f08b6e6cdcd998103b0605'
+  // Signed bytes in base64url: 127, -17, -64 are 7f ef c0, standard "f+/A", URL-safe "f-_A".
+  assert.equal(writeStyle(vector(0, 3), model), `62e556d8.fwAA${'A'.repeat(167)}`)
+  assert.equal(writeStyle(vector(0, -1), model), `62e556d8.gQAA${'A'.repeat(167)}`)
+  assert.equal(writeStyle([127, -17, -64, ...Array(125).fill(0)], model), `62e556d8.f-_A${'A'.repeat(167)}`)
+  let seed = 7
+  const next = () => (seed = seed * 16807 % 2147483647) / 2147483647 - .5
+  for (let i = 0; i < 200; i++) {
+    const v = unit(Array.from({ length: 128 }, next)), text = writeStyle(v, model), read = readStyle(text)
+    assert.match(text, /^62e556d8\.[A-Za-z0-9_-]{171}$/)
+    assert.equal(read.model, '62e556d8')
+    assert.ok(read.embedding.reduce((sum, x, d) => sum + x * v[d], 0) > .9999, 'Int8 keeps the direction')
+    assert.equal(writeStyle(read.embedding, model), text, 'A link opened and written again is the same link')
+  }
+  for (const bad of [undefined, null, '', '62e556d8', `62e556d8${'A'.repeat(171)}`, `62e556d8.${'A'.repeat(170)}`, `62e556d8.${'A'.repeat(172)}`, `62E556D8.fwAA${'A'.repeat(167)}`,
+    `62e556d8.f+AA${'A'.repeat(167)}`, `62e556d8.fwA=${'A'.repeat(167)}`, ` 62e556d8.fwAA${'A'.repeat(167)}`, `62e556d8.fwAA${'A'.repeat(167)}\n`]) assert.throws(() => readStyle(bad), /Invalid style/, JSON.stringify(bad))
+  assert.throws(() => readStyle(`62e556d8.${'A'.repeat(171)}`), /Zero embedding/)
+  for (const bad of [vector(0, 0), vector(0, NaN), [1]]) assert.throws(() => writeStyle(bad, model), /embedding/)
+})
+
+test('a 64-number embedding: catalogs, rows, heads and style links carry their own dimension', async () => {
+  const { packVectors } = await import('../src/references.mjs')
+  const binding = { encoderSha256: 'e'.repeat(64), preparationSha256: 'p'.repeat(64) }
+  const axis = (d, n = 64) => { const v = new Float32Array(n); v[d] = 1; return Array.from(v) }
+  const catalog = readCatalog({ version: 3, kind: 'font-catalog', ...binding, dimensions: 64, faces: [{ id: 'a/400', familyId: 'a', family: 'A' }, { id: 'b/400', familyId: 'b', family: 'B' }],
+    vectors: { ...packVectors([axis(0), axis(1)]), owners: [0, 1] } }, binding)
+  assert.equal(catalog.dimensions, 64); assert.equal(catalog.vectors.length, 128)
+  assert.deepEqual(rankCatalog(axis(1), catalog).map(m => m.family), ['b', 'a'])
+  assert.throws(() => rankCatalog(axis(1, 128), catalog), /dimensions/)
+  assert.equal(embedWindows([axis(2), axis(2)]).length, 64)
+  const heads = readHeads({ dimensions: 64, heads: { weight: { weights: [axis(0)], bias: [0], scale: 300, offset: 400 }, italic: { weights: [axis(1)], bias: [0] },
+    script: { weights: [axis(2), axis(3)], bias: [0, 0], labels: ['Latn', 'Cyrl'] }, category: { weights: [axis(4)], bias: [0], labels: ['SERIF'] }, fine: { weights: [axis(5)], bias: [0], labels: ['didone'] } } })
+  assert.equal(verdict(axis(3), heads).script[0].label, 'Cyrl')
+  const text = writeStyle(axis(7), 'a'.repeat(64)); assert.equal(text.length, 9 + 86); assert.deepEqual(Array.from(readStyle(text).embedding), axis(7))
+  assert.throws(() => readHeads({ dimensions: 128, heads: heads }), /head/)
+  // Rows of 64 join rows of 64, never rows of 128.
+  const other = { version: 3, kind: 'font-catalog', ...binding, dimensions: 128, faces: [{ id: 'c/400', familyId: 'c', family: 'C' }], vectors: { ...packVectors([axis(0, 128)]), owners: [0] } }
+  const { joinCatalogs } = await import('../src/references.mjs')
+  assert.throws(() => joinCatalogs(other, { version: 3, kind: 'font-catalog', ...binding, dimensions: 64, faces: [{ id: 'a/400', familyId: 'a', family: 'A' }], vectors: { ...packVectors([axis(0)]), owners: [0] } }), /differently/)
 })
 
 test('bit packing: the Python exporter\'s streams, every width\'s extremes, partial last bytes, and nothing', () => {
@@ -194,4 +253,14 @@ test('bit packing: the Python exporter\'s streams, every width\'s extremes, part
   const bytes = Int8Array.from([-127, 5, 127, -1])
   assert.deepEqual(pack(bytes, 8), new Uint8Array(bytes.buffer))
   assert.deepEqual([pack([], 4).length, unpack(new Uint8Array(0), 4, 0).length], [0, 0])
+})
+
+test('a catalog holds up to 100,000 faces: a captured catalogue of one face a family is far past the Google set\'s 8,132', () => {
+  const many = n => {
+    const faces = Array.from({ length: n }, (_, i) => ({ id: `f${i}`, familyId: `f${i}`, family: `F${i}` })), data = Buffer.alloc(n * 128)
+    for (let i = 0; i < n; i++) data[i * 128 + (i % 128)] = 127
+    return { ...catalog(), faces, vectors: { encoding: 'int8-base64', shape: [n, 128], data: data.toString('base64'), scales: Array(n).fill(1 / 127), owners: Array.from({ length: n }, (_, i) => i) } }
+  }
+  assert.equal(readCatalog(many(10001), binding).families, 10001)
+  assert.throws(() => readCatalog(many(100001), binding), /unique catalog faces/)
 })

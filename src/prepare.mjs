@@ -112,7 +112,7 @@ export function prepare(image, options = {}) {
   }
   border.sort((a, b) => a - b)
   const background = border[Math.floor(border.length / 2)]
-  const light = options.polarity === 'light' || (options.polarity == null && background < .5)
+  let light = options.polarity === 'light' || (options.polarity == null && background < .5)
   if (options.polarity != null && !['light', 'dark'].includes(options.polarity)) throw new RangeError('Polarity must be light or dark')
   for (let i = 0; i < gray.length; i++) gray[i] = Math.max(0, light ? gray[i] - background : background - gray[i])
   const pixels = new Float32Array(targetWidth * targetHeight).fill(1)
@@ -132,6 +132,18 @@ export function prepare(image, options = {}) {
     return count ? level / 255 : null
   }
   let contrast = contrastOf()
+  // The paper guess can pick the wrong side: dark letters on a mid-grey wall whose outer ring reads dark are taken for
+  // light text, and no ink clears the cutoff. When the other side's ink does, it is the text. A crop that prepares on the
+  // first guess never gets here, so its output is unchanged. The luminance repeats the first pass's arithmetic exactly.
+  if (options.polarity == null && !(contrast >= .08)) {
+    for (let row = 0; row < h; row++) for (let col = 0; col < w; col++) {
+      const p = ((y + row) * width + x + col) * 4, alpha = data[p + 3] / 255
+      const value = Math.fround((alpha * (data[p] * .2126 + data[p + 1] * .7152 + data[p + 2] * .0722) + (1 - alpha) * matte) / 255)
+      gray[row * w + col] = Math.max(0, light ? background - value : value - background)
+    }
+    const other = contrastOf()
+    if (other >= .08) { light = !light; contrast = other; result.polarity = light ? 'light' : 'dark' }
+  }
   if (contrast === null) return result
   if (contrast < .08) { result.contrast = contrast; result.status = 'low-contrast'; return result }
   let threshold = Math.max(.02, contrast * .08)

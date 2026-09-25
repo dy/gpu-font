@@ -9,7 +9,10 @@ import { readCatalog, embedWindows, matchCatalog, foldTwins, sha256, preparation
 const MODEL = new URL('../models/encoder/encoder.json', import.meta.url)
 export const catalogs = {
   'google-fonts': new URL('../models/encoder/google-fonts.json', import.meta.url),
+  dafont: new URL('../models/encoder/catalogs/dafont.json', import.meta.url),
+  'adobe-fonts': new URL('../models/encoder/catalogs/adobe-fonts.json', import.meta.url),
   debian: new URL('../models/encoder/catalogs/debian.json', import.meta.url),
+  fontlibrary: new URL('../models/encoder/catalogs/fontlibrary.json', import.meta.url),
   other: new URL('../models/encoder/catalogs/other.json', import.meta.url)
 }
 
@@ -48,6 +51,8 @@ export async function createMatcher(catalogUrl = catalogs['google-fonts'], model
   let catalog
   try { catalog = readCatalog(await data, encoder.binding) } catch (error) { encoder.destroy(); throw error }
   return {
+    // Scores below it mean the crop's font is probably in no catalog; null when the model ships none.
+    threshold: encoder.model.threshold,
     // Fonts best first, identical designs folded into one entry with their `siblings`; [] when the crop holds no text.
     async match(imageData) {
       const { status, windows } = prepareLine(imageData, { ...encoder.preparation, deskew: true, sampler: 'windows' })

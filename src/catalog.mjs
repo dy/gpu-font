@@ -24,11 +24,14 @@ export function unpack(bytes, bits, count) {
   }
   return values
 }
-// Catalog vectors: 128 dimensions a row, one scale per row, 8 or 4 bits a dimension.
+// Catalog vectors: `dimensions` numbers a row (the encoder's output, 128 or 64), one scale per row, 8 or 4 bits a number.
 const VECTOR_BITS = { 'int8-base64': 8, 'int4-base64': 4 }
-export function rowBytes(vectors) {
+// An embedding has a multiple of 16 numbers, 16 to 1024: what a style link or a catalog row can be read as.
+export const validDimensions = d => Number.isInteger(d) && d >= 16 && d <= 1024 && d % 16 === 0
+export function rowBytes(vectors, dimensions) {
   if (!VECTOR_BITS[vectors?.encoding]) throw new Error('Unknown vector encoding')
-  return 128 * VECTOR_BITS[vectors.encoding] / 8
+  if (!validDimensions(dimensions)) throw new Error('Invalid embedding dimensions')
+  return dimensions * VECTOR_BITS[vectors.encoding] / 8
 }
 
 export function unit(values) {
@@ -40,7 +43,8 @@ export function unit(values) {
 
 export function embedWindows(projections) {
   if (!Array.isArray(projections) || !projections.length || projections.length > 3) throw new Error('Expected one to three projections')
-  const sum = new Float32Array(128)
+  if (!validDimensions(projections[0]?.length)) throw new Error('Invalid embedding dimensions')
+  const sum = new Float32Array(projections[0].length)
   for (const p of projections) {
     if (p?.length !== sum.length) throw new Error('Invalid embedding dimensions')
     const vector = unit(p)
@@ -50,10 +54,10 @@ export function embedWindows(projections) {
 }
 
 export function readCatalog(data, binding) {
-  if (!data || ![1, 2, 3].includes(data.version) || data.kind !== 'font-catalog' || data.dimensions !== 128 || (data.version === 3 ? data.referencesPerFace !== undefined : ![1, 4].includes(data.referencesPerFace))) throw new Error('Invalid font catalog')
-  if (!binding?.encoderSha256 || !binding?.preparationSha256 || data.encoderSha256 !== binding.encoderSha256 || data.preparationSha256 !== binding.preparationSha256) throw new Error('Catalog uses a different encoder or preparation')
-  const faces = data.faces, v = data.vectors
-  if (!Array.isArray(faces) || !faces.length || faces.length > 10000 || faces.some(f => !f || ['id', 'familyId', 'family'].some(k => typeof f[k] !== 'string' || !f[k])) || new Set(faces.map(f => f.id)).size !== faces.length) throw new Error('Expected unique catalog faces')
+  if (!data || ![1, 2, 3].includes(data.version) || data.kind !== 'font-catalog' || !validDimensions(data.dimensions) || (data.version === 3 ? data.referencesPerFace !== undefined : ![1, 4].includes(data.referencesPerFace))) throw new Error('Invalid font catalog')
+  if (!binding?.encoderSha256 || !binding?.preparationSha256 || data.encoderSha256 !== binding.encoderSha256 || data.preparationSha256 !== binding.preparationSha256) throw new Error('Catalog was built with a different model: rebuild it with this one')
+  const faces = data.faces, v = data.vectors, dimensions = data.dimensions
+  if (!Array.isArray(faces) || !faces.length || faces.length > 100000 || faces.some(f => !f || ['id', 'familyId', 'family'].some(k => typeof f[k] !== 'string' || !f[k])) || new Set(faces.map(f => f.id)).size !== faces.length) throw new Error('Expected unique catalog faces')
   const names = new Map()
   for (const f of faces) {
     if (names.has(f.familyId) && (data.version === 1 || names.get(f.familyId) !== f.family)) throw new Error('Conflicting catalog families')
@@ -61,8 +65,8 @@ export function readCatalog(data, binding) {
   }
   const rows = data.version === 3 ? v?.shape?.[0] : faces.length * data.referencesPerFace
   if (!Number.isInteger(rows) || rows < faces.length || rows > 640000) throw new Error('Invalid reference count')
-  if (!VECTOR_BITS[v?.encoding] || JSON.stringify(v.shape) !== JSON.stringify([rows, 128])) throw new Error('Invalid vector shape')
-  const size = rows * rowBytes(v)
+  if (!VECTOR_BITS[v?.encoding] || JSON.stringify(v.shape) !== JSON.stringify([rows, dimensions])) throw new Error('Invalid vector shape')
+  const size = rows * rowBytes(v, dimensions)
   if (typeof v.data !== 'string' || v.data.length > Math.ceil(size / 3) * 4 || !base64(v.data)) throw new Error('Invalid vector bytes')
   const binary = atob(v.data), bytes = new Uint8Array(binary.length)
   for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i)
@@ -73,32 +77,61 @@ export function readCatalog(data, binding) {
   v.owners.forEach(i => counts[i]++)
   if (counts.some(n => data.version === 3 ? n < 1 : n !== data.referencesPerFace)) throw new Error('Missing catalog owner')
   // Dequantize and L2-normalize each row in place; plain loops keep per-face catalogs (tens of thousands of rows) fast.
-  const packed = unpack(bytes, VECTOR_BITS[v.encoding], rows * 128), vectors = new Float32Array(rows * 128)
-  for (let r = 0, o = 0; r < rows; r++, o += 128) {
+  const packed = unpack(bytes, VECTOR_BITS[v.encoding], rows * dimensions), vectors = new Float32Array(rows * dimensions)
+  for (let r = 0, o = 0; r < rows; r++, o += dimensions) {
     let norm = 0
-    for (let d = 0; d < 128; d++) { const value = Math.fround(packed[o + d] * v.scales[r]); vectors[o + d] = value; norm += value * value }
+    for (let d = 0; d < dimensions; d++) { const value = Math.fround(packed[o + d] * v.scales[r]); vectors[o + d] = value; norm += value * value }
     if (!Number.isFinite(norm)) throw new Error('Invalid embedding')  // float32 overflow, as stored
     if (!(norm > 1e-24)) throw new Error('Zero embedding')
     norm = Math.sqrt(norm)
-    for (let d = 0; d < 128; d++) vectors[o + d] /= norm
+    for (let d = 0; d < dimensions; d++) vectors[o + d] /= norm
   }
-  return { faces: faces.map(f => ({ ...f })), vectors, owners: [...v.owners], families: names.size }
+  return { faces: faces.map(f => ({ ...f })), vectors, owners: [...v.owners], families: names.size, dimensions }
 }
 
 // Read catalogs searched as one: their faces and rows in order, each row's owner shifted past the faces before it.
 export function unionCatalogs(catalogs) {
+  const dimensions = catalogs[0]?.dimensions
+  if (catalogs.some(c => c.dimensions !== dimensions)) throw new Error('Catalogs of different embedding dimensions')
   const faces = catalogs.flatMap(c => c.faces), vectors = new Float32Array(catalogs.reduce((n, c) => n + c.vectors.length, 0)), owners = []
   let row = 0, base = 0
   for (const c of catalogs) { vectors.set(c.vectors, row); row += c.vectors.length; for (const owner of c.owners) owners.push(owner + base); base += c.faces.length }
-  return { faces, vectors, owners, families: new Set(faces.map(f => f.familyId)).size }
+  return { faces, vectors, owners, families: new Set(faces.map(f => f.familyId)).size, dimensions }
+}
+
+// A read catalog cut to the faces `keep` accepts, with their rows: one source of a grouped catalog, searched alone.
+export function subsetCatalog(catalog, keep) {
+  const index = new Map(), faces = [], rows = []
+  catalog.faces.forEach((face, i) => { if (keep(face)) { index.set(i, faces.length); faces.push(face) } })
+  catalog.owners.forEach((owner, row) => { if (index.has(owner)) rows.push(row) })
+  const d = catalog.dimensions, vectors = new Float32Array(rows.length * d)
+  rows.forEach((row, i) => vectors.set(catalog.vectors.subarray(row * d, row * d + d), i * d))
+  return { faces, vectors, owners: rows.map(row => index.get(catalog.owners[row])), families: new Set(faces.map(f => f.familyId)).size, dimensions: d }
+}
+
+// A style as URL-safe text: the first 8 hex digits of the model that read it, a dot, then its values as signed bytes in
+// base64url (180 characters for 128 numbers). A cosine search reads only direction, so the vector is scaled to fill int8.
+export function writeStyle(embedding, modelSha256) {
+  if (!validDimensions(embedding?.length)) throw new Error('Invalid embedding dimensions')
+  const v = unit(embedding), top = Math.max(...v.map(Math.abs)), bytes = Int8Array.from(v, x => Math.round(x / top * 127))
+  return `${modelSha256.slice(0, 8)}.${btoa(String.fromCharCode(...new Uint8Array(bytes.buffer))).replaceAll('+', '-').replaceAll('/', '_').replace(/=+$/, '')}`
+}
+// { model, embedding }: the model's 8 hex digits, for the caller to compare with its own, and the unit vector.
+export function readStyle(text) {
+  const [, model, data] = /^([0-9a-f]{8})\.([\w-]{22,1366})$/.exec(text ?? '') ?? []
+  if (!data) throw new Error('Invalid style')
+  const bytes = Int8Array.from(atob(data.replaceAll('-', '+').replaceAll('_', '/') + '='.repeat((4 - data.length % 4) % 4)), c => c.charCodeAt(0))
+  if (!validDimensions(bytes.length)) throw new Error('Invalid style')
+  return { model, embedding: unit(bytes) }
 }
 
 // Optional typed verdicts shipped with the encoder: weight, italic, script, Google category and fine style class.
 export function readHeads(artifact) {
-  const h = artifact?.heads
+  const h = artifact?.heads, dimensions = artifact?.dimensions
   if (h === undefined) return null
+  if (!validDimensions(dimensions)) throw new Error('Invalid embedding dimensions')
   const layer = (value, rows, name) => {
-    if (!Array.isArray(value?.weights) || value.weights.length !== rows || value.weights.some(r => !Array.isArray(r) || r.length !== 128 || !r.every(Number.isFinite)) || !Array.isArray(value.bias) || value.bias.length !== rows || !value.bias.every(Number.isFinite)) throw new Error(`Invalid ${name} head`)
+    if (!Array.isArray(value?.weights) || value.weights.length !== rows || value.weights.some(r => !Array.isArray(r) || r.length !== dimensions || !r.every(Number.isFinite)) || !Array.isArray(value.bias) || value.bias.length !== rows || !value.bias.every(Number.isFinite)) throw new Error(`Invalid ${name} head`)
     return { weights: value.weights.map(r => Float32Array.from(r)), bias: Float32Array.from(value.bias) }
   }
   const labelled = (value, name) => {
@@ -155,13 +188,14 @@ export function matchCatalog(embedding, catalog, judged = null) {
 
 // `script` skips faces that cannot draw it; faces without declared coverage stay eligible.
 export function rankCatalog(embedding, catalog, { script } = {}) {
-  if (embedding?.length !== 128) throw new Error('Invalid embedding dimensions')
+  const d = catalog.dimensions
+  if (embedding?.length !== d) throw new Error('Invalid embedding dimensions')
   const query = unit(embedding), best = new Map()
   for (let row = 0; row < catalog.owners.length; row++) {
     const face = catalog.faces[catalog.owners[row]]
     if (script && Array.isArray(face.scripts) && !face.scripts.includes(script)) continue
     let score = 0
-    for (let d = 0; d < 128; d++) score += query[d] * catalog.vectors[row * 128 + d]
+    for (let i = 0; i < d; i++) score += query[i] * catalog.vectors[row * d + i]
     score = Math.max(-1, Math.min(1, score))
     const previous = best.get(face.familyId)
     if (!previous || score > previous.score || (score === previous.score && face.id < previous.face.id)) best.set(face.familyId, { family: face.familyId, score, face })

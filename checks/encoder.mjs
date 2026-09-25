@@ -9,7 +9,7 @@ import { cpus } from 'node:os'
 import { gzipSync, brotliCompressSync } from 'node:zlib'
 import { chromium } from 'playwright'
 import { readNetwork, inferCPU } from '../src/network.mjs'
-import { readCatalog, preparationHash } from '../src/catalog.mjs'
+import { readCatalog, preparationHash, validDimensions } from '../src/catalog.mjs'
 
 if (process.argv.length !== 2 && process.argv.length !== 5) throw new Error('Pass encoder, matching catalog, and report paths, or no arguments for the deployed model')
 const [path = 'models/encoder/encoder.json', catalogPath = 'models/encoder/google-fonts.json', reportPath = 'bench/encoder-runtime.json'] = process.argv.slice(2)
@@ -19,7 +19,7 @@ if (child.error || child.status !== 0) throw child.error || new Error('Encoder r
 const bytes = await readFile(path), encoder = JSON.parse(bytes), reference = JSON.parse(await readFile(referencePath))
 const hash = bytes => createHash('sha256').update(bytes).digest('hex')
 assert.equal(hash(bytes), reference.encoderSha256)
-assert.equal(encoder.kind, 'font-encoder'); assert.equal(encoder.dimensions, 128); assert.equal(encoder.fonts, undefined)
+assert.equal(encoder.kind, 'font-encoder'); assert.ok(validDimensions(encoder.dimensions), `${encoder.dimensions} dimensions`); assert.equal(encoder.fonts, undefined)
 readCatalog(JSON.parse(await readFile(catalogPath)), { encoderSha256: hash(bytes), preparationSha256: await preparationHash(encoder.preparation) })
 const artifact = encoder
 const model = readNetwork(artifact), error = (a, b) => Math.max(...a.map((v, i) => Math.abs(v - b[i])))

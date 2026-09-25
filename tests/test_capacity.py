@@ -5,9 +5,10 @@ import unittest
 import numpy as np
 import torch
 
+from scripts.corpus import ROOT
 from train.encoder import load_encoder
 from train.encoder_data import save
-from train.ten_model import Classifier, widen, export, load_export, pack_bits, unpack_bits, LARGE_ARCH, WIDER_ARCH, WIDEST_ARCH, CORPUS_ARCH
+from train.ten_model import Classifier, widen, export, load_export, pack_bits, unpack_bits, cluster_values, clustered, clusters_of, plain_state, export_clusters, LARGE_ARCH, WIDER_ARCH, WIDEST_ARCH, STUDENT_ARCH, CORPUS_ARCH
 
 
 class CapacityTests(unittest.TestCase):
@@ -64,6 +65,65 @@ class CapacityTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmp:
             path=Path(tmp)/'encoder.json';save(path,{**{k:v for k,v in six.items() if k!='fonts'},'kind':'font-encoder','dimensions':128,'normalization':'l2'})
             with torch.no_grad():torch.testing.assert_close(load_encoder(path)(x),restored(x),atol=0,rtol=0)
+
+    def test_a_separable_student_infers_alike_in_pytorch_and_the_browser_code(self):
+        import json,subprocess,tempfile
+        from pathlib import Path
+        torch.manual_seed(15);model=Classifier(64,architecture=STUDENT_ARCH,dilations=[1,1,2,2,1]).eval()
+        self.assertEqual([c.groups for c in model.convs],[1,96,1,192,1,288,1,384,1]);self.assertLess(sum(p.numel() for p in model.parameters()),400000)
+        artifact,restored=export(model,[str(i) for i in range(64)],{'width':128,'height':48,'windows':3},bits=6)
+        self.assertEqual([l['shape'] for l in artifact['layers']][:3],[[96,1,3,3],[96,1,3,3],[192,96,1,1]])
+        pixels=torch.rand(1,1,30,77)
+        with torch.no_grad():expected=restored(pixels)[0].tolist()
+        with tempfile.TemporaryDirectory() as tmp:
+            Path(tmp,'model.json').write_text(json.dumps({**{k:v for k,v in artifact.items() if k!='fonts'},'kind':'font-encoder','dimensions':64,'normalization':'l2'}))
+            Path(tmp,'window.json').write_text(json.dumps({'width':77,'height':30,'pixels':pixels.flatten().tolist()}))
+            out=subprocess.run(['node','--input-type=module','-e',f"""
+import {{ readFileSync }} from 'node:fs'; import {{ readNetwork, inferCPU }} from '{ROOT}/src/network.mjs'
+const w = JSON.parse(readFileSync('{tmp}/window.json')), model = readNetwork(JSON.parse(readFileSync('{tmp}/model.json')))
+console.log(JSON.stringify(Array.from(inferCPU(model, {{ width: w.width, height: w.height, pixels: Float32Array.from(w.pixels) }}))))"""],capture_output=True,text=True,check=True)
+        ours=json.loads(out.stdout);scale=max(abs(v) for v in expected)
+        self.assertLess(max(abs(a-b) for a,b in zip(ours,expected)),1e-4*max(scale,1))
+        self.assertRaises(ValueError,widen,model,0,WIDER_ARCH)
+        # Clustered 4-bit weights: 16 shared values per layer, indices in the file, exact on reload and in JavaScript.
+        book,index=cluster_values(np.array([[-1,-.9,.2,.25,1],[0,.1,-.5,.5,.95]]),2)
+        self.assertEqual(book.shape,(4,));self.assertTrue((np.diff(book)>=0).all());self.assertTrue(((index>=0)&(index<4)).all());self.assertEqual(index.shape,(2,5))
+        clustered,restored=export(model,[str(i) for i in range(64)],{'width':128,'height':48,'windows':3},bits=4,codebook=True)
+        self.assertEqual(len(clustered['layers'][1]['codebook']),16);self.assertEqual(len(base64.b64decode(clustered['layers'][1]['weights'])),96*9*4//8)
+        with torch.no_grad():torch.testing.assert_close(load_export(clustered)(pixels),restored(pixels),atol=0,rtol=0)
+        with tempfile.TemporaryDirectory() as tmp:
+            Path(tmp,'model.json').write_text(json.dumps({**{k:v for k,v in clustered.items() if k!='fonts'},'kind':'font-encoder','dimensions':64,'normalization':'l2'}))
+            Path(tmp,'window.json').write_text(json.dumps({'width':77,'height':30,'pixels':pixels.flatten().tolist()}))
+            out=subprocess.run(['node','--input-type=module','-e',f"""
+import {{ readFileSync }} from 'node:fs'; import {{ readNetwork, inferCPU }} from '{ROOT}/src/network.mjs'
+const w = JSON.parse(readFileSync('{tmp}/window.json')), model = readNetwork(JSON.parse(readFileSync('{tmp}/model.json')))
+console.log(JSON.stringify(Array.from(inferCPU(model, {{ width: w.width, height: w.height, pixels: Float32Array.from(w.pixels) }}))))"""],capture_output=True,text=True,check=True)
+            with torch.no_grad():expected=restored(pixels)[0].tolist()
+            self.assertLess(max(abs(a-b) for a,b in zip(json.loads(out.stdout),expected)),1e-4*max(max(abs(v) for v in expected),1))
+
+
+        torch.manual_seed(12);model=Classifier(128,context=True,wide=True)
+        large=widen(model,noise=.0001)
+        self.assertFalse(torch.equal(large.convs[0].weight[:32],large.convs[0].weight[32:]))
+        output=large(torch.rand(4,1,24,50));loss=output.square().mean();loss.backward()
+        self.assertTrue(torch.isfinite(loss));self.assertGreater(float(large.convs[0].weight.grad.abs().sum()),0)
+        self.assertTrue(all(torch.isfinite(p.grad).all() for p in large.parameters() if p.grad is not None))
+
+    def test_a_clustered_model_trains_only_its_codebooks_scales_and_biases_and_exports_exactly(self):
+        torch.manual_seed(4);model=Classifier(64,architecture=STUDENT_ARCH,dilations=[1,1,2,2,1]);q=clustered(model,4).eval();x=torch.rand(2,1,40,90)
+        names=[n for n,p in q.named_parameters() if p.requires_grad]
+        self.assertTrue(all(n.endswith(('.bias','.codebook','.scale')) for n in names));self.assertLess(sum(p.numel() for p in q.parameters() if p.requires_grad),5000)
+        # The materialized state is an ordinary folded checkpoint; the artifact from the clusters reproduces it bit for bit.
+        state=plain_state(q);plain=Classifier(64,training=False,architecture=STUDENT_ARCH,dilations=[1,1,2,2,1]).eval();plain.load_state_dict(state)
+        with torch.no_grad():torch.testing.assert_close(plain(x),q(x),atol=1e-5,rtol=1e-5)
+        biases=[state[f'{n}.bias'] for n in [*(f'convs.{i}' for i in range(len(q.convs))),'head']]
+        artifact,restored=export_clusters(clusters_of(q),biases,q.architecture,q.dilations,[str(i) for i in range(64)],{'width':128,'height':48,'windows':3})
+        self.assertEqual([len(l['codebook']) for l in artifact['layers']],[16]*10)
+        with torch.no_grad():torch.testing.assert_close(load_export(artifact)(x),restored(x),atol=0,rtol=0);torch.testing.assert_close(restored(x),q(x),atol=1e-5,rtol=1e-5)
+        # One training step moves the codebooks, never the indices.
+        before=q.convs[1].parametrizations.weight[0].index.clone();opt=torch.optim.SGD([p for p in q.parameters() if p.requires_grad],lr=.1)
+        q.train();q(x).sum().backward();opt.step()
+        self.assertTrue(torch.equal(q.convs[1].parametrizations.weight[0].index,before));self.assertFalse(torch.allclose(q.eval()(x),restored(x)))
 
     def test_duplicated_features_can_learn_different_filters(self):
         torch.manual_seed(12);model=Classifier(128,context=True,wide=True)

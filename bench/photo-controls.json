@@ -1,0 +1,38 @@
+{
+ "photos": {
+  "sample": "WhatFontIs-Bench development photos of Google families, every fifteenth",
+  "cases": 199,
+  "photo": {
+   "top1": 0.2513,
+   "top5": 0.5126
+  },
+  "binarized": {
+   "top1": 0.2864,
+   "top5": 0.5427
+  },
+  "clean": {
+   "top1": 0.5528,
+   "top5": 0.794
+  },
+  "clean binarized": {
+   "top1": 0.4573,
+   "top5": 0.7286
+  }
+ },
+ "forum": {
+  "sample": "the cropped DaFont requests",
+  "cases": 151,
+  "photo": {
+   "top1": 0.2848,
+   "top5": 0.4768
+  },
+  "binarized": {
+   "top1": 0.2848,
+   "top5": 0.4636
+  }
+ },
+ "variants": {
+  "clean": "the word at 64 px in the pinned instance of the photo's face, black on white",
+  "binarized": "Otsu's threshold on luminance, the minority side drawn black on white"
+ }
+}

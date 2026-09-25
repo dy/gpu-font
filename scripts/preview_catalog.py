@@ -8,13 +8,17 @@ import subprocess
 import numpy as np
 import torch
 
-from train.encoder import ROOT, DIMENSIONS, load_encoder, embed, references
+from train.encoder import ROOT, load_encoder, embed
+from train.ten_model import pack_bits
 from train.encoder_data import save, validate_shard
 from train.encoder_catalog import preparation_hash, read_catalog
 from train.robustness import read, sha
 
 RECIPES={'all':{'latin-lower-v1','latin-upper-v1','words-a-v1','words-b-v1','digits-v1'},'words':{'words-a-v1','words-b-v1'},
          'alphabet':{'latin-lower-v1','latin-upper-v1'},'provided':{'provided-v1'}}
+# The catalog to search with: every face by every line it has, so a face lacking glyphs for one line stands on the others.
+# The recipes above hold one fixed set of lines per face, so that they compare like with like.
+PARTIAL={'captured'};RECIPES['captured']=set().union(*RECIPES.values())
 
 
 def make_catalog(records,vectors,encoder_path,manifest_hash,recipe):
@@ -26,7 +30,7 @@ def make_catalog(records,vectors,encoder_path,manifest_hash,recipe):
     selected=[records[i] for i in ids];face_ids=sorted({r['faceId'] for r in selected});faces=[]
     for face_id in face_ids:
         rows=[r for r in selected if r['faceId']==face_id];first=rows[0]
-        if {r['recipeId'] for r in rows}!=RECIPES[recipe]:raise ValueError('Incomplete recipe for '+face_id)
+        if recipe not in PARTIAL and {r['recipeId'] for r in rows}!=RECIPES[recipe]:raise ValueError('Incomplete recipe for '+face_id)
         for key in ['familyId','family','styleName','weight','slant','axes','foundry']:
             if len({json.dumps(r[key],sort_keys=True) for r in rows})!=1:raise ValueError('Conflicting face metadata: '+key)
         faces.append({'id':face_id,'familyId':first['familyId'],'family':first['family'],'styleName':first['styleName'],
@@ -34,14 +38,16 @@ def make_catalog(records,vectors,encoder_path,manifest_hash,recipe):
                       'axes':first['axes'],'foundry':first['foundry'],'scripts':sorted({s for r in rows for s in r['scripts']}),
                       'sourceUrl':first['sourceUrl'],'referenceIds':[r['id'] for r in rows]})
     rows=sorted(range(len(selected)),key=lambda k:(face_ids.index(selected[k]['faceId']),selected[k]['id']))
-    refs,_,packed,scales=references(vectors[ids][rows],[{'family':selected[k]['id']} for k in rows],[selected[k]['id'] for k in rows],1,True)
+    # Four bits a dimension, as the shipped catalogs pack their rows (bench/style.md, Quantization).
+    unit=vectors[ids][rows];unit=unit/np.linalg.norm(unit,axis=1,keepdims=True);scales=np.maximum(np.abs(unit).max(1)/7,1e-12)
+    packed=np.round(unit/scales[:,None]).clip(-7,7).astype(np.int8)
     owners=np.array([face_ids.index(selected[k]['faceId']) for k in rows]);encoder=read(encoder_path)
     catalog={'version':3,'kind':'font-catalog','encoderSha256':sha(encoder_path),'preparationSha256':preparation_hash(encoder['preparation']),
-             'dimensions':DIMENSIONS,'sourceManifestSha256':manifest_hash,'referenceRecipe':recipe,
-             'faces':faces,'vectors':{'encoding':'int8-base64','shape':list(packed.shape),'data':base64.b64encode(packed.tobytes()).decode(),
-                                       'scales':scales[:,0].tolist(),'owners':owners.tolist()}}
+             'dimensions':encoder['dimensions'],'sourceManifestSha256':manifest_hash,'referenceRecipe':recipe,
+             'faces':faces,'vectors':{'encoding':'int4-base64','shape':list(packed.shape),'data':base64.b64encode(pack_bits(packed,4)).decode(),
+                                       'scales':scales.tolist(),'owners':owners.tolist()}}
     decoded,decoded_owners,labels=read_catalog(catalog,encoder_path)
-    np.testing.assert_allclose(decoded,refs,atol=1e-6);np.testing.assert_array_equal(decoded_owners,owners)
+    rows4=packed*scales[:,None];np.testing.assert_allclose(decoded,rows4/np.linalg.norm(rows4,axis=1,keepdims=True),atol=1e-6);np.testing.assert_array_equal(decoded_owners,owners)
     if labels!=face_ids:raise ValueError('Changed face order')
     return catalog
 
@@ -51,7 +57,7 @@ def complete(records,recipe):
     have={}
     for r in records:
         if r['recipeId'] in RECIPES[recipe]:have.setdefault(r['faceId'],set()).add(r['recipeId'])
-    ready={f for f,s in have.items() if s==RECIPES[recipe]}
+    ready={f for f,s in have.items() if s==RECIPES[recipe] or recipe in PARTIAL}
     return [i for i,r in enumerate(records) if r['faceId'] in ready],sorted(set(have)-ready)
 
 

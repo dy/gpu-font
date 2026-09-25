@@ -1,15 +1,15 @@
 {
-  "encoderSha256": "62e556d8b0a34aa18618cc9ddaa34a632f49117480f08b6e6cdcd998103b0605",
-  "dimensions": 128,
+  "encoderSha256": "f57d7254b01360c6faa09df9fbb83960692d2733c1d7df8ff0d9959a37adcdc5",
+  "dimensions": 64,
   "hardware": "Apple M4 Max",
-  "cpuError": 0.0000011324882507324219,
-  "gpuError": 0.0000037550926208496094,
-  "embeddingError": 2.821551719836557e-7,
+  "cpuError": 1.1175870895385742e-7,
+  "gpuError": 1.6391277313232422e-7,
+  "embeddingError": 2.0417244944725965e-7,
   "timing": {
     "adapter": "metal-3",
-    "initializationMs": 204.89999961853027,
-    "warmWindowP50Ms": 2.8999996185302734,
-    "warmWindowP95Ms": 9.5,
+    "initializationMs": 239.10000038146973,
+    "warmWindowP50Ms": 0.9000005722045898,
+    "warmWindowP95Ms": 1.3999996185302734,
     "samples": 20,
     "width": 128,
     "height": 48
@@ -18,67 +18,67 @@
     "text": "Quiet rivers flow",
     "font": "56px serif",
     "median": "of 9 WebGPU and 3 CPU matches after one warm-up",
-    "webgpuMs": 132.80000019073486,
-    "cpuMs": 12467.199999809265
+    "webgpuMs": 50.89999961853027,
+    "cpuMs": 1179.0999994277954
   },
   "payload": [
     {
       "path": "models/encoder/encoder.json",
-      "sha256": "62e556d8b0a34aa18618cc9ddaa34a632f49117480f08b6e6cdcd998103b0605",
-      "bytes": 4232607,
-      "gzipBytes": 2905503,
-      "brotliBytes": 2461241
+      "sha256": "f57d7254b01360c6faa09df9fbb83960692d2733c1d7df8ff0d9959a37adcdc5",
+      "bytes": 524855,
+      "gzipBytes": 353648,
+      "brotliBytes": 329259
     },
     {
       "path": "models/encoder/google-fonts.json",
-      "sha256": "5e52ac1282c420b60a5fb4e77423bdb4f0ab8ba6c2e8de41d3a10a6be8d94bd2",
-      "bytes": 6404810,
-      "gzipBytes": 3067326,
-      "brotliBytes": 2874639
+      "sha256": "a7acc3fae7cc6023f65819d2d96f8fe282d3bf300f1952b39c481285d33e2e26",
+      "bytes": 3590287,
+      "gzipBytes": 846649,
+      "brotliBytes": 693721
     },
     {
       "path": "src/network.mjs",
-      "sha256": "f20e7033994fe1151d44ad40033ab2bbd02a13bbbaef8a8b92a2fafb366fc181",
-      "bytes": 6690,
-      "gzipBytes": 2337,
-      "brotliBytes": 2086
+      "sha256": "2af6a9d6dbff1052c3ae9f0354fff3cc076fe51f5a3929db2ab25d62070b3fb8",
+      "bytes": 8742,
+      "gzipBytes": 3006,
+      "brotliBytes": 2660
     },
     {
       "path": "src/network-gpu.mjs",
-      "sha256": "fa27d2362027749dd689b0478cd4eca35839eaa0f40331f1f586fef0a2633f61",
-      "bytes": 6123,
-      "gzipBytes": 2121,
-      "brotliBytes": 1909
+      "sha256": "2330f1934b9d17c4e04bba90c379cf34d141d7de9c7ad0ff00d08cc456e0521d",
+      "bytes": 6375,
+      "gzipBytes": 2247,
+      "brotliBytes": 2006
     },
     {
       "path": "src/catalog.mjs",
-      "sha256": "64a49b0317dff5dfde54be37cc5630fd9febfe422b866bf25cc18d01b64e67ca",
-      "bytes": 9730,
-      "gzipBytes": 3547,
-      "brotliBytes": 3134
+      "sha256": "897c779fe21d03db0727f5fc671a4d040b7e8deb49846c38bbfa1cfdea8ab086",
+      "bytes": 14777,
+      "gzipBytes": 5185,
+      "brotliBytes": 4584
     },
     {
       "path": "src/prepare.mjs",
-      "sha256": "c48ce58778ad111f611ed96ad73a41b0c5821c2d1733cc3368931c4abafd7a13",
-      "bytes": 5811,
-      "gzipBytes": 2127,
-      "brotliBytes": 1897
+      "sha256": "f4a0b31a2afb86592cbbb519818c86437f3df88f08b41ce7d6100c654e743f7a",
+      "bytes": 12058,
+      "gzipBytes": 4204,
+      "brotliBytes": 3712
     },
     {
       "path": "src/input.mjs",
-      "sha256": "6499378ce15d196937fab2e76c87c4b3bdd802981a01e363a0fbcddeb5b6d853",
-      "bytes": 2150,
-      "gzipBytes": 916,
-      "brotliBytes": 799
+      "sha256": "2cf5262269f9a5fda3504da2f7b83d16bbe4fe8aba88f78dfac42405b7476af4",
+      "bytes": 2492,
+      "gzipBytes": 1041,
+      "brotliBytes": 903
     },
     {
       "path": "src/line.mjs",
-      "sha256": "e35378b08a94e5e0539fabbc1c2f0075177a73ae1b88f5721dcd90f102e01b39",
-      "bytes": 7764,
-      "gzipBytes": 2632,
-      "brotliBytes": 2342
+      "sha256": "8d5dd4c551eed118a2f341d33bd24b5790efce5b4dba3301111bc3b1eab62e14",
+      "bytes": 8598,
+      "gzipBytes": 2828,
+      "brotliBytes": 2516
     }
   ],
-  "componentBytes": 10675685,
+  "componentBytes": 4168184,
   "scope": "Existing CPU/Metal convolution kernels with native encoder outputs. Single-window projection timing excludes image preparation and catalog search; match timing is one whole match in Chromium through createMatcher. Bytes include encoder, catalog and existing inference/preparation modules; include catalog parsing/ranking; exclude demo and optional font previews."
 }

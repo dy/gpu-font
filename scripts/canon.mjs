@@ -63,6 +63,12 @@ async function typefaces() {
   return [...new Map(rows.map(row => [row.id, row])).values()].filter(row => !/^Q\d+$/.test(row.name))
 }
 
+/** Each item's Fonts In Use identifier (Wikidata P11599, CC0): its page is fontsinuse.com/typefaces/<id>. */
+async function fontsInUse() {
+  const result = await sparql('SELECT ?item ?id WHERE { ?item wdt:P11599 ?id }')
+  return Object.fromEntries(result.results.bindings.map(b => [b.item.value.split('/').pop(), b.id.value]))
+}
+
 const STYLE_CLASSES = new Set(['handwriting style', 'script style', 'writing system', 'natural writing system', 'bicameral script', 'cursive', 'teaching script', 'calligraphy style'])
 
 /** Typeface, genre (a class other entries belong to) or writing style, from Wikidata's own typing. */
@@ -191,6 +197,7 @@ async function main() {
   console.log(`Wikidata: ${faces.length} typefaces`)
   const links = await cached('wikidata-sitelinks', () => sitelinks(faces.map(face => face.id)))
   const kindInfo = await cached('wikidata-kinds', () => kinds(faces.map(face => face.id)))
+  const inUse = await cached('wikidata-fontsinuse', fontsInUse)
   const titles = [...new Set(faces.map(face => links[face.id]?.enTitle).filter(Boolean))]
   const views = await cached('enwiki-pageviews', () => pageviews(titles))
   console.log(`English Wikipedia articles: ${titles.length}`)
@@ -210,7 +217,8 @@ async function main() {
     const k = key(face.name), previous = entries.get(k)
     if (previous && previous.score >= score) continue
     entries.set(k, {
-      name: face.name, kind: kindOf(face, kindInfo[face.id]), wikidata: face.id, designers: face.designers, year: face.year, foundries: face.foundries,
+      name: face.name, kind: kindOf(face, kindInfo[face.id]), wikidata: face.id, ...(inUse[face.id] && { fontsInUse: inUse[face.id] }),
+      designers: face.designers, year: face.year, foundries: face.foundries,
       signals: { majorWikipedias: link.major, wikipediaSitelinks: link.total, enwikiPageviewsYear: viewCount }, score,
     })
   }

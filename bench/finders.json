@@ -1,0 +1,1298 @@
+{
+ "issue": "https://github.com/dy/gpu-font/issues/1",
+ "protocol": "One fixed crop per image, the same file for every finder. Top 1 and top 5 at family level; identical designs count as right. Time per image from upload to result.",
+ "probes": {
+  "weight": [
+   "probe-weight-300",
+   "probe-weight-700"
+  ],
+  "italic": [
+   "probe-upright",
+   "probe-italic"
+  ],
+  "subsets": [
+   "script-cyrillic",
+   "script-greek",
+   "script-arabic",
+   "script-hebrew",
+   "script-devanagari",
+   "script-chinese"
+  ]
+ },
+ "images": [
+  {
+   "id": "control-1",
+   "group": "control",
+   "family": "Zen Maru Gothic",
+   "face": "Zen Maru Gothic Regular",
+   "text": "SMARTER",
+   "source": "WhatFontIs-Bench v1.0, image 1212 (texture, easy)",
+   "link": "https://github.com/whatfontis/WhatFontIs-Bench/tree/f01d865380c160b5d54b07d0d1aba54d6ae3fefe/v1",
+   "license": "CC BY 4.0 (WhatFontIs-Bench v1.0; backgrounds CC0 1.0)",
+   "box": [
+    323,
+    251,
+    1794,
+    627
+   ],
+   "file": ".data/finders/control-1.png",
+   "sha256": "2597c2f6d116a769bb7511e67243705d609aefa9974f1486cbe090117ba71677"
+  },
+  {
+   "id": "control-2",
+   "group": "control",
+   "family": "Khand",
+   "face": "Khand regular",
+   "text": "JANESON",
+   "source": "WhatFontIs-Bench v1.0, image 9847 (scene, medium)",
+   "link": "https://github.com/whatfontis/WhatFontIs-Bench/tree/f01d865380c160b5d54b07d0d1aba54d6ae3fefe/v1",
+   "license": "CC BY 4.0 (WhatFontIs-Bench v1.0; backgrounds CC0 1.0)",
+   "box": [
+    713,
+    551,
+    1237,
+    757
+   ],
+   "file": ".data/finders/control-2.png",
+   "sha256": "4bbd472c24770980f9da0a27be952979c41e133a920fca4c276a2be6cb02c45a"
+  },
+  {
+   "id": "control-3",
+   "group": "control",
+   "family": "Konkhmer Sleokchher",
+   "face": "Konkhmer Sleokchher Regular",
+   "text": "Carrasco",
+   "source": "WhatFontIs-Bench v1.0, image 1117 (object, hard)",
+   "link": "https://github.com/whatfontis/WhatFontIs-Bench/tree/f01d865380c160b5d54b07d0d1aba54d6ae3fefe/v1",
+   "license": "CC BY 4.0 (WhatFontIs-Bench v1.0; backgrounds CC0 1.0)",
+   "box": [
+    194,
+    239,
+    1024,
+    440
+   ],
+   "file": ".data/finders/control-3.png",
+   "sha256": "dbdf6de13f476ec4a11f9641fa9b16569dac3b53d4b298f0030270232010c5ae"
+  },
+  {
+   "id": "control-4",
+   "group": "control",
+   "family": "Koh Santepheap",
+   "face": "Koh Santepheap Regular",
+   "text": "sidewalk",
+   "source": "WhatFontIs-Bench v1.0, image 4474 (texture, hard)",
+   "link": "https://github.com/whatfontis/WhatFontIs-Bench/tree/f01d865380c160b5d54b07d0d1aba54d6ae3fefe/v1",
+   "license": "CC BY 4.0 (WhatFontIs-Bench v1.0; backgrounds CC0 1.0)",
+   "box": [
+    110,
+    210,
+    881,
+    411
+   ],
+   "file": ".data/finders/control-4.png",
+   "sha256": "600c36b5519b8bd7899849eb6c3cf8b089945904bf6cc68c2ca9b5b0254c0950"
+  },
+  {
+   "id": "control-5",
+   "group": "control",
+   "family": "Caudex",
+   "face": "Caudex regular",
+   "text": "JUSTICE",
+   "source": "WhatFontIs-Bench v1.0, image 6361 (scene, easy)",
+   "link": "https://github.com/whatfontis/WhatFontIs-Bench/tree/f01d865380c160b5d54b07d0d1aba54d6ae3fefe/v1",
+   "license": "CC BY 4.0 (WhatFontIs-Bench v1.0; backgrounds CC0 1.0)",
+   "box": [
+    300,
+    50,
+    1137,
+    328
+   ],
+   "file": ".data/finders/control-5.png",
+   "sha256": "01c1dd624a4ab19df71a7e5c522e0c105ee6f586e63b41c1df57834d0dd4241f"
+  },
+  {
+   "id": "control-6",
+   "group": "control",
+   "family": "Faustina",
+   "face": "Faustina regular",
+   "text": "Between",
+   "source": "WhatFontIs-Bench v1.0, image 5630 (object, medium)",
+   "link": "https://github.com/whatfontis/WhatFontIs-Bench/tree/f01d865380c160b5d54b07d0d1aba54d6ae3fefe/v1",
+   "license": "CC BY 4.0 (WhatFontIs-Bench v1.0; backgrounds CC0 1.0)",
+   "box": [
+    85,
+    151,
+    992,
+    392
+   ],
+   "file": ".data/finders/control-6.png",
+   "sha256": "62235d7d0ac15b7bff1220b01accd9194522ea74e3c041a36e30cff9d1fd7136"
+  },
+  {
+   "id": "control-7",
+   "group": "control",
+   "family": "Graduate",
+   "face": "Graduate regular",
+   "text": "CHEDDAR",
+   "source": "WhatFontIs-Bench v1.0, image 7089 (texture, medium)",
+   "link": "https://github.com/whatfontis/WhatFontIs-Bench/tree/f01d865380c160b5d54b07d0d1aba54d6ae3fefe/v1",
+   "license": "CC BY 4.0 (WhatFontIs-Bench v1.0; backgrounds CC0 1.0)",
+   "box": [
+    287,
+    138,
+    1456,
+    422
+   ],
+   "file": ".data/finders/control-7.png",
+   "sha256": "67f39832e561f7fd76625360b11f5612fb3efef0e9bbb99198656f3c4df2476b"
+  },
+  {
+   "id": "control-8",
+   "group": "control",
+   "family": "Hepta Slab",
+   "face": "Hepta Slab regular",
+   "text": "matinee",
+   "source": "WhatFontIs-Bench v1.0, image 7153 (scene, hard)",
+   "link": "https://github.com/whatfontis/WhatFontIs-Bench/tree/f01d865380c160b5d54b07d0d1aba54d6ae3fefe/v1",
+   "license": "CC BY 4.0 (WhatFontIs-Bench v1.0; backgrounds CC0 1.0)",
+   "box": [
+    98,
+    281,
+    847,
+    478
+   ],
+   "file": ".data/finders/control-8.png",
+   "sha256": "ddee8d32a6b94e0481dab9b1fc50086f6c4612e71bc9eba853aa947a4b67e8d1"
+  },
+  {
+   "id": "control-9",
+   "group": "control",
+   "family": "Courier Prime",
+   "face": "Courier Prime Regular",
+   "text": "TORRIST",
+   "source": "WhatFontIs-Bench v1.0, image 9541 (object, easy)",
+   "link": "https://github.com/whatfontis/WhatFontIs-Bench/tree/f01d865380c160b5d54b07d0d1aba54d6ae3fefe/v1",
+   "license": "CC BY 4.0 (WhatFontIs-Bench v1.0; backgrounds CC0 1.0)",
+   "box": [
+    414,
+    248,
+    1766,
+    538
+   ],
+   "file": ".data/finders/control-9.png",
+   "sha256": "784ce9f01e9b4ce9397f30bdbb2fa742d0f8657de0c02419deb2972556b1f7b3"
+  },
+  {
+   "id": "control-10",
+   "group": "control",
+   "family": "Xanh Mono",
+   "face": "Xanh Mono Regular",
+   "text": "GREENBUSH",
+   "source": "WhatFontIs-Bench v1.0, image 9419 (texture, hard)",
+   "link": "https://github.com/whatfontis/WhatFontIs-Bench/tree/f01d865380c160b5d54b07d0d1aba54d6ae3fefe/v1",
+   "license": "CC BY 4.0 (WhatFontIs-Bench v1.0; backgrounds CC0 1.0)",
+   "box": [
+    147,
+    88,
+    828,
+    266
+   ],
+   "file": ".data/finders/control-10.png",
+   "sha256": "d4c44bf95e0a2b98235030139b99138d9e9b2352605b991a450fbd92a02f5407"
+  },
+  {
+   "id": "classic-1",
+   "group": "classic",
+   "family": "Neue Haas Grotesk Text Pro 65",
+   "face": "Neue Haas Grotesk Text Pro 65 Medium",
+   "text": "GRAVITY",
+   "source": "WhatFontIs-Bench v1.0, image 1478 (texture, easy)",
+   "link": "https://github.com/whatfontis/WhatFontIs-Bench/tree/f01d865380c160b5d54b07d0d1aba54d6ae3fefe/v1",
+   "license": "CC BY 4.0 (WhatFontIs-Bench v1.0; backgrounds CC0 1.0)",
+   "box": [
+    429,
+    127,
+    1766,
+    479
+   ],
+   "file": ".data/finders/classic-1.png",
+   "sha256": "0eb4c57163ce0100cfffcb0d4e2e83ce954ed84f1cd177178b598ea1f3a870cd"
+  },
+  {
+   "id": "classic-2",
+   "group": "classic",
+   "family": "Futura PT",
+   "face": "Futura PT Book",
+   "text": "parsley",
+   "source": "WhatFontIs-Bench v1.0, image 1435 (scene, medium)",
+   "link": "https://github.com/whatfontis/WhatFontIs-Bench/tree/f01d865380c160b5d54b07d0d1aba54d6ae3fefe/v1",
+   "license": "CC BY 4.0 (WhatFontIs-Bench v1.0; backgrounds CC0 1.0)",
+   "box": [
+    641,
+    514,
+    1221,
+    770
+   ],
+   "file": ".data/finders/classic-2.png",
+   "sha256": "c7def0ead669c8274c83d167967585bceb175467d76b5efbbb2c6c1413197b71"
+  },
+  {
+   "id": "classic-3",
+   "group": "classic",
+   "family": "Adobe Garamond",
+   "face": "Adobe Garamond Pro Regular",
+   "text": "EUROPEE",
+   "source": "WhatFontIs-Bench v1.0, image 381 (object, hard)",
+   "link": "https://github.com/whatfontis/WhatFontIs-Bench/tree/f01d865380c160b5d54b07d0d1aba54d6ae3fefe/v1",
+   "license": "CC BY 4.0 (WhatFontIs-Bench v1.0; backgrounds CC0 1.0)",
+   "box": [
+    297,
+    107,
+    1043,
+    273
+   ],
+   "file": ".data/finders/classic-3.png",
+   "sha256": "5070ad83c522f0f1a950962cb80328319aaf8b2e5d249482d8b431423d1ea867"
+  },
+  {
+   "id": "classic-4",
+   "group": "classic",
+   "family": "DIN 2014",
+   "face": "DIN 2014 Regular",
+   "text": "STREECIPS",
+   "source": "WhatFontIs-Bench v1.0, image 1882 (texture, hard)",
+   "link": "https://github.com/whatfontis/WhatFontIs-Bench/tree/f01d865380c160b5d54b07d0d1aba54d6ae3fefe/v1",
+   "license": "CC BY 4.0 (WhatFontIs-Bench v1.0; backgrounds CC0 1.0)",
+   "box": [
+    209,
+    234,
+    1054,
+    425
+   ],
+   "file": ".data/finders/classic-4.png",
+   "sha256": "7820091d302cb9a31ef555223b88f9de5d12241e95de8cbd4f88685b41ab1142"
+  },
+  {
+   "id": "classic-5",
+   "group": "classic",
+   "family": "FranklinGothic URW",
+   "face": "FranklinGothic URW Book",
+   "text": "juillet",
+   "source": "WhatFontIs-Bench v1.0, image 11488 (scene, easy)",
+   "link": "https://github.com/whatfontis/WhatFontIs-Bench/tree/f01d865380c160b5d54b07d0d1aba54d6ae3fefe/v1",
+   "license": "CC BY 4.0 (WhatFontIs-Bench v1.0; backgrounds CC0 1.0)",
+   "box": [
+    989,
+    395,
+    1626,
+    688
+   ],
+   "file": ".data/finders/classic-5.png",
+   "sha256": "b7ea2c9896b14722757e5514166c7712ba7ca202c2fb40239777309e13d13e37"
+  },
+  {
+   "id": "classic-6",
+   "group": "classic",
+   "family": "Century Gothic",
+   "face": "Century Gothic Pro Regular",
+   "text": "RESTRICTED",
+   "source": "WhatFontIs-Bench v1.0, image 287 (object, medium)",
+   "link": "https://github.com/whatfontis/WhatFontIs-Bench/tree/f01d865380c160b5d54b07d0d1aba54d6ae3fefe/v1",
+   "license": "CC BY 4.0 (WhatFontIs-Bench v1.0; backgrounds CC0 1.0)",
+   "box": [
+    386,
+    397,
+    1769,
+    683
+   ],
+   "file": ".data/finders/classic-6.png",
+   "sha256": "ee93edd1858a9aab106f4a99186e51b1e1a8dad3801d050158cf63a2cb0d2a57"
+  },
+  {
+   "id": "classic-7",
+   "group": "classic",
+   "family": "Rockwell",
+   "face": "Rockwell Std Regular",
+   "text": "SPEDOSKE",
+   "source": "WhatFontIs-Bench v1.0, image 435 (texture, medium)",
+   "link": "https://github.com/whatfontis/WhatFontIs-Bench/tree/f01d865380c160b5d54b07d0d1aba54d6ae3fefe/v1",
+   "license": "CC BY 4.0 (WhatFontIs-Bench v1.0; backgrounds CC0 1.0)",
+   "box": [
+    236,
+    238,
+    1347,
+    475
+   ],
+   "file": ".data/finders/classic-7.png",
+   "sha256": "4dadb806230a7dc9ebe959a7c0f461296982dab4de722518967b26f8e69d28a3"
+  },
+  {
+   "id": "classic-8",
+   "group": "classic",
+   "family": "Trajan Pro 3",
+   "face": "Trajan Pro 3 Regular",
+   "text": "ASSISTS",
+   "source": "WhatFontIs-Bench v1.0, image 4012 (scene, hard)",
+   "link": "https://github.com/whatfontis/WhatFontIs-Bench/tree/f01d865380c160b5d54b07d0d1aba54d6ae3fefe/v1",
+   "license": "CC BY 4.0 (WhatFontIs-Bench v1.0; backgrounds CC0 1.0)",
+   "box": [
+    569,
+    267,
+    1221,
+    456
+   ],
+   "file": ".data/finders/classic-8.png",
+   "sha256": "99ea38997e73c92a134beddf24f693282a023a42eca07e78fd44080882f08006"
+  },
+  {
+   "id": "classic-9",
+   "group": "classic",
+   "family": "Adobe Caslon Pro",
+   "face": "Adobe Caslon Pro Regular",
+   "text": "Miranda",
+   "source": "WhatFontIs-Bench v1.0, image 5014 (object, easy)",
+   "link": "https://github.com/whatfontis/WhatFontIs-Bench/tree/f01d865380c160b5d54b07d0d1aba54d6ae3fefe/v1",
+   "license": "CC BY 4.0 (WhatFontIs-Bench v1.0; backgrounds CC0 1.0)",
+   "box": [
+    232,
+    322,
+    1281,
+    634
+   ],
+   "file": ".data/finders/classic-9.png",
+   "sha256": "0c8026e9ebfd252faa24a02f7b5ae5eadbcc9597908a3ed08759a2af24e52053"
+  },
+  {
+   "id": "classic-10",
+   "group": "classic",
+   "family": "Brandon Grotesque",
+   "face": "Brandon Grotesque Regular",
+   "text": "Gabriel",
+   "source": "WhatFontIs-Bench v1.0, image 1774 (texture, hard)",
+   "link": "https://github.com/whatfontis/WhatFontIs-Bench/tree/f01d865380c160b5d54b07d0d1aba54d6ae3fefe/v1",
+   "license": "CC BY 4.0 (WhatFontIs-Bench v1.0; backgrounds CC0 1.0)",
+   "box": [
+    152,
+    133,
+    721,
+    343
+   ],
+   "file": ".data/finders/classic-10.png",
+   "sha256": "bede1ef36f175890fecde3ab4b2aadb30d260727561a3c7e260fa917477127aa"
+  },
+  {
+   "id": "hard-shadow",
+   "group": "hard",
+   "family": "Peddana",
+   "face": "Peddana regular",
+   "text": "Independent",
+   "source": "WhatFontIs-Bench v1.0, image 5445 (object, hard)",
+   "link": "https://github.com/whatfontis/WhatFontIs-Bench/tree/f01d865380c160b5d54b07d0d1aba54d6ae3fefe/v1",
+   "license": "CC BY 4.0 (WhatFontIs-Bench v1.0; backgrounds CC0 1.0)",
+   "box": [
+    113,
+    175,
+    1183,
+    424
+   ],
+   "file": ".data/finders/hard-shadow.png",
+   "sha256": "fd12b2bd5e19c80ebe2c2e992075fce87dbea02096cd57e6b2b34a99d30dfef0"
+  },
+  {
+   "id": "hard-glare",
+   "group": "hard",
+   "family": "Yeseva One",
+   "face": "Yeseva One regular",
+   "text": "CONFISERIE",
+   "source": "WhatFontIs-Bench v1.0, image 4039 (object, hard)",
+   "link": "https://github.com/whatfontis/WhatFontIs-Bench/tree/f01d865380c160b5d54b07d0d1aba54d6ae3fefe/v1",
+   "license": "CC BY 4.0 (WhatFontIs-Bench v1.0; backgrounds CC0 1.0)",
+   "box": [
+    218,
+    254,
+    1293,
+    445
+   ],
+   "file": ".data/finders/hard-glare.png",
+   "sha256": "3b9d07ff8d0e5896edfeb78904320729bb3c5a886f8f66ce00b7c94339929da1"
+  },
+  {
+   "id": "hard-wear",
+   "group": "hard",
+   "family": "Imbue",
+   "face": "Imbue Regular",
+   "text": "ENOTECA",
+   "source": "WhatFontIs-Bench v1.0, image 4686 (object, hard)",
+   "link": "https://github.com/whatfontis/WhatFontIs-Bench/tree/f01d865380c160b5d54b07d0d1aba54d6ae3fefe/v1",
+   "license": "CC BY 4.0 (WhatFontIs-Bench v1.0; backgrounds CC0 1.0)",
+   "box": [
+    64,
+    110,
+    554,
+    303
+   ],
+   "file": ".data/finders/hard-wear.png",
+   "sha256": "bb72d8d794d03738bba439f7280ac992ce6c3ccb04b9deea9b4df4703d2d5059"
+  },
+  {
+   "id": "hard-contrast",
+   "group": "hard",
+   "family": "Dosis",
+   "face": "Dosis regular",
+   "text": "Ciocolata",
+   "source": "WhatFontIs-Bench v1.0, image 2220 (texture, hard)",
+   "link": "https://github.com/whatfontis/WhatFontIs-Bench/tree/f01d865380c160b5d54b07d0d1aba54d6ae3fefe/v1",
+   "license": "CC BY 4.0 (WhatFontIs-Bench v1.0; backgrounds CC0 1.0)",
+   "box": [
+    51,
+    157,
+    767,
+    397
+   ],
+   "file": ".data/finders/hard-contrast.png",
+   "sha256": "776a99ef871d331e21a0c24a1646ff1c320a41414f789df21965c37ac7f20445"
+  },
+  {
+   "id": "hard-caps",
+   "group": "hard",
+   "family": "Orbit",
+   "face": "Orbit Regular",
+   "text": "MISSION",
+   "source": "WhatFontIs-Bench v1.0, image 10400 (object, hard)",
+   "link": "https://github.com/whatfontis/WhatFontIs-Bench/tree/f01d865380c160b5d54b07d0d1aba54d6ae3fefe/v1",
+   "license": "CC BY 4.0 (WhatFontIs-Bench v1.0; backgrounds CC0 1.0)",
+   "box": [
+    164,
+    145,
+    795,
+    307
+   ],
+   "file": ".data/finders/hard-caps.png",
+   "sha256": "d9e2c65e698ab7a853460f2e5fec4caa10b28cc25d70d37c5790d829a82440b0"
+  },
+  {
+   "id": "short-1",
+   "group": "short",
+   "family": "Ramaraja",
+   "face": "Ramaraja regular",
+   "text": "D",
+   "source": "WhatFontIs-Bench v1.0, image 5314 (texture, medium)",
+   "link": "https://github.com/whatfontis/WhatFontIs-Bench/tree/f01d865380c160b5d54b07d0d1aba54d6ae3fefe/v1",
+   "license": "CC BY 4.0 (WhatFontIs-Bench v1.0; backgrounds CC0 1.0)",
+   "box": [
+    234,
+    154,
+    428,
+    403
+   ],
+   "file": ".data/finders/short-1.png",
+   "sha256": "18344abd52ddcf6294e390f6b3fcf9a4a2ff3ea323c9933dd4a83e9a5289aad5"
+  },
+  {
+   "id": "short-2",
+   "group": "short",
+   "family": "Manjari",
+   "face": "Manjari regular",
+   "text": "SO",
+   "source": "WhatFontIs-Bench v1.0, image 2669 (texture, hard)",
+   "link": "https://github.com/whatfontis/WhatFontIs-Bench/tree/f01d865380c160b5d54b07d0d1aba54d6ae3fefe/v1",
+   "license": "CC BY 4.0 (WhatFontIs-Bench v1.0; backgrounds CC0 1.0)",
+   "box": [
+    327,
+    166,
+    551,
+    325
+   ],
+   "file": ".data/finders/short-2.png",
+   "sha256": "3a2064e7548378fcb20ac981c953b24468630cde49aa4c5f5297aed7cf5e8abe"
+  },
+  {
+   "id": "short-3",
+   "group": "short",
+   "family": "Azeret Mono",
+   "face": "Azeret Mono Regular",
+   "text": "dis",
+   "source": "WhatFontIs-Bench v1.0, image 8777 (texture, easy)",
+   "link": "https://github.com/whatfontis/WhatFontIs-Bench/tree/f01d865380c160b5d54b07d0d1aba54d6ae3fefe/v1",
+   "license": "CC BY 4.0 (WhatFontIs-Bench v1.0; backgrounds CC0 1.0)",
+   "box": [
+    201,
+    232,
+    762,
+    537
+   ],
+   "file": ".data/finders/short-3.png",
+   "sha256": "acd142be9210302bd234a5fb18644dddd3597c565c935b072fe3716a26a9e817"
+  },
+  {
+   "id": "short-4",
+   "group": "short",
+   "family": "Abril Fatface",
+   "face": "Abril Fatface regular",
+   "text": "STE",
+   "source": "WhatFontIs-Bench v1.0, image 3979 (texture, easy)",
+   "link": "https://github.com/whatfontis/WhatFontIs-Bench/tree/f01d865380c160b5d54b07d0d1aba54d6ae3fefe/v1",
+   "license": "CC BY 4.0 (WhatFontIs-Bench v1.0; backgrounds CC0 1.0)",
+   "box": [
+    389,
+    322,
+    970,
+    636
+   ],
+   "file": ".data/finders/short-4.png",
+   "sha256": "83681852b8f1d2baa1c4476597721f4b18de652a5303bec3b15ac1aa05bff9d9"
+  },
+  {
+   "id": "hard-perspective",
+   "group": "hard",
+   "family": "Elms Sans",
+   "face": "elmssans--500",
+   "text": "Waterfront",
+   "source": "Rendered by scripts/finders.mjs in Chromium",
+   "link": "https://fonts.google.com/specimen/Elms+Sans",
+   "license": "SIL Open Font License (the font)",
+   "file": ".data/finders/hard-perspective.png",
+   "sha256": "6fd94ee71ce19dedad213a1a0302918a302ba0cf376914dba34df9477fee1538",
+   "css": "font-size:72px;transform:perspective(420px) rotateY(32deg)"
+  },
+  {
+   "id": "hard-outline",
+   "group": "hard",
+   "family": "Hubot Sans",
+   "face": "hubotsans--800",
+   "text": "Outline Only",
+   "source": "Rendered by scripts/finders.mjs in Chromium",
+   "link": "https://fonts.google.com/specimen/Hubot+Sans",
+   "license": "SIL Open Font License (the font)",
+   "file": ".data/finders/hard-outline.png",
+   "sha256": "dfdfae92cf61534bd7947c196e83fb41eea2a772dd2dda780f1bed8526621171",
+   "css": "font-size:80px;color:transparent;-webkit-text-stroke:2.5px #151515"
+  },
+  {
+   "id": "hard-small",
+   "group": "hard",
+   "family": "Atkinson Hyperlegible Next",
+   "face": "atkinsonhyperlegiblenext--400",
+   "text": "Small print on a page",
+   "source": "Rendered by scripts/finders.mjs in Chromium",
+   "link": "https://fonts.google.com/specimen/Atkinson+Hyperlegible+Next",
+   "license": "SIL Open Font License (the font)",
+   "file": ".data/finders/hard-small.png",
+   "sha256": "e87130976245b4619f48ca100c042c5889cfc380f92e3a4f36dd8c5ffb5ac896",
+   "css": "font-size:11px"
+  },
+  {
+   "id": "hard-condensed",
+   "group": "hard",
+   "family": "Pragati Narrow",
+   "face": "pragatinarrow--700",
+   "text": "NORTHBOUND",
+   "source": "Rendered by scripts/finders.mjs in Chromium",
+   "link": "https://fonts.google.com/specimen/Pragati+Narrow",
+   "license": "SIL Open Font License (the font)",
+   "file": ".data/finders/hard-condensed.png",
+   "sha256": "fe8cdac4ac352ec1d69a24e6328dbdc73f84309523b678da057be3a4ee111931",
+   "css": "font-size:64px"
+  },
+  {
+   "id": "hard-script",
+   "group": "hard",
+   "family": "Euphoria Script",
+   "face": "euphoriascript--400",
+   "text": "Evening Garden",
+   "source": "Rendered by scripts/finders.mjs in Chromium",
+   "link": "https://fonts.google.com/specimen/Euphoria+Script",
+   "license": "SIL Open Font License (the font)",
+   "file": ".data/finders/hard-script.png",
+   "sha256": "6bbf355412cfd114fc3715b1b24ae1e7c6cf43350b60293e1d0cfce37743979a",
+   "css": "font-size:72px"
+  },
+  {
+   "id": "script-cyrillic",
+   "group": "script",
+   "family": "Comfortaa",
+   "face": "comfortaa--400",
+   "text": "Съешь же ещё",
+   "source": "Rendered by scripts/finders.mjs in Chromium",
+   "link": "https://fonts.google.com/specimen/Comfortaa",
+   "license": "SIL Open Font License (the font)",
+   "file": ".data/finders/script-cyrillic.png",
+   "sha256": "dc016ffc091b3c9a025e1e32e74ffeb29f6d6cf4ffc06e4e8fb0b1f7eab1ffbd",
+   "css": "font-size:56px"
+  },
+  {
+   "id": "script-greek",
+   "group": "script",
+   "family": "Caudex",
+   "face": "caudex--400",
+   "text": "Ξεσκεπάζω την",
+   "source": "Rendered by scripts/finders.mjs in Chromium",
+   "link": "https://fonts.google.com/specimen/Caudex",
+   "license": "SIL Open Font License (the font)",
+   "file": ".data/finders/script-greek.png",
+   "sha256": "e6c9439fc94983b3fea95033a465c678374227c66b0928f4e4bd745f3b418b9d",
+   "css": "font-size:56px"
+  },
+  {
+   "id": "script-arabic",
+   "group": "script",
+   "family": "Cairo",
+   "face": "cairo--400",
+   "text": "نص حكيم له سر قاطع",
+   "source": "Rendered by scripts/finders.mjs in Chromium",
+   "link": "https://fonts.google.com/specimen/Cairo",
+   "license": "SIL Open Font License (the font)",
+   "file": ".data/finders/script-arabic.png",
+   "sha256": "2aa7faec29234861672493c86caf2a590aeb74f3940817eb9803f8b31c3ba94b",
+   "css": "font-size:56px"
+  },
+  {
+   "id": "script-hebrew",
+   "group": "script",
+   "family": "Frank Ruhl Libre",
+   "face": "frankruhllibre--400",
+   "text": "דג סקרן שט בים",
+   "source": "Rendered by scripts/finders.mjs in Chromium",
+   "link": "https://fonts.google.com/specimen/Frank+Ruhl+Libre",
+   "license": "SIL Open Font License (the font)",
+   "file": ".data/finders/script-hebrew.png",
+   "sha256": "8a018e5ee4e07d8716bf197d5d123c81777f675e37c508d330e89eabd00763f8",
+   "css": "font-size:56px"
+  },
+  {
+   "id": "script-devanagari",
+   "group": "script",
+   "family": "Hind",
+   "face": "hind--400",
+   "text": "ऋषियों को सताने",
+   "source": "Rendered by scripts/finders.mjs in Chromium",
+   "link": "https://fonts.google.com/specimen/Hind",
+   "license": "SIL Open Font License (the font)",
+   "file": ".data/finders/script-devanagari.png",
+   "sha256": "e827646cc59bb586e5fbd56ccc98ab2c0e420dd1a2e0863c2454be731aeac21d",
+   "css": "font-size:56px"
+  },
+  {
+   "id": "script-chinese",
+   "group": "script",
+   "family": "Chiron Hei HK",
+   "face": "chironheihk--400",
+   "text": "天地玄黃宇宙洪荒",
+   "source": "Rendered by scripts/finders.mjs in Chromium",
+   "link": "https://fonts.google.com/specimen/Chiron+Hei+HK",
+   "license": "SIL Open Font License (the font)",
+   "file": ".data/finders/script-chinese.png",
+   "sha256": "7d989ef7b2986155e89d1d52dfbc0a32c24a2868956171c0e98ea4b7a9514a84",
+   "css": "font-size:56px"
+  },
+  {
+   "id": "probe-weight-300",
+   "group": "probe",
+   "family": "Figtree",
+   "face": "figtree--300",
+   "text": "Harbour lights",
+   "source": "Rendered by scripts/finders.mjs in Chromium",
+   "link": "https://fonts.google.com/specimen/Figtree",
+   "license": "SIL Open Font License (the font)",
+   "file": ".data/finders/probe-weight-300.png",
+   "sha256": "45f7cd4aa4979156a4c13197a79d2f1b631e5eb54864eca704e49af9e712308f",
+   "css": "font-size:64px"
+  },
+  {
+   "id": "probe-weight-700",
+   "group": "probe",
+   "family": "Figtree",
+   "face": "figtree--700",
+   "text": "Harbour lights",
+   "source": "Rendered by scripts/finders.mjs in Chromium",
+   "link": "https://fonts.google.com/specimen/Figtree",
+   "license": "SIL Open Font License (the font)",
+   "file": ".data/finders/probe-weight-700.png",
+   "sha256": "f861270bc0ab124c1834d565ed8da1f3d25c45dec730577d6a8a5059f25b2e16",
+   "css": "font-size:64px"
+  },
+  {
+   "id": "probe-upright",
+   "group": "probe",
+   "family": "Faustina",
+   "face": "faustina--400",
+   "text": "Harbour lights",
+   "source": "Rendered by scripts/finders.mjs in Chromium",
+   "link": "https://fonts.google.com/specimen/Faustina",
+   "license": "SIL Open Font License (the font)",
+   "file": ".data/finders/probe-upright.png",
+   "sha256": "7f85c8cc8c7164acc58d6cd9500d0906696a4bc83adc768f71b3f0bba884cf7d",
+   "css": "font-size:64px"
+  },
+  {
+   "id": "probe-italic",
+   "group": "probe",
+   "family": "Faustina",
+   "face": "faustina--400i",
+   "text": "Harbour lights",
+   "source": "Rendered by scripts/finders.mjs in Chromium",
+   "link": "https://fonts.google.com/specimen/Faustina",
+   "license": "SIL Open Font License (the font)",
+   "file": ".data/finders/probe-italic.png",
+   "sha256": "d5fbe51e8f95dbf66c6e345a4f0ec11d6a1b518991e66b3991ce11067e6dd9fe",
+   "css": "font-size:64px"
+  }
+ ],
+ "finders": {
+  "WhatFontIs": {
+   "how": "Its API (https://www.whatfontis.com/API-identify-fonts-from-image.html): 200 requests a day, personal use with attribution."
+  },
+  "WhatTheFont": {
+   "how": "By hand: MyFonts terms forbid scripted queries."
+  },
+  "Font Finder": {
+   "how": "By hand: it publishes no terms and no API."
+  },
+  "Photoshop Match Font": {
+   "how": "By hand: a desktop app."
+  },
+  "Lens": {
+   "how": "From a script."
+  },
+  "What the Google Font": {
+   "how": "By hand: its terms forbid automated tools without authorization, and robots.txt disallows /api/."
+  },
+  "Matcherator": {
+   "how": "By hand: Fontspring terms forbid scripted queries."
+  },
+  "gpu-font": {
+   "date": "2026-09-25",
+   "how": "From scripts/finders.mjs. Catalog All, Chromium on apple metal-3.",
+   "answers": {
+    "control-1": {
+     "top5": [
+      "SN Pro",
+      "Pitagon Sans Text",
+      "Quicksand",
+      "Fredoka",
+      "K2D"
+     ],
+     "rank": null,
+     "face": "300 normal",
+     "ms": 111
+    },
+    "control-2": {
+     "top5": [
+      "Economica",
+      "BenchNine",
+      "Saira Extra Condensed",
+      "Sofia Sans Extra Condensed",
+      "Bevellier"
+     ],
+     "rank": null,
+     "face": "400 normal",
+     "ms": 77
+    },
+    "control-3": {
+     "top5": [
+      "Syamala Ramana",
+      "Familjen Grotesk",
+      "Chivo",
+      "Boon",
+      "Sans Uralic"
+     ],
+     "rank": null,
+     "face": "400 normal",
+     "ms": 72
+    },
+    "control-4": {
+     "top5": [
+      "Noto Serif",
+      "Droid Serif",
+      "Inria Serif",
+      "Droid Serif",
+      "Khmer SBBIC Serif"
+     ],
+     "rank": null,
+     "face": "400 normal",
+     "ms": 75
+    },
+    "control-5": {
+     "top5": [
+      "Than",
+      "Calluna",
+      "Cinzel Decorative",
+      "Nocturne Serif",
+      "Trajan"
+     ],
+     "rank": null,
+     "face": "null normal",
+     "ms": 72
+    },
+    "control-6": {
+     "top5": [
+      "Le Monde Courrier",
+      "PermianSerifTypeface",
+      "Sole Serif Variable",
+      "Manuale",
+      "XCharter Math"
+     ],
+     "rank": null,
+     "face": "null normal",
+     "ms": 64
+    },
+    "control-7": {
+     "top5": [
+      "Graduate",
+      "Iosevka Etoile",
+      "Hoover",
+      "Iosevka Slab",
+      "Kelly Slab"
+     ],
+     "rank": 1,
+     "face": "400 normal",
+     "ms": 77
+    },
+    "control-8": {
+     "top5": [
+      "Hepta Slab",
+      "BioRhyme",
+      "Mortise",
+      "Typewriter Inked",
+      "MVB Fantabular"
+     ],
+     "rank": 1,
+     "face": "400 normal",
+     "ms": 61
+    },
+    "control-9": {
+     "top5": [
+      "Nimbus Mono",
+      "Nimbus Mono PS",
+      "ALM Fixed",
+      "NewComputerModern Mono",
+      "Latin Modern Mono"
+     ],
+     "rank": null,
+     "face": "400 normal",
+     "ms": 86
+    },
+    "control-10": {
+     "top5": [
+      "Xanh Mono",
+      "花園肉丸",
+      "花園肉丸B",
+      "Hana Meatball",
+      "HanaMinA"
+     ],
+     "rank": 1,
+     "face": "400 normal",
+     "ms": 59
+    },
+    "classic-1": {
+     "top5": [
+      "Neue Haas Unica",
+      "AlYarmook",
+      "Nice",
+      "Schibsted Grotesk",
+      "Haramain"
+     ],
+     "rank": null,
+     "face": "null normal",
+     "ms": 89
+    },
+    "classic-2": {
+     "top5": [
+      "Now",
+      "Now Alt",
+      "Glacial Indifference",
+      "Teachers",
+      "Venryn Sans"
+     ],
+     "rank": null,
+     "face": "400 normal",
+     "ms": 52
+    },
+    "classic-3": {
+     "top5": [
+      "KpMath",
+      "Aria Text",
+      "Quincy CF",
+      "Romande ADF No2 Std",
+      "KpRoman"
+     ],
+     "rank": null,
+     "face": "400 normal",
+     "ms": 51
+    },
+    "classic-4": {
+     "top5": [
+      "Geist",
+      "Haskoy",
+      "Hezaedrus",
+      "Pitagon Sans Text",
+      "Morrison"
+     ],
+     "rank": null,
+     "face": "400 normal",
+     "ms": 59
+    },
+    "classic-5": {
+     "top5": [
+      "Bertioga Sans",
+      "Public Sans",
+      "Zalando Sans",
+      "Cheyenne Sans Novus",
+      "Aileron"
+     ],
+     "rank": null,
+     "face": "300 normal",
+     "ms": 54
+    },
+    "classic-6": {
+     "top5": [
+      "Plus Jakarta Sans",
+      "HK Grotesk",
+      "Kripa",
+      "Cello Sans",
+      "Orkney"
+     ],
+     "rank": null,
+     "face": "300 normal",
+     "ms": 76
+    },
+    "classic-7": {
+     "top5": [
+      "Hepta Slab",
+      "Madawaska",
+      "Stint Pro",
+      "Novecento Slab",
+      "Mokoko Variable"
+     ],
+     "rank": null,
+     "face": "600 normal",
+     "ms": 71
+    },
+    "classic-8": {
+     "top5": [
+      "Trajanus Bricks",
+      "Kumlien",
+      "Junge",
+      "Softspoken Serif",
+      "Capitalis"
+     ],
+     "rank": null,
+     "face": "null null",
+     "ms": 59
+    },
+    "classic-9": {
+     "top5": [
+      "Rialto dF",
+      "Calluna",
+      "Minion",
+      "Dashiell Fine",
+      "Dashiell Bright"
+     ],
+     "rank": null,
+     "face": "null normal",
+     "ms": 66
+    },
+    "classic-10": {
+     "top5": [
+      "New Atten",
+      "Brandon Grotesque",
+      "Venryn Sans",
+      "Jost",
+      "Neue Kabel"
+     ],
+     "rank": 2,
+     "face": "null normal",
+     "ms": 57
+    },
+    "hard-shadow": {
+     "top5": [
+      "Alike",
+      "Richmond Text",
+      "Libra Serif Modern",
+      "Tinos",
+      "Liberation Serif"
+     ],
+     "rank": null,
+     "face": "400 normal",
+     "ms": 69
+    },
+    "hard-glare": {
+     "top5": [
+      "Noto Serif Display",
+      "Yeseva One",
+      "DM Serif Display",
+      "Career",
+      "Nyght Serif"
+     ],
+     "rank": 2,
+     "face": "700 normal",
+     "ms": 64
+    },
+    "hard-wear": {
+     "top5": [
+      "Imbue Variable",
+      "Vincente",
+      "Aujournuit",
+      "Imbue",
+      "Non watercolor"
+     ],
+     "rank": 4,
+     "face": "null normal",
+     "ms": 51
+    },
+    "hard-contrast": {
+     "top5": [
+      "Beiruti",
+      "Dosis",
+      "Playwrite DE Grund",
+      "Pompiere",
+      "Mesmerize"
+     ],
+     "rank": 2,
+     "face": "300 normal",
+     "ms": 61
+    },
+    "hard-caps": {
+     "top5": [
+      "Slice",
+      "Malgun Gothic",
+      "DM Mono",
+      "Stymie",
+      "CareToDance"
+     ],
+     "rank": null,
+     "face": "null null",
+     "ms": 54
+    },
+    "short-1": {
+     "top5": [
+      "Vremena",
+      "Poltawski Nowy",
+      "Amiri",
+      "Bona Nova",
+      "Bona Nova SC"
+     ],
+     "rank": null,
+     "face": "400 normal",
+     "ms": 43
+    },
+    "short-2": {
+     "top5": [
+      "Chillax",
+      "Router",
+      "Nicole",
+      "Golane Vintage",
+      "Aaber"
+     ],
+     "rank": null,
+     "face": "400 normal",
+     "ms": 41
+    },
+    "short-3": {
+     "top5": [
+      "Azeret Mono",
+      "Martian Mono",
+      "Space Mono",
+      "LT Superior Mono",
+      "Jozsika"
+     ],
+     "rank": 1,
+     "face": "400 normal",
+     "ms": 55
+    },
+    "short-4": {
+     "top5": [
+      "Kalnia",
+      "Elsie",
+      "XB Zar",
+      "Vegetal",
+      "Playfair Display SC"
+     ],
+     "rank": null,
+     "face": "700 normal",
+     "ms": 51
+    },
+    "hard-perspective": {
+     "top5": [
+      "Big Daddy St",
+      "Fudd",
+      "Sani Trixie Sans",
+      "Teachers",
+      "Urbanist"
+     ],
+     "rank": null,
+     "face": "null null",
+     "ms": 46
+    },
+    "hard-outline": {
+     "top5": [
+      "Weirdmojo",
+      "Londrina Outline",
+      "Blink",
+      "Londrina Sketch",
+      "Vanchrome"
+     ],
+     "rank": null,
+     "face": "null null",
+     "ms": 41
+    },
+    "hard-small": {
+     "top5": [
+      "DejaVu Sans",
+      "Puritan",
+      "Epunda Sans",
+      "QTVagaRound",
+      "Assistant"
+     ],
+     "rank": null,
+     "face": "400 normal",
+     "ms": 43
+    },
+    "hard-condensed": {
+     "top5": [
+      "Bertioga Sans",
+      "Archivo Narrow",
+      "Pragati Narrow",
+      "Liberation Sans Narrow",
+      "D-DIN"
+     ],
+     "rank": 3,
+     "face": "800 normal",
+     "ms": 46
+    },
+    "hard-script": {
+     "top5": [
+      "Euphoria Script",
+      "Good Karma",
+      "Charllona",
+      "San Rafael",
+      "Blantick Script"
+     ],
+     "rank": 1,
+     "face": "400 normal",
+     "ms": 61
+    },
+    "script-cyrillic": {
+     "top5": [
+      "Comfortaa",
+      "LINE Seed JP",
+      "Didact Gothic",
+      "Raleway",
+      "Montserrat"
+     ],
+     "rank": 1,
+     "face": "400 normal",
+     "ms": 16
+    },
+    "script-greek": {
+     "top5": [
+      "Caudex",
+      "Libertinus Serif",
+      "Vollkorn",
+      "Chiron Sung HK",
+      "Charis SIL"
+     ],
+     "rank": 1,
+     "face": "400 normal",
+     "ms": 14
+    },
+    "script-arabic": {
+     "top5": [
+      "Cairo",
+      "Changa",
+      "Noto Kufi Arabic",
+      "Almarai",
+      "Fustat"
+     ],
+     "rank": 1,
+     "face": "500 normal",
+     "ms": 14
+    },
+    "script-hebrew": {
+     "top5": [
+      "Noto Serif Hebrew",
+      "Frank Ruhl Libre",
+      "Cardo",
+      "Noto Rashi Hebrew",
+      "Tinos"
+     ],
+     "rank": 2,
+     "face": "400 normal",
+     "ms": 12
+    },
+    "script-devanagari": {
+     "top5": [
+      "Kripa",
+      "Mukta",
+      "Hind",
+      "Yantramanav",
+      "Baloo 2"
+     ],
+     "rank": 3,
+     "face": "400 normal",
+     "ms": 14
+    },
+    "script-chinese": {
+     "top5": [
+      "Sawarabi Gothic",
+      "Noto Sans HK",
+      "Noto Traditional Nushu",
+      "Chiron Hei HK",
+      "Noto Sans JP"
+     ],
+     "rank": 4,
+     "face": "400 normal",
+     "ms": 13
+    },
+    "probe-weight-300": {
+     "top5": [
+      "Century Gothic",
+      "Century Gothic Std",
+      "Open Sauce Two",
+      "Levenim MT",
+      "Google Sans"
+     ],
+     "rank": null,
+     "face": "null normal",
+     "ms": 47
+    },
+    "probe-weight-700": {
+     "top5": [
+      "Fustat",
+      "Hanken Grotesk",
+      "Gabarito",
+      "Funnel Sans",
+      "Uacari Legacy"
+     ],
+     "rank": null,
+     "face": "800 normal",
+     "ms": 48
+    },
+    "probe-upright": {
+     "top5": [
+      "Faustina",
+      "Rival",
+      "Skolar Devanagari",
+      "Skolar Gujarati",
+      "Skolar"
+     ],
+     "rank": 1,
+     "face": "400 normal",
+     "ms": 44
+    },
+    "probe-italic": {
+     "top5": [
+      "Faustina",
+      "DejaVu Serif",
+      "Manuale",
+      "Enra Semi Variable",
+      "Enra Slab Variable"
+     ],
+     "rank": 1,
+     "face": "400 italic",
+     "ms": 47
+    }
+   }
+  }
+ }
+}

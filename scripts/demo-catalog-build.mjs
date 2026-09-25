@@ -33,15 +33,27 @@ for (const familyId of new Set(google.faces.map(f => f.familyId))) {
 // Source samples, loaded by name from Google Fonts; a few names differ between the repository and the Google Fonts API.
 const renamed = { 'Rounded Mplus 1c': 'M PLUS Rounded 1c' }
 const fonts = (await read('bench/fonts-100.json')).fonts.map(font => ({ id: font.id, name: font.family, family: renamed[font.family] ?? font.family }))
+// Every capture-built catalog compiled under .data/catalogs (scripts.preview_catalog writes a report.json beside it): the pilot
+// sets, Adobe Fonts, the DaFont batches. The ledger below decides which of them ship.
 const sources = []
-for (const version of ['v1', 'v2']) {
-  const compiled = `.data/catalogs/preview-pilot-${version}`
-  if (!await access(`${compiled}/report.json`).then(() => true, () => false)) continue
-  const report = await read(`${compiled}/report.json`), snapshot = await readFile(`${compiled}/inputs.json`)
-  if (hash(snapshot) !== report.inputsSha256) throw new Error('Changed preview input snapshot; recompile the catalog')
+async function compiledFolders(root) {
+  const found = []
+  for (const entry of (await readdir(root, { withFileTypes: true }).catch(() => [])).sort((a, b) => a.name.localeCompare(b.name))) {
+    if (!entry.isDirectory() || ['files', 'withheld'].includes(entry.name)) continue
+    const folder = `${root}/${entry.name}`
+    if (await access(`${folder}/report.json`).then(() => true, () => false)) found.push(folder); else found.push(...await compiledFolders(folder))
+  }
+  return found
+}
+for (const compiled of await compiledFolders('.data/catalogs')) {
+  const report = await read(`${compiled}/report.json`)
+  // Capture-built catalogs of an earlier encoder stay out, as file-built ones do; the same sources ship from their files.
+  if (report.encoderSha256 !== binding.encoderSha256) { console.log(`Skipped ${compiled}: compiled for another encoder.`); continue }
+  const snapshot = await readFile(`${compiled}/inputs.json`)
+  if (hash(snapshot) !== report.inputsSha256) throw new Error(`Changed preview input snapshot in ${compiled}; recompile the catalog`)
   const inputs = JSON.parse(snapshot), records = inputs.samples
-  if (inputs.manifestSha256 !== report.sourceManifestSha256 || inputs.encoderSha256 !== binding.encoderSha256) throw new Error('Incompatible preview snapshot')
-  const product = report.catalogs.find(c => c.recipe === 'all')  // every capture, one row each
+  if (inputs.manifestSha256 !== report.sourceManifestSha256 || inputs.encoderSha256 !== report.encoderSha256) throw new Error(`Incompatible preview snapshot in ${compiled}`)
+  const product = report.catalogs.find(c => c.recipe === 'captured') ?? report.catalogs.find(c => c.recipe === 'all')  // every face by every line it has, one row each; the fixed recipes only where nothing else was captured
   if (!product) continue
   const path = `${compiled}/${product.path}`
   if (hash(await readFile(path)) !== product.sha256) throw new Error('Changed preview catalog')
@@ -55,7 +67,9 @@ for (const version of ['v1', 'v2']) {
 const derived = 'models/encoder/catalogs', withheld = '.data/catalogs/withheld'
 const ledger = new Map((await read('bench/foundries.json')).sources.map(source => [source.id, source]))
 // A grouped catalog ships only when every source in it would ship alone.
-const shippable = ({ id, sources = [id] }) => sources.every(id => ['permitted', 'none-found'].includes(ledger.get(id)?.terms?.status))
+// A source whose terms do not permit collection can still ship by a recorded decision in the ledger (`decision.ship`): names, links
+// and style vectors only, no images or files, taken down on the source's request. The terms status stays as found.
+const shippable = ({ id, sources = [id] }) => sources.every(id => ['permitted', 'none-found'].includes(ledger.get(id)?.terms?.status) || ledger.get(id)?.decision?.ship === true)
 const compiled = sourceCatalogs(sources, binding).filter(source => source.id !== 'google-fonts') // Google is indexed in full above.
 // Catalogs built from pinned font files (scripts/catalog-files.mjs) supersede capture-built ones of the same source.
 const files = '.data/catalogs/files'
@@ -64,6 +78,8 @@ for (const file of (await readdir(files).catch(() => [])).filter(name => name.en
   if (data.encoderSha256 !== binding.encoderSha256 || data.preparationSha256 !== binding.preparationSha256) { console.log(`Skipped ${files}/${file}: built for another encoder; run scripts/catalog-files.mjs.`); continue }
   compiled.splice(0, compiled.length, ...compiled.filter(source => source.id !== id), { id, name: data.name, data })
 }
+// The ledger names every source; a capture set's own spelling (its records' source name) yields to it.
+for (const source of compiled) source.name = ledger.get(source.id)?.name.replace(/\s*\(.*\)$/, '') ?? source.name
 // The menu lists the largest catalogs first. Cleared sources under a hundred families are searched together as Other,
 // last: a catalog that small is not worth its own entry. Each face keeps the source it came from.
 const familyCount = source => new Set(source.data.faces.map(f => f.familyId)).size, SMALL = 100
@@ -72,6 +88,8 @@ const cleared = compiled.filter(shippable), small = cleared.filter(source => fam
 let shipped = cleared.filter(source => familyCount(source) >= SMALL)
 if (small.length) shipped.push({ id: 'other', name: 'Other', sources: small.map(s => s.id),
   data: small.map(s => ({ ...s.data, faces: s.data.faces.map(f => ({ ...f, sourceId: s.id })) })).reduce((all, next) => joinCatalogs(all, next)) })
+// A face's referenceIds tie it to its captures at build time; the shipped copy drops them (1.2 MB of DaFont's file).
+shipped = shipped.map(s => ({ ...s, data: { ...s.data, faces: s.data.faces.map(({ referenceIds, ...face }) => face) } }))
 if (compiled.length) {
   await mkdir(derived, { recursive: true }); await mkdir(withheld, { recursive: true })
   for (const source of compiled.filter(source => !shippable(source))) await writeFile(`${withheld}/${source.id}.json`, JSON.stringify(source.data) + '\n')
@@ -84,7 +102,9 @@ if (compiled.length) {
   shipped = await Promise.all(listed.map(async ({ id, name, sources }) => ({ id, name, sources, data: await read(`${derived}/${id}.json`) })))
 }
 for (const source of compiled.filter(source => !shippable(source))) console.log(`Withheld ${source.name}: terms ${ledger.get(source.id)?.terms?.status ?? 'not in bench/foundries.json'}; kept in ${withheld}.`)
-for (const source of shipped) await addCatalog(source.id, source.name, `${derived}/${source.id}.json`, source.sources)
+// A grouped catalog names each source in it, so a link can search one alone: ?catalog=collletttivo.
+const named = id => ({ id, name: ledger.get(id)?.name.replace(/\s*\(.*\)$/, '') ?? id })
+for (const source of shipped) await addCatalog(source.id, source.name, `${derived}/${source.id}.json`, source.sources?.map(named))
 const measured = await read('bench/encoder-test.json')
 let metrics = measured.encoderSha256 === binding.encoderSha256 && measured.catalogSha256 === options[0].sha256 ? measured.results.groups['split/test'] : null
 for (const file of ['bench/encoder-recovery-quality.json', 'bench/encoder-quality.json']) {

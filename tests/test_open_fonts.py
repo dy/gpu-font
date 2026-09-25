@@ -107,6 +107,42 @@ class Members(unittest.TestCase):
         self.assertEqual(list(members(b'font', 'https://host/fonts/FSEX302.ttf?raw=1', 'file')), [('FSEX302.ttf', b'font')])
         self.assertEqual(list(members(b'f', 'https://raw/x/Sym%5BFILL%2Cwght%5D.ttf', 'file')), [('Sym[FILL,wght].ttf', b'f')])
 
+    def test_the_bytes_decide_the_format_not_the_url(self):
+        import io, tarfile, zipfile
+        files = {'X/A.ttf': b'\x00\x01\x00\x00a', 'X/OFL.txt': b'licence'}
+        zipped = io.BytesIO()
+        with zipfile.ZipFile(zipped, 'w') as archive:
+            for name, content in files.items(): archive.writestr(name, content)
+        tarred = io.BytesIO()
+        with tarfile.open(fileobj=tarred, mode='w:gz') as archive:
+            for name, content in files.items(): info = tarfile.TarInfo(name); info.size = len(content); archive.addfile(info, io.BytesIO(content))
+        for url, format in [('https://www.fontsquirrel.com/fonts/download/Verily-Serif-Mono', None),
+                            ('https://tobiasjung.name/downloadfile.php?file=ProFont-Windows-Bold.zip', None), ('https://gitlab.com/a/b.git', 'git')]:
+            self.assertEqual(dict(members(zipped.getvalue(), url, format)), files, url)
+        self.assertEqual(dict(members(tarred.getvalue(), 'https://host/release.zip', None)), files)  # named zip, but a tar
+        self.assertEqual(list(members(b'OTTOa', 'https://host/fonts/A.otf?dl=1')), [('A.otf', b'OTTOa')])
+        self.assertEqual(list(members(b'wOF2a', 'https://host/A.woff2')), [('A.woff2', b'wOF2a')])  # decode_webfonts unpacks it next
+
+    def test_a_web_page_or_an_empty_download_is_neither_archive_nor_font(self):
+        with self.assertRaisesRegex(ValueError, r"cm-web-fonts/: neither an archive nor a font, but b'<!DOCTYPE html>"):
+            list(members(b'<!DOCTYPE html><html>', 'http://checkmyworking.com/cm-web-fonts/'))
+        with self.assertRaisesRegex(ValueError, r"neither an archive nor a font, but b''"):
+            list(members(b'', 'https://host/empty'))
+
+
+class Listed(unittest.TestCase):
+    def test_every_catalogue_row_is_listed_and_skipped_on_failure_while_curated_sources_fail_loudly(self):
+        from scripts.open_fonts import SOURCES
+        rows = [row for row in json.loads((ROOT / 'bench/open-releases.json').read_text())['releases'] if row.get('include')]
+        self.assertEqual(sum(bool(spec.get('listed')) for spec in SOURCES), len(rows))
+        self.assertEqual([spec for spec in SOURCES[:len(SOURCES) - len(rows)] if spec.get('listed')], [])  # the curated sources come first
+
+    def test_a_listed_family_links_to_the_page_that_lists_it(self):
+        from scripts.open_fonts import SOURCES
+        pages = {spec.get('page') for spec in SOURCES if spec['source'] == 'collletttivo'}
+        self.assertIn('https://www.collletttivo.it/typefaces/ribes/', pages)  # the link Collletttivo asked for
+        self.assertEqual([spec['source'] for spec in SOURCES if not spec.get('listed') and spec.get('page')], [])  # curated sources keep their home
+
 
 class DebianPackage(unittest.TestCase):
     def test_a_deb_yields_its_installed_files_and_its_licences(self):

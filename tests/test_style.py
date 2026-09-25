@@ -6,6 +6,7 @@ from types import SimpleNamespace
 import unittest
 
 import numpy as np
+from PIL import Image
 import torch
 
 from scripts.corpus import ROOT
@@ -13,7 +14,8 @@ from train.style_data import Preparer, text, tensors, skeleton, sketch, COMMON
 from train.style_teacher import distances, twins, enumerate_faces
 from train.style_catalog import kinds, LATIN
 from train.style import Heads, Setup, losses, architecture_of, benchmark_of, run_seed, train, CATEGORIES
-from train.ten_model import CORPUS_ARCH, LARGE_ARCH, WIDER_ARCH
+from train.ten_model import Classifier, CORPUS_ARCH, LARGE_ARCH, WIDER_ARCH
+from train.style_open import queryable
 
 
 def line(width=90, height=30, seed=0):
@@ -155,12 +157,39 @@ class CatalogAndLossTests(unittest.TestCase):
         # Refused before any setup: training development families and selecting on them would grade the model on its own homework.
         with self.assertRaisesRegex(ValueError, 'catalog:validation'): train('x', ['train', 'development', 'test'], 1, 'unused.pt', 1)
 
+    def test_the_rejection_threshold_separates_present_from_absent_scores(self):
+        from train.style import threshold_of
+        # Present scores all above absent ones: the cut sits at the lowest present score and keeps every present query.
+        rule = threshold_of([.9, .8, .7], [.6, .5]); self.assertEqual((rule['threshold'], rule['presentCoverage'], rule['absentAcceptance']), (.7, 1.0, 0.0))
+        # Overlap: the cut that gains most present coverage per absent acceptance.
+        rule = threshold_of([.9, .85, .8, .7, .6], [.5, .55, .6, .65, .4]); self.assertAlmostEqual(rule['threshold'], .7, places=6); self.assertEqual(rule['presentCoverage'], .8)
+        # Identical distributions: no cut helps; the rule keeps everything (J = 0 at the lowest score).
+        rule = threshold_of([.5, .6], [.5, .6]); self.assertEqual(rule['presentCoverage'], 1.0); self.assertEqual(rule['absentAcceptance'], 1.0)
+
     def test_a_run_is_measured_where_its_families_are_held_out(self):
         # The frozen benchmark holds out development and test families; a run that trained on either reads the catalog test.
         self.assertEqual(benchmark_of(['train']), 'bench')
         for roles in (['train', 'development', 'test'], ['train', 'test'], ['train', 'development']): self.assertEqual(benchmark_of(roles), 'catalog')
 
-    def test_checkpoints_name_their_architecture_and_older_ones_their_flag(self):
+    def test_an_export_names_the_preparation_files_that_run(self):
+        from train.style import shipped_preparation
+        from train.robustness import sha
+        block = shipped_preparation(); shipped = json.load(open(ROOT/'models/encoder/encoder.json'))['preparation']
+        self.assertEqual({k: v for k, v in block.items() if k not in ('sha256', 'normalizerSha256', 'lineSha256')}, {k: v for k, v in shipped.items() if k not in ('sha256', 'normalizerSha256', 'lineSha256')})
+        self.assertEqual([block['sha256'], block['normalizerSha256'], block['lineSha256']], [sha(ROOT/f'src/{name}.mjs') for name in ['input', 'prepare', 'line']])
+
+    def test_a_folded_head_keeps_the_projected_direction_and_the_checkpoint_its_width(self):
+        from train.style import fold_head, dimensions_of
+        torch.manual_seed(2); model = Classifier(128, context=True, wide=True, dilations=[1, 1, 2, 2, 1]).eval()
+        basis, _ = np.linalg.qr(np.random.default_rng(0).normal(size=(128, 64))); basis = basis.T.astype(np.float32)  # 64 orthonormal rows
+        folded = Classifier(64, context=True, wide=True, dilations=[1, 1, 2, 2, 1]).eval(); folded.load_state_dict(fold_head(model.state_dict(), basis))
+        x = torch.rand(3, 1, 48, 128)
+        with torch.no_grad(): e, f = model(x), folded(x)
+        expected = torch.nn.functional.normalize(torch.nn.functional.normalize(e, dim=1) @ torch.from_numpy(basis).T, dim=1)
+        self.assertGreater(float((torch.nn.functional.normalize(f, dim=1) * expected).sum(1).min()), .9999)
+        self.assertEqual((dimensions_of({'state': model.state_dict()}), dimensions_of({'state': folded.state_dict()})), (128, 64))
+
+
         self.assertEqual(architecture_of({'architecture': WIDER_ARCH, 'large': True}), WIDER_ARCH)
         self.assertEqual(architecture_of({'large': True}), LARGE_ARCH); self.assertEqual(architecture_of({}), CORPUS_ARCH)
 
@@ -178,6 +207,50 @@ class CatalogAndLossTests(unittest.TestCase):
         total, parts, _ = losses(torch.eye(128)[[0, 2, 2, 0]], heads, proxies, setup, views, 'cpu')
         self.assertEqual(float(parts['views']), 0)
         self.assertAlmostEqual(float(total), float(parts['identity'] + parts['geometry'] + .2*sum(parts[k] for k in ['weight', 'italic', 'script', 'category', 'fine'])), places=4)
+        # A teacher's target: nothing to learn when the views already sit on it, a full cosine distance when orthogonal.
+        from train.style import DISTILL
+        e = torch.eye(128)[[0, 2, 2, 0]]
+        self.assertEqual(float(losses(e, heads, proxies, setup, views, 'cpu', follow=e)[1]['distill']), 0)
+        away, parts_away, _ = losses(e, heads, proxies, setup, views, 'cpu', follow=torch.eye(128)[[5, 5, 5, 5]])
+        self.assertAlmostEqual(float(parts_away['distill']), 1, places=6); self.assertAlmostEqual(float(away - total), DISTILL, places=4)
 
 
 if __name__ == '__main__': unittest.main()
+
+
+class PhotoViewTests(unittest.TestCase):
+    def test_photo_views_keep_the_letters_findable_and_differ_by_seed(self):
+        from train.style_data import damage, effect
+        image = Image.fromarray(line(200, 40, 3)); prepare = Preparer()
+        try:
+            outs = [damage(image, random.Random(seed), photo=True) for seed in range(12)]
+            self.assertTrue(all(o.dtype == np.uint8 and o.ndim == 2 for o in outs))
+            self.assertEqual(len({o.tobytes() for o in outs}), 12)
+            self.assertEqual(damage(image, random.Random(5), photo=True).tobytes(), outs[5].tobytes())  # one seed, one view
+            self.assertGreaterEqual(sum(bool(prepare(o)) for o in outs), 10)  # the surface never hides the line
+            self.assertEqual(damage(image, random.Random(5)).tobytes(), damage(image, random.Random(5), photo=False).tobytes())  # plain damage unchanged by the flag
+        finally: prepare.close()
+        # An outline keeps the letters' interior as surface; a shadow or an extrusion keeps the letters and adds ink behind them.
+        mask = np.zeros((30, 60), np.float32); mask[8:22, 10:50] = 1
+        outline = effect(mask, random.Random(0), 30, 'outline')
+        self.assertEqual(float(outline[15, 30]), 0.0); self.assertGreater(float(outline[7, 30]), 0)
+        for kind in ('shadow', 'extrusion'):
+            out = effect(mask, random.Random(0), 30, kind)
+            self.assertTrue((out >= mask - 1e-6).all()); self.assertGreater(float(out.sum()), float(mask.sum()))
+
+    def test_photo_benchmark_reads_weight_and_posture_from_the_set_s_titles(self):
+        from train.style_photos import weight_of, normalize, family_of
+        self.assertEqual([weight_of(t) for t in ['Asap 600', 'Lora Bold Italic', 'Alef', 'Roboto Thin', 'Playfair Display 900 Italic']], [(600, False), (700, True), (400, False), (100, False), (900, True)])
+        self.assertEqual(normalize('IBM Plex Sans KR'), 'ibmplexsanskr')
+        # The set names fonts with a style word or weight after the family; one family keeps a number that is its name.
+        self.assertEqual([family_of(n) for n in ['Heebo regular', 'Spartan 500', 'Inter Tight Regular', 'Roboto Medium 500', 'Asap', 'Press Start 2P']], ['Heebo', 'Spartan', 'Inter Tight', 'Roboto', 'Asap', 'Press Start 2P'])
+
+
+class StyleOpenTests(unittest.TestCase):
+    def test_open_plan_queries_only_faces_the_text_recipe_can_draw(self):
+        self.assertTrue(queryable('abcdefghijklmnopqrstuvwxyz'))
+        self.assertTrue(queryable('etaoinshr'))
+        self.assertFalse(queryable('ABCDEFGHIJKLMNOPQRSTUVWXYZ'))
+        self.assertFalse(queryable('eta'))
+        self.assertFalse(queryable(''))
+

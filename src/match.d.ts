@@ -58,9 +58,10 @@ export interface Encoder {
 }
 
 /** The catalogs this package ships, by id. */
-export const catalogs: Record<'google-fonts' | 'debian' | 'other', URL>
+export const catalogs: Record<'google-fonts' | 'dafont' | 'adobe-fonts' | 'debian' | 'fontlibrary' | 'other', URL>
 
 /** Loads a catalog (Google Fonts by default) and the model it was built with. */
+/** Scores below `threshold` mean the crop's font is probably in no catalog; null when the model ships none. */
 export function createMatcher(catalog?: string | URL, model?: string | URL): Promise<Matcher>
 
 /** Loads the model alone. */

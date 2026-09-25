@@ -9,7 +9,7 @@ import shutil
 import numpy as np
 import torch
 
-from train.encoder import DATA, ROOT, SPLIT, DIMENSIONS, load_data, load_encoder, assess, references, rank, metrics, unit
+from train.encoder import DATA, ROOT, SPLIT, DIMENSIONS, valid_dimensions, load_data, load_encoder, assess, references, rank, metrics, unit
 from train.encoder_data import save
 from train.robustness import read,sha
 from train.ten_model import unpack_bits
@@ -55,13 +55,13 @@ def make_catalog(encoder_path,families,samples,vectors,count,inventory):
 
 def read_catalog(catalog,encoder_path):
     encoder=read(encoder_path)
-    if not isinstance(catalog,dict) or type(catalog.get('version'))is not int or catalog['version'] not in [1,2,3] or catalog.get('kind')!='font-catalog' or type(catalog.get('dimensions'))is not int or catalog['dimensions']!=DIMENSIONS:raise ValueError('Invalid catalog schema')
+    if not isinstance(catalog,dict) or type(catalog.get('version'))is not int or catalog['version'] not in [1,2,3] or catalog.get('kind')!='font-catalog' or not valid_dimensions(catalog.get('dimensions')) or catalog['dimensions']!=encoder.get('dimensions',DIMENSIONS):raise ValueError('Invalid catalog schema')
     variable=catalog['version']==3
     if variable and 'referencesPerFace' in catalog:raise ValueError('Variable references must omit the fixed budget')
     if not variable and (type(catalog.get('referencesPerFace'))is not int or catalog['referencesPerFace'] not in [1,4]):raise ValueError('Invalid reference budget')
     if catalog.get('encoderSha256')!=sha(encoder_path) or catalog.get('preparationSha256')!=preparation_hash(encoder['preparation']):raise ValueError('Incompatible encoder/preparation')
     faces=catalog.get('faces')
-    if not isinstance(faces,list) or not 1<=len(faces)<=10000 or any(not isinstance(f,dict) or any(not isinstance(f.get(k),str) or not f[k] for k in ['id','familyId','family']) for f in faces) or len({f['id'] for f in faces})!=len(faces):raise ValueError('Expected unique catalog faces')
+    if not isinstance(faces,list) or not 1<=len(faces)<=100000 or any(not isinstance(f,dict) or any(not isinstance(f.get(k),str) or not f[k] for k in ['id','familyId','family']) for f in faces) or len({f['id'] for f in faces})!=len(faces):raise ValueError('Expected unique catalog faces')
     if catalog['version']==1 and len({f['familyId'] for f in faces})!=len(faces):raise ValueError('Version 1 requires unique families')
     names={}
     for face in faces:
@@ -71,17 +71,18 @@ def read_catalog(catalog,encoder_path):
     rows=vectors['shape'][0] if catalog['version']==3 else len(faces)*catalog['referencesPerFace']
     if type(rows)is not int or not len(faces)<=rows<=640000:raise ValueError('Invalid reference count')
     bits={'int8-base64':8,'int4-base64':4}.get(vectors.get('encoding'))  # src/catalog.mjs reads the same two
-    if not bits or vectors.get('shape')!=[rows,DIMENSIONS] or any(type(n)is not int for n in vectors['shape']):raise ValueError('Invalid vector shape')
+    dimensions=catalog['dimensions']
+    if not bits or vectors.get('shape')!=[rows,dimensions] or any(type(n)is not int for n in vectors['shape']):raise ValueError('Invalid vector shape')
     try:raw=base64.b64decode(vectors['data'],validate=True)
     except (KeyError,TypeError,ValueError) as error:raise ValueError('Invalid vector bytes') from error
-    if len(raw)!=rows*DIMENSIONS*bits//8:raise ValueError('Truncated or trailing vectors')
+    if len(raw)!=rows*dimensions*bits//8:raise ValueError('Truncated or trailing vectors')
     scales=vectors.get('scales');owners=vectors.get('owners')
     if not isinstance(scales,list) or len(scales)!=rows or any(type(s) not in [float,int] or not np.isfinite(s) or s<=0 for s in scales):raise ValueError('Invalid vector scales')
     if not isinstance(owners,list) or len(owners)!=rows or any(type(i)is not int or not 0<=i<len(faces) for i in owners):raise ValueError('Invalid vector owners')
     counts=np.bincount(owners,minlength=len(faces))
     invalid=counts<1 if variable else counts!=catalog['referencesPerFace']
     if np.any(invalid):raise ValueError('Missing catalog owner')
-    decoded=unpack_bits(raw,bits,rows*DIMENSIONS).reshape(rows,DIMENSIONS).astype(np.float32)*np.array(scales,dtype=np.float32)[:,None]
+    decoded=unpack_bits(raw,bits,rows*dimensions).reshape(rows,dimensions).astype(np.float32)*np.array(scales,dtype=np.float32)[:,None]
     # V1 scores unique families; V2 scores individual faces, grouped by family by the caller.
     return unit(decoded),np.array(owners),[f['familyId' if catalog['version']==1 else 'id'] for f in faces]
 

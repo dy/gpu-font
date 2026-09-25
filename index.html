@@ -4,33 +4,34 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#f9f9f9">
-  <meta name="description" content="Crop a line of text and get the closest free fonts from Google Fonts, Debian, Fontshare, Collletttivo and more, with their weight and italic.">
+  <meta name="description" content="Crop a line of text and get the closest fonts from Google Fonts, DaFont, Adobe Fonts, Debian, Font Library and more, with their weight and italic.">
   <title>Find the font in an image, in your browser – gpu-font</title>
   <link rel="canonical" href="https://dy.github.io/gpu-font/">
   <meta property="og:type" content="website">
   <meta property="og:site_name" content="gpu-font">
   <meta property="og:url" content="https://dy.github.io/gpu-font/">
   <meta property="og:title" content="Find the font in an image, in your browser">
-  <meta property="og:description" content="Crop a line of text and get the closest free fonts from Google Fonts, Debian, Fontshare, Collletttivo and more, with their weight and italic.">
+  <meta property="og:description" content="Crop a line of text and get the closest fonts from Google Fonts, DaFont, Adobe Fonts, Debian, Font Library and more, with their weight and italic.">
   <meta property="og:image" content="https://dy.github.io/gpu-font/og.png">
   <meta property="og:image:width" content="1200">
   <meta property="og:image:height" content="630">
   <meta property="og:image:alt" content="“Find the font in an image” beside a cropped line of text and its closest fonts, ranked">
   <meta name="twitter:card" content="summary_large_image">
-  <script type="application/ld+json">{"@context":"https://schema.org","@type":"WebApplication","name":"gpu-font","url":"https://dy.github.io/gpu-font/","description":"Crop a line of text and get the closest free fonts from Google Fonts, Debian, Fontshare, Collletttivo and more, with their weight and italic.","image":"https://dy.github.io/gpu-font/og.png","applicationCategory":"DesignApplication","operatingSystem":"Any","browserRequirements":"Requires JavaScript; runs on WebGPU, or on the CPU without it","isAccessibleForFree":true,"offers":{"@type":"Offer","price":"0","priceCurrency":"USD"},"license":"https://github.com/dy/gpu-font/blob/main/LICENSE","sameAs":"https://github.com/dy/gpu-font"}</script>
+  <script type="application/ld+json">{"@context":"https://schema.org","@type":"WebApplication","name":"gpu-font","url":"https://dy.github.io/gpu-font/","description":"Crop a line of text and get the closest fonts from Google Fonts, DaFont, Adobe Fonts, Debian, Font Library and more, with their weight and italic.","image":"https://dy.github.io/gpu-font/og.png","applicationCategory":"DesignApplication","operatingSystem":"Any","browserRequirements":"Requires JavaScript; runs on WebGPU, or on the CPU without it","isAccessibleForFree":true,"offers":{"@type":"Offer","price":"0","priceCurrency":"USD"},"license":"https://github.com/dy/gpu-font/blob/main/LICENSE","sameAs":"https://github.com/dy/gpu-font"}</script>
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 32 32%22%3E%3Crect width=%2232%22 height=%2232%22 rx=%226%22 fill=%22%23222%22/%3E%3Ctext x=%2216%22 y=%2222%22 font-family=%22Georgia,serif%22 font-size=%2216%22 fill=%22%23fff%22 text-anchor=%22middle%22%3EAa%3C/text%3E%3C/svg%3E">
+  <script>if (new URLSearchParams(location.search).has('embed')) { document.documentElement.dataset.embed = ''; document.head.append(Object.assign(document.createElement('base'), { target: '_blank' })) }</script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <script type="importmap">{"imports":{"./crop.mjs":"./crop.mjs?v=550aca56ca","./my-fonts.mjs":"./my-fonts.mjs?v=d075f19d67","./src/catalog.mjs":"./src/catalog.mjs?v=734bee841e","./src/input.mjs":"./src/input.mjs?v=2cf5262269","./src/line.mjs":"./src/line.mjs?v=8d5dd4c551","./src/network-gpu.mjs":"./src/network-gpu.mjs?v=fa27d23620","./src/network.mjs":"./src/network.mjs?v=03778f9887","./src/prepare.mjs":"./src/prepare.mjs?v=1f8d1989f4"}}</script>
+  <script type="importmap">{"imports":{"./crop.mjs":"./crop.mjs?v=550aca56ca","./my-fonts.mjs":"./my-fonts.mjs?v=d075f19d67","./src/catalog.mjs":"./src/catalog.mjs?v=2e88db909a","./src/input.mjs":"./src/input.mjs?v=2cf5262269","./src/line.mjs":"./src/line.mjs?v=8d5dd4c551","./src/network-gpu.mjs":"./src/network-gpu.mjs?v=2330f1934b","./src/network.mjs":"./src/network.mjs?v=2af6a9d6db","./src/prepare.mjs":"./src/prepare.mjs?v=f4a0b31a2a"}}</script>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter&family=Source+Serif+4&display=swap">
   <link rel="stylesheet" href="./tokens.css?v=aa4aae7c63">
-  <link rel="stylesheet" href="./style.css?v=21abbd5f25">
+  <link rel="stylesheet" href="./style.css?v=867fe7052d">
 </head>
 <body>
   <a class="skip" href="#workbench">Skip to workbench</a>
   <header class="masthead">
     <a href="./" class="wordmark" aria-label="gpu-font home">gpu-font</a>
-    <span id="backend" class="sr-only" role="status">Loading…</span><nav class="site-nav" aria-label="Site"><a href="./catalogs.html">Catalogs</a></nav><a class="header-icon" href="https://github.com/dy/gpu-font" aria-label="GitHub repository" title="GitHub"><svg width="20" height="20" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M6.766 11.328c-2.063-.25-3.516-1.734-3.516-3.656 0-.781.281-1.625.75-2.188-.203-.515-.172-1.609.063-2.062.625-.078 1.468.25 1.968.703.594-.187 1.219-.281 1.985-.281.765 0 1.39.094 1.953.265.484-.437 1.344-.765 1.969-.687.218.422.25 1.515.046 2.047.5.593.766 1.39.766 2.203 0 1.922-1.453 3.375-3.547 3.64.531.344.89 1.094.89 1.954v1.625c0 .468.391.734.86.547C13.781 14.359 16 11.53 16 8.03 16 3.61 12.406 0 7.984 0 3.563 0 0 3.61 0 8.031a7.88 7.88 0 0 0 5.172 7.422c.422.156.828-.125.828-.547v-1.25c-.219.094-.5.156-.75.156-1.031 0-1.64-.562-2.078-1.609-.172-.422-.36-.672-.719-.719-.187-.015-.25-.093-.25-.187 0-.188.313-.328.625-.328.453 0 .844.281 1.25.86.313.452.64.655 1.031.655s.641-.14 1-.5c.266-.265.47-.5.657-.656"/></svg></a>
+    <span id="backend" class="sr-only" role="status">Loading…</span><a class="header-icon" href="https://github.com/dy/gpu-font" aria-label="GitHub repository" title="GitHub"><svg width="20" height="20" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M6.766 11.328c-2.063-.25-3.516-1.734-3.516-3.656 0-.781.281-1.625.75-2.188-.203-.515-.172-1.609.063-2.062.625-.078 1.468.25 1.968.703.594-.187 1.219-.281 1.985-.281.765 0 1.39.094 1.953.265.484-.437 1.344-.765 1.969-.687.218.422.25 1.515.046 2.047.5.593.766 1.39.766 2.203 0 1.922-1.453 3.375-3.547 3.64.531.344.89 1.094.89 1.954v1.625c0 .468.391.734.86.547C13.781 14.359 16 11.53 16 8.03 16 3.61 12.406 0 7.984 0 3.563 0 0 3.61 0 8.031a7.88 7.88 0 0 0 5.172 7.422c.422.156.828-.125.828-.547v-1.25c-.219.094-.5.156-.75.156-1.031 0-1.64-.562-2.078-1.609-.172-.422-.36-.672-.719-.719-.187-.015-.25-.093-.25-.187 0-.188.313-.328.625-.328.453 0 .844.281 1.25.86.313.452.64.655 1.031.655s.641-.14 1-.5c.266-.265.47-.5.657-.656"/></svg></a>
   </header>
   <main>
     <section class="intro" aria-labelledby="intro-title">
@@ -106,7 +107,7 @@
           <p id="preview-error" class="message" data-error role="status" hidden>These font previews don’t support this character.</p>
           <div id="twins-tip" class="popover twins-tip" popover="manual" role="tooltip"></div>
           <ol id="results" class="results" aria-label="Ranked font matches" aria-describedby="score-note"></ol>
-          <div class="results-foot"><button id="more-matches" class="text-button more-matches" aria-controls="results" aria-expanded="false" inert>More matches<svg class="chevron" width="14" height="14" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="m4 6 4 4 4-4" stroke="currentColor" stroke-width="1.2"/></svg></button><button id="save" class="text-button" aria-label="Download JSON" title="Download the result as JSON" disabled><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 4h-.5C8.1 4 7.5 4.6 7.5 6v3.5c0 1.4-.8 2.5-2 2.5 1.2 0 2 1.1 2 2.5V18c0 1.4.6 2 2 2h.5M14 4h.5c1.4 0 2 .6 2 2v3.5c0 1.4.8 2.5 2 2.5-1.2 0-2 1.1-2 2.5V18c0 1.4-.6 2-2 2H14"/></svg>JSON</button></div>
+          <div class="results-foot"><button id="more-matches" class="text-button more-matches" aria-controls="results" aria-expanded="false" inert>More matches<svg class="chevron" width="14" height="14" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="m4 6 4 4 4-4" stroke="currentColor" stroke-width="1.2"/></svg></button><button id="copy-link" class="text-button" aria-label="Copy link" title="Copy a link to these matches" disabled><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 14a4 4 0 0 0 5.66 0l3-3a4 4 0 0 0-5.66-5.66l-1 1"/><path d="M14 10a4 4 0 0 0-5.66 0l-3 3a4 4 0 0 0 5.66 5.66l1-1"/></svg>Link</button><button id="save" class="text-button" aria-label="Download JSON" title="Download the result as JSON" disabled><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 4h-.5C8.1 4 7.5 4.6 7.5 6v3.5c0 1.4-.8 2.5-2 2.5 1.2 0 2 1.1 2 2.5V18c0 1.4.6 2 2 2h.5M14 4h.5c1.4 0 2 .6 2 2v3.5c0 1.4.8 2.5 2 2.5-1.2 0-2 1.1-2 2.5V18c0 1.4-.6 2-2 2H14"/></svg>JSON</button></div>
         </section>
       </div>
     </div>
@@ -170,7 +171,7 @@
         </div>
         <div class="qa">
           <h3>Do new fonts need retraining?</h3>
-          <p>No. A new font needs only its 128-number style vector, and fonts it never saw match as well as fonts it trained on. Styles unlike the training data match less well.</p>
+          <p>No. A new font needs only its style vector, and fonts it never saw match as well as fonts it trained on. Styles unlike the training data match less well.</p>
         </div>
         <div class="qa">
           <h3>Can I add my own fonts?</h3>
@@ -194,15 +195,15 @@
           <tr><th scope="row"><a href="https://github.com/mixfont/lens">Lens</a><span class="detail">Mixfont</span></th><td>5,000+<span class="detail">Google Fonts and other open fonts</span></td><td>–</td><td>Weight, italic</td><td>–</td><td>Local Python, or hosted</td><td>Non‑commercial</td><td>Free non‑commercial, paid API</td></tr>
           <tr><th scope="row"><a href="https://www.serbyte.net/what-the-google-font">What the Google Font</a><span class="detail">Serbyte Development</span></th><td>2,000+<span class="detail">Google Fonts families</span></td><td>–</td><td>–</td><td>–</td><td>Server, web and Chrome extension</td><td>No</td><td>Free, unlimited</td></tr>
           <tr><th scope="row"><a href="https://www.fontsquirrel.com/matcherator">Matcherator</a><span class="detail">Font Squirrel</span></th><td>Not stated<span class="detail"><a href="https://www.fontsquirrel.com/faq">Font Squirrel, Fontspring, MyFonts</a></span></td><td>–</td><td>–</td><td>–</td><td>Server</td><td>No</td><td>Free</td></tr>
-          <tr><th scope="row"><a href="https://github.com/dy/gpu-font">gpu-font</a><span class="detail">dy</span></th><td><span id="compared-fonts">–</span><span class="detail"><a href="./catalogs.html#sources">Google Fonts, Debian, Fontshare and more</a></span></td><td><a href="./catalogs.html#my-fonts">Installed, folders</a></td><td>Weight, italic</td><td id="compared-scripts">–</td><td>Browser, WebGPU or CPU</td><td>MIT</td><td>Free</td></tr>
+          <tr><th scope="row"><a href="https://github.com/dy/gpu-font">gpu-font</a><span class="detail">dy</span></th><td><span id="compared-fonts">–</span><span class="detail">Google Fonts, Debian, Fontshare and more</span></td><td><a href="./catalogs.html#my-fonts">Installed, folders</a></td><td>Weight, italic</td><td id="compared-scripts">–</td><td>Browser, WebGPU or CPU</td><td>MIT</td><td>Free</td></tr>
         </tbody></table></div>
     </section>
 
     <section id="legal" class="explanation" aria-labelledby="legal-title">
       <h2 id="legal-title">Licenses</h2>
       <div class="explanation-copy">
-        <p>No font files ship here: previews load from <a href="https://fonts.google.com/">Google Fonts</a> under each family’s license, and the <a href="./catalogs.html">catalogs</a> hold only names, links and style numbers.</p>
-        <p>A match is not a license: check a font’s terms with its foundry. Font names are their owners’ trademarks; gpu-font isn’t affiliated with them.</p>
+        <p>No font files ship here: previews load from <a href="https://fonts.google.com/">Google Fonts</a> under each family’s license, and the catalogs hold only names, links and style numbers.</p>
+        <p>A match is not a license: check a font’s terms with its foundry. Font names are their owners’ trademarks; gpu-font isn’t affiliated with them. Is your font in a catalog? <a href="https://github.com/dy/gpu-font/issues/new?title=Remove+or+relink+a+font&amp;body=Family%3A%0ACatalog%3A%0ARemove+it%2C+or+link+it+to%3A%0A">Ask to remove it or change its link.</a></p>
         <p>The code is <a href="https://github.com/dy/gpu-font/blob/main/LICENSE" rel="license">MIT-licensed</a> and comes without warranty.</p>
       </div>
     </section>
@@ -210,6 +211,6 @@
   <footer><p class="credit">Made by <a href="https://github.com/dy">dy</a>.</p><div class="footer-links"><a class="footer-license" href="https://github.com/dy/gpu-font/blob/main/LICENSE" rel="license">MIT</a><a class="footer-icon omkara" href="https://github.com/krishnized/license" aria-label="Krishnized license" title="Krishnized license"><span aria-hidden="true">ॐ</span></a></div></footer>
 
 
-  <script type="module" src="./app.mjs?v=0278100183"></script>
+  <script type="module" src="./app.mjs?v=75b43d99d8"></script>
 </body>
 </html>

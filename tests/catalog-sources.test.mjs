@@ -4,11 +4,11 @@ import { sourceCatalogs } from '../scripts/catalog-sources.mjs'
 import { readCatalog, rankCatalog, pack } from '../src/catalog.mjs'
 
 const binding = { encoderSha256: 'encoder', preparationSha256: 'preparation' }
-function batch(id, source, dimension) {
-  const vector = Buffer.alloc(128); vector[dimension] = 127
-  return { catalog: { version: 2, kind: 'font-catalog', ...binding, dimensions: 128, referencesPerFace: 1, sourceManifestSha256: id,
+function batch(id, source, dimension, width = 128) {
+  const vector = Buffer.alloc(width); vector[dimension] = 127
+  return { catalog: { version: 2, kind: 'font-catalog', ...binding, dimensions: width, referencesPerFace: 1, sourceManifestSha256: id,
     faces: [{ id, familyId: id, family: id, referenceIds: [id + '-words'] }],
-    vectors: { encoding: 'int8-base64', shape: [1, 128], data: vector.toString('base64'), owners: [0], scales: [1 / 127] } },
+    vectors: { encoding: 'int8-base64', shape: [1, width], data: vector.toString('base64'), owners: [0], scales: [1 / 127] } },
   records: [{ id: id + '-words', faceId: id, source: { key: source, name: source } }] }
 }
 test('source collections merge batches, remap owners and deduplicate identical faces without losing scores', () => {
@@ -45,4 +45,11 @@ test('4-bit batches merge row by row and keep their encoding; one source packed 
   const query = new Float32Array(128); query[1] = 1
   assert.deepEqual(rankCatalog(query, readCatalog(merged.data, binding)), rankCatalog(query, readCatalog(eight.data, binding)))
   assert.throws(() => sourceCatalogs([four('a', 'fontshare', 0), batch('b', 'fontshare', 1)], binding), /differently/)
+})
+test('a grouped catalog takes its sources\' embedding width, 64 as well as 128, and rejects a mix', () => {
+  const [merged] = sourceCatalogs([batch('b', 'fontshare', 1, 64), batch('a', 'fontshare', 0, 64)], binding)
+  assert.deepEqual([merged.data.dimensions, merged.data.vectors.shape], [64, [2, 64]])
+  const query = new Float32Array(64); query[1] = 1
+  assert.deepEqual(rankCatalog(query, readCatalog(merged.data, binding)).map(m => [m.family, m.score]), [['b', 1], ['a', 0]])
+  assert.throws(() => sourceCatalogs([batch('a', 'fontshare', 0, 64), batch('b', 'fontshare', 1)], binding), /dimensions/)
 })

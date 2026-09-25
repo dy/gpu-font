@@ -187,5 +187,12 @@ class EncoderTests(unittest.TestCase):
                 save(path,{**artifact,key:value});self.assertRaises(ValueError,load_encoder,path)
             save(path,artifact);self.assertEqual(load_encoder(path).head.out_features,128)
 
+    def test_embed_sizes_its_sums_by_the_model_not_a_constant(self):
+        torch.manual_seed(7);model=Classifier(64,context=True,wide=True,dilations=[1,1,2,2,1]).eval()
+        windows=[{'source':s,'offset':i*12,'width':4,'height':3} for i,s in enumerate(['a','a','b'])];pixels=np.arange(36,dtype=np.uint8)
+        vectors=encoder.embed(model,{'windows':windows},pixels,['a','b'])
+        self.assertEqual(vectors.shape,(2,64));np.testing.assert_allclose(np.linalg.norm(vectors,axis=1),1,rtol=1e-5)
+        self.assertRaises(ValueError,encoder.embed,model,{'windows':windows},pixels,['a','b','c'])  # c has no window
+
 
 if __name__=='__main__':unittest.main()

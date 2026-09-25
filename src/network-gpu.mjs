@@ -8,9 +8,8 @@ const bindings = `
 @group(0) @binding(4) var<uniform> shape: vec4<u32>;
 `
 function shader(layer, model) {
-  const { channels, strides, dilations } = model, dilation = dilations[layer]
-  const features = channels.at(-1)
-  if (layer === strides.length) return `
+  const features = model.channels.at(-1), depth = model.layers.length - 1
+  if (layer === depth) return `
 @group(0) @binding(0) var<storage, read> input: array<f32>;
 @group(0) @binding(3) var<storage, read_write> output: array<f32>;
 @group(0) @binding(4) var<uniform> shape: vec4<u32>;
@@ -20,25 +19,27 @@ function shader(layer, model) {
   for (var p = 0u; p < count; p++) { sum += input[c * count + p]; }
   output[c] = sum / f32(count);
 }`
-  if (layer === strides.length + 1) return `${bindings}
+  if (layer === depth + 1) return `${bindings}
 @compute @workgroup_size(64) fn main(@builtin(global_invocation_id) gid: vec3<u32>) {
   let d = gid.x; if (d >= shape.z) { return; }
   var sum = bias[d];
   for (var c = 0u; c < ${features}u; c++) { sum += input[c] * weights[d * ${features}u + c]; }
   output[d] = sum;
 }`
+  // A 3×3 conv over every input channel, a depthwise 3×3 over the output's own channel, or a pointwise 1×1 mix.
+  const { kind, stride, dilation, shape: [co, ci] } = model.layers[layer], taps = kind === 'pointwise' ? 1 : 3
   return `${bindings}
 @compute @workgroup_size(64) fn main(@builtin(global_invocation_id) gid: vec3<u32>) {
   let p = gid.x; let count = shape.z * shape.w;
-  if (p >= ${channels[layer + 1]}u * count) { return; }
+  if (p >= ${co}u * count) { return; }
   let x = i32(p % shape.z); let y = i32((p / shape.z) % shape.w); let c = p / count;
   var sum = bias[c];
-  for (var k = 0u; k < ${channels[layer]}u; k++) {
-    for (var dy = 0; dy < 3; dy++) { for (var dx = 0; dx < 3; dx++) {
-      let ix = x * ${strides[layer]} + (dx - 1) * ${dilation}; let iy = y * ${strides[layer]} + (dy - 1) * ${dilation};
+  for (var k = 0u; k < ${ci}u; k++) {
+    for (var dy = 0; dy < ${taps}; dy++) { for (var dx = 0; dx < ${taps}; dx++) {
+      let ix = x * ${stride} + (dx - 1) * ${taps > 1 ? dilation : 0}; let iy = y * ${stride} + (dy - 1) * ${taps > 1 ? dilation : 0};
       if (ix >= 0 && ix < i32(shape.x) && iy >= 0 && iy < i32(shape.y)) {
-        let v = input[(k * shape.y + u32(iy)) * shape.x + u32(ix)];
-        sum += ${layer === 0 ? '(1.0 - v)' : 'v'} * weights[((c * ${channels[layer]}u + k) * 3u + u32(dy)) * 3u + u32(dx)];
+        let v = input[(${kind === 'depthwise' ? 'c' : 'k'} * shape.y + u32(iy)) * shape.x + u32(ix)];
+        sum += ${layer === 0 ? '(1.0 - v)' : 'v'} * weights[((c * ${ci}u + k) * ${taps}u + u32(dy)) * ${taps}u + u32(dx)];
       }
     } }
   }
@@ -47,7 +48,7 @@ function shader(layer, model) {
 }
 
 export async function createNetworkGPU(model, gpu = globalThis.navigator?.gpu) {
-  const { channels, strides } = model, depth = strides.length
+  const { channels } = model, depth = model.layers.length - 1, layers = model.layers
   if (!gpu) throw new Error('WebGPU is unavailable')
   const adapter = await gpu.requestAdapter()
   if (!adapter) throw new Error('No WebGPU adapter')
@@ -67,9 +68,9 @@ export async function createNetworkGPU(model, gpu = globalThis.navigator?.gpu) {
     const stages = []
     let previous = input, width = 128, height = 48
     for (let i = 0; i <= depth + 1; i++) {
-      const w = i === depth ? channels.at(-1) : i > depth ? model.outputs : Math.ceil(width / strides[i])
-      const h = i >= depth ? 1 : Math.ceil(height / strides[i])
-      const output = buffer(w * h * (i >= depth ? 1 : channels[i + 1]) * 4, GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_SRC)
+      const w = i === depth ? channels.at(-1) : i > depth ? model.outputs : Math.ceil(width / layers[i].stride)
+      const h = i >= depth ? 1 : Math.ceil(height / layers[i].stride)
+      const output = buffer(w * h * (i >= depth ? 1 : layers[i].shape[0]) * 4, GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_SRC)
       const layer = model.layers[i > depth ? depth : i]
       const weights = i === depth ? null : buffer(layer.weights.byteLength, GPUBufferUsage.STORAGE, layer.weights)
       const bias = i === depth ? null : buffer(layer.bias.byteLength, GPUBufferUsage.STORAGE, layer.bias)
@@ -85,11 +86,11 @@ export async function createNetworkGPU(model, gpu = globalThis.navigator?.gpu) {
       let { width, height } = window
       const commands = device.createCommandEncoder()
       for (const [i, stage] of stages.entries()) {
-        const w = i === depth ? channels.at(-1) : i > depth ? model.outputs : Math.ceil(width / strides[i]), h = i >= depth ? 1 : Math.ceil(height / strides[i])
+        const w = i === depth ? channels.at(-1) : i > depth ? model.outputs : Math.ceil(width / layers[i].stride), h = i >= depth ? 1 : Math.ceil(height / layers[i].stride)
         device.queue.writeBuffer(stage.shape, 0, new Uint32Array([width, height, w, h]))
         const pass = commands.beginComputePass()
         pass.setPipeline(stage.pipeline); pass.setBindGroup(0, stage.group)
-        pass.dispatchWorkgroups(Math.ceil(w * h * (i >= depth ? 1 : channels[i + 1]) / 64)); pass.end()
+        pass.dispatchWorkgroups(Math.ceil(w * h * (i >= depth ? 1 : layers[i].shape[0]) / 64)); pass.end()
         width = w; height = h
       }
       commands.copyBufferToBuffer(previous, 0, readback, 0, model.outputs * 4)

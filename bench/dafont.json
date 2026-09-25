@@ -1,0 +1,1441 @@
+{
+ "source": {
+  "benchmark": "https://github.com/MaxHalford/llm-font-recognition",
+  "commit": "810d681299104de5e5affded5b2f7cb7ef7d8918",
+  "forum": "https://www.dafont.com/forum/?f=1"
+ },
+ "coverage": {
+  "requests": 4887,
+  "answered": 1573,
+  "indexed": 612,
+  "byCatalog": {
+   "dafont": 341,
+   "adobe-fonts": 125,
+   "google-fonts": 119,
+   "debian": 10,
+   "other": 10,
+   "fontlibrary": 7
+  },
+  "missing": [
+   {
+    "font": "Edwardian Script",
+    "requests": 8
+   },
+   {
+    "font": "Benguiat",
+    "requests": 4
+   },
+   {
+    "font": "Compacta",
+    "requests": 4
+   },
+   {
+    "font": "Aachen",
+    "requests": 3
+   },
+   {
+    "font": "Argue",
+    "requests": 3
+   },
+   {
+    "font": "Blaster",
+    "requests": 3
+   },
+   {
+    "font": "Burgues Script",
+    "requests": 3
+   },
+   {
+    "font": "Copperplate Gothic",
+    "requests": 3
+   },
+   {
+    "font": "Gazzetta",
+    "requests": 3
+   },
+   {
+    "font": "Gloss And Bloom",
+    "requests": 3
+   },
+   {
+    "font": "Photograph Signature",
+    "requests": 3
+   },
+   {
+    "font": "Primal Sailor",
+    "requests": 3
+   },
+   {
+    "font": "Quantify",
+    "requests": 3
+   },
+   {
+    "font": "Trebuchet",
+    "requests": 3
+   },
+   {
+    "font": "VAG Rounded",
+    "requests": 3
+   },
+   {
+    "font": "AdineKirnberg Script",
+    "requests": 2
+   },
+   {
+    "font": "Air Millhouse Italic",
+    "requests": 2
+   },
+   {
+    "font": "Aloha March",
+    "requests": 2
+   },
+   {
+    "font": "Amarillo",
+    "requests": 2
+   },
+   {
+    "font": "Apricots",
+    "requests": 2
+   },
+   {
+    "font": "Aston Script",
+    "requests": 2
+   },
+   {
+    "font": "Berlin Sans",
+    "requests": 2
+   },
+   {
+    "font": "Bible Script",
+    "requests": 2
+   },
+   {
+    "font": "Big Noodle Titling",
+    "requests": 2
+   },
+   {
+    "font": "Birds of Paradise",
+    "requests": 2
+   },
+   {
+    "font": "Biro Script",
+    "requests": 2
+   },
+   {
+    "font": "Bloody Murder",
+    "requests": 2
+   },
+   {
+    "font": "Brand",
+    "requests": 2
+   },
+   {
+    "font": "Bright Live",
+    "requests": 2
+   },
+   {
+    "font": "Broedy",
+    "requests": 2
+   },
+   {
+    "font": "Chiller",
+    "requests": 2
+   },
+   {
+    "font": "Chopin Script",
+    "requests": 2
+   },
+   {
+    "font": "Colors Of Autumn",
+    "requests": 2
+   },
+   {
+    "font": "Comic Sans",
+    "requests": 2
+   },
+   {
+    "font": "Cortese",
+    "requests": 2
+   },
+   {
+    "font": "Crillee",
+    "requests": 2
+   },
+   {
+    "font": "Daubenton",
+    "requests": 2
+   },
+   {
+    "font": "Didot",
+    "requests": 2
+   },
+   {
+    "font": "Dulcelin",
+    "requests": 2
+   },
+   {
+    "font": "Family Guy",
+    "requests": 2
+   },
+   {
+    "font": "Felix Titling",
+    "requests": 2
+   },
+   {
+    "font": "Fenway Park",
+    "requests": 2
+   },
+   {
+    "font": "Forte",
+    "requests": 2
+   },
+   {
+    "font": "Frankfurter",
+    "requests": 2
+   },
+   {
+    "font": "Freestyle Script",
+    "requests": 2
+   },
+   {
+    "font": "Futura",
+    "requests": 2
+   },
+   {
+    "font": "Futura Bold",
+    "requests": 2
+   },
+   {
+    "font": "Ghoulish",
+    "requests": 2
+   },
+   {
+    "font": "Graffiti City",
+    "requests": 2
+   },
+   {
+    "font": "Gyahegi",
+    "requests": 2
+   },
+   {
+    "font": "Halimun",
+    "requests": 2
+   },
+   {
+    "font": "IM Fell Types",
+    "requests": 2
+   },
+   {
+    "font": "Iron Horse",
+    "requests": 2
+   },
+   {
+    "font": "Jitzu Swash Bold",
+    "requests": 2
+   },
+   {
+    "font": "Krinkes",
+    "requests": 2
+   },
+   {
+    "font": "Lubalin Graph",
+    "requests": 2
+   },
+   {
+    "font": "MADE Okine Sans",
+    "requests": 2
+   },
+   {
+    "font": "Magnolia Script",
+    "requests": 2
+   },
+   {
+    "font": "Mariage",
+    "requests": 2
+   },
+   {
+    "font": "Matura",
+    "requests": 2
+   },
+   {
+    "font": "MiSeang",
+    "requests": 2
+   },
+   {
+    "font": "Mistress Benedict Brush",
+    "requests": 2
+   },
+   {
+    "font": "Morpheus",
+    "requests": 2
+   },
+   {
+    "font": "New Gothic Textura",
+    "requests": 2
+   },
+   {
+    "font": "Nexa Rust Sans",
+    "requests": 2
+   },
+   {
+    "font": "Operina",
+    "requests": 2
+   },
+   {
+    "font": "Peignot Demi",
+    "requests": 2
+   },
+   {
+    "font": "Quarantype Hangout",
+    "requests": 2
+   },
+   {
+    "font": "Railey",
+    "requests": 2
+   },
+   {
+    "font": "Revue",
+    "requests": 2
+   },
+   {
+    "font": "Scholar",
+    "requests": 2
+   },
+   {
+    "font": "Serpentine Bold Oblique",
+    "requests": 2
+   },
+   {
+    "font": "Sloop Script Three",
+    "requests": 2
+   },
+   {
+    "font": "Themadi",
+    "requests": 2
+   },
+   {
+    "font": "Thirthy",
+    "requests": 2
+   },
+   {
+    "font": "Very Vogue",
+    "requests": 2
+   },
+   {
+    "font": "Viner Hand",
+    "requests": 2
+   },
+   {
+    "font": "Vondey",
+    "requests": 2
+   }
+  ]
+ },
+ "crop": "One box per request, in the picture's pixels [x0, y0, x1, y1], chosen before gpu-font ran on any of them: the text the forum's answer names, one line of it (the longest when several lines share the font), with a little background around it. Where the thread says which text the answer names, that text; lettering whose lines interlock or curve is boxed whole. Hard pictures are never skipped; a request is skipped only when its thread does not say which of several fonts the answer names.",
+ "skipped": 2,
+ "rule": "Right when the forum's answer, compared without case or punctuation, names a row the page shows or a family folded into it; chatbots by the same comparison.",
+ "catalogs": "All: every shipped catalog searched as one.",
+ "browser": "151.0.7922.34",
+ "adapter": "apple metal-3",
+ "date": "2026-09-25",
+ "gpuFont": {
+  "requests": 151,
+  "top1": 0.2848,
+  "top5": 0.4768
+ },
+ "chatbots": {
+  "gemini-2.5-flash-preview-05-20": {
+   "answered": {
+    "requests": 753,
+    "top1": 0.008,
+    "top5": 0.0146
+   },
+   "paired": {
+    "requests": 65,
+    "top1": 0.0308,
+    "top5": 0.0615,
+    "gpuFont": {
+     "requests": 65,
+     "top1": 0.2,
+     "top5": 0.4308
+    }
+   }
+  },
+  "gpt-4o-mini": {
+   "answered": {
+    "requests": 360,
+    "top1": 0.0111,
+    "top5": 0.0222
+   },
+   "paired": {
+    "requests": 37,
+    "top1": 0.0811,
+    "top5": 0.1892,
+    "gpuFont": {
+     "requests": 37,
+     "top1": 0.1622,
+     "top5": 0.4054
+    }
+   }
+  }
+ },
+ "requests": [
+  {
+   "task": "577036",
+   "font": "Essays 1743",
+   "rank": null,
+   "first": "Sahitya",
+   "score": 0.83
+  },
+  {
+   "task": "577014",
+   "font": "Sansation",
+   "rank": 15,
+   "first": "Cantarell",
+   "score": 0.864
+  },
+  {
+   "task": "576992",
+   "font": "Sonsie One",
+   "rank": null,
+   "first": "Cartoon Shadow",
+   "score": 0.73
+  },
+  {
+   "task": "576991",
+   "font": "Quando",
+   "rank": 10,
+   "first": "Kameron",
+   "score": 0.896
+  },
+  {
+   "task": "576942",
+   "font": "Alex Brush",
+   "rank": 2,
+   "first": "Sheila",
+   "score": 0.741
+  },
+  {
+   "task": "576524",
+   "font": "Archivo Black",
+   "rank": 1,
+   "first": "Archivo Black",
+   "score": 0.947
+  },
+  {
+   "task": "576919",
+   "font": "Luckiest Guy",
+   "rank": 1,
+   "first": "Luckiest Guy",
+   "score": 0.848
+  },
+  {
+   "task": "560347",
+   "font": "Cooper Hewitt",
+   "rank": null,
+   "first": "Ad Gothic Variable",
+   "score": 0.768
+  },
+  {
+   "task": "576861",
+   "font": "Dancing Script",
+   "rank": 1,
+   "first": "Dancing Script",
+   "score": 0.749
+  },
+  {
+   "task": "562393",
+   "font": "Arial Black",
+   "rank": 9,
+   "first": "Rust never sleeps",
+   "score": 0.868
+  },
+  {
+   "task": "577067",
+   "font": "Modak",
+   "rank": null,
+   "first": "d puntillas C Lace",
+   "score": 0.78
+  },
+  {
+   "task": "577077",
+   "font": "Squealer",
+   "rank": 1,
+   "first": "Squealer",
+   "score": 0.76
+  },
+  {
+   "task": "577089",
+   "font": "Impact",
+   "rank": 5,
+   "first": "Alumni Sans",
+   "score": 0.839
+  },
+  {
+   "task": "577125",
+   "font": "Orbitron",
+   "rank": 4,
+   "first": "Anita Semi-square",
+   "score": 0.866
+  },
+  {
+   "task": "577157",
+   "font": "Cantata One",
+   "rank": 12,
+   "first": "Bodoni Moda SC",
+   "score": 0.834
+  },
+  {
+   "task": "577177",
+   "font": "Cookie",
+   "rank": 3,
+   "first": "Rochester Pro",
+   "score": 0.855
+  },
+  {
+   "task": "577251",
+   "font": "Ubuntu",
+   "rank": 8,
+   "first": "Red Hat Display",
+   "score": 0.81
+  },
+  {
+   "task": "577256",
+   "font": "Alegreya Sans",
+   "rank": null,
+   "first": "IM FELL FLOWERS 2",
+   "score": 0.69
+  },
+  {
+   "task": "577290",
+   "font": "Grandstander",
+   "rank": null,
+   "first": "Appendix",
+   "score": 0.725
+  },
+  {
+   "task": "577316",
+   "font": "Imbue",
+   "rank": null,
+   "first": "Abusive Pencil",
+   "score": 0.63
+  },
+  {
+   "task": "577348",
+   "font": "PT Serif",
+   "rank": 2,
+   "first": "PT Serif Pro",
+   "score": 0.895
+  },
+  {
+   "task": "577347",
+   "font": "Paytone One",
+   "rank": null,
+   "first": "Plutonium",
+   "score": 0.664
+  },
+  {
+   "task": "577355",
+   "font": "Merriweather",
+   "rank": 12,
+   "first": "Martel",
+   "score": 0.884
+  },
+  {
+   "task": "577413",
+   "font": "Pacifico",
+   "rank": 1,
+   "first": "Pacifico",
+   "score": 0.834
+  },
+  {
+   "task": "384803",
+   "font": "Squealer",
+   "rank": 10,
+   "first": "VM74",
+   "score": 0.76
+  },
+  {
+   "task": "577485",
+   "font": "Pinyon Script",
+   "rank": 11,
+   "first": "Medusa",
+   "score": 0.864
+  },
+  {
+   "task": "577480",
+   "font": "Josefin Sans",
+   "rank": null,
+   "first": "Tron",
+   "score": 0.704
+  },
+  {
+   "task": "577508",
+   "font": "Supreme",
+   "rank": null,
+   "first": "Retanglez",
+   "score": 0.646
+  },
+  {
+   "task": "577511",
+   "font": "Roboto",
+   "rank": 12,
+   "first": "Cheyenne Sans",
+   "score": 0.867
+  },
+  {
+   "task": "577534",
+   "font": "Bebas Neue",
+   "rank": null,
+   "first": "DIN 1451 Pro",
+   "score": 0.892
+  },
+  {
+   "task": "577546",
+   "font": "Fraunces",
+   "rank": 1,
+   "first": "Fraunces",
+   "score": 0.878
+  },
+  {
+   "task": "577575",
+   "font": "Mister Firley",
+   "rank": null,
+   "first": "Zombie Garden Party",
+   "score": 0.712
+  },
+  {
+   "task": "577600",
+   "font": "Homemade Apple",
+   "rank": 4,
+   "first": "Lavishly Yours",
+   "score": 0.608
+  },
+  {
+   "task": "577640",
+   "font": "Pirata One",
+   "rank": 3,
+   "first": "Substrate",
+   "score": 0.848
+  },
+  {
+   "task": "577620",
+   "font": "Sancreek",
+   "rank": 1,
+   "first": "Sancreek",
+   "score": 0.855
+  },
+  {
+   "task": "577678",
+   "font": "Verdana",
+   "rank": 7,
+   "first": "Kanit",
+   "score": 0.89
+  },
+  {
+   "task": "577682",
+   "font": "Trade Winds",
+   "rank": 1,
+   "first": "Trade Winds",
+   "score": 0.84
+  },
+  {
+   "task": "577780",
+   "font": "Gilda Display",
+   "rank": 1,
+   "first": "Gilda Display",
+   "score": 0.89
+  },
+  {
+   "task": "577798",
+   "font": "Teko",
+   "rank": 2,
+   "first": "Super Bowl",
+   "score": 0.849
+  },
+  {
+   "task": "577858",
+   "font": "Petit Formal Script",
+   "rank": 1,
+   "first": "Petit Formal Script",
+   "score": 0.825
+  },
+  {
+   "task": "577886",
+   "font": "Mail Ray Stuff",
+   "rank": null,
+   "first": "El Paso",
+   "score": 0.718
+  },
+  {
+   "task": "577874",
+   "font": "Arial",
+   "rank": 7,
+   "first": "BPG Ingiri GPL&GNU",
+   "score": 0.898
+  },
+  {
+   "task": "577898",
+   "font": "Fredoka",
+   "rank": 10,
+   "first": "Golane Vintage",
+   "score": 0.797
+  },
+  {
+   "task": "577924",
+   "font": "Philosopher",
+   "rank": 1,
+   "first": "Philosopher",
+   "score": 0.842
+  },
+  {
+   "task": "577955",
+   "font": "Pirata One",
+   "rank": 1,
+   "first": "Pirata One",
+   "score": 0.866
+  },
+  {
+   "task": "578004",
+   "font": "Cinzel",
+   "rank": 9,
+   "first": "Cinzel Decorative",
+   "score": 0.841
+  },
+  {
+   "task": "577995",
+   "font": "Alfa Slab One",
+   "rank": null,
+   "first": "Perec Ludique",
+   "score": 0.673
+  },
+  {
+   "task": "577991",
+   "font": "Cormorant",
+   "rank": 3,
+   "first": "Cormorant SC",
+   "score": 0.906
+  },
+  {
+   "task": "577983",
+   "font": "Instrument Serif",
+   "rank": null,
+   "first": "Wersfiga",
+   "score": 0.75
+  },
+  {
+   "task": "578063",
+   "font": "Impact",
+   "rank": null,
+   "first": "Debonair Inline",
+   "score": 0.799
+  },
+  {
+   "task": "578128",
+   "font": "Fredoka",
+   "rank": null,
+   "first": "Noto Serif Kannada",
+   "score": 0.565
+  },
+  {
+   "task": "578135",
+   "font": "Modak",
+   "rank": null,
+   "first": "Extra Days",
+   "score": 0.701
+  },
+  {
+   "task": "578178",
+   "font": "Anton",
+   "rank": 4,
+   "first": "Octynaz",
+   "score": 0.889
+  },
+  {
+   "task": "578183",
+   "font": "Miss Fajardose",
+   "rank": 2,
+   "first": "Monsieur La Doulaise",
+   "score": 0.791
+  },
+  {
+   "task": "578225",
+   "font": "League Spartan",
+   "rank": null,
+   "first": "Callejera",
+   "score": 0.726
+  },
+  {
+   "task": "578259",
+   "font": "Permanent Marker",
+   "rank": null,
+   "first": "Richu Mast",
+   "score": 0.789
+  },
+  {
+   "task": "578263",
+   "font": "Bangers",
+   "rank": 15,
+   "first": "Grandstander",
+   "score": 0.809
+  },
+  {
+   "task": "578400",
+   "font": "Prime Minister of Canada",
+   "rank": 1,
+   "first": "Prime Minister of Canada",
+   "score": 0.902
+  },
+  {
+   "task": "578459",
+   "font": "Condiment",
+   "rank": 2,
+   "first": "Aguafina Script",
+   "score": 0.756
+  },
+  {
+   "task": "579268",
+   "font": "Vademecum",
+   "rank": null,
+   "first": "Reserved Dogs",
+   "score": 0.81
+  },
+  {
+   "task": "579272",
+   "font": "Cinzel",
+   "rank": 1,
+   "first": "Cinzel",
+   "score": 0.902
+  },
+  {
+   "task": "579263",
+   "font": "Noto Serif Display",
+   "rank": 1,
+   "first": "Noto Serif Display",
+   "score": 0.924
+  },
+  {
+   "task": "579252",
+   "font": "Beth Ellen",
+   "rank": 1,
+   "first": "Beth Ellen",
+   "score": 0.813
+  },
+  {
+   "task": "489348",
+   "font": "Road Rage",
+   "rank": null,
+   "first": "Wicked Brush",
+   "score": 0.617
+  },
+  {
+   "task": "579241",
+   "font": "Arial",
+   "rank": null,
+   "first": "Schibsted Grotesk",
+   "score": 0.877
+  },
+  {
+   "task": "579161",
+   "font": "Pinyon Script",
+   "rank": 6,
+   "first": "Filmotype Yale",
+   "score": 0.847
+  },
+  {
+   "task": "579181",
+   "font": "Shrikhand",
+   "rank": 1,
+   "first": "Shrikhand",
+   "score": 0.897
+  },
+  {
+   "task": "579177",
+   "font": "Fraunces",
+   "rank": 2,
+   "first": "Alice",
+   "score": 0.805
+  },
+  {
+   "task": "579145",
+   "font": "Orbitron",
+   "rank": 1,
+   "first": "Orbitron",
+   "score": 0.848
+  },
+  {
+   "task": "579116",
+   "font": "Exo 2",
+   "rank": null,
+   "first": "Metropolis",
+   "score": 0.712
+  },
+  {
+   "task": "579046",
+   "font": "Cinzel",
+   "rank": 3,
+   "first": "Cinzel Decorative",
+   "score": 0.884
+  },
+  {
+   "task": "578939",
+   "font": "Poetsen One",
+   "rank": null,
+   "first": "April Easter",
+   "score": 0.879
+  },
+  {
+   "task": "578935",
+   "font": "Neuropol",
+   "rank": 1,
+   "first": "Neuropol",
+   "score": 0.846
+  },
+  {
+   "task": "578886",
+   "font": "Berkshire Swash",
+   "rank": 3,
+   "first": "Berkshire Pro",
+   "score": 0.843
+  },
+  {
+   "task": "578851",
+   "font": "Luckiest Guy",
+   "rank": null,
+   "first": "Typewriter Grunge",
+   "score": 0.749
+  },
+  {
+   "task": "578837",
+   "font": "Rochester",
+   "rank": 1,
+   "first": "Rochester",
+   "score": 0.91
+  },
+  {
+   "task": "571459",
+   "font": "Do Hyeon",
+   "rank": 10,
+   "first": "Sunflower",
+   "score": 0.65
+  },
+  {
+   "task": "578736",
+   "font": "Playfair Display",
+   "rank": null,
+   "first": "BM Euljiro oraeorae",
+   "score": 0.556
+  },
+  {
+   "task": "578625",
+   "font": "Cormorant Garamond",
+   "rank": 6,
+   "first": "Cormorant Upright",
+   "score": 0.885
+  },
+  {
+   "task": "578617",
+   "font": "Times New Roman",
+   "rank": null,
+   "first": "Magister",
+   "score": 0.791
+  },
+  {
+   "task": "578559",
+   "font": "Rambla",
+   "rank": 1,
+   "first": "Rambla",
+   "score": 0.867
+  },
+  {
+   "task": "578544",
+   "font": "Times New Roman",
+   "rank": null,
+   "first": "TW-Sung-Plus",
+   "score": 0.843
+  },
+  {
+   "task": "436350",
+   "font": "Cormorant",
+   "rank": 1,
+   "first": "Cormorant",
+   "score": 0.822
+  },
+  {
+   "task": "579317",
+   "font": "Eurofurence",
+   "rank": 1,
+   "first": "eurofurence",
+   "score": 0.856
+  },
+  {
+   "task": "579322",
+   "font": "Euphorigenic",
+   "rank": null,
+   "first": "Black Friday",
+   "score": 0.857
+  },
+  {
+   "task": "579404",
+   "font": "Rye",
+   "rank": 2,
+   "first": "Anderson Four Feather Falls",
+   "score": 0.844
+  },
+  {
+   "task": "579405",
+   "font": "Bricolage Grotesque",
+   "rank": 1,
+   "first": "Bricolage Grotesque",
+   "score": 0.859
+  },
+  {
+   "task": "579484",
+   "font": "Nanum Brush Script",
+   "rank": null,
+   "first": "Mixed Feelings",
+   "score": 0.66
+  },
+  {
+   "task": "579551",
+   "font": "Impact",
+   "rank": 1,
+   "first": "Impact",
+   "score": 0.925
+  },
+  {
+   "task": "570189",
+   "font": "Pirata One",
+   "rank": 2,
+   "first": "Bokor",
+   "score": 0.896
+  },
+  {
+   "task": "579754",
+   "font": "Road Rage",
+   "rank": null,
+   "first": "Panther",
+   "score": 0.659
+  },
+  {
+   "task": "579793",
+   "font": "Montserrat",
+   "rank": 3,
+   "first": "Lexend Exa",
+   "score": 0.853
+  },
+  {
+   "task": "579797",
+   "font": "Euphorigenic",
+   "rank": 1,
+   "first": "Euphorigenic",
+   "score": 0.809
+  },
+  {
+   "task": "579816",
+   "font": "Deftone Stylus",
+   "rank": null,
+   "first": "Sketch Handwriting",
+   "score": 0.557
+  },
+  {
+   "task": "580055",
+   "font": "Caudex",
+   "rank": 1,
+   "first": "Caudex",
+   "score": 0.833
+  },
+  {
+   "task": "580099",
+   "font": "Impact",
+   "rank": 8,
+   "first": "Oswald",
+   "score": 0.779
+  },
+  {
+   "task": "580126",
+   "font": "Capriola",
+   "rank": null,
+   "first": "Rustic Revolution",
+   "score": 0.719
+  },
+  {
+   "task": "580123",
+   "font": "Reggae One",
+   "rank": 1,
+   "first": "Reggae One",
+   "score": 0.827
+  },
+  {
+   "task": "580240",
+   "font": "Architect's Daughter",
+   "rank": 13,
+   "first": "QTTechtone",
+   "score": 0.824
+  },
+  {
+   "task": "580254",
+   "font": "Poppins",
+   "rank": 15,
+   "first": "Libre Franklin",
+   "score": 0.849
+  },
+  {
+   "task": "580345",
+   "font": "Times New Roman",
+   "rank": null,
+   "first": "BuryCaps",
+   "score": 0.814
+  },
+  {
+   "task": "580417",
+   "font": "Cinzel",
+   "rank": 1,
+   "first": "Cinzel",
+   "score": 0.725
+  },
+  {
+   "task": "580442",
+   "font": "Playfair Display",
+   "rank": 1,
+   "first": "Playfair Display",
+   "score": 0.84
+  },
+  {
+   "task": "580497",
+   "font": "Cinzel",
+   "rank": 6,
+   "first": "Cinzel Decorative",
+   "score": 0.87
+  },
+  {
+   "task": "580492",
+   "font": "Krona One",
+   "rank": null,
+   "first": "Charger Pro",
+   "score": 0.857
+  },
+  {
+   "task": "580513",
+   "font": "Josefin Sans",
+   "rank": 1,
+   "first": "Josefin Sans",
+   "score": 0.916
+  },
+  {
+   "task": "580519",
+   "font": "Arial Black",
+   "rank": null,
+   "first": "Clash Grotesk",
+   "score": 0.887
+  },
+  {
+   "task": "580541",
+   "font": "Arial Black",
+   "rank": null,
+   "first": "KG Crossing A Line",
+   "score": 0.877
+  },
+  {
+   "task": "580537",
+   "font": "Allison",
+   "rank": 3,
+   "first": "DkgHandwriting",
+   "score": 0.742
+  },
+  {
+   "task": "580637",
+   "font": "Die Nasty",
+   "rank": null,
+   "first": "Mesmerize",
+   "score": 0.719
+  },
+  {
+   "task": "580631",
+   "font": "Rochester",
+   "rank": null,
+   "first": "Saltwater",
+   "score": 0.701
+  },
+  {
+   "task": "580666",
+   "font": "Homemade Apple",
+   "rank": 1,
+   "first": "Homemade Apple",
+   "score": 0.825
+  },
+  {
+   "task": "580681",
+   "font": "Playfair Display",
+   "rank": null,
+   "first": "Libre Caslon Display",
+   "score": 0.889
+  },
+  {
+   "task": "580687",
+   "font": "Baloo 2",
+   "rank": 1,
+   "first": "Baloo Bhai 2",
+   "score": 0.818
+  },
+  {
+   "task": "580697",
+   "font": "Farro",
+   "rank": 1,
+   "first": "Farro",
+   "score": 0.89
+  },
+  {
+   "task": "580756",
+   "font": "Gwendolyn",
+   "rank": 3,
+   "first": "Winsome",
+   "score": 0.767
+  },
+  {
+   "task": "580780",
+   "font": "Playfair Display",
+   "rank": 10,
+   "first": "The Roots",
+   "score": 0.724
+  },
+  {
+   "task": "580806",
+   "font": "Yellowtail",
+   "rank": 1,
+   "first": "Yellowtail",
+   "score": 0.814
+  },
+  {
+   "task": "580814",
+   "font": "Quattrocento",
+   "rank": 4,
+   "first": "Sentient",
+   "score": 0.833
+  },
+  {
+   "task": "580813",
+   "font": "IBM Plex Sans",
+   "rank": 5,
+   "first": "Rosa Sans",
+   "score": 0.797
+  },
+  {
+   "task": "580823",
+   "font": "Times New Roman",
+   "rank": null,
+   "first": "Nyght Serif",
+   "score": 0.826
+  },
+  {
+   "task": "580864",
+   "font": "Tinos",
+   "rank": 2,
+   "first": "Liberation Serif",
+   "score": 0.83
+  },
+  {
+   "task": "581024",
+   "font": "Cinzel",
+   "rank": null,
+   "first": "Rocky",
+   "score": 0.801
+  },
+  {
+   "task": "581047",
+   "font": "Sacramento",
+   "rank": 4,
+   "first": "Pretty Girls Script",
+   "score": 0.758
+  },
+  {
+   "task": "581059",
+   "font": "Krona One",
+   "rank": 3,
+   "first": "Mesmerize",
+   "score": 0.855
+  },
+  {
+   "task": "581164",
+   "font": "Instrument Serif",
+   "rank": 1,
+   "first": "Instrument Serif",
+   "score": 0.797
+  },
+  {
+   "task": "581165",
+   "font": "Unbounded",
+   "rank": null,
+   "first": "Nu School Militia",
+   "score": 0.659
+  },
+  {
+   "task": "581190",
+   "font": "Bellefair",
+   "rank": null,
+   "first": "Trajan",
+   "score": 0.749
+  },
+  {
+   "task": "581212",
+   "font": "Arapey",
+   "rank": 6,
+   "first": "Mastro",
+   "score": 0.866
+  },
+  {
+   "task": "581257",
+   "font": "Audiowide",
+   "rank": null,
+   "first": "EB Garamond Initials Fill1",
+   "score": 0.665
+  },
+  {
+   "task": "581250",
+   "font": "Cinzel",
+   "rank": 1,
+   "first": "Cinzel",
+   "score": 0.88
+  },
+  {
+   "task": "581274",
+   "font": "Calistoga",
+   "rank": 7,
+   "first": "Irianis ADF Style Std",
+   "score": 0.857
+  },
+  {
+   "task": "581284",
+   "font": "Credit Valley",
+   "rank": null,
+   "first": "Hadasim CLM",
+   "score": 0.82
+  },
+  {
+   "task": "581327",
+   "font": "Permanent Marker",
+   "rank": 1,
+   "first": "Permanent Marker",
+   "score": 0.917
+  },
+  {
+   "task": "581419",
+   "font": "Baveuse",
+   "rank": null,
+   "first": "Alfarn",
+   "score": 0.805
+  },
+  {
+   "task": "581498",
+   "font": "Mr De Haviland",
+   "rank": 1,
+   "first": "Mr De Haviland",
+   "score": 0.707
+  },
+  {
+   "task": "581607",
+   "font": "Orbitron",
+   "rank": 2,
+   "first": "Mechanoid",
+   "score": 0.949
+  },
+  {
+   "task": "581724",
+   "font": "Suranna",
+   "rank": null,
+   "first": "Simonetta",
+   "score": 0.896
+  },
+  {
+   "task": "581751",
+   "font": "Deftone Stylus",
+   "rank": null,
+   "first": "Plutonium",
+   "score": 0.684
+  },
+  {
+   "task": "581759",
+   "font": "Damion",
+   "rank": 1,
+   "first": "Damion",
+   "score": 0.81
+  },
+  {
+   "task": "581767",
+   "font": "Dancing Script",
+   "rank": 5,
+   "first": "VDL-KuroMincho",
+   "score": 0.752
+  },
+  {
+   "task": "464694",
+   "font": "Impact",
+   "rank": null,
+   "first": "Road Of Deal",
+   "score": 0.745
+  },
+  {
+   "task": "581988",
+   "font": "Batang",
+   "rank": 2,
+   "first": "Baekmuk Batang",
+   "score": 0.815
+  },
+  {
+   "task": "582035",
+   "font": "Deftone Stylus",
+   "rank": null,
+   "first": "Pauls Poison",
+   "score": 0.653
+  },
+  {
+   "task": "582024",
+   "font": "Sansation",
+   "rank": 1,
+   "first": "Sansation",
+   "score": 0.865
+  },
+  {
+   "task": "582116",
+   "font": "Pompiere",
+   "rank": 6,
+   "first": "KG Sorry Not Sorry",
+   "score": 0.886
+  },
+  {
+   "task": "582167",
+   "font": "Cinzel",
+   "rank": 5,
+   "first": "Cinzel Decorative",
+   "score": 0.866
+  },
+  {
+   "task": "582172",
+   "font": "Goblin One",
+   "rank": 1,
+   "first": "Goblin One",
+   "score": 0.901
+  },
+  {
+   "task": "582415",
+   "font": "Great Vibes",
+   "rank": 8,
+   "first": "Lacoruna",
+   "score": 0.721
+  },
+  {
+   "task": "582436",
+   "font": "Rock Salt",
+   "rank": null,
+   "first": "BIZ UDPMincho",
+   "score": 0.552
+  },
+  {
+   "task": "582459",
+   "font": "Pompiere",
+   "rank": 1,
+   "first": "Pompiere",
+   "score": 0.802
+  }
+ ]
+}

@@ -130,6 +130,45 @@ test('PNG decoder checks the smallest image, exact final boundary, checksums and
   assert.throws(() => decodePng(scanlinePng(Buffer.from([5, 1, 2, 3, 4]))), /filter/)
 })
 
+// A PNG built chunk by chunk, so bit depth, colour type, palette and transparency can be any the spec allows.
+function packedPng({ width, height, depth, type, rows, palette = null, alpha = null }) {
+  const chunk = (name, data) => {
+    const body = Buffer.concat([Buffer.from(name), data]), out = Buffer.alloc(body.length + 8)
+    out.writeUInt32BE(data.length); body.copy(out, 4); out.writeUInt32BE(crc32(body), out.length - 4)
+    return out
+  }
+  const header = Buffer.alloc(13); header.writeUInt32BE(width, 0); header.writeUInt32BE(height, 4); header[8] = depth; header[9] = type
+  return Buffer.concat([Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]), chunk('IHDR', header),
+    ...(palette ? [chunk('PLTE', Buffer.from(palette.flat()))] : []), ...(alpha ? [chunk('tRNS', Buffer.from(alpha))] : []),
+    chunk('IDAT', deflateSync(Buffer.from(rows.flat()))), chunk('IEND', Buffer.alloc(0))])
+}
+
+test('palette and low-bit grey PNGs decode to the colours their samples name', () => {
+  const black = [0, 0, 0], white = [255, 255, 255], red = [255, 0, 0]
+  // 4-bit indices, three pixels a row so the third starts the second byte; row 2 uses the Sub filter, each byte adding
+  // the one before: 0x21, then 0xef + 0x21 = 0x10 (mod 256). tRNS lists only two entries: white is transparent, red opaque.
+  const four = decodePng(packedPng({ width: 3, height: 2, depth: 4, type: 3, palette: [black, white, red], alpha: [255, 0],
+    rows: [[0, 0x01, 0x20], [1, 0x21, 0xef]] }))
+  assert.deepEqual([four.width, four.height, four.channels], [3, 2, 4])
+  assert.deepEqual([...four.pixels], [...black, 255, ...white, 0, ...red, 255, ...red, 255, ...white, 0, ...white, 0])
+  // One index byte a pixel, so every filter steps back one byte: rows use None, Up, Average and Paeth in turn.
+  // Up: 1+1, 0+2, 1+0. Average: 0+(0+2>>1), 1+(1+2>>1), 1+(2+1>>1). Paeth picks up, left, left: 1+1, 0+2, 1+2.
+  const blue = [0, 0, 255]
+  const filtered = decodePng(packedPng({ width: 3, height: 4, depth: 8, type: 3, palette: [black, white, red, blue],
+    rows: [[0, 1, 2, 0], [2, 1, 0, 1], [3, 0, 1, 1], [4, 1, 0, 1]] }))
+  assert.deepEqual([...filtered.pixels], [white, red, black, red, red, white, white, red, red, red, red, blue].flat())
+  // 8-bit indices with no tRNS decode to opaque RGB.
+  const eight = decodePng(packedPng({ width: 2, height: 1, depth: 8, type: 3, palette: [black, red], rows: [[0, 1, 0]] }))
+  assert.deepEqual([eight.channels, ...eight.pixels], [3, ...red, ...black])
+  // 1-bit grey across two bytes: nine pixels, the ninth in the high bit of byte two.
+  const bits = decodePng(packedPng({ width: 9, height: 1, depth: 1, type: 0, rows: [[0, 0b10100001, 0b10000000]] }))
+  assert.deepEqual([bits.channels, ...bits.pixels], [1, 255, 0, 255, 0, 0, 0, 0, 255, 255])
+  // The smallest image, and an index its palette does not have.
+  assert.deepEqual([...decodePng(packedPng({ width: 1, height: 1, depth: 1, type: 3, palette: [red], rows: [[0, 0]] })).pixels], red)
+  assert.throws(() => decodePng(packedPng({ width: 1, height: 1, depth: 8, type: 3, palette: [red], rows: [[0, 1]] })), /outside its palette/)
+  assert.throws(() => decodePng(packedPng({ width: 1, height: 1, depth: 8, type: 3, rows: [[0, 0]] })), /palette missing/)
+})
+
 test('ink bounds find the glyphs, honour a search box and survive a tinted background', () => {
   const image = decodePng(specimen({ width: 200, height: 80 }))
   assert.deepEqual(inkBounds(image), { x: 20, y: 24, width: 160, height: 32 })
@@ -196,6 +235,18 @@ test('regions must be positive, integral and inside the image', () => {
   }
 })
 
+test('identical pixels are twins across families and a capture fault within one', async () => {
+  const twin = (face, family) => ({ id: `source-${face}-latin-lower-v1`, sourceGroup: `source-${face}-latin-lower-v1`, faceId: `source:${face}`,
+    familyId: `source:${family}`, image: { ...record().record.image, path: `images/${face}-latin-lower-v1.png` } })
+  const across = await validateArchive((await archive([{}, twin('face-2', 'family-2')])).dir)
+  assert.deepEqual(across.errors, [])
+  assert.match(across.warnings.join('\n'), /shared by twin families: source:family-1, source:family-2/)
+  const within = await validateArchive((await archive([{}, twin('face-2', 'family-1')])).dir)
+  assert.match(within.errors.join('\n'), /shared by different faces: source:face-1, source:face-2/)
+  const mixed = await validateArchive((await archive([{}, twin('face-2', 'family-1'), twin('face-3', 'family-3')])).dir)
+  assert.equal(mixed.errors.length, 1, 'one family drawing two faces alike is still a fault beside a twin')
+})
+
 test('a manifest with a broken line reports the line and keeps the rest', () => {
   const good = JSON.stringify(record().record)
   const { records, problems } = parseManifest(`${good}\n{"schemaVersion":1,\n\n${good}\n`)
@@ -254,7 +305,7 @@ test('archive validation rejects empty/null records and PNGs with intact headers
   assert.match((await validateArchive(dir)).errors.join('\n'), /unreadable image.*scanlines/)
 })
 
-test('several regions may share one source image, but identical pixels across faces are an error', async () => {
+test('several regions may share one source image, but identical pixels across faces of one family are an error', async () => {
   const shared = await archive([{}])
   const [first] = shared.records
   const second = {

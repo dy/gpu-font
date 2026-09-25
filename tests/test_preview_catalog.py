@@ -13,25 +13,26 @@ from train.ten_model import pack_bits
 
 
 class PreviewCatalogTests(unittest.TestCase):
-    def test_four_bit_vectors_read_as_their_values_times_their_scales(self):
+    def test_compiled_rows_are_four_bit_and_read_as_their_values_times_their_scales(self):
         with tempfile.TemporaryDirectory() as tmp:
-            encoder=Path(tmp)/'encoder.json';save(encoder,{'preparation':{'width':128,'height':48,'windows':3}})
+            encoder=Path(tmp)/'encoder.json';save(encoder,{'dimensions':128,'preparation':{'width':128,'height':48,'windows':3}})
             records=[{'id':f'r{i}{recipe}','recipeId':recipe,'faceId':f'f{i}','familyId':'a','family':'A','styleName':f'S{i}','weight':400,'slant':'upright','axes':{},'foundry':'F','sourceUrl':'https://example.test/a','scripts':['Latn']} for i in range(3) for recipe in ['words-a-v1','words-b-v1']]
             vectors=np.random.default_rng(3).normal(size=(6,128)).astype(np.float32);a=make_catalog(records,vectors,encoder,'manifest','words')
-            eight=np.frombuffer(base64.b64decode(a['vectors']['data']),np.int8).reshape(6,128).astype(np.float32)*np.array(a['vectors']['scales'],np.float32)[:,None]
-            scales=np.abs(eight).max(1)/7;four=np.round(eight/scales[:,None]).clip(-7,7).astype(np.int8)
-            b=copy.deepcopy(a);b['vectors'].update(encoding='int4-base64',data=base64.b64encode(pack_bits(four,4)).decode(),scales=scales.tolist())
-            decoded,owners,labels=read_catalog(b,encoder)
-            # Each row is its 4-bit values times its scale, normalized; owners and labels are the 8-bit catalog's.
+            self.assertEqual((a['vectors']['encoding'],a['dimensions'],a['vectors']['shape']),('int4-base64',128,[6,128]))
+            unit=vectors/np.linalg.norm(vectors,axis=1,keepdims=True);scales=np.abs(unit).max(1)/7;four=np.round(unit/scales[:,None]).clip(-7,7).astype(np.int8)
+            self.assertEqual(a['vectors']['data'],base64.b64encode(pack_bits(four,4)).decode());np.testing.assert_allclose(a['vectors']['scales'],scales,rtol=1e-6)
+            decoded,owners,labels=read_catalog(a,encoder)
+            # Each row is its 4-bit values times its scale, normalized; an 8-bit copy of the same values reads the same.
             np.testing.assert_allclose(decoded*np.linalg.norm(four*scales[:,None],axis=1,keepdims=True),four*scales[:,None],rtol=1e-5,atol=1e-7)
-            self.assertEqual((owners.tolist(),labels),(lambda r:(r[1].tolist(),r[2]))(read_catalog(a,encoder)))
-            for data,message in [(b['vectors']['data'][:-4],'Truncated'),(base64.b64encode(pack_bits(four,4)+b'\0').decode(),'Truncated')]:
-                self.assertRaisesRegex(ValueError,message,read_catalog,{**b,'vectors':{**b['vectors'],'data':data}},encoder)
-            self.assertRaisesRegex(ValueError,'shape',read_catalog,{**b,'vectors':{**b['vectors'],'encoding':'int5-base64'}},encoder)
+            b=copy.deepcopy(a);b['vectors'].update(encoding='int8-base64',data=base64.b64encode(four.tobytes()).decode())
+            np.testing.assert_allclose(read_catalog(b,encoder)[0],decoded,atol=1e-7);self.assertEqual((owners.tolist(),labels),(lambda r:(r[1].tolist(),r[2]))(read_catalog(b,encoder)))
+            for data,message in [(a['vectors']['data'][:-4],'Truncated'),(base64.b64encode(pack_bits(four,4)+b'\0').decode(),'Truncated')]:
+                self.assertRaisesRegex(ValueError,message,read_catalog,{**a,'vectors':{**a['vectors'],'data':data}},encoder)
+            self.assertRaisesRegex(ValueError,'shape',read_catalog,{**a,'vectors':{**a['vectors'],'encoding':'int5-base64'}},encoder)
 
     def test_image_references_keep_regular_bold_italic_faces_and_exact_provenance(self):
         with tempfile.TemporaryDirectory() as tmp:
-            encoder=Path(tmp)/'encoder.json';save(encoder,{'preparation':{'width':128,'height':48,'windows':3}})
+            encoder=Path(tmp)/'encoder.json';save(encoder,{'dimensions':128,'preparation':{'width':128,'height':48,'windows':3}})
             records=[];vectors=[]
             for i,(style,weight,slant) in enumerate([('Regular',400,'upright'),('Bold',540,'upright'),('Italic',400,'italic')]):
                 for recipe in ['words-a-v1','words-b-v1']:
@@ -60,6 +61,10 @@ class PreviewCatalogTests(unittest.TestCase):
             self.assertEqual(skipped,['Italic']);self.assertEqual(ids,[0,1,2,3])
             self.assertEqual(make_catalog([records[i] for i in ids],vectors[ids],encoder,'manifest','words')['faces'],[f for f in a['faces'] if f['id']!='Italic'])
             self.assertEqual(complete(records,'alphabet'),([],[]))
+            # The catalog searched with keeps every face by every line it has: Italic stands on its one line.
+            ids,skipped=complete(records[:-1],'captured');partial=make_catalog([records[i] for i in ids],vectors[ids],encoder,'manifest','captured')
+            self.assertEqual((ids,skipped),([0,1,2,3,4],[]))
+            self.assertEqual([(f['id'],f['referenceIds']) for f in partial['faces']],[('Bold',['Boldwords-a-v1','Boldwords-b-v1']),('Italic',['Italicwords-a-v1']),('Regular',['Regularwords-a-v1','Regularwords-b-v1'])])
             bad=copy.deepcopy(records);bad[1]['weight']=700
             self.assertRaisesRegex(ValueError,'Conflicting',make_catalog,bad,vectors,encoder,'manifest','words')
             # The shipped recipe: every controlled capture of a face is its own row, never averaged away.
@@ -73,6 +78,16 @@ class PreviewCatalogTests(unittest.TestCase):
             self.assertRaises(ValueError,make_catalog,[],np.empty((0,128)),encoder,'manifest','words')
             self.assertRaises(ValueError,make_catalog,records,vectors[:-1],encoder,'manifest','words')
             self.assertRaises(ValueError,make_catalog,records,np.zeros_like(vectors),encoder,'manifest','words')
+
+
+    def test_a_catalog_holds_up_to_100000_faces(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            encoder=Path(tmp)/'encoder.json';save(encoder,{'dimensions':128,'preparation':{'width':128,'height':48,'windows':3}})
+            face=lambda i:{'id':f'f{i}','familyId':f'f{i}','family':f'F{i}','referenceIds':[f'f{i}-words']}
+            records=[{'id':f'f{i}-words','recipeId':'words-a-v1','faceId':f'f{i}','familyId':f'f{i}','family':f'F{i}','styleName':'S','weight':400,'slant':'upright','axes':{},'foundry':'F','sourceUrl':'https://example.test/a','scripts':['Latn']} for i in range(10001)]
+            vectors=np.zeros((10001,128),np.float32);vectors[np.arange(10001),np.arange(10001)%128]=1
+            many=make_catalog(records,vectors,encoder,'manifest','captured');self.assertEqual(len(read_catalog(many,encoder)[2]),10001)
+            self.assertRaisesRegex(ValueError,'faces',read_catalog,{**many,'faces':[face(i) for i in range(100001)]},encoder)
 
 
 if __name__=='__main__':unittest.main()

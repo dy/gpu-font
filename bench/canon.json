@@ -1,6 +1,6 @@
 {
  "version": 1,
- "generated": "2026-09-24",
+ "generated": "2026-09-25",
  "size": 1000,
  "method": "Score = the larger of a Wikipedia score (0.6 × log English pageviews over the last year + 0.4 × share of 15 major Wikipedias with an article) and a Google Fonts score (0.9 × log-rank of its popularity). Identity, designers, year and foundry from Wikidata (CC0).",
  "sources": [
@@ -9,18 +9,15 @@
   "https://fonts.google.com/metadata/fonts"
  ],
  "coverage": {
-  "indexed (clone)": 9,
-  "indexed": 545,
-  "missing": 377,
-  "indexed (revival)": 10,
-  "indexed (related family)": 21,
-  "indexed (same-design)": 9,
-  "inventoried (clone)": 5,
-  "inventoried (revival)": 1,
-  "inventoried": 8,
-  "inventoried (related family)": 8,
-  "inventoried (same-design)": 6,
-  "indexed (basis)": 1
+  "indexed (clone)": 12,
+  "indexed": 553,
+  "missing": 373,
+  "indexed (revival)": 15,
+  "indexed (related family)": 28,
+  "indexed (same-design)": 15,
+  "inventoried (clone)": 2,
+  "indexed (basis)": 1,
+  "inventoried (related family)": 1
  },
  "typefaces": [
   {
@@ -28,6 +25,7 @@
    "name": "Helvetica",
    "kind": "typeface",
    "wikidata": "Q504745",
+   "fontsInUse": "44",
    "designers": [
     "Max Miedinger"
    ],
@@ -41,14 +39,14 @@
    "score": 0.994,
    "coverage": {
     "status": "indexed",
-    "source": "tex-gyre",
-    "via": "TeX Gyre Heros",
+    "source": "urw-base35",
+    "via": "Nimbus Sans",
     "match": "clone",
     "equivalents": [
      {
       "family": "Nimbus Sans",
       "relation": "clone",
-      "status": "inventoried",
+      "status": "indexed",
       "evidence": "https://github.com/ArtifexSoftware/urw-base35-fonts/blob/20200910/fontconfig/urw-nimbus-sans.conf"
      },
      {
@@ -65,6 +63,7 @@
    "name": "Times New Roman",
    "kind": "typeface",
    "wikidata": "Q213048",
+   "fontsInUse": "5117",
    "designers": [
     "Victor Lardent",
     "Stanley Morison"
@@ -86,7 +85,7 @@
      {
       "family": "Liberation Serif",
       "relation": "metric-compatible",
-      "status": "inventoried",
+      "status": "indexed",
       "evidence": "https://en.wikipedia.org/wiki/Liberation_fonts"
      },
      {
@@ -103,6 +102,7 @@
    "name": "Comic Sans MS",
    "kind": "typeface",
    "wikidata": "Q868492",
+   "fontsInUse": "7204",
    "designers": [
     "Vincent Connare"
    ],
@@ -118,7 +118,15 @@
     "status": "indexed",
     "source": "ms-corefonts",
     "via": "Comic Sans MS",
-    "match": "exact"
+    "match": "exact",
+    "equivalents": [
+     {
+      "family": "Comic Neue",
+      "relation": "inspired",
+      "status": "indexed",
+      "evidence": "https://github.com/google/fonts/blob/e44c4b011a820c2cbe2fd2cfa8052037d7edb571/ofl/comicneue/DESCRIPTION.en_us.html"
+     }
+    ]
    }
   },
   {
@@ -126,6 +134,7 @@
    "name": "Arial",
    "kind": "typeface",
    "wikidata": "Q653123",
+   "fontsInUse": "4869",
    "designers": [
     "Patricia Saunders",
     "Robin Nicholas"
@@ -147,7 +156,7 @@
      {
       "family": "Liberation Sans",
       "relation": "metric-compatible",
-      "status": "inventoried",
+      "status": "indexed",
       "evidence": "https://en.wikipedia.org/wiki/Liberation_fonts"
      },
      {
@@ -164,6 +173,7 @@
    "name": "Calibri",
    "kind": "typeface",
    "wikidata": "Q246937",
+   "fontsInUse": "171",
    "designers": [
     "Mamoun Sakkal",
     "Luc(as) de Groot"
@@ -193,6 +203,7 @@
    "name": "Wingdings",
    "kind": "typeface",
    "wikidata": "Q958410",
+   "fontsInUse": "7307",
    "designers": [
     "Kris Holmes",
     "Charles Bigelow"
@@ -214,6 +225,7 @@
    "name": "Futura",
    "kind": "typeface",
    "wikidata": "Q247686",
+   "fontsInUse": "4",
    "designers": [
     "Paul Renner"
    ],
@@ -242,6 +254,7 @@
    "name": "Gill Sans",
    "kind": "typeface",
    "wikidata": "Q255886",
+   "fontsInUse": "45",
    "designers": [
     "Eric Gill"
    ],
@@ -295,6 +308,7 @@
    "name": "Verdana",
    "kind": "typeface",
    "wikidata": "Q610791",
+   "fontsInUse": "7315",
    "designers": [
     "Matthew Carter"
    ],
@@ -318,6 +332,7 @@
    "name": "Courier",
    "kind": "typeface",
    "wikidata": "Q515301",
+   "fontsInUse": "69",
    "designers": [
     "Howard Kettler"
    ],
@@ -331,14 +346,14 @@
    "score": 0.896,
    "coverage": {
     "status": "indexed",
-    "source": "tex-gyre",
-    "via": "TeX Gyre Cursor",
+    "source": "urw-base35",
+    "via": "Nimbus Mono PS",
     "match": "clone",
     "equivalents": [
      {
       "family": "Nimbus Mono PS",
       "relation": "clone",
-      "status": "inventoried",
+      "status": "indexed",
       "evidence": "https://github.com/ArtifexSoftware/urw-base35-fonts/blob/20200910/fontconfig/urw-nimbus-mono-ps.conf"
      },
      {
@@ -355,6 +370,7 @@
    "name": "Garamond",
    "kind": "typeface",
    "wikidata": "Q246110",
+   "fontsInUse": "43",
    "designers": [
     "Claude Garamond"
    ],
@@ -407,6 +423,7 @@
    "name": "Frutiger",
    "kind": "typeface",
    "wikidata": "Q915886",
+   "fontsInUse": "3481",
    "designers": [],
    "year": 1975,
    "foundries": [],
@@ -425,6 +442,7 @@
    "name": "Computer Modern",
    "kind": "typeface",
    "wikidata": "Q1122282",
+   "fontsInUse": "39120",
    "designers": [
     "Donald Knuth"
    ],
@@ -468,6 +486,7 @@
    "name": "Segoe",
    "kind": "typeface",
    "wikidata": "Q97189",
+   "fontsInUse": "7616",
    "designers": [],
    "year": 2004,
    "foundries": [],
@@ -483,7 +502,7 @@
      {
       "family": "Selawik",
       "relation": "metric-compatible",
-      "status": "inventoried",
+      "status": "indexed",
       "evidence": "https://learn.microsoft.com/en-us/typography/font-list/selawik"
      }
     ]
@@ -494,6 +513,7 @@
    "name": "DIN 1451",
    "kind": "typeface",
    "wikidata": "Q591913",
+   "fontsInUse": "1149",
    "designers": [],
    "year": 1931,
    "foundries": [],
@@ -564,6 +584,7 @@
    "name": "Univers",
    "kind": "typeface",
    "wikidata": "Q1065215",
+   "fontsInUse": "1160",
    "designers": [
     "Adrian Frutiger"
    ],
@@ -576,7 +597,7 @@
    },
    "score": 0.802,
    "coverage": {
-    "status": "inventoried",
+    "status": "indexed",
     "source": "fontlibrary",
     "via": "U001",
     "match": "clone",
@@ -584,7 +605,7 @@
      {
       "family": "U001",
       "relation": "clone",
-      "status": "inventoried",
+      "status": "indexed",
       "evidence": "https://en.wikipedia.org/wiki/Univers#URW_Classic_Sans"
      }
     ]
@@ -595,6 +616,7 @@
    "name": "Palatino",
    "kind": "typeface",
    "wikidata": "Q1093499",
+   "fontsInUse": "3361",
    "designers": [
     "Hermann Zapf"
    ],
@@ -608,14 +630,14 @@
    "score": 0.797,
    "coverage": {
     "status": "indexed",
-    "source": "tex-gyre",
-    "via": "TeX Gyre Pagella",
+    "source": "urw-base35",
+    "via": "P052",
     "match": "clone",
     "equivalents": [
      {
       "family": "P052",
       "relation": "clone",
-      "status": "inventoried",
+      "status": "indexed",
       "evidence": "https://github.com/ArtifexSoftware/urw-base35-fonts/blob/20200910/fontconfig/urw-p052.conf"
      },
      {
@@ -632,6 +654,7 @@
    "name": "Baskerville",
    "kind": "typeface",
    "wikidata": "Q768857",
+   "fontsInUse": "1145",
    "designers": [
     "John Baskerville"
    ],
@@ -663,6 +686,7 @@
    "name": "Georgia",
    "kind": "typeface",
    "wikidata": "Q246141",
+   "fontsInUse": "70",
    "designers": [
     "Matthew Carter"
    ],
@@ -712,6 +736,7 @@
    "name": "Papyrus",
    "kind": "typeface",
    "wikidata": "Q4816790",
+   "fontsInUse": "1076",
    "designers": [],
    "year": 1982,
    "foundries": [],
@@ -753,6 +778,7 @@
    "name": "Impact",
    "kind": "typeface",
    "wikidata": "Q246115",
+   "fontsInUse": "4983",
    "designers": [
     "Geoffrey Lee"
    ],
@@ -776,6 +802,7 @@
    "name": "Akzidenz-Grotesk",
    "kind": "typeface",
    "wikidata": "Q424600",
+   "fontsInUse": "76",
    "designers": [],
    "year": 1896,
    "foundries": [],
@@ -811,6 +838,7 @@
    "name": "Caslon",
    "kind": "typeface",
    "wikidata": "Q1047752",
+   "fontsInUse": "236",
    "designers": [
     "William Caslon"
    ],
@@ -882,6 +910,7 @@
    "name": "Bodoni",
    "kind": "typeface",
    "wikidata": "Q833029",
+   "fontsInUse": "229",
    "designers": [
     "Giambattista Bodoni"
    ],
@@ -948,8 +977,8 @@
    "score": 0.738,
    "coverage": {
     "status": "indexed",
-    "source": "debian",
-    "via": "Liberation Sans Narrow",
+    "source": "liberation",
+    "via": "Liberation Mono",
     "match": "related"
    }
   },
@@ -1002,6 +1031,7 @@
    "name": "Johnston",
    "kind": "typeface",
    "wikidata": "Q383685",
+   "fontsInUse": "10621",
    "designers": [
     "Eric Gill",
     "Agfa Monotype Corporation",
@@ -1016,7 +1046,7 @@
    },
    "score": 0.726,
    "coverage": {
-    "status": "inventoried",
+    "status": "indexed",
     "source": "railway-sans",
     "via": "Railway",
     "match": "revival",
@@ -1024,7 +1054,7 @@
      {
       "family": "Railway",
       "relation": "revival",
-      "status": "inventoried",
+      "status": "indexed",
       "evidence": "https://github.com/googlefonts/railway-sans"
      },
      {
@@ -1041,6 +1071,7 @@
    "name": "Optima",
    "kind": "typeface",
    "wikidata": "Q1091875",
+   "fontsInUse": "3359",
    "designers": [
     "Hermann Zapf"
    ],
@@ -1053,7 +1084,7 @@
    },
    "score": 0.722,
    "coverage": {
-    "status": "inventoried",
+    "status": "indexed",
     "source": "fontlibrary",
     "via": "URWClassico",
     "match": "clone",
@@ -1061,13 +1092,13 @@
      {
       "family": "Linux Biolinum O",
       "relation": "inspired",
-      "status": "inventoried",
+      "status": "indexed",
       "evidence": "https://en.wikipedia.org/wiki/Linux_Libertine"
      },
      {
       "family": "URW Classico",
       "relation": "clone",
-      "status": "inventoried",
+      "status": "indexed",
       "evidence": "https://en.wikipedia.org/wiki/Optima"
      }
     ]
@@ -1078,6 +1109,7 @@
    "name": "Avenir",
    "kind": "typeface",
    "wikidata": "Q505337",
+   "fontsInUse": "3409",
    "designers": [
     "Adrian Frutiger"
    ],
@@ -1124,6 +1156,7 @@
    "name": "Tahoma",
    "kind": "typeface",
    "wikidata": "Q910757",
+   "fontsInUse": "29159",
    "designers": [
     "Matthew Carter"
    ],
@@ -1154,6 +1187,7 @@
    "name": "Trebuchet MS",
    "kind": "typeface",
    "wikidata": "Q1631297",
+   "fontsInUse": "29814",
    "designers": [
     "Vincent Connare"
    ],
@@ -1202,6 +1236,7 @@
    "name": "Gotham",
    "kind": "typeface",
    "wikidata": "Q4147080",
+   "fontsInUse": "20",
    "designers": [
     "Tobias Frere-Jones"
    ],
@@ -1222,6 +1257,7 @@
    "name": "Webdings",
    "kind": "typeface",
    "wikidata": "Q1815347",
+   "fontsInUse": "7810",
    "designers": [
     "Vincent Connare",
     "Geraldine Wade",
@@ -1245,6 +1281,7 @@
    "name": "Bembo",
    "kind": "typeface",
    "wikidata": "Q816361",
+   "fontsInUse": "4877",
    "designers": [
     "Giovanni Antonio Tagliente",
     "Alfred Fairbank",
@@ -1275,6 +1312,7 @@
    "name": "Consolas",
    "kind": "typeface",
    "wikidata": "Q1127456",
+   "fontsInUse": "176",
    "designers": [
     "Luc(as) de Groot"
    ],
@@ -1303,6 +1341,7 @@
    "name": "Linux Libertine",
    "kind": "typeface",
    "wikidata": "Q165925",
+   "fontsInUse": "40765",
    "designers": [],
    "year": 2003,
    "foundries": [],
@@ -1313,7 +1352,7 @@
    },
    "score": 0.673,
    "coverage": {
-    "status": "inventoried",
+    "status": "indexed",
     "source": "fontlibrary",
     "via": "Linux Libertine",
     "match": "exact",
@@ -1321,13 +1360,13 @@
      {
       "family": "Linux Libertine O",
       "relation": "same-design",
-      "status": "inventoried",
+      "status": "indexed",
       "evidence": "https://sourceforge.net/projects/linuxlibertine/"
      },
      {
       "family": "Linux Biolinum O",
       "relation": "same-design",
-      "status": "inventoried",
+      "status": "indexed",
       "evidence": "https://sourceforge.net/projects/linuxlibertine/"
      }
     ]
@@ -1338,6 +1377,7 @@
    "name": "Franklin Gothic",
    "kind": "typeface",
    "wikidata": "Q1424804",
+   "fontsInUse": "35",
    "designers": [
     "Morris Fuller Benton"
    ],
@@ -1369,6 +1409,7 @@
    "name": "Cooper Black",
    "kind": "typeface",
    "wikidata": "Q3311696",
+   "fontsInUse": "7357",
    "designers": [
     "Oswald Bruce Cooper"
    ],
@@ -1412,6 +1453,7 @@
    "name": "Cambria",
    "kind": "typeface",
    "wikidata": "Q2300682",
+   "fontsInUse": "172",
    "designers": [
     "Jelle Bosma",
     "Robin Nicholas"
@@ -1459,6 +1501,7 @@
    "name": "Myriad",
    "kind": "typeface",
    "wikidata": "Q246119",
+   "fontsInUse": "4302",
    "designers": [],
    "year": 1992,
    "foundries": [],
@@ -1477,6 +1520,7 @@
    "name": "Century Gothic",
    "kind": "typeface",
    "wikidata": "Q472836",
+   "fontsInUse": "4901",
    "designers": [],
    "year": 1991,
    "foundries": [],
@@ -1495,6 +1539,7 @@
    "name": "Eurostile",
    "kind": "typeface",
    "wikidata": "Q448605",
+   "fontsInUse": "3424",
    "designers": [
     "Aldo Novarese"
    ],
@@ -1546,6 +1591,7 @@
    "name": "FHWA Series fonts",
    "kind": "typeface",
    "wikidata": "Q1671285",
+   "fontsInUse": "20992",
    "designers": [],
    "year": 1948,
    "foundries": [],
@@ -1556,7 +1602,7 @@
    },
    "score": 0.648,
    "coverage": {
-    "status": "inventoried",
+    "status": "indexed",
     "source": "roadgeek",
     "via": "Roadgeek 2014 Series B",
     "match": "clone",
@@ -1564,43 +1610,43 @@
      {
       "family": "Roadgeek 2014 Series B",
       "relation": "clone",
-      "status": "inventoried",
+      "status": "indexed",
       "evidence": "https://github.com/sammdot/roadgeek-fonts"
      },
      {
       "family": "Roadgeek 2014 Series C",
       "relation": "clone",
-      "status": "inventoried",
+      "status": "indexed",
       "evidence": "https://github.com/sammdot/roadgeek-fonts"
      },
      {
       "family": "Roadgeek 2014 Series D",
       "relation": "clone",
-      "status": "inventoried",
+      "status": "indexed",
       "evidence": "https://github.com/sammdot/roadgeek-fonts"
      },
      {
       "family": "Roadgeek 2014 Series E",
       "relation": "clone",
-      "status": "inventoried",
+      "status": "indexed",
       "evidence": "https://github.com/sammdot/roadgeek-fonts"
      },
      {
       "family": "Roadgeek 2014 Series EM",
       "relation": "clone",
-      "status": "inventoried",
+      "status": "indexed",
       "evidence": "https://github.com/sammdot/roadgeek-fonts"
      },
      {
       "family": "Roadgeek 2014 Series EEM",
       "relation": "clone",
-      "status": "inventoried",
+      "status": "indexed",
       "evidence": "https://github.com/sammdot/roadgeek-fonts"
      },
      {
       "family": "Roadgeek 2014 Series F",
       "relation": "clone",
-      "status": "inventoried",
+      "status": "indexed",
       "evidence": "https://github.com/sammdot/roadgeek-fonts"
      },
      {
@@ -1617,6 +1663,7 @@
    "name": "Clarendon",
    "kind": "typeface",
    "wikidata": "Q644810",
+   "fontsInUse": "248",
    "designers": [
     "Robert Besley"
    ],
@@ -1680,7 +1727,7 @@
    },
    "score": 0.637,
    "coverage": {
-    "status": "inventoried",
+    "status": "indexed",
     "source": "opendyslexic",
     "via": "OpenDyslexic",
     "match": "exact"
@@ -1691,6 +1738,7 @@
    "name": "Didot",
    "kind": "typeface",
    "wikidata": "Q933861",
+   "fontsInUse": "4008",
    "designers": [
     "Firmin Didot"
    ],
@@ -1722,6 +1770,7 @@
    "name": "Product Sans",
    "kind": "typeface",
    "wikidata": "Q25022191",
+   "fontsInUse": "39891",
    "designers": [
     "Google"
    ],
@@ -1754,7 +1803,7 @@
    },
    "score": 0.628,
    "coverage": {
-    "status": "inventoried",
+    "status": "indexed",
     "source": "ocr-skala",
     "via": "OCR B",
     "match": "exact",
@@ -1762,7 +1811,7 @@
      {
       "family": "OCR B",
       "relation": "clone",
-      "status": "inventoried",
+      "status": "indexed",
       "evidence": "https://tsukurimashou.org/ocr.php.en"
      }
     ]
@@ -1796,6 +1845,7 @@
    "name": "Lucida",
    "kind": "typeface",
    "wikidata": "Q267249",
+   "fontsInUse": "1024",
    "designers": [
     "Charles Bigelow",
     "Kris Holmes"
@@ -1854,6 +1904,7 @@
    "name": "Trajan",
    "kind": "typeface",
    "wikidata": "Q1478347",
+   "fontsInUse": "4556",
    "designers": [
     "Robert Slimbach",
     "Carol Twombly"
@@ -1885,7 +1936,7 @@
    },
    "score": 0.618,
    "coverage": {
-    "status": "inventoried",
+    "status": "indexed",
     "source": "debian",
     "via": "Font Awesome 5 Free",
     "match": "related"
@@ -1896,6 +1947,7 @@
    "name": "Sabon",
    "kind": "typeface",
    "wikidata": "Q505169",
+   "fontsInUse": "97",
    "designers": [
     "Jan Tschichold"
    ],
@@ -1962,6 +2014,7 @@
    "name": "ITC Avant Garde",
    "kind": "typeface",
    "wikidata": "Q790168",
+   "fontsInUse": "1143",
    "designers": [
     "Herb Lubalin"
    ],
@@ -1977,14 +2030,14 @@
    "score": 0.612,
    "coverage": {
     "status": "indexed",
-    "source": "tex-gyre",
-    "via": "TeX Gyre Adventor",
+    "source": "urw-base35",
+    "via": "URW Gothic",
     "match": "clone",
     "equivalents": [
      {
       "family": "URW Gothic",
       "relation": "clone",
-      "status": "inventoried",
+      "status": "indexed",
       "evidence": "https://github.com/ArtifexSoftware/urw-base35-fonts/blob/20200910/fontconfig/urw-gothic.conf"
      },
      {
@@ -2013,7 +2066,7 @@
    },
    "score": 0.607,
    "coverage": {
-    "status": "inventoried",
+    "status": "indexed",
     "source": "ocr-skala",
     "via": "OCR A",
     "match": "exact",
@@ -2021,7 +2074,7 @@
      {
       "family": "OCR A",
       "relation": "clone",
-      "status": "inventoried",
+      "status": "indexed",
       "evidence": "https://tsukurimashou.org/ocr.php.en"
      }
     ]
@@ -2057,6 +2110,7 @@
    "name": "Rockwell",
    "kind": "typeface",
    "wikidata": "Q830067",
+   "fontsInUse": "5086",
    "designers": [
     "Frank Hinman Pierpont"
    ],
@@ -2128,6 +2182,7 @@
    "name": "Transport",
    "kind": "typeface",
    "wikidata": "Q7834844",
+   "fontsInUse": "1258",
    "designers": [
     "Jock Kinneir",
     "Margaret Calvert"
@@ -2149,6 +2204,7 @@
    "name": "Albertus",
    "kind": "typeface",
    "wikidata": "Q3608678",
+   "fontsInUse": "4857",
    "designers": [
     "Berthold Wolpe"
    ],
@@ -2268,7 +2324,7 @@
    },
    "score": 0.576,
    "coverage": {
-    "status": "inventoried",
+    "status": "indexed",
     "source": "gnu-unifont",
     "via": "Unifont",
     "match": "same-design",
@@ -2276,7 +2332,7 @@
      {
       "family": "Unifont",
       "relation": "same-design",
-      "status": "inventoried",
+      "status": "indexed",
       "evidence": "https://unifoundry.com/unifont/"
      }
     ]
@@ -2287,6 +2343,7 @@
    "name": "Minion",
    "kind": "typeface",
    "wikidata": "Q742456",
+   "fontsInUse": "4291",
    "designers": [],
    "year": 1990,
    "foundries": [],
@@ -2305,6 +2362,7 @@
    "name": "Monaco",
    "kind": "typeface",
    "wikidata": "Q246407",
+   "fontsInUse": "24096",
    "designers": [
     "Kris Holmes",
     "Susan Kare"
@@ -2326,6 +2384,7 @@
    "name": "Chicago",
    "kind": "typeface",
    "wikidata": "Q1071816",
+   "fontsInUse": "7666",
    "designers": [
     "Charles Bigelow",
     "Kris Holmes",
@@ -2384,6 +2443,7 @@
    "name": "Vercetti Regular",
    "kind": "typeface",
    "wikidata": "Q122203073",
+   "fontsInUse": "210877",
    "designers": [
     "Richard Mandona"
    ],
@@ -2414,7 +2474,7 @@
    },
    "score": 0.564,
    "coverage": {
-    "status": "inventoried",
+    "status": "indexed",
     "source": "gnu-freefont",
     "via": "FreeSerif",
     "match": "same-design",
@@ -2422,19 +2482,19 @@
      {
       "family": "FreeSerif",
       "relation": "same-design",
-      "status": "inventoried",
+      "status": "indexed",
       "evidence": "https://www.gnu.org/software/freefont/"
      },
      {
       "family": "FreeSans",
       "relation": "same-design",
-      "status": "inventoried",
+      "status": "indexed",
       "evidence": "https://www.gnu.org/software/freefont/"
      },
      {
       "family": "FreeMono",
       "relation": "same-design",
-      "status": "inventoried",
+      "status": "indexed",
       "evidence": "https://www.gnu.org/software/freefont/"
      }
     ]
@@ -2489,6 +2549,7 @@
    "name": "Copperplate Gothic",
    "kind": "typeface",
    "wikidata": "Q5168849",
+   "fontsInUse": "3895",
    "designers": [
     "Frederic Goudy"
    ],
@@ -2608,6 +2669,7 @@
    "name": "Hoefler Text",
    "kind": "typeface",
    "wikidata": "Q1622796",
+   "fontsInUse": "10167",
    "designers": [
     "Jonathan Hoefler"
    ],
@@ -2628,6 +2690,7 @@
    "name": "Microgramma",
    "kind": "typeface",
    "wikidata": "Q1583517",
+   "fontsInUse": "1847",
    "designers": [
     "Alessandro Butti",
     "Aldo Novarese"
@@ -2725,6 +2788,7 @@
    "name": "Bauhaus",
    "kind": "typeface",
    "wikidata": "Q4873486",
+   "fontsInUse": "1615",
    "designers": [
     "Herbert Bayer"
    ],
@@ -2745,6 +2809,7 @@
    "name": "Bank Gothic",
    "kind": "typeface",
    "wikidata": "Q4333890",
+   "fontsInUse": "5475",
    "designers": [
     "Morris Fuller Benton"
    ],
@@ -2796,6 +2861,7 @@
    "name": "Plantin",
    "kind": "typeface",
    "wikidata": "Q7201647",
+   "fontsInUse": "4376",
    "designers": [
     "Frank Hinman Pierpont"
    ],
@@ -2924,6 +2990,7 @@
    "name": "Junicode",
    "kind": "typeface",
    "wikidata": "Q1051634",
+   "fontsInUse": "94678",
    "designers": [
     "Peter S. Baker"
    ],
@@ -2944,7 +3011,7 @@
      {
       "family": "Junicode VF",
       "relation": "same-design",
-      "status": "inventoried",
+      "status": "indexed",
       "evidence": "https://github.com/psb1558/Junicode-font"
      }
     ]
@@ -2955,6 +3022,7 @@
    "name": "Goudy Old Style",
    "kind": "typeface",
    "wikidata": "Q5588178",
+   "fontsInUse": "4101",
    "designers": [
     "Frederic Goudy"
    ],
@@ -2967,7 +3035,18 @@
    },
    "score": 0.526,
    "coverage": {
-    "status": "missing"
+    "status": "indexed",
+    "source": "google-fonts",
+    "via": "Sorts Mill Goudy",
+    "match": "revival",
+    "equivalents": [
+     {
+      "family": "Sorts Mill Goudy",
+      "relation": "revival",
+      "status": "indexed",
+      "evidence": "https://github.com/google/fonts/blob/e44c4b011a820c2cbe2fd2cfa8052037d7edb571/ofl/sortsmillgoudy/DESCRIPTION.en_us.html"
+     }
+    ]
    }
   },
   {
@@ -2975,6 +3054,7 @@
    "name": "Bitstream Charter",
    "kind": "typeface",
    "wikidata": "Q1067806",
+   "fontsInUse": "245",
    "designers": [
     "Matthew Carter"
    ],
@@ -3047,6 +3127,7 @@
    "name": "Freestyle Script",
    "kind": "typeface",
    "wikidata": "Q45807000",
+   "fontsInUse": "1764",
    "designers": [
     "Martin Wait"
    ],
@@ -3067,6 +3148,7 @@
    "name": "Perpetua",
    "kind": "typeface",
    "wikidata": "Q2200696",
+   "fontsInUse": "4907",
    "designers": [
     "Eric Gill"
    ],
@@ -3087,6 +3169,7 @@
    "name": "Source Han Sans",
    "kind": "typeface",
    "wikidata": "Q17378124",
+   "fontsInUse": "38301",
    "designers": [
     "Joo-yeon Kang",
     "Soo-young Jang",
@@ -3144,6 +3227,7 @@
    "name": "Clearview",
    "kind": "typeface",
    "wikidata": "Q5130905",
+   "fontsInUse": "32602",
    "designers": [
     "James Montalbano"
    ],
@@ -3234,6 +3318,7 @@
    "name": "Rotis",
    "kind": "typeface",
    "wikidata": "Q1412055",
+   "fontsInUse": "31512",
    "designers": [
     "Otl Aicher"
    ],
@@ -3264,7 +3349,7 @@
    },
    "score": 0.516,
    "coverage": {
-    "status": "inventoried",
+    "status": "indexed",
     "source": "fontlibrary",
     "via": "Waltograph",
     "match": "exact"
@@ -3275,6 +3360,7 @@
    "name": "Centaur",
    "kind": "typeface",
    "wikidata": "Q927717",
+   "fontsInUse": "4899",
    "designers": [
     "Bruce Rogers"
    ],
@@ -3295,6 +3381,7 @@
    "name": "Menlo",
    "kind": "typeface",
    "wikidata": "Q6817145",
+   "fontsInUse": "10455",
    "designers": [],
    "year": 2011,
    "foundries": [],
@@ -3330,6 +3417,7 @@
    "name": "Cheltenham",
    "kind": "typeface",
    "wikidata": "Q2744729",
+   "fontsInUse": "89",
    "designers": [
     "Morris Fuller Benton",
     "Joseph W. Phinney",
@@ -3376,6 +3464,7 @@
    "name": "Bookerly",
    "kind": "typeface",
    "wikidata": "Q20683326",
+   "fontsInUse": "42479",
    "designers": [],
    "year": 2014,
    "foundries": [],
@@ -3394,6 +3483,7 @@
    "name": "Adobe Jenson",
    "kind": "typeface",
    "wikidata": "Q865653",
+   "fontsInUse": "4186",
    "designers": [
     "Robert Slimbach"
    ],
@@ -3414,6 +3504,7 @@
    "name": "VAG Rounded",
    "kind": "typeface",
    "wikidata": "Q2505388",
+   "fontsInUse": "4344",
    "designers": [],
    "year": 1979,
    "foundries": [],
@@ -3432,6 +3523,7 @@
    "name": "Kabel",
    "kind": "typeface",
    "wikidata": "Q657153",
+   "fontsInUse": "4190",
    "designers": [
     "Rudolf Koch"
    ],
@@ -3452,6 +3544,7 @@
    "name": "Brush Script",
    "kind": "typeface",
    "wikidata": "Q2178998",
+   "fontsInUse": "7340",
    "designers": [],
    "year": 1942,
    "foundries": [],
@@ -3473,6 +3566,7 @@
    "name": "Zapf Dingbats",
    "kind": "typeface",
    "wikidata": "Q8066397",
+   "fontsInUse": "7696",
    "designers": [
     "Hermann Zapf"
    ],
@@ -3548,6 +3642,7 @@
    "name": "Handel Gothic",
    "kind": "typeface",
    "wikidata": "Q3126707",
+   "fontsInUse": "985",
    "designers": [
     "Don Handel"
    ],
@@ -3568,6 +3663,7 @@
    "name": "Andalé Mono",
    "kind": "typeface",
    "wikidata": "Q489678",
+   "fontsInUse": "8064",
    "designers": [],
    "year": 1995,
    "foundries": [],
@@ -3589,6 +3685,7 @@
    "name": "ITC Benguiat",
    "kind": "typeface",
    "wikidata": "Q2426669",
+   "fontsInUse": "1682",
    "designers": [
     "Ed Benguiat"
    ],
@@ -3609,6 +3706,7 @@
    "name": "Bookman",
    "kind": "typeface",
    "wikidata": "Q4943251",
+   "fontsInUse": "230",
    "designers": [
     "Ed Benguiat"
    ],
@@ -3622,14 +3720,14 @@
    "score": 0.504,
    "coverage": {
     "status": "indexed",
-    "source": "tex-gyre",
-    "via": "TeX Gyre Bonum",
+    "source": "urw-base35",
+    "via": "URW Bookman",
     "match": "clone",
     "equivalents": [
      {
       "family": "URW Bookman",
       "relation": "clone",
-      "status": "inventoried",
+      "status": "indexed",
       "evidence": "https://github.com/ArtifexSoftware/urw-base35-fonts/blob/20200910/fontconfig/urw-bookman.conf"
      },
      {
@@ -3689,6 +3787,7 @@
    "name": "Geneva",
    "kind": "typeface",
    "wikidata": "Q622571",
+   "fontsInUse": "19929",
    "designers": [
     "Susan Kare"
    ],
@@ -3709,6 +3808,7 @@
    "name": "FF Meta",
    "kind": "typeface",
    "wikidata": "Q368188",
+   "fontsInUse": "2498",
    "designers": [],
    "year": 1991,
    "foundries": [],
@@ -3727,6 +3827,7 @@
    "name": "Meiryo",
    "kind": "typeface",
    "wikidata": "Q873380",
+   "fontsInUse": "121073",
    "designers": [],
    "year": 2008,
    "foundries": [],
@@ -3745,6 +3846,7 @@
    "name": "Windsor",
    "kind": "typeface",
    "wikidata": "Q2805776",
+   "fontsInUse": "1808",
    "designers": [],
    "year": 1905,
    "foundries": [],
@@ -3763,6 +3865,7 @@
    "name": "Candara",
    "kind": "typeface",
    "wikidata": "Q1032931",
+   "fontsInUse": "174",
    "designers": [],
    "year": 2007,
    "foundries": [],
@@ -3814,7 +3917,7 @@
    },
    "score": 0.5,
    "coverage": {
-    "status": "inventoried",
+    "status": "indexed",
     "source": "fontlibrary",
     "via": "Terminal Grotesque",
     "match": "related"
@@ -3825,6 +3928,7 @@
    "name": "Corbel",
    "kind": "typeface",
    "wikidata": "Q246157",
+   "fontsInUse": "178",
    "designers": [
     "Jeremy Tankard"
    ],
@@ -3845,6 +3949,7 @@
    "name": "AMS Euler",
    "kind": "typeface",
    "wikidata": "Q295325",
+   "fontsInUse": "3339",
    "designers": [
     "Hermann Zapf"
    ],
@@ -3876,6 +3981,7 @@
    "name": "FF DIN",
    "kind": "typeface",
    "wikidata": "Q5425442",
+   "fontsInUse": "2422",
    "designers": [
     "Albert-Jan Pool"
    ],
@@ -3919,6 +4025,7 @@
    "name": "Lucida Sans Unicode",
    "kind": "typeface",
    "wikidata": "Q713566",
+   "fontsInUse": "1027",
    "designers": [],
    "year": 1993,
    "foundries": [],
@@ -3937,6 +4044,7 @@
    "name": "New York",
    "kind": "typeface",
    "wikidata": "Q64351964",
+   "fontsInUse": "101760",
    "designers": [
     "Apple Inc."
    ],
@@ -3980,6 +4088,7 @@
    "name": "Rail Alphabet",
    "kind": "typeface",
    "wikidata": "Q7283880",
+   "fontsInUse": "129940",
    "designers": [
     "Jock Kinneir",
     "Margaret Calvert"
@@ -4001,6 +4110,7 @@
    "name": "American Typewriter",
    "kind": "typeface",
    "wikidata": "Q4745296",
+   "fontsInUse": "10",
    "designers": [],
    "year": 1974,
    "foundries": [],
@@ -4042,6 +4152,7 @@
    "name": "Friz Quadrata",
    "kind": "typeface",
    "wikidata": "Q5505072",
+   "fontsInUse": "1768",
    "designers": [],
    "year": 1965,
    "foundries": [],
@@ -4060,6 +4171,7 @@
    "name": "Nimbus Sans",
    "kind": "typeface",
    "wikidata": "Q1749880",
+   "fontsInUse": "4776",
    "designers": [],
    "year": 1999,
    "foundries": [],
@@ -4070,7 +4182,7 @@
    },
    "score": 0.485,
    "coverage": {
-    "status": "inventoried",
+    "status": "indexed",
     "source": "urw-base35",
     "via": "Nimbus Sans",
     "match": "exact"
@@ -4106,6 +4218,7 @@
    "name": "Apple Color Emoji",
    "kind": "typeface",
    "wikidata": "Q4781145",
+   "fontsInUse": "10884",
    "designers": [
     "Angela Guzman"
    ],
@@ -4126,6 +4239,7 @@
    "name": "News Gothic",
    "kind": "typeface",
    "wikidata": "Q7019371",
+   "fontsInUse": "303",
    "designers": [
     "Morris Fuller Benton"
    ],
@@ -4203,6 +4317,7 @@
    "name": "Hobo",
    "kind": "typeface",
    "wikidata": "Q1621610",
+   "fontsInUse": "4015",
    "designers": [
     "Morris Fuller Benton"
    ],
@@ -4263,6 +4378,7 @@
    "name": "Twentieth Century",
    "kind": "typeface",
    "wikidata": "Q7857698",
+   "fontsInUse": "5122",
    "designers": [],
    "year": 1937,
    "foundries": [],
@@ -4304,6 +4420,7 @@
    "name": "Peignot",
    "kind": "typeface",
    "wikidata": "Q94249",
+   "fontsInUse": "4336",
    "designers": [
     "Cassandre"
    ],
@@ -4349,6 +4466,7 @@
    "name": "Constantia",
    "kind": "typeface",
    "wikidata": "Q245923",
+   "fontsInUse": "177",
    "designers": [
     "John Hudson"
    ],
@@ -4428,6 +4546,7 @@
    "name": "Haettenschweiler",
    "kind": "typeface",
    "wikidata": "Q1567741",
+   "fontsInUse": "20597",
    "designers": [
     "Walter Haettenschweiler"
    ],
@@ -4448,6 +4567,7 @@
    "name": "Mrs Eaves",
    "kind": "typeface",
    "wikidata": "Q17080878",
+   "fontsInUse": "2050",
    "designers": [
     "Zuzana Licko"
    ],
@@ -4492,6 +4612,7 @@
    "name": "Interstate",
    "kind": "typeface",
    "wikidata": "Q14775419",
+   "fontsInUse": "2247",
    "designers": [],
    "year": 1999,
    "foundries": [],
@@ -4540,7 +4661,7 @@
    },
    "score": 0.467,
    "coverage": {
-    "status": "inventoried",
+    "status": "indexed",
     "source": "hershey",
     "via": "AVHershey Simplex",
     "match": "same-design",
@@ -4548,19 +4669,19 @@
      {
       "family": "AVHershey Simplex",
       "relation": "same-design",
-      "status": "inventoried",
+      "status": "indexed",
       "evidence": "https://github.com/scruss/AVHershey-OTF"
      },
      {
       "family": "AVHershey Duplex",
       "relation": "same-design",
-      "status": "inventoried",
+      "status": "indexed",
       "evidence": "https://github.com/scruss/AVHershey-OTF"
      },
      {
       "family": "AVHershey Complex",
       "relation": "same-design",
-      "status": "inventoried",
+      "status": "indexed",
       "evidence": "https://github.com/scruss/AVHershey-OTF"
      }
     ]
@@ -4571,6 +4692,7 @@
    "name": "Agency FB",
    "kind": "typeface",
    "wikidata": "Q4691995",
+   "fontsInUse": "7185",
    "designers": [
     "Morris Fuller Benton"
    ],
@@ -4638,6 +4760,7 @@
    "name": "Mistral",
    "kind": "typeface",
    "wikidata": "Q1939311",
+   "fontsInUse": "3452",
    "designers": [
     "Roger Excoffon"
    ],
@@ -4658,6 +4781,7 @@
    "name": "Algerian",
    "kind": "typeface",
    "wikidata": "Q2233383",
+   "fontsInUse": "3253",
    "designers": [],
    "year": 1988,
    "foundries": [],
@@ -4676,6 +4800,7 @@
    "name": "STIX Fonts",
    "kind": "typeface",
    "wikidata": "Q7394748",
+   "fontsInUse": "152140",
    "designers": [],
    "year": 1995,
    "foundries": [],
@@ -4758,6 +4883,7 @@
    "name": "Scotch Roman",
    "kind": "typeface",
    "wikidata": "Q7435531",
+   "fontsInUse": "4970",
    "designers": [],
    "year": null,
    "foundries": [],
@@ -4776,6 +4902,7 @@
    "name": "Toronto Subway",
    "kind": "typeface",
    "wikidata": "Q7826527",
+   "fontsInUse": "29710",
    "designers": [],
    "year": 1954,
    "foundries": [],
@@ -4794,6 +4921,7 @@
    "name": "Nimbus Roman No. 9 L",
    "kind": "typeface",
    "wikidata": "Q1992547",
+   "fontsInUse": "4775",
    "designers": [],
    "year": 1987,
    "foundries": [],
@@ -4804,7 +4932,7 @@
    },
    "score": 0.46,
    "coverage": {
-    "status": "inventoried",
+    "status": "indexed",
     "source": "urw-base35",
     "via": "Nimbus Roman",
     "match": "same-design",
@@ -4812,7 +4940,7 @@
      {
       "family": "Nimbus Roman",
       "relation": "same-design",
-      "status": "inventoried",
+      "status": "indexed",
       "evidence": "https://github.com/ArtifexSoftware/urw-base35-fonts/blob/20200910/fontconfig/urw-fallback-backwards.conf"
      }
     ]
@@ -4887,6 +5015,7 @@
    "name": "Theano Didot",
    "kind": "typeface",
    "wikidata": "Q24910197",
+   "fontsInUse": "7596",
    "designers": [
     "Aleksey Kryukov"
    ],
@@ -4933,6 +5062,7 @@
    "name": "Compacta",
    "kind": "typeface",
    "wikidata": "Q5155329",
+   "fontsInUse": "1721",
    "designers": [
     "Fred Lambert"
    ],
@@ -4994,6 +5124,7 @@
    "name": "Cochin",
    "kind": "typeface",
    "wikidata": "Q5139303",
+   "fontsInUse": "3865",
    "designers": [
     "Georges Peignot"
    ],
@@ -5014,6 +5145,7 @@
    "name": "Literaturnaya",
    "kind": "typeface",
    "wikidata": "Q1960648",
+   "fontsInUse": "5545",
    "designers": [],
    "year": 1930,
    "foundries": [],
@@ -5024,7 +5156,7 @@
    },
    "score": 0.453,
    "coverage": {
-    "status": "inventoried",
+    "status": "indexed",
     "source": "fontlibrary",
     "via": "Literaturnaya Book",
     "match": "related"
@@ -5053,6 +5185,7 @@
    "name": "Antique Olive",
    "kind": "typeface",
    "wikidata": "Q582888",
+   "fontsInUse": "1140",
    "designers": [
     "Roger Excoffon"
    ],
@@ -5073,6 +5206,7 @@
    "name": "Mandatory",
    "kind": "typeface",
    "wikidata": "Q54370234",
+   "fontsInUse": "23257",
    "designers": [],
    "year": 2001,
    "foundries": [],
@@ -5091,6 +5225,7 @@
    "name": "Arno",
    "kind": "typeface",
    "wikidata": "Q3917159",
+   "fontsInUse": "91",
    "designers": [
     "Robert Slimbach"
    ],
@@ -5111,6 +5246,7 @@
    "name": "SNV",
    "kind": "typeface",
    "wikidata": "Q7391918",
+   "fontsInUse": "28295",
    "designers": [],
    "year": null,
    "foundries": [],
@@ -5194,6 +5330,7 @@
    "name": "Iowan Old Style",
    "kind": "typeface",
    "wikidata": "Q24964238",
+   "fontsInUse": "279",
    "designers": [
     "John Downer"
    ],
@@ -5214,6 +5351,7 @@
    "name": "Trade Gothic",
    "kind": "typeface",
    "wikidata": "Q7831947",
+   "fontsInUse": "33",
    "designers": [],
    "year": 1948,
    "foundries": [],
@@ -5293,6 +5431,7 @@
    "name": "Folio",
    "kind": "typeface",
    "wikidata": "Q456289",
+   "fontsInUse": "1758",
    "designers": [],
    "year": 1957,
    "foundries": [],
@@ -5311,6 +5450,7 @@
    "name": "Source Han Serif",
    "kind": "typeface",
    "wikidata": "Q29167853",
+   "fontsInUse": "46751",
    "designers": [
     "Ryoko Nishizuka",
     "Frank Grießhammer"
@@ -5408,6 +5548,7 @@
    "name": "Courier New",
    "kind": "typeface",
    "wikidata": "Q31886911",
+   "fontsInUse": "4919",
    "designers": [],
    "year": null,
    "foundries": [],
@@ -5426,7 +5567,7 @@
      {
       "family": "Liberation Mono",
       "relation": "metric-compatible",
-      "status": "inventoried",
+      "status": "indexed",
       "evidence": "https://en.wikipedia.org/wiki/Liberation_fonts"
      },
      {
@@ -5505,6 +5646,7 @@
    "name": "Utopia",
    "kind": "typeface",
    "wikidata": "Q7902942",
+   "fontsInUse": "4599",
    "designers": [
     "Robert Slimbach"
    ],
@@ -5536,6 +5678,7 @@
    "name": "Memphis",
    "kind": "typeface",
    "wikidata": "Q28457377",
+   "fontsInUse": "4273",
    "designers": [],
    "year": 1929,
    "foundries": [],
@@ -5554,6 +5697,7 @@
    "name": "Neutraface",
    "kind": "typeface",
    "wikidata": "Q731173",
+   "fontsInUse": "62",
    "designers": [
     "Christian Schwartz"
    ],
@@ -5597,6 +5741,7 @@
    "name": "Bell",
    "kind": "typeface",
    "wikidata": "Q2642009",
+   "fontsInUse": "3785",
    "designers": [
     "Richard Austin"
    ],
@@ -5617,6 +5762,7 @@
    "name": "Bell Centennial",
    "kind": "typeface",
    "wikidata": "Q2942450",
+   "fontsInUse": "3781",
    "designers": [
     "Matthew Carter"
    ],
@@ -5655,6 +5801,7 @@
    "name": "Monotype Grotesque",
    "kind": "typeface",
    "wikidata": "Q6902058",
+   "fontsInUse": "18",
    "designers": [
     "Frank Hinman Pierpont"
    ],
@@ -5675,6 +5822,7 @@
    "name": "Joanna",
    "kind": "typeface",
    "wikidata": "Q4332904",
+   "fontsInUse": "4994",
    "designers": [
     "Eric Gill"
    ],
@@ -5736,6 +5884,7 @@
    "name": "Miller",
    "kind": "typeface",
    "wikidata": "Q6859066",
+   "fontsInUse": "100",
    "designers": [
     "Matthew Carter"
    ],
@@ -5774,6 +5923,7 @@
    "name": "ITC Zapf Chancery",
    "kind": "typeface",
    "wikidata": "Q5974730",
+   "fontsInUse": "1966",
    "designers": [
     "Hermann Zapf"
    ],
@@ -5787,14 +5937,14 @@
    "score": 0.433,
    "coverage": {
     "status": "indexed",
-    "source": "tex-gyre",
-    "via": "TeX Gyre Chorus",
+    "source": "urw-base35",
+    "via": "Z003",
     "match": "clone",
     "equivalents": [
      {
       "family": "Z003",
       "relation": "clone",
-      "status": "inventoried",
+      "status": "indexed",
       "evidence": "https://github.com/ArtifexSoftware/urw-base35-fonts/blob/20200910/fontconfig/urw-z003.conf"
      },
      {
@@ -5811,6 +5961,7 @@
    "name": "Syntax",
    "kind": "typeface",
    "wikidata": "Q1766362",
+   "fontsInUse": "3437",
    "designers": [],
    "year": 1968,
    "foundries": [],
@@ -5852,6 +6003,7 @@
    "name": "Lithos",
    "kind": "typeface",
    "wikidata": "Q6648164",
+   "fontsInUse": "4234",
    "designers": [
     "Carol Twombly"
    ],
@@ -5890,6 +6042,7 @@
    "name": "Caslon Antique",
    "kind": "typeface",
    "wikidata": "Q5048975",
+   "fontsInUse": "16044",
    "designers": [],
    "year": 1894,
    "foundries": [],
@@ -5931,6 +6084,7 @@
    "name": "Eras",
    "kind": "typeface",
    "wikidata": "Q609258",
+   "fontsInUse": "1745",
    "designers": [
     "Albert Hollenstein",
     "Albert Boton"
@@ -5988,6 +6142,7 @@
    "name": "Archer",
    "kind": "typeface",
    "wikidata": "Q4785938",
+   "fontsInUse": "7219",
    "designers": [
     "Jonathan Hoefler",
     "Tobias Frere-Jones"
@@ -6009,6 +6164,7 @@
    "name": "Korinna",
    "kind": "typeface",
    "wikidata": "Q6432295",
+   "fontsInUse": "39230",
    "designers": [
     "Ed Benguiat"
    ],
@@ -6029,6 +6185,7 @@
    "name": "Erbar",
    "kind": "typeface",
    "wikidata": "Q942044",
+   "fontsInUse": "7923",
    "designers": [],
    "year": 1926,
    "foundries": [],
@@ -6047,6 +6204,7 @@
    "name": "Egyptienne",
    "kind": "typeface",
    "wikidata": "Q17075893",
+   "fontsInUse": "4027",
    "designers": [],
    "year": 1956,
    "foundries": [],
@@ -6106,6 +6264,7 @@
    "name": "Hiragino",
    "kind": "typeface",
    "wikidata": "Q4399673",
+   "fontsInUse": "32227",
    "designers": [],
    "year": 1993,
    "foundries": [],
@@ -6147,6 +6306,7 @@
    "name": "Benton Sans",
    "kind": "typeface",
    "wikidata": "Q818336",
+   "fontsInUse": "106",
    "designers": [
     "Tobias Frere-Jones"
    ],
@@ -6177,7 +6337,7 @@
    },
    "score": 0.427,
    "coverage": {
-    "status": "inventoried",
+    "status": "indexed",
     "source": "ubuntu-titling",
     "via": "Ubuntu-Title",
     "match": "same-design",
@@ -6185,7 +6345,7 @@
      {
       "family": "Ubuntu-Title",
       "relation": "same-design",
-      "status": "inventoried",
+      "status": "indexed",
       "evidence": "https://packages.debian.org/sid/fonts-ubuntu-title"
      }
     ]
@@ -6208,7 +6368,7 @@
    },
    "score": 0.427,
    "coverage": {
-    "status": "inventoried",
+    "status": "indexed",
     "source": "fontlibrary",
     "via": "Hussar Motorway",
     "match": "related"
@@ -6229,7 +6389,7 @@
    },
    "score": 0.426,
    "coverage": {
-    "status": "inventoried",
+    "status": "indexed",
     "source": "sil",
     "via": "Doulos SIL",
     "match": "exact"
@@ -6263,6 +6423,7 @@
    "name": "Galliard",
    "kind": "typeface",
    "wikidata": "Q5519041",
+   "fontsInUse": "556",
    "designers": [
     "Matthew Carter"
    ],
@@ -6283,6 +6444,7 @@
    "name": "FF Dax",
    "kind": "typeface",
    "wikidata": "Q1388182",
+   "fontsInUse": "2420",
    "designers": [],
    "year": 1995,
    "foundries": [],
@@ -6301,6 +6463,7 @@
    "name": "Charcoal",
    "kind": "typeface",
    "wikidata": "Q2340303",
+   "fontsInUse": "10660",
    "designers": [],
    "year": 1995,
    "foundries": [],
@@ -6319,6 +6482,7 @@
    "name": "Souvenir",
    "kind": "typeface",
    "wikidata": "Q7571528",
+   "fontsInUse": "1913",
    "designers": [
     "Morris Fuller Benton",
     "Ed Benguiat"
@@ -6340,6 +6504,7 @@
    "name": "M+ Fonts",
    "kind": "typeface",
    "wikidata": "Q6711927",
+   "fontsInUse": "183074",
    "designers": [],
    "year": 2003,
    "foundries": [],
@@ -6375,6 +6540,7 @@
    "name": "Parisine",
    "kind": "typeface",
    "wikidata": "Q3014103",
+   "fontsInUse": "5641",
    "designers": [
     "Jean François Porchez"
    ],
@@ -6435,6 +6601,7 @@
    "name": "Letter Gothic",
    "kind": "typeface",
    "wikidata": "Q3820378",
+   "fontsInUse": "4767",
    "designers": [],
    "year": 1962,
    "foundries": [],
@@ -6453,6 +6620,7 @@
    "name": "Tiresias",
    "kind": "typeface",
    "wikidata": "Q744998",
+   "fontsInUse": "8641",
    "designers": [],
    "year": 1998,
    "foundries": [],
@@ -6517,6 +6685,7 @@
    "name": "Walbaum",
    "kind": "typeface",
    "wikidata": "Q25394223",
+   "fontsInUse": "4630",
    "designers": [
     "Justus Erich Walbaum"
    ],
@@ -6555,6 +6724,7 @@
    "name": "Grotesque",
    "kind": "typeface",
    "wikidata": "Q28452292",
+   "fontsInUse": "7205",
    "designers": [],
    "year": null,
    "foundries": [],
@@ -6586,7 +6756,7 @@
    },
    "score": 0.422,
    "coverage": {
-    "status": "inventoried",
+    "status": "indexed",
     "source": "debian",
     "via": "ALM Fixed",
     "match": "related"
@@ -6620,6 +6790,7 @@
    "name": "Bell Gothic",
    "kind": "typeface",
    "wikidata": "Q2633344",
+   "fontsInUse": "3784",
    "designers": [
     "Chauncey H. Griffith"
    ],
@@ -6658,6 +6829,7 @@
    "name": "Brandon Grotesque",
    "kind": "typeface",
    "wikidata": "Q4956878",
+   "fontsInUse": "37",
    "designers": [
     "Hannes von Döhren"
    ],
@@ -6696,6 +6868,7 @@
    "name": "Metro",
    "kind": "typeface",
    "wikidata": "Q25345842",
+   "fontsInUse": "31740",
    "designers": [
     "William Addison Dwiggins"
    ],
@@ -6761,6 +6934,7 @@
    "name": "Athelas",
    "kind": "typeface",
    "wikidata": "Q28441321",
+   "fontsInUse": "6597",
    "designers": [],
    "year": 2008,
    "foundries": [],
@@ -6797,6 +6971,7 @@
    "name": "Calisto MT",
    "kind": "typeface",
    "wikidata": "Q5021404",
+   "fontsInUse": "4894",
    "designers": [
     "Ron Carpenter"
    ],
@@ -6835,6 +7010,7 @@
    "name": "Lexicon",
    "kind": "typeface",
    "wikidata": "Q2767859",
+   "fontsInUse": "22793",
    "designers": [],
    "year": 1992,
    "foundries": [],
@@ -6873,6 +7049,7 @@
    "name": "PragmataPro",
    "kind": "typeface",
    "wikidata": "Q16944806",
+   "fontsInUse": "6138",
    "designers": [
     "Fabrizio Schiavi"
    ],
@@ -6934,6 +7111,7 @@
    "name": "Breitkopf Fraktur",
    "kind": "typeface",
    "wikidata": "Q906643",
+   "fontsInUse": "4735",
    "designers": [
     "Johann Gottlob Immanuel Breitkopf"
    ],
@@ -7012,6 +7190,7 @@
    "name": "Aster",
    "kind": "typeface",
    "wikidata": "Q4810630",
+   "fontsInUse": "1600",
    "designers": [
     "Francesco Simoncini"
    ],
@@ -7055,6 +7234,7 @@
    "name": "Nimbus Mono L",
    "kind": "typeface",
    "wikidata": "Q7037649",
+   "fontsInUse": "4774",
    "designers": [],
    "year": null,
    "foundries": [],
@@ -7065,7 +7245,7 @@
    },
    "score": 0.415,
    "coverage": {
-    "status": "inventoried",
+    "status": "indexed",
     "source": "urw-base35",
     "via": "Nimbus Mono PS",
     "match": "same-design",
@@ -7073,7 +7253,7 @@
      {
       "family": "Nimbus Mono PS",
       "relation": "same-design",
-      "status": "inventoried",
+      "status": "indexed",
       "evidence": "https://github.com/ArtifexSoftware/urw-base35-fonts/blob/20200910/fontconfig/urw-fallback-backwards.conf"
      }
     ]
@@ -7120,6 +7300,7 @@
    "name": "Venus (typeface)",
    "kind": "typeface",
    "wikidata": "Q28230583",
+   "fontsInUse": "16",
    "designers": [],
    "year": 1907,
    "foundries": [],
@@ -7138,6 +7319,7 @@
    "name": "Kennerley Old Style",
    "kind": "typeface",
    "wikidata": "Q6644158",
+   "fontsInUse": "6043",
    "designers": [
     "Frederic Goudy"
    ],
@@ -7158,6 +7340,7 @@
    "name": "Scala",
    "kind": "typeface",
    "wikidata": "Q478407",
+   "fontsInUse": "95",
    "designers": [
     "Martin Majoor"
    ],
@@ -7178,6 +7361,7 @@
    "name": "Cloister",
    "kind": "typeface",
    "wikidata": "Q25345843",
+   "fontsInUse": "903",
    "designers": [
     "Morris Fuller Benton"
    ],
@@ -7241,6 +7425,7 @@
    "name": "Caledonia",
    "kind": "typeface",
    "wikidata": "Q5019369",
+   "fontsInUse": "4316",
    "designers": [],
    "year": 1938,
    "foundries": [],
@@ -7259,6 +7444,7 @@
    "name": "Ehrhardt",
    "kind": "typeface",
    "wikidata": "Q2418301",
+   "fontsInUse": "4925",
    "designers": [],
    "year": 1938,
    "foundries": [],
@@ -7337,6 +7523,7 @@
    "name": "Granjon",
    "kind": "typeface",
    "wikidata": "Q2471329",
+   "fontsInUse": "4103",
    "designers": [
     "George W. Jones"
    ],
@@ -7357,6 +7544,7 @@
    "name": "Unica",
    "kind": "typeface",
    "wikidata": "Q42572728",
+   "fontsInUse": "10661",
    "designers": [
     "Team'77",
     "Christian Mengelt",
@@ -7382,6 +7570,7 @@
    "name": "Industria",
    "kind": "typeface",
    "wikidata": "Q17042094",
+   "fontsInUse": "1153",
    "designers": [],
    "year": 1984,
    "foundries": [],
@@ -7400,6 +7589,7 @@
    "name": "Gabriola",
    "kind": "typeface",
    "wikidata": "Q16993899",
+   "fontsInUse": "40533",
    "designers": [
     "John Hudson"
    ],
@@ -7443,6 +7633,7 @@
    "name": "Caslon Egyptian",
    "kind": "typeface",
    "wikidata": "Q28404074",
+   "fontsInUse": "41924",
    "designers": [],
    "year": 1816,
    "foundries": [],
@@ -7471,7 +7662,7 @@
    },
    "score": 0.408,
    "coverage": {
-    "status": "inventoried",
+    "status": "indexed",
     "source": "fontlibrary",
     "via": "SST",
     "match": "exact"
@@ -7541,6 +7732,7 @@
    "name": "Concrete Roman",
    "kind": "typeface",
    "wikidata": "Q3686337",
+   "fontsInUse": "39852",
    "designers": [
     "Donald Knuth"
    ],
@@ -7584,6 +7776,7 @@
    "name": "Apple Symbols",
    "kind": "typeface",
    "wikidata": "Q4781237",
+   "fontsInUse": "76355",
    "designers": [],
    "year": null,
    "foundries": [],
@@ -7602,6 +7795,7 @@
    "name": "Trump Mediaeval",
    "kind": "typeface",
    "wikidata": "Q18354751",
+   "fontsInUse": "32151",
    "designers": [],
    "year": 1954,
    "foundries": [],
@@ -7736,6 +7930,7 @@
    "name": "Bulmer",
    "kind": "typeface",
    "wikidata": "Q2798814",
+   "fontsInUse": "232",
    "designers": [],
    "year": 1790,
    "foundries": [],
@@ -7754,6 +7949,7 @@
    "name": "Dante",
    "kind": "typeface",
    "wikidata": "Q5221147",
+   "fontsInUse": "4921",
    "designers": [
     "Giovanni Mardersteig"
    ],
@@ -7816,6 +8012,7 @@
    "name": "Everson Mono",
    "kind": "typeface",
    "wikidata": "Q5417346",
+   "fontsInUse": "82449",
    "designers": [
     "Michael Everson"
    ],
@@ -7859,6 +8056,7 @@
    "name": "Tratex",
    "kind": "typeface",
    "wikidata": "Q3395786",
+   "fontsInUse": "75790",
    "designers": [
     "Kåge Gustafson"
    ],
@@ -7890,7 +8088,7 @@
    "score": 0.401,
    "coverage": {
     "status": "indexed",
-    "source": "fontsource",
+    "source": "fontlibrary",
     "via": "Iosevka",
     "match": "exact"
    }
@@ -7900,6 +8098,7 @@
    "name": "Klavika",
    "kind": "typeface",
    "wikidata": "Q6419999",
+   "fontsInUse": "8",
    "designers": [],
    "year": 2004,
    "foundries": [],
@@ -7942,6 +8141,7 @@
    "name": "FF Scala Sans",
    "kind": "typeface",
    "wikidata": "Q5425447",
+   "fontsInUse": "94",
    "designers": [
     "Martin Majoor"
    ],
@@ -7962,6 +8162,7 @@
    "name": "Skia",
    "kind": "typeface",
    "wikidata": "Q7534970",
+   "fontsInUse": "28146",
    "designers": [
     "Matthew Carter"
    ],
@@ -8006,6 +8207,7 @@
    "name": "Amelia",
    "kind": "typeface",
    "wikidata": "Q4742216",
+   "fontsInUse": "1138",
    "designers": [],
    "year": 1964,
    "foundries": [],
@@ -8024,6 +8226,7 @@
    "name": "City",
    "kind": "typeface",
    "wikidata": "Q5123012",
+   "fontsInUse": "67",
    "designers": [],
    "year": 1930,
    "foundries": [],
@@ -8081,6 +8284,7 @@
    "name": "Britannic",
    "kind": "typeface",
    "wikidata": "Q25345839",
+   "fontsInUse": "53",
    "designers": [],
    "year": null,
    "foundries": [],
@@ -8135,7 +8339,7 @@
    },
    "score": 0.397,
    "coverage": {
-    "status": "inventoried",
+    "status": "indexed",
     "source": "debian",
     "via": "WenQuanYi Zen Hei",
     "match": "related"
@@ -8164,6 +8368,7 @@
    "name": "Aurora",
    "kind": "typeface",
    "wikidata": "Q4822483",
+   "fontsInUse": "7604",
    "designers": [],
    "year": 1960,
    "foundries": [],
@@ -8182,6 +8387,7 @@
    "name": "Cartier",
    "kind": "typeface",
    "wikidata": "Q5047326",
+   "fontsInUse": "4898",
    "designers": [
     "Carl Dair"
    ],
@@ -8202,6 +8408,7 @@
    "name": "Allegro",
    "kind": "typeface",
    "wikidata": "Q4731411",
+   "fontsInUse": "10857",
    "designers": [],
    "year": 1936,
    "foundries": [],
@@ -8243,6 +8450,7 @@
    "name": "Stereofidelic",
    "kind": "typeface",
    "wikidata": "Q7611240",
+   "fontsInUse": "28749",
    "designers": [
     "Ray Larabie"
    ],
@@ -8266,6 +8474,7 @@
    "name": "Guardian Egyptian",
    "kind": "typeface",
    "wikidata": "Q16993448",
+   "fontsInUse": "47632",
    "designers": [
     "Paul Barnes",
     "Christian Schwartz"
@@ -8287,6 +8496,7 @@
    "name": "University of California Old Style",
    "kind": "typeface",
    "wikidata": "Q24765334",
+   "fontsInUse": "15825",
    "designers": [
     "Frederic Goudy"
    ],
@@ -8330,6 +8540,7 @@
    "name": "Electra",
    "kind": "typeface",
    "wikidata": "Q31888418",
+   "fontsInUse": "4032",
    "designers": [
     "William Addison Dwiggins"
    ],
@@ -8350,6 +8561,7 @@
    "name": "Trinité",
    "kind": "typeface",
    "wikidata": "Q4002363",
+   "fontsInUse": "29858",
    "designers": [],
    "year": 1982,
    "foundries": [],
@@ -8368,6 +8580,7 @@
    "name": "FS Me",
    "kind": "typeface",
    "wikidata": "Q18354584",
+   "fontsInUse": "8905",
    "designers": [],
    "year": 2008,
    "foundries": [],
@@ -8410,6 +8623,7 @@
    "name": "Requiem",
    "kind": "typeface",
    "wikidata": "Q7314840",
+   "fontsInUse": "7540",
    "designers": [
     "Jonathan Hoefler"
    ],
@@ -8430,6 +8644,7 @@
    "name": "Semplicità",
    "kind": "typeface",
    "wikidata": "Q30580539",
+   "fontsInUse": "513",
    "designers": [],
    "year": null,
    "foundries": [],
@@ -8448,6 +8663,7 @@
    "name": "Serifa",
    "kind": "typeface",
    "wikidata": "Q16894305",
+   "fontsInUse": "318",
    "designers": [
     "Adrian Frutiger"
    ],
@@ -8468,6 +8684,7 @@
    "name": "Bernhard Gothic",
    "kind": "typeface",
    "wikidata": "Q825106",
+   "fontsInUse": "1685",
    "designers": [],
    "year": 1929,
    "foundries": [],
@@ -8549,6 +8766,7 @@
    "name": "Hightower Text",
    "kind": "typeface",
    "wikidata": "Q25345841",
+   "fontsInUse": "20989",
    "designers": [
     "Tobias Frere-Jones"
    ],
@@ -8589,6 +8807,7 @@
    "name": "Clearface",
    "kind": "typeface",
    "wikidata": "Q5130837",
+   "fontsInUse": "3305",
    "designers": [
     "Morris Fuller Benton"
    ],
@@ -8609,6 +8828,7 @@
    "name": "Solus",
    "kind": "typeface",
    "wikidata": "Q28454984",
+   "fontsInUse": "32298",
    "designers": [
     "Eric Gill"
    ],
@@ -8629,6 +8849,7 @@
    "name": "Braggadocio",
    "kind": "typeface",
    "wikidata": "Q4955415",
+   "fontsInUse": "7337",
    "designers": [],
    "year": 1930,
    "foundries": [],
@@ -8647,6 +8868,7 @@
    "name": "Tempo",
    "kind": "typeface",
    "wikidata": "Q28457378",
+   "fontsInUse": "4539",
    "designers": [
     "Robert Hunter Middleton"
    ],
@@ -8708,6 +8930,7 @@
    "name": "Neo Sans",
    "kind": "typeface",
    "wikidata": "Q1977421",
+   "fontsInUse": "5034",
    "designers": [
     "Seb Lester"
    ],
@@ -8748,6 +8971,7 @@
    "name": "Graphik",
    "kind": "typeface",
    "wikidata": "Q29365095",
+   "fontsInUse": "57",
    "designers": [
     "Christian Schwartz"
    ],
@@ -8768,6 +8992,7 @@
    "name": "Berthold Block",
    "kind": "typeface",
    "wikidata": "Q25345844",
+   "fontsInUse": "7572",
    "designers": [],
    "year": 1908,
    "foundries": [],
@@ -8786,6 +9011,7 @@
    "name": "Nobel",
    "kind": "typeface",
    "wikidata": "Q4859717",
+   "fontsInUse": "41487",
    "designers": [
     "Dick Dooijes",
     "S.H. de Roos"
@@ -8850,6 +9076,7 @@
    "name": "Granby",
    "kind": "typeface",
    "wikidata": "Q28457457",
+   "fontsInUse": "1787",
    "designers": [],
    "year": null,
    "foundries": [],
@@ -8868,6 +9095,7 @@
    "name": "Imprint",
    "kind": "typeface",
    "wikidata": "Q2311519",
+   "fontsInUse": "4911",
    "designers": [
     "Gerard Meynell"
    ],
@@ -8933,6 +9161,7 @@
    "name": "ITC Anna",
    "kind": "typeface",
    "wikidata": "Q28403419",
+   "fontsInUse": "1592",
    "designers": [],
    "year": 1991,
    "foundries": [],
@@ -8951,6 +9180,7 @@
    "name": "Lydian",
    "kind": "typeface",
    "wikidata": "Q2797464",
+   "fontsInUse": "6",
    "designers": [
     "Warren Chappell"
    ],
@@ -8998,6 +9228,7 @@
    "name": "Bernhard Modern",
    "kind": "typeface",
    "wikidata": "Q4894208",
+   "fontsInUse": "227",
    "designers": [
     "Lucian Bernhard"
    ],
@@ -9018,6 +9249,7 @@
    "name": "Architype Van Doesburg",
    "kind": "typeface",
    "wikidata": "Q2591742",
+   "fontsInUse": "31938",
    "designers": [
     "Theo van Doesburg"
    ],
@@ -9038,6 +9270,7 @@
    "name": "Retina",
    "kind": "typeface",
    "wikidata": "Q113903791",
+   "fontsInUse": "7654",
    "designers": [
     "Tobias Frere-Jones"
    ],
@@ -9058,6 +9291,7 @@
    "name": "Aldus",
    "kind": "typeface",
    "wikidata": "Q3609389",
+   "fontsInUse": "3338",
    "designers": [
     "Hermann Zapf"
    ],
@@ -9101,6 +9335,7 @@
    "name": "National Trust",
    "kind": "typeface",
    "wikidata": "Q28457591",
+   "fontsInUse": "39449",
    "designers": [],
    "year": 2009,
    "foundries": [],
@@ -9119,6 +9354,7 @@
    "name": "Architype Renner",
    "kind": "typeface",
    "wikidata": "Q1924027",
+   "fontsInUse": "31931",
    "designers": [],
    "year": 1997,
    "foundries": [],
@@ -9137,6 +9373,7 @@
    "name": "NR Brunel",
    "kind": "typeface",
    "wikidata": "Q28815833",
+   "fontsInUse": "129941",
    "designers": [
     "Freda Sack"
    ],
@@ -9199,6 +9436,7 @@
    "name": "Casey",
    "kind": "typeface",
    "wikidata": "Q2393033",
+   "fontsInUse": "1319",
    "designers": [],
    "year": 1996,
    "foundries": [],
@@ -9240,6 +9478,7 @@
    "name": "Trafikkalfabetet",
    "kind": "typeface",
    "wikidata": "Q3434788",
+   "fontsInUse": "5216",
    "designers": [],
    "year": null,
    "foundries": [],
@@ -9278,6 +9517,7 @@
    "name": "Neuzeit S",
    "kind": "typeface",
    "wikidata": "Q2338537",
+   "fontsInUse": "7388",
    "designers": [],
    "year": null,
    "foundries": [],
@@ -9373,6 +9613,7 @@
    "name": "Auriol",
    "kind": "typeface",
    "wikidata": "Q4822389",
+   "fontsInUse": "3260",
    "designers": [
     "George Auriol"
    ],
@@ -9393,6 +9634,7 @@
    "name": "Spartan",
    "kind": "typeface",
    "wikidata": "Q7573880",
+   "fontsInUse": "4496",
    "designers": [],
    "year": null,
    "foundries": [],
@@ -9404,8 +9646,8 @@
    "score": 0.375,
    "coverage": {
     "status": "indexed",
-    "source": "google-fonts",
-    "via": "League Spartan",
+    "source": "fontlibrary",
+    "via": "Spartan MB",
     "match": "related"
    }
   },
@@ -9441,6 +9683,7 @@
    "name": "Antykwa Półtawskiego",
    "kind": "typeface",
    "wikidata": "Q2120650",
+   "fontsInUse": "46072",
    "designers": [
     "Adam Półtawski"
    ],
@@ -9461,6 +9704,7 @@
    "name": "Filosofia",
    "kind": "typeface",
    "wikidata": "Q11922050",
+   "fontsInUse": "2016",
    "designers": [
     "Zuzana Licko"
    ],
@@ -9564,6 +9808,7 @@
    "name": "Goudy Sans",
    "kind": "typeface",
    "wikidata": "Q24963401",
+   "fontsInUse": "3638",
    "designers": [
     "Frederic Goudy"
    ],
@@ -9584,6 +9829,7 @@
    "name": "Century Schoolbook",
    "kind": "typeface",
    "wikidata": "Q43387583",
+   "fontsInUse": "244",
    "designers": [
     "Morris Fuller Benton"
    ],
@@ -9597,14 +9843,14 @@
    "score": 0.372,
    "coverage": {
     "status": "indexed",
-    "source": "tex-gyre",
-    "via": "TeX Gyre Schola",
+    "source": "urw-base35",
+    "via": "C059",
     "match": "clone",
     "equivalents": [
      {
       "family": "C059",
       "relation": "clone",
-      "status": "inventoried",
+      "status": "indexed",
       "evidence": "https://github.com/ArtifexSoftware/urw-base35-fonts/blob/20200910/fontconfig/urw-c059.conf"
      },
      {
@@ -9644,6 +9890,7 @@
    "name": "Architype Albers",
    "kind": "typeface",
    "wikidata": "Q2500318",
+   "fontsInUse": "31786",
    "designers": [
     "Josef Albers"
    ],
@@ -9664,6 +9911,7 @@
    "name": "Gilbert",
    "kind": "typeface",
    "wikidata": "Q96379483",
+   "fontsInUse": "46399",
    "designers": [],
    "year": null,
    "foundries": [],
@@ -9723,6 +9971,7 @@
    "name": "Bliss",
    "kind": "typeface",
    "wikidata": "Q28457461",
+   "fontsInUse": "7656",
    "designers": [],
    "year": 1996,
    "foundries": [],
@@ -9802,6 +10051,7 @@
    "name": "Euphemia",
    "kind": "typeface",
    "wikidata": "Q17002578",
+   "fontsInUse": "102277",
    "designers": [
     "Ross Mills"
    ],
@@ -9822,6 +10072,7 @@
    "name": "Méridien",
    "kind": "typeface",
    "wikidata": "Q21296414",
+   "fontsInUse": "4275",
    "designers": [],
    "year": 1957,
    "foundries": [],
@@ -9840,6 +10091,7 @@
    "name": "Template Gothic",
    "kind": "typeface",
    "wikidata": "Q17082247",
+   "fontsInUse": "2088",
    "designers": [
     "Barry Deck"
    ],
@@ -9860,6 +10112,7 @@
    "name": "Andalé Sans",
    "kind": "typeface",
    "wikidata": "Q4753547",
+   "fontsInUse": "4863",
    "designers": [],
    "year": 1995,
    "foundries": [],
@@ -9902,6 +10155,7 @@
    "name": "NPS Rawlinson Roadway",
    "kind": "typeface",
    "wikidata": "Q6955068",
+   "fontsInUse": "32615",
    "designers": [
     "James Montalbano"
    ],
@@ -9922,6 +10176,7 @@
    "name": "Carter Sans",
    "kind": "typeface",
    "wikidata": "Q5047213",
+   "fontsInUse": "7961",
    "designers": [
     "Matthew Carter"
    ],
@@ -9942,6 +10197,7 @@
    "name": "Fairfield",
    "kind": "typeface",
    "wikidata": "Q5430236",
+   "fontsInUse": "7",
    "designers": [],
    "year": 1940,
    "foundries": [],
@@ -9952,7 +10208,18 @@
    },
    "score": 0.367,
    "coverage": {
-    "status": "missing"
+    "status": "indexed",
+    "source": "google-fonts",
+    "via": "Fanwood Text",
+    "match": "revival",
+    "equivalents": [
+     {
+      "family": "Fanwood Text",
+      "relation": "revival",
+      "status": "indexed",
+      "evidence": "https://github.com/google/fonts/blob/e44c4b011a820c2cbe2fd2cfa8052037d7edb571/ofl/fanwoodtext/DESCRIPTION.en_us.html"
+     }
+    ]
    }
   },
   {
@@ -9980,6 +10247,7 @@
    "name": "Eagle",
    "kind": "typeface",
    "wikidata": "Q5325000",
+   "fontsInUse": "2215",
    "designers": [
     "Morris Fuller Benton"
    ],
@@ -10106,6 +10374,7 @@
    "name": "Seravek",
    "kind": "typeface",
    "wikidata": "Q28127167",
+   "fontsInUse": "5723",
    "designers": [],
    "year": 2007,
    "foundries": [],
@@ -10124,6 +10393,7 @@
    "name": "Architype Bayer",
    "kind": "typeface",
    "wikidata": "Q2400243",
+   "fontsInUse": "31937",
    "designers": [
     "Herbert Bayer"
    ],
@@ -10144,6 +10414,7 @@
    "name": "Dotum",
    "kind": "typeface",
    "wikidata": "Q3336008",
+   "fontsInUse": "217297",
    "designers": [],
    "year": 2000,
    "foundries": [],
@@ -10188,6 +10459,7 @@
    "name": "Beton",
    "kind": "typeface",
    "wikidata": "Q28457381",
+   "fontsInUse": "840",
    "designers": [
     "Heinrich Jost"
    ],
@@ -10208,6 +10480,7 @@
    "name": "ITC Officina",
    "kind": "typeface",
    "wikidata": "Q1654978",
+   "fontsInUse": "1869",
    "designers": [
     "Ole Schäfer",
     "Just van Rossum"
@@ -10229,6 +10502,7 @@
    "name": "E-Ukraine",
    "kind": "typeface",
    "wikidata": "Q108887868",
+   "fontsInUse": "209816",
    "designers": [],
    "year": null,
    "foundries": [],
@@ -10337,6 +10611,7 @@
    "name": "Athens",
    "kind": "typeface",
    "wikidata": "Q4813457",
+   "fontsInUse": "46397",
    "designers": [
     "Susan Kare"
    ],
@@ -10418,6 +10693,7 @@
    "name": "Umbra",
    "kind": "typeface",
    "wikidata": "Q7881373",
+   "fontsInUse": "7335",
    "designers": [],
    "year": 1935,
    "foundries": [],
@@ -10578,6 +10854,7 @@
    "name": "Monticello",
    "kind": "typeface",
    "wikidata": "Q6905944",
+   "fontsInUse": "4296",
    "designers": [
     "Chauncey H. Griffith"
    ],
@@ -10647,6 +10924,7 @@
    "name": "Warnock",
    "kind": "typeface",
    "wikidata": "Q30668417",
+   "fontsInUse": "4631",
    "designers": [],
    "year": 2000,
    "foundries": [],
@@ -10683,6 +10961,7 @@
    "name": "FF Kievit",
    "kind": "typeface",
    "wikidata": "Q1741129",
+   "fontsInUse": "2482",
    "designers": [
     "Paul van der Laan",
     "Mike Abbink",
@@ -10841,6 +11120,7 @@
    "name": "Normal-Grotesk",
    "kind": "typeface",
    "wikidata": "Q28457201",
+   "fontsInUse": "44429",
    "designers": [],
    "year": null,
    "foundries": [],
@@ -10859,6 +11139,7 @@
    "name": "Deepdene",
    "kind": "typeface",
    "wikidata": "Q25345840",
+   "fontsInUse": "17489",
    "designers": [
     "Frederic Goudy"
    ],
@@ -10871,7 +11152,18 @@
    },
    "score": 0.352,
    "coverage": {
-    "status": "missing"
+    "status": "indexed",
+    "source": "google-fonts",
+    "via": "Linden Hill",
+    "match": "revival",
+    "equivalents": [
+     {
+      "family": "Linden Hill",
+      "relation": "revival",
+      "status": "indexed",
+      "evidence": "https://github.com/google/fonts/blob/e44c4b011a820c2cbe2fd2cfa8052037d7edb571/ofl/lindenhill/DESCRIPTION.en_us.html"
+     }
+    ]
    }
   },
   {
@@ -10925,6 +11217,7 @@
    "name": "Triplex",
    "kind": "typeface",
    "wikidata": "Q7843596",
+   "fontsInUse": "2095",
    "designers": [
     "Zuzana Licko"
    ],
@@ -10945,6 +11238,7 @@
    "name": "Gridnik",
    "kind": "typeface",
    "wikidata": "Q1893460",
+   "fontsInUse": "7536",
    "designers": [
     "Wim Crouwel"
    ],
@@ -11010,6 +11304,7 @@
    "name": "URW Grotesk",
    "kind": "typeface",
    "wikidata": "Q24886195",
+   "fontsInUse": "6831",
    "designers": [
     "Hermann Zapf"
    ],
@@ -11054,6 +11349,7 @@
    "name": "Emerson",
    "kind": "typeface",
    "wikidata": "Q5370846",
+   "fontsInUse": "87156",
    "designers": [],
    "year": 1935,
    "foundries": [],
@@ -11114,6 +11410,7 @@
    "name": "Footlight",
    "kind": "typeface",
    "wikidata": "Q17003175",
+   "fontsInUse": "4951",
    "designers": [],
    "year": 1985,
    "foundries": [],
@@ -11178,6 +11475,7 @@
    "name": "Fournier MT",
    "kind": "typeface",
    "wikidata": "Q28453716",
+   "fontsInUse": "4053",
    "designers": [],
    "year": null,
    "foundries": [],
@@ -11196,6 +11494,7 @@
    "name": "Koch-Antiqua",
    "kind": "typeface",
    "wikidata": "Q28455136",
+   "fontsInUse": "4646",
    "designers": [
     "Rudolf Koch"
    ],
@@ -11216,6 +11515,7 @@
    "name": "Poetica",
    "kind": "typeface",
    "wikidata": "Q7207469",
+   "fontsInUse": "4382",
    "designers": [
     "Robert Slimbach"
    ],
@@ -11259,6 +11559,7 @@
    "name": "Wallau",
    "kind": "typeface",
    "wikidata": "Q123709621",
+   "fontsInUse": "31509",
    "designers": [
     "Rudolf Koch"
    ],
@@ -11302,6 +11603,7 @@
    "name": "Tasse",
    "kind": "typeface",
    "wikidata": "Q1876249",
+   "fontsInUse": "2305",
    "designers": [],
    "year": null,
    "foundries": [],
@@ -11320,6 +11622,7 @@
    "name": "Charlotte Sans",
    "kind": "typeface",
    "wikidata": "Q2625487",
+   "fontsInUse": "3294",
    "designers": [],
    "year": 1992,
    "foundries": [],
@@ -11399,6 +11702,7 @@
    "name": "Permanent Headline",
    "kind": "typeface",
    "wikidata": "Q24897177",
+   "fontsInUse": "7242",
    "designers": [
     "Karlgeorg Hoefer"
    ],
@@ -11419,6 +11723,7 @@
    "name": "Radiant",
    "kind": "typeface",
    "wikidata": "Q28457380",
+   "fontsInUse": "1193",
    "designers": [
     "Robert Hunter Middleton"
    ],
@@ -11624,6 +11929,7 @@
    "name": "Karnak",
    "kind": "typeface",
    "wikidata": "Q28457379",
+   "fontsInUse": "5951",
    "designers": [
     "Robert Hunter Middleton"
    ],
@@ -11644,6 +11950,7 @@
    "name": "Solare",
    "kind": "typeface",
    "wikidata": "Q125338248",
+   "fontsInUse": "233702",
    "designers": [
     "Nikolas Wrobel"
    ],
@@ -11730,6 +12037,7 @@
    "name": "Panno",
    "kind": "typeface",
    "wikidata": "Q7131414",
+   "fontsInUse": "350",
    "designers": [
     "Pieter van Rosmalen"
    ],
@@ -11793,6 +12101,7 @@
    "name": "Veronese",
    "kind": "typeface",
    "wikidata": "Q30602358",
+   "fontsInUse": "6004",
    "designers": [],
    "year": null,
    "foundries": [],
@@ -11834,6 +12143,7 @@
    "name": "Architype Schwitters",
    "kind": "typeface",
    "wikidata": "Q2052481",
+   "fontsInUse": "31939",
    "designers": [
     "Kurt Schwitters"
    ],
@@ -11854,6 +12164,7 @@
    "name": "Tower",
    "kind": "typeface",
    "wikidata": "Q7829621",
+   "fontsInUse": "93051",
    "designers": [
     "Morris Fuller Benton"
    ],
@@ -11866,7 +12177,7 @@
    },
    "score": 0.334,
    "coverage": {
-    "status": "inventoried",
+    "status": "indexed",
     "source": "fontlibrary",
     "via": "Tower Print",
     "match": "related"
@@ -12065,6 +12376,7 @@
    "name": "Surveyor",
    "kind": "typeface",
    "wikidata": "Q7647108",
+   "fontsInUse": "32344",
    "designers": [
     "Tobias Frere-Jones"
    ],
@@ -12108,6 +12420,7 @@
    "name": "Architype van der Leck",
    "kind": "typeface",
    "wikidata": "Q2960409",
+   "fontsInUse": "42396",
    "designers": [
     "Bart van der Leck"
    ],
@@ -12258,6 +12571,7 @@
    "name": "Skeleton Antique",
    "kind": "typeface",
    "wikidata": "Q2339531",
+   "fontsInUse": "28127",
    "designers": [
     "William Hamilton Page"
    ],
@@ -12321,6 +12635,7 @@
    "name": "Cholla Slab",
    "kind": "typeface",
    "wikidata": "Q2113814",
+   "fontsInUse": "1995",
    "designers": [],
    "year": 1998,
    "foundries": [],
@@ -12527,6 +12842,7 @@
    "name": "Excelsior",
    "kind": "typeface",
    "wikidata": "Q5419464",
+   "fontsInUse": "4041",
    "designers": [
     "Chauncey H. Griffith"
    ],
@@ -12578,6 +12894,7 @@
    "name": "Elephant",
    "kind": "typeface",
    "wikidata": "Q25345812",
+   "fontsInUse": "106797",
    "designers": [
     "Matthew Carter"
    ],
@@ -12636,7 +12953,18 @@
    },
    "score": 0.318,
    "coverage": {
-    "status": "missing"
+    "status": "indexed",
+    "source": "google-fonts",
+    "via": "Della Respira",
+    "match": "revival",
+    "equivalents": [
+     {
+      "family": "Della Respira",
+      "relation": "revival",
+      "status": "indexed",
+      "evidence": "https://github.com/google/fonts/blob/e44c4b011a820c2cbe2fd2cfa8052037d7edb571/ofl/dellarespira/DESCRIPTION.en_us.html"
+     }
+    ]
    }
   },
   {
@@ -12705,6 +13033,7 @@
    "name": "Ellington",
    "kind": "typeface",
    "wikidata": "Q5365410",
+   "fontsInUse": "4927",
    "designers": [],
    "year": 1990,
    "foundries": [],
@@ -13121,6 +13450,7 @@
    "name": "Nilland",
    "kind": "typeface",
    "wikidata": "Q17080892",
+   "fontsInUse": "32083",
    "designers": [
     "Manfred Klein"
    ],
@@ -13310,6 +13640,7 @@
    "name": "Artcraft",
    "kind": "typeface",
    "wikidata": "Q4797373",
+   "fontsInUse": "8072",
    "designers": [
     "Robert Wiebking"
    ],
@@ -13401,6 +13732,7 @@
    "name": "Eurocrat",
    "kind": "typeface",
    "wikidata": "Q16938893",
+   "fontsInUse": "18682",
    "designers": [],
    "year": 1986,
    "foundries": [],
@@ -13443,6 +13775,7 @@
    "name": "Lexia",
    "kind": "typeface",
    "wikidata": "Q16905499",
+   "fontsInUse": "1314",
    "designers": [
     "Ron Carpenter"
    ],
@@ -13463,6 +13796,7 @@
    "name": "Nordstern",
    "kind": "typeface",
    "wikidata": "Q56279228",
+   "fontsInUse": "43779",
    "designers": [],
    "year": null,
    "foundries": [],
@@ -13505,6 +13839,7 @@
    "name": "Ionic No. 5",
    "kind": "typeface",
    "wikidata": "Q2224604",
+   "fontsInUse": "10664",
    "designers": [
     "Chauncey H. Griffith"
    ],
@@ -13550,6 +13885,7 @@
    "name": "ITC Kahana",
    "kind": "typeface",
    "wikidata": "Q5974719",
+   "fontsInUse": "21925",
    "designers": [],
    "year": null,
    "foundries": [],
@@ -13759,6 +14095,7 @@
    "name": "Adobe Caslon",
    "kind": "typeface",
    "wikidata": "Q23777629",
+   "fontsInUse": "65",
    "designers": [
     "Carol Twombly"
    ],
@@ -13982,6 +14319,7 @@
    "name": "Hess Old Style",
    "kind": "typeface",
    "wikidata": "Q17004509",
+   "fontsInUse": "5941",
    "designers": [],
    "year": null,
    "foundries": [],
@@ -14369,6 +14707,7 @@
    "name": "Joanna Sans Nova",
    "kind": "typeface",
    "wikidata": "Q119169668",
+   "fontsInUse": "40413",
    "designers": [
     "Terrance Weinzierl"
    ],
@@ -14592,6 +14931,7 @@
    "name": "Berling",
    "kind": "typeface",
    "wikidata": "Q43400171",
+   "fontsInUse": "838",
    "designers": [
     "Karl-Erik Forsberg"
    ],
@@ -14918,6 +15258,7 @@
    "name": "Engschrift",
    "kind": "typeface",
    "wikidata": "Q15831472",
+   "fontsInUse": "18527",
    "designers": [],
    "year": null,
    "foundries": [],
@@ -22363,6 +22704,7 @@
    "name": "Century Oldstyle",
    "kind": "typeface",
    "wikidata": "Q43387504",
+   "fontsInUse": "1712",
    "designers": [
     "Morris Fuller Benton"
    ],

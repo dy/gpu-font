@@ -6,6 +6,7 @@
 //   node scripts/catalog-files.mjs [source ...]     with the demo server running (npm run demo)
 import { readFile, writeFile, mkdir } from 'node:fs/promises'
 import { createHash } from 'node:crypto'
+import { spawnSync } from 'node:child_process'
 import { chromium } from 'playwright'
 import { joinCatalogs } from '../src/references.mjs'
 
@@ -25,8 +26,16 @@ const base = `http://127.0.0.1:${process.env.PORT || 4179}`
 // and a face that crashes it alone is skipped and reported.
 const launch = () => chromium.launch({ channel: 'chromium', args: ['--enable-unsafe-webgpu', ...(process.platform === 'darwin' ? ['--use-angle=metal'] : [])] })
 let browser = await launch()
-// A crash may take the whole browser down, not just its page.
-async function session() {
+// A crash may take the whole browser down, not just its page, and a lost GPU process leaves the next page without WebGPU: a browser
+// that cannot open a working page is relaunched.
+async function session(tries = 3) {
+  try { return await fresh() } catch (error) {
+    if (tries === 1) throw error
+    await browser.close().catch(() => {}); browser = await launch()
+    return session(tries - 1)
+  }
+}
+async function fresh() {
   if (!browser.isConnected()) browser = await launch()
   const page = await browser.newPage()
   await page.route('**/catalog-files', route => route.fulfill({ contentType: 'text/html', body: '<title>Catalog files</title>' }))
@@ -76,4 +85,9 @@ try {
     const indexed = new Set(catalog.faces.map(f => f.familyId)).size
     console.log(`\n${source}: ${indexed} families, ${catalog.faces.length} faces${skipped.length ? `; skipped ${skipped.length}: ${skipped.map(f => f.id).join(', ')}` : ''}`)
   }
-} finally { await browser.close() }
+} catch (error) { process.exitCode = 1; throw error } finally {
+  // The page holds a WebGPU device; released first, the browser closes. One that still hangs after 15 s is killed: every catalog is written by now.
+  await page.evaluate(() => window.encoder?.destroy()).catch(() => {}); await page.close().catch(() => {})
+  setTimeout(() => { console.error('The browser did not close in 15 s; killed'); spawnSync('pkill', ['-P', String(process.pid)]); process.exit() }, 15000).unref()
+  await browser.close()
+}

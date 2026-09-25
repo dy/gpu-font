@@ -1,0 +1,13 @@
+# The JavaScript suite on every push and pull request: the page's modules, the npm package, the shipped catalogs against
+# the shipped model. The Python suite needs the training data in .data and a Metal GPU, so it runs on a developer's Mac.
+name: test
+on: [push, pull_request]
+jobs:
+  node:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22, cache: npm }
+      - run: npm ci
+      - run: node --test

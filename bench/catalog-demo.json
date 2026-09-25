@@ -1,28 +1,46 @@
 {
-  "encoderSha256": "62e556d8b0a34aa18618cc9ddaa34a632f49117480f08b6e6cdcd998103b0605",
+  "encoderSha256": "f57d7254b01360c6faa09df9fbb83960692d2733c1d7df8ff0d9959a37adcdc5",
   "catalogs": [
     {
       "id": "google-fonts",
-      "sha256": "5e52ac1282c420b60a5fb4e77423bdb4f0ab8ba6c2e8de41d3a10a6be8d94bd2",
+      "sha256": "a7acc3fae7cc6023f65819d2d96f8fe282d3bf300f1952b39c481285d33e2e26",
       "families": 2004,
       "faces": 8132
     },
     {
+      "id": "dafont",
+      "sha256": "503abac51aa471dd4561e190c37be7d52ba0ac339a3ba5b91c922a26477b1c3e",
+      "families": 34975,
+      "faces": 34975
+    },
+    {
+      "id": "adobe-fonts",
+      "sha256": "1f87c88e5fb8ac9518240e07721ddb85c3cb57f154d17cf28dca190fda4f5db3",
+      "families": 4784,
+      "faces": 4788
+    },
+    {
       "id": "debian",
-      "sha256": "c82b17d2c184a6dcefcfa259b47eb030c86509eec995360257e42bbbab3e0f58",
-      "families": 1509,
-      "faces": 2695
+      "sha256": "f8f8fba5e763f93ff6477d3ed44c0b669f0850ef1a1ac1fb2951ad3dc4de5316",
+      "families": 2174,
+      "faces": 4296
+    },
+    {
+      "id": "fontlibrary",
+      "sha256": "a16193e28a67b882f92c1f2375cbdeaebfdc765ce6af31e1f78f16e5426fc0d9",
+      "families": 1226,
+      "faces": 3977
     },
     {
       "id": "other",
-      "sha256": "899b176efb8aa0fc1df705e0ddc055627e6d35af123feb14632a812308e5d0f9",
-      "families": 273,
-      "faces": 1160
+      "sha256": "ed99674b45530b888e57c444f60edd280cb0c238ae1d52bc0a93eef4e28fb3ae",
+      "families": 379,
+      "faces": 1570
     }
   ],
-  "cpuError": 0.0000011324882507324219,
-  "gpuError": 0.0000037550926208496094,
-  "detectionMilliseconds": 50.39999961853027,
+  "cpuError": 1.1175870895385742e-7,
+  "gpuError": 1.6391277313232422e-7,
+  "detectionMilliseconds": 37.69999980926514,
   "checks": [
     "native CPU/PyTorch/WebGPU projections",
     "exact displayed tensors and input stats",
@@ -43,6 +61,9 @@
     "my fonts: browser-indexed Lora equals the encoder on stored references, join, installed faces, previews, removal",
     "Aa returns to the last sample",
     "narrow crop keeps layout",
+    "share links: address, copy, reopen, re-rank; one source alone; embed; unreadable and other-model links",
+    "my fonts download",
+    "removal requests",
     "empty image/sample entry",
     "corrupt image recovery",
     "keyboard and responsive selectors",

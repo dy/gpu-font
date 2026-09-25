@@ -3,10 +3,13 @@ import { prepareInput } from './src/input.mjs'
 import { prepareLine } from './src/line.mjs'
 import { readNetwork, inferCPU, rankWindows } from './src/network.mjs'
 import { createNetworkGPU } from './src/network-gpu.mjs'
-import { readCatalog, unionCatalogs, matchCatalog, foldTwins, embedWindows, sha256, preparationHash, readHeads, verdict } from './src/catalog.mjs'
+import { readCatalog, unionCatalogs, subsetCatalog, matchCatalog, foldTwins, embedWindows, sha256, preparationHash, readHeads, verdict, writeStyle, readStyle } from './src/catalog.mjs'
 import { readMyFonts } from './my-fonts.mjs'
 
 const $ = id => document.getElementById(id)
+// The address the page opened with: ?catalog= names what to search, ?style= a shared crop's style, ?embed shows the
+// matcher alone. Read once: the page rewrites its own address as the matches change.
+const params = new URLSearchParams(location.search), embedded = params.has('embed')
 // Dropdowns are absolutely positioned in page coordinates: they open inside the viewport, then scroll with their trigger.
 const place = (popover, left, top) => Object.assign(popover.style, { left: `${left + scrollX}px`, top: `${top + scrollY}px` })
 const source = $('source'), ctx = source.getContext('2d', { willReadFrequently: true })
@@ -45,7 +48,7 @@ function invalidate(retain = false) {
     $('results').replaceChildren(); hideTwins(); $('more-matches').inert = true
     previewValid = true; $('preview-error').hidden = true
   }
-  $('save').disabled = true
+  shareable()
   // A retained source keeps its last windows until new ones replace them, so the page does not jump.
   if (!retain) $('normalized').replaceChildren()
   $('input-regions').replaceChildren()
@@ -304,10 +307,10 @@ async function analyze() {
       inputs: prepared.windows.map(input => ({ ...input, pixels: Array.from(input.pixels) })), matches }
     showInput(prepared.windows, region, sampled)
     renderResults()
-    showVerdict(embedding ? describe(judged) : [last.accepted ? 'Above threshold' : 'Below threshold'])
+    showVerdict(embedding ? labelsFor(judged, matches) : [last.accepted ? 'Above threshold' : 'Below threshold'])
     $('detection-time').textContent = `${elapsed.toFixed(1)}ms`
     $('detection-time').title = 'Image preparation, inference and ranking'
-    $('save').disabled = false
+    shareable()
   } catch (error) { if (run === analysis) { invalidate(); message(`Could not analyze this crop: ${error.message}`, true) } }
   finally {
     running = false
@@ -352,6 +355,9 @@ function renderResults() {
 const CATEGORY = { SANS_SERIF: 'Sans serif', SERIF: 'Serif', DISPLAY: 'Display', HANDWRITING: 'Handwriting', MONOSPACE: 'Monospace' }
 const SCRIPT = new Intl.DisplayNames('en', { type: 'script' }) // Latn → Latin
 // The typed verdict for the crop itself: category, the likeliest fine class, upright or italic, script.
+// The verdict pills, plus a warning when the best match scores below the model's rejection threshold: the crop's font
+// is then probably in no catalog, though the closest look-alike still shows.
+const labelsFor = (judged, matches) => [...describe(judged), ...(model.threshold != null && matches[0] && matches[0].score < model.threshold ? ['Probably in no catalog'] : [])]
 function describe(judged) {
   if (!judged) return []
   const fine = judged.fine[0].p >= .5 && judged.fine[0].label.split('/').at(-1)
@@ -425,6 +431,9 @@ async function selectCatalog(option, file = null, { focus = true } = {}) {
       // All: every shipped catalog, each verified as when chosen alone, searched as one.
       const parts = await Promise.all(option.parts.map(readShipped))
       data = unionCatalogs(parts); hash = option.parts.map(part => part.sha256)
+    } else if (option.group) {
+      // One source of a grouped catalog (Other), searched alone: its faces, which name their source.
+      data = subsetCatalog(await readShipped(option.group), face => face.sourceId === option.id); hash = option.group.sha256
     } else if (file || option.data) {
       if (file?.size > 20 * 1024 * 1024) throw new Error('Choose a catalog smaller than 20 MB.')
       const bytes = file ? await file.arrayBuffer() : new TextEncoder().encode(JSON.stringify(option.data))
@@ -434,14 +443,15 @@ async function selectCatalog(option, file = null, { focus = true } = {}) {
     const cached = last
     searchCatalog = { ...option, ...data, sha256: hash, builtin: !file && !option.data }
     invalidate(); updateCatalogLabel()
-    if (cached?.embedding && current) {
+    if (cached?.embedding && (current || cached.shared)) {
       const start = performance.now(), matches = matchCatalog(cached.embedding, searchCatalog, cached.verdict)
       const elapsed = performance.now() - start
       last = { ...cached, matches, catalog: { id: option.id, sha256: hash }, milliseconds: elapsed, cachedEmbedding: true }
-      showInput(last.inputs, last.crop, last.resolution); renderResults()
+      if (last.inputs) showInput(last.inputs, last.crop, last.resolution)
+      renderResults()
       $('detection-time').textContent = `Ranked in ${elapsed.toFixed(1)}ms`
       $('detection-time').title = 'Catalog ranking; image embedding reused'
-      showVerdict(describe(last.verdict)); $('save').disabled = false
+      showVerdict(labelsFor(last.verdict, matches)); shareable()
     } else if (current) schedule()
   } catch (error) {
     if (version === catalogRevision) { $('catalog-error').textContent = error.message; $('catalog-error').hidden = false }
@@ -666,6 +676,47 @@ $('save').addEventListener('click', () => {
   const a = document.createElement('a'); a.href = url; a.download = 'gpu-font-result.json'; a.click()
   setTimeout(() => URL.revokeObjectURL(url), 1000)
 })
+// The address of the matches on show, which opens them again: ?style= is the crop's style, the 128 numbers the model
+// reads from it and never its pixels; ?catalog= the catalog they were ranked in, unless the default or an opened file.
+function address({ embed = embedded } = {}) {
+  const url = new URL(location.href), query = url.searchParams
+  if (searchCatalog.id !== catalog.catalogs[0].id && searchCatalog.id !== 'custom') query.set('catalog', searchCatalog.id); else query.delete('catalog')
+  if (last?.embedding) query.set('style', writeStyle(last.embedding, catalog.modelSha256)); else query.delete('style')
+  if (!embed) query.delete('embed')
+  return url.href
+}
+// JSON and Link follow the matches on show, and so does the address bar once they settle: browsers refuse a page that
+// rewrites its address many times a second. Only the encoder's matches have a style to link.
+let addressTimer = 0
+function shareable() {
+  $('save').disabled = !last; $('copy-link').disabled = !last?.embedding
+  clearTimeout(addressTimer)
+  if (searchCatalog) addressTimer = setTimeout(() => { try { history.replaceState(history.state, '', address()) } catch {} }, 500)
+}
+// A link copies without the embed flag, so it opens the whole page. An iframe without clipboard access still copies
+// through the older command, which needs the click alone.
+async function copy(text) {
+  try { await navigator.clipboard.writeText(text); return true } catch {}
+  const button = document.activeElement, field = Object.assign(document.createElement('textarea'), { value: text })
+  field.style.cssText = 'position: fixed; opacity: 0'; document.body.append(field); field.select()
+  try { return document.execCommand('copy') } catch { return false } finally { field.remove(); button?.focus({ preventScroll: true }) }
+}
+let copied = 0
+$('copy-link').addEventListener('click', async () => {
+  const done = await copy(address({ embed: false })), button = $('copy-link')
+  button.lastChild.textContent = done ? 'Copied' : 'Copy failed'; button.setAttribute('aria-label', done ? 'Link copied' : 'Copy failed')
+  clearTimeout(copied); copied = setTimeout(() => { button.lastChild.textContent = 'Link'; button.setAttribute('aria-label', 'Copy link') }, 2000)
+})
+// A shared link's matches: its style ranked in this page's catalog. The image stays with whoever shared it.
+function showShared(text) {
+  let style
+  try { style = readStyle(text) } catch { message('This link’s matches can’t be read.', true); return }
+  if (!catalog.modelSha256.startsWith(style.model)) { message('This link comes from another version of the model, so its matches can’t be shown.', true); return }
+  const judged = heads ? verdict(style.embedding, heads) : null
+  last = { shared: true, mode: 'encoder', embedding: Array.from(style.embedding), verdict: judged, catalog: { id: searchCatalog.id, sha256: searchCatalog.sha256 }, scoreType: 'cosine', matches: matchCatalog(style.embedding, searchCatalog, judged) }
+  renderResults(); showVerdict(labelsFor(judged, last.matches)); shareable()
+  message('Matches from a shared link: it holds the crop’s style, not its image.')
+}
 window.addEventListener('pagehide', () => { invalidate(); gpu?.destroy() })
 
 // Counts a download's bytes as they arrive: decompressed, as site.json sizes them (Content-Length is the gzip size).
@@ -706,9 +757,13 @@ async function initialize() {
       }))
       $('add-my-fonts').hidden = !!mine
       updateCatalogLabel()
-      // A link can name the catalog to search: ?catalog=my-fonts.
-      const wanted = options.find(each => each !== option && each.id === new URLSearchParams(location.search).get('catalog'))
-      if (wanted) await selectCatalog(wanted, null, { focus: false })
+      // A link can name the catalog to search, ?catalog=my-fonts, or one source of a grouped catalog, ?catalog=collletttivo.
+      const sources = data.catalogs.flatMap(group => (group.sources ?? []).map(source => ({ ...source, group })))
+      const id = params.get('catalog'), wanted = [...options, ...sources].find(each => each.id === id)
+      if (wanted && wanted !== option) await selectCatalog(wanted, null, { focus: false })
+      else if (id && !wanted) { $('catalog-error').textContent = `${id === 'my-fonts' ? 'My fonts aren’t indexed in this browser' : `No catalog “${id}”`}; searching ${option.name}.`; $('catalog-error').hidden = false }
+      // An embed searches the catalog its link names; its label stays, as a plain name.
+      if (embedded) { $('catalog-button').disabled = true; $('catalog-button').removeAttribute('aria-label') }
       // Shipped catalogs, not the selected or imported one.
       // Fractions read as percentages; data-format names the rest. A .meter draws its fraction as a bar, or a time
       // against the slowest time beside it.
@@ -719,11 +774,11 @@ async function initialize() {
         const peers = format === 'seconds' ? [...figure.parentElement.parentElement.querySelectorAll('[data-format="seconds"]')].map(f => data.metrics[f.dataset.metric]) : [1]
         figure.style.setProperty('--value', value / Math.max(...peers))
       }
-      intro(`Finds the closest of ${data.families.toLocaleString()} font families, from ${data.catalogs.length} catalogs, to any line of text.`, data.metrics.top1, 'rendered text in fonts it never saw')
+      intro(`Finds the closest of ${data.families.toLocaleString()} font families, from ${data.catalogs.length} catalogs, to any line of text.`, data.metrics.top1, 'rendered crops of every Google Fonts family, on text it never trained on')
       // The comparison counts fonts as other finders do: every face of every shipped catalog.
       $('compared-fonts').textContent = data.catalogs.reduce((n, option) => n + option.faces, 0).toLocaleString('en-US')
       if (heads) $('compared-scripts').textContent = String(heads.script.labels.length)
-      $('method-note').textContent = 'A small neural network turns the crop into 128 numbers that describe its style. Every font has its own 128 numbers; the nearest are the matches.'
+      $('method-note').textContent = `A small neural network turns the crop into ${model.outputs} numbers that describe its style. Every font has its own ${model.outputs} numbers; the nearest are the matches.`
       $('network-label').textContent = 'Encoder'
     }
     try { gpu = await createNetworkGPU(model) } catch (error) { gpuReason = `CPU fallback: ${error.message}` }
@@ -749,7 +804,8 @@ async function initialize() {
     }
     $('parameters').textContent = `${data.parameters.toLocaleString()} parameters, int8 weights`
     $('workbench').removeAttribute('aria-busy'); document.body.dataset.ready = 'true'
-    if (revision === 0) await sample('lora')
+    if (revision === 0 && isEncoder() && params.has('style')) showShared(params.get('style'))
+    else if (revision === 0) await sample('lora')
     else if (current) { invalidate(true); schedule() }
   } catch (error) {
     $('workbench').removeAttribute('aria-busy'); $('backend').textContent = 'Model unavailable'; message(error.message, true)

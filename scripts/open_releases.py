@@ -8,7 +8,7 @@ Rows already pinned are left alone; delete a row's `commit` to re-pin it.
 
     python scripts/open_releases.py        pin unpinned rows (GitHub via gh, other hosts via git)
 """
-import json, re, subprocess, sys, tempfile, urllib.parse
+import json, re, subprocess, sys, tempfile, time, urllib.parse
 from collections import defaultdict
 from pathlib import Path, PurePosixPath
 
@@ -20,14 +20,35 @@ LISTING = ROOT / 'bench/open-releases.json'
 SKIP = re.compile(r'(^|/)(web|webfonts?|woff2?|eot|svg|old|archive|previous|test|tests|proof|proofs|specimens?|documentation|docs|sources?|src|ufo|glyphs|build-tools?|scripts)(/|$)', re.I)
 
 
+def sh(*command):
+    """A command's output. A failure carries the command's own message, and its first line is what gets recorded."""
+    result = subprocess.run(command, capture_output=True, text=True)
+    if result.returncode: raise RuntimeError(f"{' '.join(command[:2])}: {result.stderr.strip() or f'exit {result.returncode}'}")
+    return result.stdout
+
+
+def api(path):
+    """GitHub's REST API through gh, waiting out the hourly quota rather than failing on it."""
+    while True:
+        try: return json.loads(sh('gh', 'api', path))
+        except RuntimeError as error:
+            if 'rate limit' not in str(error).lower(): raise
+        core = json.loads(sh('gh', 'api', 'rate_limit'))['resources']['core']  # costs no quota
+        # The hourly quota spent: wait for its reset. Otherwise a secondary limit, which lifts within a minute.
+        time.sleep(max(core['reset'] - time.time(), 0) + 5 if not core['remaining'] else 60)
+
+
 def github(repo, branch=None):
-    run = lambda *path: json.loads(subprocess.run(['gh', 'api', '/'.join(path)], check=True, capture_output=True, text=True).stdout)
+    run = lambda *path: api('/'.join(path))
     meta = {} if branch else run('repos', repo)  # a search result already names the branch
     head = run('repos', repo, 'commits', branch or meta['default_branch'])
     commit = head['sha']
-    tree = run('repos', repo, f"git/trees/{head['commit']['tree']['sha']}?recursive=1")
-    if tree.get('truncated'): raise ValueError(f'{repo}: tree too large to list')
     licence = (meta.get('license') or {}).get('spdx_id')  # GitHub's reading of the repository's own licence file
+    try: tree = run('repos', repo, f"git/trees/{head['commit']['tree']['sha']}?recursive=1")
+    except RuntimeError: tree = {'truncated': True}  # a tree too large even to send whole
+    if tree.get('truncated'):  # past the API's listing limit: git lists a tree of any size
+        commit, paths, _, _ = remote('github.com', repo)
+        return commit, paths, f'https://github.com/{repo}/archive/{commit}.zip', licence
     return commit, [item['path'] for item in tree['tree'] if item['type'] == 'blob'], f'https://github.com/{repo}/archive/{commit}.zip', licence
 
 
@@ -35,10 +56,10 @@ def remote(host, repo):
     """Over git itself, for GitLab, Codeberg or any other host: GitLab challenges plain archive
     downloads and keeps bots off its API, and git is what every host serves to programs."""
     url = f'https://{host}/{repo}.git'
-    git = lambda *args, **kw: subprocess.run(['git', *args], check=True, capture_output=True, text=True, **kw).stdout
+    git = lambda *args: sh('git', *args)
     commit = git('ls-remote', url, 'HEAD').split()[0]
     with tempfile.TemporaryDirectory() as folder:
-        git('clone', '--quiet', '--filter=blob:none', '--no-checkout', url, folder)
+        git('clone', '--quiet', '--depth', '1', '--filter=blob:none', '--no-checkout', url, folder)  # the tip's paths, no history, no file bodies
         paths = git('-C', folder, 'ls-tree', '-r', '--name-only', commit).splitlines()
     return commit, paths, url, None
 
@@ -62,6 +83,9 @@ def pin(row):
     repo = '/'.join(parts[:2] if link.netloc == 'github.com' else parts).removesuffix('.git')
     if len(parts) < 2: raise ValueError(f'not a repository link: {row["repo"]}')
     commit, paths, url, licence = github(repo, row.get('branch')) if link.netloc == 'github.com' else remote(link.netloc, repo)
+    # A link into a folder (GitHub's …/tree/main/Family, GitLab's …/-/tree/main/Family) names one family of a shared repository.
+    inside = re.search(r'/tree/[^/]+/(.+?)/?$', link.path)
+    if inside: paths = [path for path in paths if path.startswith(inside.group(1) + '/')]
     row = {**row, 'commit': commit, **({'repoLicence': licence} if licence else {})}
     choice = choose(paths)
     if not choice: return {**row, 'unusable': 'no OpenType or TrueType files outside web builds and sources'}
@@ -80,7 +104,9 @@ def pin(row):
 
 def main():
     listing = json.loads(LISTING.read_text())
-    save = lambda: LISTING.write_text(json.dumps(listing, ensure_ascii=False, indent=1) + '\n')
+    def save():  # written aside and renamed, so an interrupted run never leaves half a file
+        LISTING.with_suffix('.tmp').write_text(json.dumps(listing, ensure_ascii=False, indent=1) + '\n')
+        LISTING.with_suffix('.tmp').replace(LISTING)
     for index, row in enumerate(listing['releases']):
         if row.get('commit') or row.get('failed') or not row.get('repo'): continue
         try: listing['releases'][index] = pin(row)

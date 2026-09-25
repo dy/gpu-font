@@ -45,20 +45,24 @@ export function pngSize(buffer) {
 
 export function decodePng(buffer) {
   const { width, height, bitDepth, colorType, interlace } = pngSize(buffer)
-  const channels = CHANNELS[colorType]
-  if (bitDepth !== 8 || !channels || interlace !== 0)
+  // One packed sample a pixel: a palette index, or a grey level under 8 bits (DaFont's previews are 4- and 8-bit palettes).
+  const packed = colorType === 3 || (colorType === 0 && bitDepth < 8)
+  if (interlace !== 0 || !(packed ? [1, 2, 4, 8].includes(bitDepth) : bitDepth === 8 && CHANNELS[colorType]))
     throw new Error(`Unsupported PNG: depth ${bitDepth}, colour type ${colorType}, interlace ${interlace}`)
-  const idat = Buffer.concat(pngChunks(buffer).filter(chunk => chunk.type === 'IDAT').map(chunk => chunk.data))
-  const stride = width * channels, expected = height * (stride + 1)
+  const chunks = pngChunks(buffer)
+  const idat = Buffer.concat(chunks.filter(chunk => chunk.type === 'IDAT').map(chunk => chunk.data))
+  const samples = packed ? 1 : CHANNELS[colorType]
+  // Filters work on bytes: `step` is the bytes a whole pixel takes, at least one.
+  const stride = Math.ceil(width * samples * bitDepth / 8), step = Math.max(1, samples * bitDepth / 8), expected = height * (stride + 1)
   const raw = inflateSync(idat, { maxOutputLength: expected })
   if (raw.length !== expected) throw new Error('Truncated PNG scanlines')
-  const pixels = Buffer.alloc(height * stride)
+  const lines = Buffer.alloc(height * stride)
   for (let row = 0; row < height; row++) {
     const filter = raw[row * (stride + 1)], line = raw.subarray(row * (stride + 1) + 1, (row + 1) * (stride + 1))
-    const out = pixels.subarray(row * stride, (row + 1) * stride), prior = row ? pixels.subarray((row - 1) * stride, row * stride) : null
+    const out = lines.subarray(row * stride, (row + 1) * stride), prior = row ? lines.subarray((row - 1) * stride, row * stride) : null
     for (let i = 0; i < stride; i++) {
-      const left = i >= channels ? out[i - channels] : 0, up = prior ? prior[i] : 0
-      const upLeft = prior && i >= channels ? prior[i - channels] : 0
+      const left = i >= step ? out[i - step] : 0, up = prior ? prior[i] : 0
+      const upLeft = prior && i >= step ? prior[i - step] : 0
       if (filter === 0) out[i] = line[i]
       else if (filter === 1) out[i] = (line[i] + left) & 0xff
       else if (filter === 2) out[i] = (line[i] + up) & 0xff
@@ -69,6 +73,25 @@ export function decodePng(buffer) {
         out[i] = (line[i] + (dl <= du && dl <= dul ? left : du <= dul ? up : upLeft)) & 0xff
       } else throw new Error(`Unknown PNG filter ${filter} on row ${row}`)
     }
+  }
+  if (!packed) return { width, height, channels: samples, pixels: lines }
+  const sample = (row, x) => {
+    const bit = x * bitDepth
+    return (lines[row * stride + (bit >> 3)] >> (8 - bitDepth - (bit & 7))) & ((1 << bitDepth) - 1)
+  }
+  if (colorType === 0) {
+    const pixels = Buffer.alloc(width * height), top = (1 << bitDepth) - 1
+    for (let row = 0; row < height; row++) for (let x = 0; x < width; x++) pixels[row * width + x] = Math.round(sample(row, x) * 255 / top)
+    return { width, height, channels: 1, pixels }
+  }
+  const palette = chunks.find(chunk => chunk.type === 'PLTE')?.data, alpha = chunks.find(chunk => chunk.type === 'tRNS')?.data
+  if (!palette || palette.length % 3) throw new Error('PNG palette missing or malformed')
+  const channels = alpha ? 4 : 3, pixels = Buffer.alloc(width * height * channels)
+  for (let row = 0; row < height; row++) for (let x = 0; x < width; x++) {
+    const index = sample(row, x), at = (row * width + x) * channels
+    if (index * 3 >= palette.length) throw new Error(`PNG index ${index} outside its palette of ${palette.length / 3}`)
+    palette.copy(pixels, at, index * 3, index * 3 + 3)
+    if (alpha) pixels[at + 3] = index < alpha.length ? alpha[index] : 255 // tRNS may list only the first entries
   }
   return { width, height, channels, pixels }
 }
@@ -387,8 +410,11 @@ export async function validateArchive(dir) {
   }
 
   for (const [digest, sharing] of hashes) {
-    const faces = new Set(sharing.map(record => record.faceId))
-    if (faces.size > 1) errors.push(`identical pixels ${digest.slice(0, 12)} shared by different faces: ${[...faces].join(', ')}`)
+    const faces = new Set(sharing.map(record => record.faceId)), families = new Set(sharing.map(record => record.familyId))
+    // Faces of one family drawing identical pixels mean the tester never switched faces. Different families can share one
+    // design (a foundry's Latin across its Japanese families): those are twins, kept, as identical Google Fonts designs are.
+    if (faces.size > families.size) errors.push(`identical pixels ${digest.slice(0, 12)} shared by different faces: ${[...faces].join(', ')}`)
+    else if (families.size > 1) warnings.push(`identical pixels ${digest.slice(0, 12)} shared by twin families: ${[...families].join(', ')}`)
     const paths = new Set(sharing.map(record => record.image.path))
     if (paths.size > 1) warnings.push(`identical pixels ${digest.slice(0, 12)} stored at ${paths.size} paths`)
   }

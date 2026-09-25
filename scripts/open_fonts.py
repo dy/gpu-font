@@ -121,8 +121,8 @@ SOURCES += [{'source': 'league-of-moveable-type', 'licence': 'OFL-1.1', 'include
             for repo, name, version in [('league-mono', 'LeagueMono', '2.300'), ('the-neue-black', 'TheNeueBlack', '1.007')]]
 # Families from open catalogues (Velvetyne, Collletttivo, Uncut, Font Library), after every source above:
 # pinned to their designers' repositories by scripts/open_releases.py, or a release file on a site.
-SOURCES += [{'source': row['source'], 'licence': row['licence'], 'include': row['include'],
-             **{key: row[key] for key in ('url', 'files', 'format', 'folder') if key in row},
+SOURCES += [{'source': row['source'], 'licence': row['licence'], 'include': row['include'], 'listed': True,
+             **{key: row[key] for key in ('url', 'files', 'format', 'folder', 'page') if key in row},
              **({'commit': row['commit']} if row.get('format') == 'git' else {})}
             for row in json.loads((ROOT / 'bench/open-releases.json').read_text())['releases'] if row.get('include')]
 # Fontshare publishes its whole catalogue through a public API. Its font files carry
@@ -148,6 +148,7 @@ FONTSHARE = {'source': 'fontshare'}  # stands for Fontshare's API in the claimin
 # A font is known by its signature, not its name: repositories also commit macOS "._" forks,
 # Git LFS pointers and HTML error pages under font extensions.
 SFNT = (b'OTTO', b'\x00\x01\x00\x00', b'true', b'ttcf')
+WEBFONT = (b'wOFF', b'wOF2')  # compressed for browsers; decode_webfonts unpacks them
 is_font = lambda content: content[:4] in SFNT
 LICENCE_NAMES = re.compile(r'(^|/)(LICEN[CS]E|COPYING|COPYRIGHT|OFL|GUST-FONT-LICENSE|README)[^/]*$', re.I)
 
@@ -199,12 +200,17 @@ def members(data, url, format=None):
             for path in sorted(out.rglob('*')):
                 if path.is_file() and not path.is_symlink(): yield str(path.relative_to(out)), path.read_bytes()
         return
-    if url.endswith('.zip') or format == 'git':
+    # The bytes say what arrived, not the URL: Font Squirrel's /fonts/download/… and downloadfile.php?file=… are zips.
+    if zipfile.is_zipfile(io.BytesIO(data)):
         with zipfile.ZipFile(io.BytesIO(data)) as archive:
             for info in archive.infolist():
                 if not info.is_dir(): yield info.filename, archive.read(info)
+    elif data[:4] in SFNT + WEBFONT:  # a font served on its own
+        yield urllib.parse.unquote(PurePosixPath(url.split('?')[0]).name), data
     else:
-        with tarfile.open(fileobj=io.BytesIO(data)) as archive:
+        try: archive = tarfile.open(fileobj=io.BytesIO(data))
+        except tarfile.ReadError: raise ValueError(f'{url}: neither an archive nor a font, but {data[:32]!r}') from None
+        with archive:
             for info in archive.getmembers():
                 if info.isfile(): yield info.name, archive.extractfile(info).read()
 
@@ -299,7 +305,7 @@ def decode_webfonts(members):
     """WOFF and WOFF2 files are fonts compressed for browsers; each is decoded to the font it holds."""
     from fontTools.ttLib import TTFont
     for name, content in members:
-        if content[:4] not in (b'wOFF', b'wOF2'): yield name, content; continue
+        if content[:4] not in WEBFONT: yield name, content; continue
         try:
             font = TTFont(io.BytesIO(content)); font.flavor = None
             out = io.BytesIO(); font.save(out)
@@ -327,7 +333,7 @@ def debian_sources():
     for block in index.split('\n\n'):
         field = dict(re.findall(r'^([A-Za-z0-9-]+): (.*)$', block, re.M))
         if field.get('Section') != 'fonts' or DEBIAN_SKIP.match(field.get('Package', '')): continue
-        yield {'source': 'debian', 'url': DEBIAN + field['Filename'], 'sha256': field['SHA256'], 'format': 'deb',
+        yield {'source': 'debian', 'url': DEBIAN + field['Filename'], 'sha256': field['SHA256'], 'format': 'deb', 'listed': True,
                'licence': 'see the package copyright file', 'include': r'usr/share/(fonts|texlive/texmf-dist/fonts)/(truetype|opentype)/.+\.(ttf|otf|ttc)$'}
 
 
@@ -407,9 +413,9 @@ def main():
                     data, digest = fetch(url, pins.get(key) or spec.get('sha256'), spec.get('commit'))
                     wanted = one_format(decode_webfonts(split_collections((name, content) for name, content in members(data, url, spec.get('format'))
                                                                           if re.search(spec['include'], name, re.I) or LICENCE_NAMES.search(name))))
-                except (OSError, ValueError, subprocess.CalledProcessError) as error:
-                    # Curated sources fail loudly; one of Debian's hundreds of packages is reported and skipped.
-                    if spec.get('format') != 'deb': raise
+                except Exception as error:
+                    # Curated sources fail loudly; a row of a long listing (Debian's packages, the catalogues, GitHub's long tail) is reported and skipped.
+                    if not spec.get('listed'): raise
                     print(f'{url}: skipped ({type(error).__name__}: {error})'); continue
                 archive = {'source': spec['source'], 'url': key, 'sha256': digest, 'bytes': len(data), 'licence': spec['licence']}
                 archives.append(archive)
@@ -427,7 +433,8 @@ def main():
                         licences.append({'path': relative, 'blob': corpus.blob(content)}); continue
                     item = {'path': relative, 'size': len(content), 'sha': corpus.blob(content)}
                     if not (name := family_name(target)): print(f'{relative}: unreadable, left out'); continue
-                    if claim(spec['source'], name): add(spec['source'], name, {'spec': spec, 'items': [item], 'licences': licences})
+                    # A family from a listing links to the page that lists it (collletttivo.it/typefaces/ribes/), not to its source's home.
+                    if claim(spec['source'], name): add(spec['source'], name, {'spec': spec, 'items': [item], 'licences': licences, **({'extra': {'sourceUrl': spec['page']}} if spec.get('page') else {})})
         # Fontsource last: a family any source above or Google Fonts carries is taken from there.
         for name, group in fontsource_groups(google_names | set(owners)):
             if claim('fontsource', name): add('fontsource', name, group)

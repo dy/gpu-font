@@ -59,6 +59,22 @@ test('weights packed at fewer bits decode as the same integers at 8; a byte shor
   for (const bits of [1, 9, 6.5, '6']) assert.throws(() => readNetwork(with0({ bits })), /packed weights/)
 })
 
+test('a codebook layer decodes each index to a shared value times its row scale; a wrong-sized codebook rejects', () => {
+  // Layer 0 (16×1×3×3, 144 values) at 4 bits: indices stored signed, -8..7, into 16 shared values.
+  const a = artifact(['inter']), codebook = Array.from({ length: 16 }, (_, i) => (i - 8) / 8), indices = Array.from({ length: 144 }, (_, i) => i % 16 - 8)
+  a.layers[0] = { ...a.layers[0], bits: 4, codebook, weights: Buffer.from(pack(indices, 4)).toString('base64'), scale: Array(16).fill(2) }
+  const weights = readNetwork(a).layers[0].weights
+  assert.deepEqual(Array.from(weights.slice(0, 18)), indices.slice(0, 18).map(i => 2 * codebook[i + 8]))
+  assert.throws(() => readNetwork({ ...a, layers: [{ ...a.layers[0], codebook: codebook.slice(1) }, ...a.layers.slice(1)] }), /codebook/)
+})
+
+test('a rejection threshold ships as a score in (-1, 1) or not at all', () => {
+  const a = artifact()
+  assert.equal(readNetwork(a).threshold, null)
+  assert.equal(readNetwork({ ...a, rejection: { threshold: .62, presentCoverage: .9 } }).threshold, .62)
+  for (const threshold of [1, -1, NaN, '0.6']) assert.throws(() => readNetwork({ ...a, rejection: { threshold } }), /rejection/)
+})
+
 test('int8 model rejects corrupt schema, tensors, labels, and floating-point overflow', () => {
   const changes = [a => { a.fonts[1] = a.fonts[0] }, a => { a.layers[0].shape[0]++ }, a => { a.layers[0].scale[0] = NaN }, a => { a.layers[0].bias[0] = Infinity }, a => { a.layers[0].bias[0] = 1e200 }, a => { a.layers[0].weights = '!!!' }, a => { a.layers[0].weights = '' }, a => { a.layers.pop() }, a => { a.preparation.height++ }]
   for (const change of changes) { const a = artifact(); change(a); assert.throws(() => readNetwork(a)) }

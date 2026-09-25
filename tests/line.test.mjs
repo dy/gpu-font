@@ -102,3 +102,16 @@ test('a crop that touches the text prepares as one with a margin, regions mapped
   assert.deepEqual(a.windows.map(w => w.pixels), b.windows.map(w => w.pixels))
   assert.deepEqual(a.windows.map(w => w.polygon), b.windows.map(w => w.polygon.map(([x, y]) => [x - 10, y - 10])))
 })
+test('dark letters on a wall darker than mid-grey prepare as the same letters on a lighter wall, in both samplers', () => {
+  // The same ink difference (90 levels) with the outer ring below and above middle grey: only the paper guess differs.
+  const shade = (paper, ink) => { const image = fixture(); for (let p = 0; p < image.data.length; p += 4) image.data.fill(image.data[p] ? paper : ink, p, p + 3); return image }
+  const dark = shade(100, 10), light = shade(200, 110)
+  for (const options of [{ sampler: 'groups' }, { sampler: 'windows', deskew: true }]) {
+    const a = prepareLine(dark, options), b = prepareLine(light, options)
+    assert.equal(a.status, 'ok'); assert.equal(a.windows.length, b.windows.length)
+    for (const [i, window] of a.windows.entries()) {
+      assert.deepEqual(window.rect, b.windows[i].rect)
+      assert.ok(window.pixels.every((v, k) => Math.abs(v - b.windows[i].pixels[k]) < 1e-6), options.sampler)
+    }
+  }
+})

@@ -8,6 +8,18 @@ test('site.json sizes the model and every catalog for download progress', async 
   for (const option of site.catalogs) assert.equal(option.bytes, (await stat(option.file)).size, option.id)
 })
 
+// A link searches one source of a grouped catalog alone (?catalog=collletttivo): the group names each source, each face
+// says which source it came from, and no source id shadows a catalog id the link could also mean.
+test('a grouped catalog names each source it holds, and every face comes from one of them', async () => {
+  const site = JSON.parse(await readFile('site.json', 'utf8')), catalogIds = new Set(['all', 'my-fonts', ...site.catalogs.map(c => c.id)])
+  for (const option of site.catalogs.filter(c => c.sources)) {
+    const faces = JSON.parse(await readFile(option.file, 'utf8')).faces, ids = option.sources.map(s => s.id)
+    assert.ok(option.sources.every(s => typeof s.name === 'string' && s.name), option.id)
+    assert.deepEqual([...new Set(faces.map(f => f.sourceId))].toSorted(), ids.toSorted(), option.id)
+    assert.deepEqual(ids.filter(id => catalogIds.has(id)), [], option.id)
+  }
+})
+
 const meta = (html, attribute, key) => html.match(new RegExp(`<meta ${attribute}="${key}" content="([^"]*)">`))?.[1]
 test('each page describes itself once: the link preview repeats the search description', async () => {
   for (const page of ['index.html', 'catalogs.html']) {
@@ -42,9 +54,11 @@ test('the structured data repeats the page’s own address, description and prev
   assert.equal(data.description, meta(html, 'name', 'description')); assert.equal(data.image, meta(html, 'property', 'og:image'))
 })
 
-test('the sitemap lists every page by its canonical address', async () => {
+// Catalogs is private for now: reachable for My fonts, but out of the sitemap and search engines.
+test('the sitemap lists the public page by its canonical address; Catalogs stays unlisted', async () => {
   const listed = [...(await readFile('sitemap.xml', 'utf8')).matchAll(/<loc>([^<]*)<\/loc>/g)].map(m => m[1])
-  assert.deepEqual(listed, await Promise.all(['index.html', 'catalogs.html'].map(async page => link(await readFile(page, 'utf8'), 'canonical'))))
+  assert.deepEqual(listed, [link(await readFile('index.html', 'utf8'), 'canonical')])
+  assert.equal(meta(await readFile('catalogs.html', 'utf8'), 'name', 'robots'), 'noindex')
 })
 
 test('per-script accuracy on the page comes from the shipped breakdown', async () => {

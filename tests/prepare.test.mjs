@@ -45,6 +45,14 @@ test('opposite polarity produces the same normalized geometry and grayscale edge
   assert.ok(p.pixels.some(v => v > 0 && v < 1))
   assert.ok(p.pixels.every((v, i) => Math.abs(v - q.pixels[i]) < 1e-6))
 })
+test('dark letters on a wall that reads dark are found on the other side, as if their polarity were given', () => {
+  const wall = fixture(['.......', '.#.#.#.', '.#####.', '.......'])
+  for (let p = 0; p < wall.data.length; p += 4) if (wall.data[p] === 255) wall.data.fill(100, p, p + 3); else wall.data.fill(10, p, p + 3)
+  const found = prepare(wall), given = prepare(wall, { polarity: 'dark' })
+  assert.equal(found.status, 'ok'); assert.equal(found.polarity, 'dark')
+  assert.deepEqual(found, given)
+  assert.notEqual(prepare(wall, { polarity: 'light' }).status, 'ok')  // a declared polarity is never second-guessed
+})
 test('declared alpha background matches opaque equivalent; low contrast is explicit', () => {
   const transparent = fixture(['.....', '.###.', '.....'])
   for (let p = 0; p < transparent.data.length; p += 4) if (transparent.data[p] === 255) transparent.data[p + 3] = 0

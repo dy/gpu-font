@@ -172,7 +172,8 @@ def pack(name='bench'):
                 raw = base64.b64decode(w['pixels']); windows.append({'source':source,'offset':offset,'width':w['width'],'height':w['height']}); chunks.append(raw); offset += len(raw)
     pixels = b''.join(chunks); (OUT/f'{name}.u8').write_bytes(pixels)
     scope = {'bench':'Frozen before style training results. Chromium canvas renders of static instances; random 5-10 character Latin strings in four cases, other-script strings, degraded and dark copies. Synthetic, not screenshots.',
-             'catalog':'Every catalog family, fresh text (its own seed), same renderer and preparation as the frozen benchmark. Validation selects checkpoints of models trained on the whole catalog; test repeats the frozen recipe and is read once per released model. Synthetic, not screenshots.'}[name]
+             'catalog':'Every catalog family, fresh text (its own seed), same renderer and preparation as the frozen benchmark. Validation selects checkpoints of models trained on the whole catalog; test repeats the frozen recipe and is read once per released model. Synthetic, not screenshots.',
+             'open':'Fonts outside Google Fonts (bench/open-fonts.json, never trained on): the default face of each family, Latin lower and title at 16-64 px, one degraded copy, searched against every shipped catalog (train.style_open).'}.get(name) or f"Catalog validation queries rendered by {data['engine']}, the sizes as planned{' but ' + str(data['queries'][0]['size']) + ' px' if len({q['size'] for q in data['queries']}) == 1 else ''} (scripts/style-bench-engines.mjs): the same text, preparation and references as the catalog benchmark."
     manifest = {'pins':data['pins'],'planSha256':sha(OUT/f'{name}-plan.json'),'browser':rendered['browser'],'sha256':sha(OUT/f'{name}.u8'),'samples':samples,'windows':windows,'scope':scope}
     validate_shard(manifest, len(pixels)); save(OUT/f'{name}.json', manifest)
     print('Packed benchmark', len(samples), 'queries', len(windows), 'windows', flush=True)
@@ -215,7 +216,8 @@ def load(name='bench'):
 
 if __name__ == '__main__':
     p = argparse.ArgumentParser(); p.add_argument('command', choices=['plan', 'instances', 'render', 'pack', 'sketches']); p.add_argument('--workers', type=int, default=8); p.add_argument('--references', action='store_true')
-    p.add_argument('--name', choices=['bench', 'catalog'], default='bench'); a = p.parse_args()
+    p.add_argument('--name', default='bench', help='bench, catalog, or a rendered stage such as catalog-webkit (scripts/style-bench-engines.mjs)'); a = p.parse_args()
+    if a.command in ('plan', 'instances') and a.name not in ('bench', 'catalog'): raise ValueError('Only bench and catalog are planned here')
     if a.command == 'plan': plan(a.name)
     elif a.command == 'instances': instances(a.workers, a.references, a.name)
     elif a.command == 'render': render(a.name)

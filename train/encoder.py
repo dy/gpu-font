@@ -112,7 +112,7 @@ def embed(model,manifest,pixels,sources):
     if not sources or len(set(sources))!=len(sources):raise ValueError('Expected unique embedding sources')
     mapping={s:i for i,s in enumerate(sources)}
     ids=[i for i,w in enumerate(manifest['windows']) if w['source'] in mapping]
-    sums=np.zeros((len(sources),DIMENSIONS),dtype=np.float32);counts=np.zeros(len(sources),dtype=np.int32)
+    sums=np.zeros((len(sources),model.head.out_features),dtype=np.float32);counts=np.zeros(len(sources),dtype=np.int32)
     model.eval();device=next(model.parameters()).device
     with torch.no_grad():
         for start in range(0,len(ids),128):
@@ -259,10 +259,15 @@ def train(method,steps=20000,resume=False):
     print(method,'selected',selected['step'],'complete',flush=True)
 
 
+def valid_dimensions(d):
+    """An embedding has a multiple of 16 numbers, 16 to 1024, as src/catalog.mjs reads them."""
+    return type(d) is int and 16<=d<=1024 and d%16==0
+
+
 def load_encoder(path):
     artifact=read(path)
-    if artifact.get('kind')!='font-encoder' or artifact.get('dimensions')!=DIMENSIONS or artifact.get('normalization')!='l2' or 'fonts' in artifact:raise ValueError('Invalid encoder schema')
-    return load_export({**artifact,'fonts':[str(i) for i in range(DIMENSIONS)]})
+    if artifact.get('kind')!='font-encoder' or not valid_dimensions(artifact.get('dimensions')) or artifact.get('normalization')!='l2' or 'fonts' in artifact:raise ValueError('Invalid encoder schema')
+    return load_export({**artifact,'fonts':[str(i) for i in range(artifact['dimensions'])]})
 
 
 if __name__=='__main__':

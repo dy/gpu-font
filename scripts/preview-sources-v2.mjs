@@ -1,7 +1,6 @@
 // A separate pinned selection: never rewrite the first pilot's source config.
 import { readFile, writeFile } from 'node:fs/promises'
 import { pathToFileURL } from 'node:url'
-import { politeFetch, RECIPES, RENDER } from './preview-sources.mjs'
 
 export const SELECTION = [
   ['Synonym', 'sans'], ['Author', 'sans'], ['Bespoke Sans', 'sans'], ['Amulya', 'sans'],
@@ -50,6 +49,8 @@ export function resolveFamilies(catalogue, excludedNames) {
 }
 
 async function main() {
+  // The collection recipes stay out of the repository; only the build needs them, so a checkout still loads the selection above.
+  const { politeFetch, RECIPES, RENDER } = await import('./preview-sources.mjs')
   const previous = JSON.parse(await readFile('bench/preview-sources.json', 'utf8'))
   const corpus = JSON.parse(await readFile('bench/corpus.json', 'utf8'))
   const catalogue = process.env.PREVIEW_FONTSHARE_CATALOGUE

@@ -3,7 +3,7 @@ import { readFile, writeFile, mkdir } from 'node:fs/promises'
 import { openSync, readSync, closeSync } from 'node:fs'
 import { execFileSync } from 'node:child_process'
 import { chromium } from 'playwright'
-import { readCatalog, matchCatalog, foldTwins, embedWindows, unit, rowBytes, unpack } from '../src/catalog.mjs'
+import { readCatalog, subsetCatalog, matchCatalog, foldTwins, embedWindows, unit, rowBytes, unpack, readHeads, verdict, writeStyle, readStyle } from '../src/catalog.mjs'
 import { packVectors } from '../src/references.mjs'
 import { readNetwork, inferCPU } from '../src/network.mjs'
 
@@ -12,7 +12,7 @@ const read = async p => JSON.parse(await readFile(p, 'utf8'))
 const data = await read('site.json'), artifact = await read(data.model), model = readNetwork(artifact)
 // Shipped distinct families and catalogs, fixed at load; accuracy is not credited to a selected or imported catalog.
 const expectedIntro = [`Finds the closest of ${data.families.toLocaleString('en-US')} font families, from ${data.catalogs.length} catalogs, to any line of text.`,
-  `Experimental: on rendered text in fonts it never saw, it names the right family first ${(data.metrics.top1 * 100).toFixed(1)}% of the time.`]
+  `Experimental: on rendered crops of every Google Fonts family, on text it never trained on, it names the right family first ${(data.metrics.top1 * 100).toFixed(1)}% of the time.`]
 const intro = page => page.locator('#intro-lead, #intro-scope').allTextContents()
 // The verdict: one pill per label, category, then an optional fine class, posture and script as a word, not an ISO 15924 code.
 const verdictPills = async page => (await page.locator('#result-summary > .pill').allTextContents()).join('|'), VERDICT = /^[^|]+(\|[^|]+)?\|(Upright|Italic)\|Latin$/
@@ -130,10 +130,10 @@ try {
   // Accuracy: two bars, the first result and the top 5, each filled to its shipped metric; no title over the other questions.
   assert.deepEqual(await page.locator('#how-accurate .meter').evaluateAll(m => m.map(e => [e.previousElementSibling.textContent, e.dataset.metric, Number(e.style.getPropertyValue('--value'))])), [['1st result', 'top1', data.metrics.top1], ['Top 5', 'top5Accuracy', data.metrics.top5Accuracy]], 'Accuracy names the first result and the top five plainly')
   assert.equal(await page.locator('#faq h2').count(), 0)
-  // Only sources whose recorded terms allow it ship; banned and unverified ones stay local.
-  const terms = new Map((await read('bench/foundries.json')).sources.map(source => [source.id, source.terms?.status]))
+  // A source ships when its recorded terms allow it, or by a decision recorded beside them in the ledger; the rest stay local.
+  const ledger = new Map((await read('bench/foundries.json')).sources.map(source => [source.id, source])), cleared = id => ['permitted', 'none-found'].includes(ledger.get(id)?.terms?.status) || ledger.get(id)?.decision?.ship === true
   // A grouped catalog (Other) is cleared only when every source in it is.
-  assert.deepEqual(data.catalogs.filter(option => !(option.sources ?? [option.id]).every(id => ['permitted', 'none-found'].includes(terms.get(id)))).map(option => option.id), [], 'Every shipped catalog has cleared terms')
+  assert.deepEqual(data.catalogs.filter(option => !(option.sources?.map(s => s.id) ?? [option.id]).every(cleared)).map(option => option.id), [], 'Every shipped catalog has cleared terms or a recorded decision')
   assert.equal(data.catalogs.at(-1).id, 'other', 'Small sources are searched together as Other, last in the menu'); assert.ok(data.catalogs.every(c => c.sources || c.families >= 100))
   // Nothing heavy ships: fonts come from Google Fonts, and the page asks its own origin for no font or image.
   const own = new URL(base).host, fetched = await page.evaluate(() => performance.getEntriesByType('resource').map(r => r.name))
@@ -146,7 +146,7 @@ try {
   const endsRow = (selector, row) => page.locator(selector).evaluate((e, row) => { const box = e.closest(row).getBoundingClientRect(), own = e.getBoundingClientRect(); return own.width > 0 && Math.abs(own.right - box.right) < 1 && own.top >= box.top && own.bottom <= box.bottom }, row)
   assert.equal(await page.locator('.source-body > #model-details > summary > .input-time:last-child > svg + #detection-time').count(), 1, 'Model’s row holds the time, after a clock')
   assert.ok(await endsRow('#detection-time', 'summary'), 'The time ends Model’s row, folded')
-  assert.deepEqual(await page.locator('.results-panel .results-foot > *').evaluateAll(es => es.map(e => e.id)), ['more-matches', 'save'], 'Under the matches: More matches, then JSON')
+  assert.deepEqual(await page.locator('.results-panel .results-foot > *').evaluateAll(es => es.map(e => e.id)), ['more-matches', 'copy-link', 'save'], 'Under the matches: More matches, then Link and JSON')
   assert.ok(await endsRow('#save', '.results-foot'), 'JSON ends More matches’ row')
   const outlines = () => page.locator('#input-regions').evaluate(e => getComputedStyle(e).display)
   assert.deepEqual([await page.locator('#model-details').evaluate(d => d.open), await page.locator('#model-input').isVisible(), await outlines()], [false, false, 'none'], 'Model is folded, with the outlines')
@@ -157,7 +157,7 @@ try {
   assert.equal(await page.locator('#how-it-works .facts #parameters, #how-it-works .facts #device, #how-it-works .facts #catalog-size').count(), 3)
   assert.doesNotMatch(await page.locator('main').innerText(), /·/, 'Lists read with commas, not middle dots')
   assert.equal(await page.locator('details.about, #about').count(), 0)
-  assert.deepEqual(await page.locator('.site-nav a').evaluateAll(links => links.map(a => [a.getAttribute('href'), a.textContent])), [['./catalogs.html', 'Catalogs']])
+  assert.equal(await page.locator('.site-nav, a[href="./catalogs.html"], a[href="./catalogs.html#sources"]').count(), 0, 'Catalogs stays out of the menu and the page; only My fonts links to it')
   // Catalogs page: one Sources table. The catalogs a search covers as site.json ships them, each downloadable; then the
   // sources not searched, grouped. Each group folds open into its sources, sorted by the chosen column inside it. A ban or
   // restriction always shows its quoted clause and where it was read; held-locally families never read as coverage.
@@ -165,6 +165,10 @@ try {
   await sourcesPage.goto(`${base}/catalogs.html`)
   await sourcesPage.waitForFunction(n => document.querySelectorAll('#sources tbody tr').length >= n, data.catalogs.length + 1)
   assert.equal(await sourcesPage.locator('#sources > h2').textContent(), 'Sources')
+  // A rights holder can ask to remove a font or change its link: an issue opened from the sources or from Licenses.
+  const optOut = /^https:\/\/github\.com\/dy\/gpu-font\/issues\/new\?/
+  assert.deepEqual(await sourcesPage.locator('#sources > h2 + .explanation-copy').evaluate(e => [e.textContent, e.querySelector('a').href]), ['Is your font here? Ask to remove it or change its link.', await page.locator('#legal a', { hasText: 'Ask to remove' }).evaluate(a => a.href)], 'Rights holders are asked before the table, where Licenses sends them')
+  assert.match(await page.locator('#legal a', { hasText: 'Ask to remove' }).getAttribute('href'), optOut)
   assert.equal(await sourcesPage.locator('#sources .sources-table, [role="tab"]').count(), 1, 'One table, no tabs')
   const table = () => sourcesPage.locator('#sources tbody tr').evaluateAll(rows => rows.map(r => ({ id: r.id, member: r.classList.contains('member-row'), group: !!r.querySelector('.fold'), families: [...r.children[4].querySelectorAll(':scope > :not(.json-link)')].map(e => e.textContent).join(' '), json: r.children[4].querySelector('a[download]')?.getAttribute('href') ?? null })))
   // Folded, the table lists the shipped catalogs in site.json's order, each with its JSON under its family count, then the unsearched groups.
@@ -176,8 +180,8 @@ try {
   const open = await table(), groupOf = new Map()
   let current = null
   for (const row of open) row.member ? groupOf.set(row.id, current) : (current = row.id)
-  assert.deepEqual(open.filter(r => groupOf.get(r.id) === 'other').map(r => r.id).toSorted(), data.catalogs.find(c => c.id === 'other').sources.toSorted())
-  const unsearched = ledgerData.sources.filter(s => !data.catalogs.some(c => (c.sources ?? [c.id]).includes(s.id)) && s.kind !== 'icons')
+  assert.deepEqual(open.filter(r => groupOf.get(r.id) === 'other').map(r => r.id).toSorted(), data.catalogs.find(c => c.id === 'other').sources.map(s => s.id).toSorted())
+  const unsearched = ledgerData.sources.filter(s => !data.catalogs.some(c => (c.sources?.map(m => m.id) ?? [c.id]).includes(s.id)) && s.kind !== 'icons')
   assert.deepEqual(open.filter(r => r.member && groupOf.get(r.id) !== 'other').map(r => r.id).toSorted(), unsearched.map(s => s.id).toSorted(), 'Every unsearched source sits in one group; icon sets stay off the page')
   assert.ok(open.every(r => !r.member || !r.json), 'Only whole catalogs download')
   // Sortable by any column inside each group: Families sorts by number, largest first, then reverses; sources without a
@@ -194,7 +198,6 @@ try {
   assert.deepEqual(await order(), byFamilies(1)); assert.deepEqual(await widths(), before)
   // Tables end on their last row, with no rule under it.
   assert.deepEqual(await sourcesPage.locator('.sources-table tbody tr:last-child > *').evaluateAll(cells => [...new Set(cells.map(c => getComputedStyle(c).borderBottomStyle))]), ['none'])
-  assert.equal(await sourcesPage.locator('.site-nav [aria-current="page"]').textContent(), 'Catalogs')
   assert.ok(await sourcesPage.locator('[data-terms="ban"], [data-terms="restricted"]').evaluateAll(marks => marks.every(m => { const td = m.closest('td'); return td.querySelector('blockquote')?.textContent && /^https?:/.test(td.querySelector('.checked a')?.href) })), 'Every ban shows its clause and source')
   assert.equal(await sourcesPage.locator('.held').evaluateAll(held => held.filter(h => !h.textContent.endsWith('held locally, not shipped')).length), 0)
   // One pill everywhere: the verdict and a match's face share one look, in the secondary grey the sources table uses.
@@ -243,7 +246,6 @@ try {
   assert.match(matchLink, /underline/)
   assert.equal(allowed[1], await sourcesPage.locator('.sources-table tbody td').first().evaluate(e => getComputedStyle(e).color))
   await sourcesPage.close()
-  assert.equal(await page.locator('#legal a[href="./catalogs.html"]').count(), 1, 'Licenses links to Catalogs')
   // Dropdowns are absolutely positioned: they keep their place against the trigger while the page scrolls.
   await page.locator('#catalog-button').click()
   const gap = () => page.evaluate(() => Math.round(document.querySelector('#catalog-menu').getBoundingClientRect().top - document.querySelector('#catalog-button').getBoundingClientRect().bottom))
@@ -304,7 +306,7 @@ try {
   if (artifact.heads) assert.equal(await page.locator('#compare #compared-scripts').textContent(), String(artifact.heads.script.labels.length))
   assert.deepEqual(await page.locator('#compare thead th').allTextContents(), ['Font finder', 'Fonts', 'Your fonts', 'Styles', 'Subsets', 'Runs on', 'Open source', 'Cost'])
   assert.ok(await page.locator('#compare tbody tr').evaluateAll(rows => rows.every(r => r.cells.length === 8 && r.cells[0].querySelector('.detail')?.textContent && r.cells[1].querySelector('.detail')?.textContent)), 'Each finder names its owner, and each count its sources')
-  assert.equal(await page.locator('#compare a[href="./catalogs.html#sources"], #compare a[href="./catalogs.html#my-fonts"]').count(), 2)
+  assert.equal(await page.locator('#compare a[href="./catalogs.html#my-fonts"]').count(), 1)
   for (const twin of await page.locator('.font-twins').all()) {
     await twin.hover(); assert.equal(await page.locator('#twins-tip').evaluate(t => t.matches(':popover-open')), true)
     assert.deepEqual(await page.locator('#twins-tip li').allTextContents(), JSON.parse(await twin.getAttribute('data-twins')), 'The tooltip lists every twin')
@@ -376,7 +378,7 @@ try {
   const custom = await read(data.catalogs[0].file)
   // Smallest compatible catalog, retaining one real vector and exact owner.
   custom.faces = custom.faces.slice(0, 1)
-  custom.vectors = { ...custom.vectors, shape: [1, 128], data: Buffer.from(custom.vectors.data, 'base64').subarray(0, rowBytes(custom.vectors)).toString('base64'), scales: custom.vectors.scales.slice(0, 1), owners: [0] }
+  custom.vectors = { ...custom.vectors, shape: [1, custom.dimensions], data: Buffer.from(custom.vectors.data, 'base64').subarray(0, rowBytes(custom.vectors, custom.dimensions)).toString('base64'), scales: custom.vectors.scales.slice(0, 1), owners: [0] }
   await page.locator('#catalog-file').setInputFiles({ name: 'myfonts.json', mimeType: 'application/json', buffer: Buffer.from(JSON.stringify(custom)) })
   await page.waitForFunction(() => document.querySelector('#catalog-label').textContent === 'myfonts.json')
   const imported = await result(page)
@@ -535,6 +537,56 @@ try {
   assert.equal(earlyResult.source.name, 'early.png'); assert.deepEqual(earlyResult.inputs, original.inputs)
   await early.close()
   await page.close()
+  // A shared address shows the same matches without the image: ?style= carries the crop's style at int8 and re-encodes to
+  // itself, so the opened page keeps the address it came from. Link copies the address; the default catalog is not named.
+  const heads = readHeads(artifact), shared = await browser.newContext({ viewport: { width: 1440, height: 1000 } })
+  shared.on('page', p => p.on('pageerror', e => issues.push(e.message)))
+  await shared.grantPermissions(['clipboard-read', 'clipboard-write'], { origin: base })
+  const sender = await shared.newPage(); await sender.goto(base); const sent = await result(sender)
+  await sender.waitForFunction(() => new URLSearchParams(location.search).has('style'))
+  const link = sender.url(), style = new URL(link).searchParams.get('style'), decoded = readStyle(style).embedding
+  assert.equal(style, writeStyle(sent.embedding, data.modelSha256)); assert.equal(new URL(link).searchParams.has('catalog'), false, 'The default catalog needs no name')
+  await sender.locator('#copy-link').click(); assert.equal(await sender.evaluate(() => navigator.clipboard.readText()), link, 'Link copies the address')
+  const receiver = await shared.newPage(); await receiver.goto(link); const got = await result(receiver), google = readCatalog(await read(data.catalogs[0].file), data)
+  assert.equal(got.shared, true); assert.deepEqual(got.embedding, Array.from(decoded)); assert.deepEqual(got.matches, matchCatalog(decoded, google, verdict(decoded, heads)))
+  const top = value => foldTwins(value.matches, google, { script: value.verdict?.script?.[0]?.label, limit: 5 }).map(m => m.family)
+  assert.deepEqual(top(got), top(sent), 'The receiver sees the sender\'s five families')
+  assert.deepEqual([await receiver.locator('#message').textContent(), await receiver.locator('#empty').isVisible()], ['Matches from a shared link: it holds the crop’s style, not its image.', true])
+  await receiver.waitForTimeout(700); assert.equal(receiver.url(), link, 'An opened link keeps its address')
+  // Another catalog re-ranks the shared style, and the address names it.
+  await choose(receiver, data.catalogs[1].id); const moved = await result(receiver)
+  assert.deepEqual(moved.matches, matchCatalog(decoded, readCatalog(await read(data.catalogs[1].file), data), moved.verdict))
+  await receiver.waitForFunction(id => new URLSearchParams(location.search).get('catalog') === id, data.catalogs[1].id)
+  // One source of a grouped catalog searches alone, by its id: its faces only, under its name.
+  const group = data.catalogs.find(c => c.sources?.some(s => s.id === 'collletttivo')), alone = await shared.newPage()
+  await alone.goto(`${base}/?catalog=collletttivo&style=${style}`); const lone = await result(alone)
+  assert.deepEqual(lone.matches, matchCatalog(decoded, subsetCatalog(readCatalog(await read(group.file), data), f => f.sourceId === 'collletttivo'), lone.verdict))
+  assert.ok(lone.matches.length && lone.matches.every(m => m.face.sourceId === 'collletttivo'))
+  assert.deepEqual([await alone.locator('#catalog-label').textContent(), lone.catalog.id], [group.sources.find(s => s.id === 'collletttivo').name, 'collletttivo'])
+  // Embedded, the matcher alone: no masthead, introduction or sections; the catalog a plain label; links open new tabs,
+  // and Link copies the whole page's address.
+  const embed = await shared.newPage(); await embed.goto(`${base}/?catalog=collletttivo&embed`); await result(embed)
+  assert.deepEqual(await embed.locator('.masthead, main > section').evaluateAll(es => es.filter(e => e.checkVisibility()).length), 0)
+  assert.deepEqual([await embed.locator('#catalog-button').isDisabled(), await embed.locator('#catalog-button').innerText(), await embed.evaluate(() => document.querySelector('base')?.target)], [true, 'Collletttivo', '_blank'])
+  assert.ok(await embed.evaluate(() => document.documentElement.scrollWidth <= innerWidth))
+  await embed.locator('#copy-link').click(); const copiedLink = new URL(await embed.evaluate(() => navigator.clipboard.readText()))
+  assert.deepEqual([copiedLink.searchParams.get('catalog'), copiedLink.searchParams.has('style'), copiedLink.searchParams.has('embed')], ['collletttivo', true, false])
+  // In another site's iframe, which denies clipboard access unless it allows it, the embed still runs and Link still copies.
+  const site = base.replace('127.0.0.1', 'localhost'); await shared.grantPermissions(['clipboard-read', 'clipboard-write'], { origin: site })
+  const host = await shared.newPage(); await host.goto(`${site}/og.png`)
+  await host.evaluate(src => document.body.append(Object.assign(document.createElement('iframe'), { src, style: 'width: 1100px; height: 950px' })), `${base}/?catalog=collletttivo&embed`)
+  const framed = host.frameLocator('iframe'); await framed.locator('#copy-link:not([disabled])').waitFor({ timeout: 60000 })
+  assert.equal(await host.frames()[1].evaluate(() => document.featurePolicy.allowsFeature('clipboard-write')), false)
+  await framed.locator('#copy-link').click(); await framed.locator('#copy-link', { hasText: 'Copied' }).waitFor()
+  assert.equal(new URL(await host.evaluate(() => navigator.clipboard.readText())).searchParams.get('catalog'), 'collletttivo')
+  // A link it can't read, or made with another model, says so and shows no matches; an unknown catalog names what is searched instead.
+  for (const [query, text] of [['style=abc', 'This link’s matches can’t be read.'], [`style=00000000.${style.slice(9)}`, 'This link comes from another version of the model, so its matches can’t be shown.']]) {
+    const bad = await shared.newPage(); await bad.goto(`${base}/?${query}`); await bad.waitForFunction(() => document.body.dataset.ready === 'true')
+    assert.deepEqual([await bad.locator('#message').textContent(), await bad.locator('.result').count(), await bad.locator('#empty').isVisible()], [text, 0, true], query)
+  }
+  const unknown = await shared.newPage(); await unknown.goto(`${base}/?catalog=nope`); await result(unknown)
+  assert.equal(await unknown.locator('#catalog-error').textContent(), `No catalog “nope”; searching ${data.catalogs[0].name}.`)
+  await shared.close()
   const cpu = await browser.newPage()
   await cpu.addInitScript(() => Object.defineProperty(navigator, 'gpu', { value: undefined }))
   await cpu.goto(base); const fallback = await result(cpu)
@@ -557,8 +609,11 @@ try {
     assert.deepEqual(indexedRows.map(r => r[0]), indexedRows.map(r => r[0]).toSorted((a, b) => a.localeCompare(b))); assert.equal(indexedRows.length, 4)
     assert.equal(indexedRows.reduce((sum, r) => sum + Number(r[2]), 0), 5); const lora = indexedRows.find(r => r[0] === 'Lora'); assert.ok(lora[1].startsWith('Regular, ') && lora[2] === '2', `Lora row: ${lora}`) // styles as the files name them, regular first
     const stored = () => mine.evaluate(() => import('./my-fonts.mjs').then(m => m.readMyFonts()))
+    // Download JSON hands over the stored catalog, the file the catalog menu and createMatcher() open.
+    const [download] = await Promise.all([mine.waitForEvent('download'), mine.locator('#my-fonts-download').click()])
+    assert.equal(download.suggestedFilename(), 'my-fonts.json'); assert.deepEqual(JSON.parse(await readFile(await download.path(), 'utf8')), (await stored()).catalog)
     const indexed = readCatalog((await stored()).catalog, data), shipped = readCatalog(await read(data.catalogs[0].file), data)
-    const rowsOf = (catalog, test) => catalog.owners.flatMap((owner, r) => test(catalog.faces[owner]) ? [catalog.vectors.subarray(r * 128, r * 128 + 128)] : [])
+    const rowsOf = (catalog, test) => catalog.owners.flatMap((owner, r) => test(catalog.faces[owner]) ? [catalog.vectors.subarray(r * catalog.dimensions, (r + 1) * catalog.dimensions)] : [])
     const ours = rowsOf(indexed, f => f.family === 'Lora' && f.weight === 400 && f.style === 'normal'), theirs = rowsOf(shipped, f => f.id === 'lora/400')
     // The window file is too large to read whole; each needed window is read at its offset.
     const refs = await read('.data/style/references-browser.json'), refFile = openSync('.data/style/references-browser.u8', 'r')
@@ -566,16 +621,16 @@ try {
     const faceIndex = (await read('.data/style/faces.json')).faces.findIndex(f => f.id === 'lora/400')
     const expected = ['Latn-lower', 'Latn-upper'].map(kind => unit(refs.samples.flatMap((sample, i) => sample.face === faceIndex && sample.kind === kind
       ? [embedWindows(refs.windows.filter(w => w.source === i).map(w => inferCPU(model, { width: w.width, height: w.height, pixels: Float32Array.from(refPixels(w), v => v / 255) })))] : [])
-      .reduce((sum, e) => sum.map((v, d) => v + e[d]), new Float32Array(128))))
+      .reduce((sum, e) => sum.map((v, d) => v + e[d]), new Float32Array(model.outputs))))
     closeSync(refFile)
     const cosine = (a, b) => a.reduce((sum, v, d) => sum + v * b[d], 0), near = ours.map(row => Math.max(...theirs.map(other => cosine(row, other))))
     assert.equal(ours.length, 2, 'Lowercase and capitals')
     // The browser packs its rows at 4 bits, so its integers are compared with the encoder's vector packed the same way:
     // equal, except where a value sits on a rounding boundary and float noise tips it one step.
-    const saved = (await stored()).catalog, raw = saved.vectors, packed = unpack(Buffer.from(raw.data, 'base64'), 4, raw.shape[0] * 128)
-    const oursPacked = raw.owners.flatMap((owner, r) => { const f = saved.faces[owner]; return f.family === 'Lora' && f.weight === 400 && f.style === 'normal' ? [{ values: packed.subarray(r * 128, r * 128 + 128), scale: raw.scales[r] }] : [] })
+    const saved = (await stored()).catalog, raw = saved.vectors, dims = saved.dimensions, packed = unpack(Buffer.from(raw.data, 'base64'), 4, raw.shape[0] * dims)
+    const oursPacked = raw.owners.flatMap((owner, r) => { const f = saved.faces[owner]; return f.family === 'Lora' && f.weight === 400 && f.style === 'normal' ? [{ values: packed.subarray(r * dims, (r + 1) * dims), scale: raw.scales[r] }] : [] })
     expected.forEach((vector, i) => {
-      const cpu = packVectors([Array.from(vector)]), values = unpack(Buffer.from(cpu.data, 'base64'), 4, 128), mine = oursPacked[i]
+      const cpu = packVectors([Array.from(vector)]), values = unpack(Buffer.from(cpu.data, 'base64'), 4, dims), mine = oursPacked[i]
       assert.ok(Math.abs(mine.scale - cpu.scales[0]) <= cpu.scales[0] * 1e-4, `Browser-indexed Lora row ${i} scale ${mine.scale}, encoder ${cpu.scales[0]}`)
       const steps = Array.from(values, (v, d) => Math.abs(v - mine.values[d]))
       assert.ok(Math.max(...steps) <= 1 && steps.filter(Boolean).length <= 4, `Browser-indexed Lora row ${i} against the encoder on the stored reference windows: ${steps.filter(Boolean).length} values differ, by up to ${Math.max(...steps)} steps`)
@@ -602,12 +657,14 @@ try {
     }
     await search.close()
     await mine.locator('#my-fonts-remove').click(); await mine.waitForFunction(() => !document.querySelector('.my-fonts-table') && document.querySelector('#my-fonts-stored').hidden)
-    const after = await context.newPage(); await after.goto(base); await after.waitForFunction(() => document.body.dataset.ready === 'true')
+    // A link to my fonts, opened where none are indexed (someone else's browser), says so and searches the default.
+    const after = await context.newPage(); await after.goto(`${base}/?catalog=my-fonts`); await after.waitForFunction(() => document.body.dataset.ready === 'true')
     assert.ok(await after.locator('#add-my-fonts').evaluate(a => !a.hidden) && await after.locator('[data-catalog="my-fonts"]').count() === 0, 'Without my fonts the menu links to indexing')
+    assert.deepEqual([await after.locator('#catalog-error').textContent(), await after.locator('#catalog-label').textContent()], [`My fonts aren’t indexed in this browser; searching ${data.catalogs[0].name}.`, data.catalogs[0].name])
     await context.close()
   } else console.log('My fonts differential skipped: no local catalog instances in .data/style')
   const report = { encoderSha256: data.encoderSha256, catalogs: data.catalogs.map(o => ({ id: o.id, sha256: o.sha256, families: o.families, faces: o.faces })), cpuError, gpuError,
-    detectionMilliseconds: original.milliseconds, checks: ['native CPU/PyTorch/WebGPU projections', 'exact displayed tensors and input stats', 'catalog A → A → B → A', 'cached embedding reuse', 'one-face JSON import', 'invalid imports preserve result', 'stale catalog response', 'resolution and crop round trip', 'image button/switch/replacement', 'crop, pencil and eraser tools on any source, exact undo, brush size and cursor', 'twin tooltip and the list grown to 50 with subset previews', 'token contrast, links, popovers, code, section and question layout, dropdowns follow scroll', 'no captured specimens shipped', 'only cleared sources shipped', 'no fonts or images served; fonts from Google', 'catalogs page', 'my fonts: browser-indexed Lora equals the encoder on stored references, join, installed faces, previews, removal', 'Aa returns to the last sample', 'narrow crop keeps layout', 'empty image/sample entry', 'corrupt image recovery', 'keyboard and responsive selectors', 'image before initial catalog', 'CPU fallback'],
+    detectionMilliseconds: original.milliseconds, checks: ['native CPU/PyTorch/WebGPU projections', 'exact displayed tensors and input stats', 'catalog A → A → B → A', 'cached embedding reuse', 'one-face JSON import', 'invalid imports preserve result', 'stale catalog response', 'resolution and crop round trip', 'image button/switch/replacement', 'crop, pencil and eraser tools on any source, exact undo, brush size and cursor', 'twin tooltip and the list grown to 50 with subset previews', 'token contrast, links, popovers, code, section and question layout, dropdowns follow scroll', 'no captured specimens shipped', 'only cleared sources shipped', 'no fonts or images served; fonts from Google', 'catalogs page', 'my fonts: browser-indexed Lora equals the encoder on stored references, join, installed faces, previews, removal', 'Aa returns to the last sample', 'narrow crop keeps layout', 'share links: address, copy, reopen, re-rank; one source alone; embed; unreadable and other-model links', 'my fonts download', 'removal requests', 'empty image/sample entry', 'corrupt image recovery', 'keyboard and responsive selectors', 'image before initial catalog', 'CPU fallback'],
     scope: 'Runtime correctness and UI lifecycle only; not recognition accuracy.' }
   await writeFile('bench/catalog-demo.json', JSON.stringify(report, null, 2) + '\n'); console.log(report)
 } finally { await browser.close() }

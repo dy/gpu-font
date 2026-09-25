@@ -2,7 +2,7 @@
 // canvas at 48 px with 12 px margins (scripts/style-references-browser.mjs) and prepared as any crop, so their vectors
 // rank alongside the shipped ones.
 import { prepareLine } from './line.mjs'
-import { embedWindows, unit, pack, rowBytes } from './catalog.mjs'
+import { embedWindows, unit, pack, rowBytes, validDimensions } from './catalog.mjs'
 
 export const LATIN = { lower: ['hamburgefonts', 'quickjivexy', 'dwarflpzm'], upper: ['HAMBURGEFONTS', 'QUICKJIVEXY', 'DWARFLPZM'] }
 const ALPHABET = { lower: 'abcdefghijklmnopqrstuvwxyz', upper: 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' }, SIZE = 48, PAD = 12
@@ -41,9 +41,11 @@ export function drawLine(ctx, family, text, size = SIZE) {
 // Rows as the repository's exporter packs them: L2-normalized, 4 bits a dimension with one scale per row, scales to 6
 // significant digits. Four bits rank as well as eight (bench/style.md, Quantization) at half the size.
 export function packVectors(rows) {
-  const scales = rows.map(r => Math.max(Math.max(...r.map(Math.abs)) / 7, 1e-12)), values = new Int8Array(rows.length * 128)
-  rows.forEach((r, i) => r.forEach((v, d) => { values[i * 128 + d] = Math.max(-7, Math.min(7, Math.round(v / scales[i]))) }))
-  return { encoding: 'int4-base64', shape: [rows.length, 128], data: toBase64(pack(values, 4)), scales: scales.map(s => Number(s.toPrecision(6))) }
+  const d = rows[0]?.length
+  if (!validDimensions(d) || rows.some(r => r.length !== d)) throw new Error('Invalid embedding dimensions')
+  const scales = rows.map(r => Math.max(Math.max(...r.map(Math.abs)) / 7, 1e-12)), values = new Int8Array(rows.length * d)
+  rows.forEach((r, i) => r.forEach((v, k) => { values[i * d + k] = Math.max(-7, Math.min(7, Math.round(v / scales[i]))) }))
+  return { encoding: 'int4-base64', shape: [rows.length, d], data: toBase64(pack(values, 4)), scales: scales.map(s => Number(s.toPrecision(6))) }
 }
 function toBase64(bytes) {
   let binary = ''
@@ -54,8 +56,8 @@ function toBase64(bytes) {
 // Both catalogs' faces and rows in one; a face of the second replaces a face of the first with the same id. Rows are
 // copied as packed, so both catalogs must pack them alike.
 export function joinCatalogs(first, second) {
-  if (first.vectors.encoding !== second.vectors.encoding) throw new Error('Catalogs pack their vectors differently')
-  const replaced = new Set(second.faces.map(f => f.id)), faces = [], rows = [], scales = [], owners = [], size = rowBytes(second.vectors)
+  if (first.vectors.encoding !== second.vectors.encoding || first.dimensions !== second.dimensions) throw new Error('Catalogs pack their vectors differently')
+  const replaced = new Set(second.faces.map(f => f.id)), faces = [], rows = [], scales = [], owners = [], size = rowBytes(second.vectors, second.dimensions)
   for (const [n, catalog] of [first, second].entries()) {
     const bytes = Uint8Array.from(atob(catalog.vectors.data), c => c.charCodeAt(0)), index = new Map()
     catalog.faces.forEach((face, i) => { if (n || !replaced.has(face.id)) { index.set(i, faces.length); faces.push(face) } })
@@ -66,7 +68,7 @@ export function joinCatalogs(first, second) {
   }
   const packed = new Uint8Array(rows.length * size)
   rows.forEach((row, i) => packed.set(row, i * size))
-  return { ...second, faces, vectors: { ...second.vectors, shape: [rows.length, 128], data: toBase64(packed), scales, owners } }
+  return { ...second, faces, vectors: { ...second.vectors, shape: [rows.length, second.dimensions], data: toBase64(packed), scales, owners } }
 }
 
 // A version 3 catalog of `faces`: { id, family, styleName, weight, style, source, ... }, where `source` is what a FontFace
@@ -76,7 +78,7 @@ export function joinCatalogs(first, second) {
 export async function buildCatalog(faces, { project, preparation, binding, source = 'my-fonts', progress = () => {}, signal }) {
   const ctx = document.createElement('canvas').getContext('2d'), entries = [], rows = [], owners = [], skipped = [], seen = new Set()
   // One vector per case: each line at each size, its windows embedded as a crop's are, all averaged.
-  const embedCase = lines => Promise.all(lines.map(windows => project(windows).then(embedWindows))).then(embedded => unit(embedded.reduce((sum, e) => sum.map((v, d) => v + e[d]), new Float32Array(128))))
+  const embedCase = lines => Promise.all(lines.map(windows => project(windows).then(embedWindows))).then(embedded => unit(embedded.reduce((sum, e) => sum.map((v, d) => v + e[d]), new Float32Array(embedded[0].length))))
   const finish = async (face, cases) => {
     const vectors = await Promise.all(cases), owner = entries.length
     if (!vectors.length) { skipped.push(face); return }
@@ -105,7 +107,7 @@ export async function buildCatalog(faces, { project, preparation, binding, sourc
   }
   await previous
   progress(faces.length, faces.length)
-  const catalog = entries.length ? { version: 3, kind: 'font-catalog', ...binding, dimensions: 128, source, referenceMethod: `faces-cases-browser-${SIZES.join('-')}`,
+  const catalog = entries.length ? { version: 3, kind: 'font-catalog', ...binding, dimensions: rows[0].length, source, referenceMethod: `faces-cases-browser-${SIZES.join('-')}`,
     faces: entries, vectors: { ...packVectors(rows.map(r => Array.from(r))), owners } } : null
   return { catalog, skipped }
 }

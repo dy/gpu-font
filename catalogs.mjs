@@ -18,7 +18,7 @@ const tally = Object.keys(TERMS).map(status => [status, data.sources.filter(s =>
 $('sources-summary').textContent = `${plural(site.families, 'family', 'families')} searched from ${plural(site.catalogs.length, 'catalog', 'catalogs')}; ${plural(data.sources.length, 'source', 'sources')} checked. Terms: ${tally.map(([status, n]) => `${TERMS[status].toLowerCase()} ${count(n)}`).join(', ')}.`
 // One table: the catalogs a search covers as site.json ships them, then every other source grouped by why it isn't
 // searched. Other and each group fold open into their sources; the column sort orders the sources inside each group.
-const byId = new Map(data.sources.map(s => [s.id, s])), searched = new Set(site.catalogs.flatMap(option => option.sources ?? [option.id]))
+const byId = new Map(data.sources.map(s => [s.id, s])), searched = new Set(site.catalogs.flatMap(option => option.sources?.map(s => s.id) ?? [option.id]))
 // Each shipped catalog downloads as the JSON the search reads.
 const size = bytes => bytes >= 1e6 ? `${(bytes / 1e6).toFixed(1)} MB` : `${Math.round(bytes / 1e3)} KB`
 const agree = members => ({ status: members.every(s => s.terms.status === members[0].terms.status) ? members[0].terms.status : 'mixed' })
@@ -27,7 +27,7 @@ const families = source => source.work.familiesIndexed ?? source.work.familiesIn
 const shipped = site.catalogs.map(({ id, name, sources, families, faces, file, bytes }) => {
   const work = { status: 'searched', familiesIndexed: families, route: plural(faces, 'face', 'faces') }, json = { file, bytes }
   if (!sources) return byId.get(id) && { ...byId.get(id), work, json }
-  const members = sources.map(id => byId.get(id)).filter(Boolean).map(s => ({ ...s, work: { ...s.work, status: 'searched' } }))
+  const members = sources.map(({ id }) => byId.get(id)).filter(Boolean).map(s => ({ ...s, work: { ...s.work, status: 'searched' } }))
   return { id, name, url: null, members, licence: 'Per source', terms: agree(members), work, json }
 }).filter(Boolean)
 // Not searched, grouped by licence: open fonts whose terms allow collecting but aren't indexed yet; free fonts whose
@@ -95,7 +95,7 @@ async function showStored(note = '') {
   say(stored && !current ? 'Indexed for an earlier model; index them again to search them.' : note)
 }
 function busy(on) {
-  for (const id of ['index-installed', 'index-folder', 'index-files', 'my-fonts-remove']) $(id).disabled = on
+  for (const id of ['index-installed', 'index-folder', 'index-files', 'my-fonts-download', 'my-fonts-remove']) $(id).disabled = on
   $('index-stop').hidden = !on
 }
 // Each family's face nearest upright 400 comes first, then the second of each, so stopping early still covers every family.
@@ -143,5 +143,14 @@ $('index-folder').addEventListener('click', () => $('folder-input').click())
 $('index-files').addEventListener('click', () => $('files-input').click())
 for (const id of ['folder-input', 'files-input']) $(id).addEventListener('change', event => { const files = [...event.target.files]; event.target.value = ''; if (files.length) indexFiles(files) })
 $('index-stop').addEventListener('click', () => stopping?.abort())
+// My fonts leave as the catalog JSON a search reads: open it from the catalog menu in any browser, or pass its URL to
+// createMatcher(). Like any catalog, it fits only the model that built it.
+$('my-fonts-download').addEventListener('click', async () => {
+  const stored = await readMyFonts()
+  if (!stored) return
+  const url = URL.createObjectURL(new Blob([JSON.stringify(stored.catalog) + '\n'], { type: 'application/json' }))
+  Object.assign(document.createElement('a'), { href: url, download: 'my-fonts.json' }).click()
+  setTimeout(() => URL.revokeObjectURL(url), 1000)
+})
 $('my-fonts-remove').addEventListener('click', async () => { await removeMyFonts(); showStored('Removed.') })
 showStored()

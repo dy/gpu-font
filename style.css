@@ -47,9 +47,6 @@ code { padding: 1px var(--space-1); font: 400 var(--text-code)/1.6 var(--font-mo
 .wordmark { font: 400 var(--text-wordmark)/1 var(--font-display); letter-spacing: -.05em; }
 .header-icon, .footer-icon { display: grid; place-items: center; width: var(--size-target); height: var(--size-target); }
 .header-icon { color: var(--color-muted); }
-.site-nav { display: flex; gap: var(--space-5); margin-left: auto; font-size: var(--text-small); }
-.site-nav a { padding-block: var(--space-3); color: var(--color-muted); text-decoration: none; }
-.site-nav a:hover, .site-nav a[aria-current="page"] { color: var(--color-ink); }
 .header-icon:hover, .footer-icon:hover { color: var(--color-ink); }
 
 .intro { display: grid; gap: var(--space-6); padding-block: var(--space-10) var(--space-9); border-bottom: 1px solid var(--color-rule); }
@@ -199,10 +196,11 @@ input, select { width: 100%; min-width: 0; padding: var(--space-2); min-height: 
 .result-preview { font: 400 var(--text-preview)/normal var(--font-specimen); width: calc(100% - var(--space-7)); height: 1.3em; margin: var(--space-2) 0 0 var(--space-7); padding: 0; border: 0; background: var(--color-transparent); min-height: var(--space-12); text-overflow: ellipsis; }
 .result-preview:not([readonly]):hover, .result-preview:not([readonly]):focus { background: var(--color-well); }
 .result-preview:focus { outline: none; }
-/* More matches, and the JSON export on the right, wait until there are matches. */
+/* More matches, and the link and JSON export on the right, wait until there are matches. */
 .results-foot { display: flex; justify-content: space-between; align-items: center; gap: var(--space-4); }
 .results:empty + .results-foot { visibility: hidden; }
-.more-matches, #save { display: inline-flex; align-items: center; gap: var(--space-1); padding-inline: 0; }
+.more-matches, #copy-link, #save { display: inline-flex; align-items: center; gap: var(--space-1); padding-inline: 0; }
+#copy-link { margin-left: auto; }
 .more-matches[aria-expanded="true"] { color: var(--color-ink); }
 .more-matches[aria-expanded="true"] .chevron { transform: rotate(180deg); }
 .result-unavailable { margin: var(--space-2) 0 0 var(--space-7); color: var(--color-muted); font-size: var(--text-small); }
@@ -338,6 +336,11 @@ footer a { padding-block: var(--space-3); }
   .split > :nth-child(3) { grid-column: 2; grid-row: 1 / span 2; }
   .questions { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
 }
+/* Embedded (?embed): the matcher and the footer alone, to sit in an iframe on another site. The catalog its link names
+   stays as a plain label. */
+[data-embed] :is(.masthead, main > section) { display: none; }
+[data-embed] #catalog-button:disabled { opacity: 1; cursor: default; color: var(--color-ink); }
+[data-embed] #catalog-button:disabled .chevron { display: none; }
 @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } *, *::before, *::after { transition-duration: 0s !important; animation: none !important; } }
 
 /* Catalogs page: My fonts follows the intro's rule; Included and Not included follow it. */
@@ -349,7 +352,7 @@ footer a { padding-block: var(--space-3); }
 #my-fonts-status[data-error] { color: var(--color-error); }
 #my-fonts-stored { display: flex; align-items: center; gap: var(--space-3); }
 #my-fonts-stored[hidden] { display: none; }
-#my-fonts-remove { padding-inline: 0; }
+#my-fonts-download, #my-fonts-remove { padding-inline: 0; }
 /* My fonts: family, its styles, its face count. */
 .my-fonts-table thead th:nth-child(1) { width: 30%; }
 .my-fonts-table thead th:nth-child(2) { width: auto; }

@@ -157,12 +157,61 @@ def sketch(image, rng):
     return Image.fromarray(np.uint8(255 - a[y, x])).rotate(rng.uniform(-3, 3), Image.Resampling.BICUBIC, expand=True, fillcolor=255)
 
 
-def damage(image, rng):
-    """Screenshot conditions: colour/contrast/polarity, rotation, rescaling, blur, JPEG, noise, clipped edges."""
-    a = np.asarray(image, np.float32)/255
-    ink, paper = rng.uniform(0, .45), rng.uniform(.75, 1)
-    if rng.random() < .3: ink, paper = paper, ink  # dark mode
-    image = Image.fromarray(np.uint8(np.clip(paper + (ink - paper)*(1 - a), 0, 1)*255))
+def noise(g, h, w, scales, amplitude):
+    """Smooth random relief: Gaussian noise drawn coarse at each scale (pixels per cell) and enlarged, coarser scales louder."""
+    total = np.zeros((h, w), np.float32)
+    for i, scale in enumerate(scales):
+        coarse = g.normal(0, 1, (max(2, -(-h//scale)), max(2, -(-w//scale)))).astype(np.float32)
+        total += np.asarray(Image.fromarray(coarse).resize((w, h), Image.Resampling.BILINEAR)) * amplitude / (i + 1)
+    return total
+
+
+def effect(mask, rng, size, kind=None):
+    """Ink coverage with a display effect: hollow outline, a drop shadow under the letters, or an extrusion behind them."""
+    kind = kind or rng.choice(['outline', 'shadow', 'extrusion']); step = max(1, round(size*rng.uniform(.04, .1)))
+    shift = lambda m, dx, dy: np.pad(m, ((max(dy, 0), max(-dy, 0)), (max(dx, 0), max(-dx, 0))))[max(-dy, 0):max(-dy, 0) + m.shape[0], max(-dx, 0):max(-dx, 0) + m.shape[1]]
+    if kind == 'outline':
+        dilated = np.asarray(Image.fromarray(np.uint8(mask*255)).filter(ImageFilter.MaxFilter(2*step + 1)), np.float32)/255
+        return np.clip(dilated - mask, 0, 1)
+    dx, dy = (step*rng.choice([-1, 1]), step*rng.choice([-1, 1])) if kind == 'shadow' else (step*rng.choice([-1, 1]), step)
+    behind = shift(mask, dx, dy) if kind == 'shadow' else np.max([shift(mask, dx*k//step, dy*k//step) for k in range(1, step + 1)], 0)
+    return np.maximum(mask, behind*rng.uniform(.4, .7)*(1 - mask))
+
+
+def surface(image, rng):
+    """A rendered line as a photograph shows it: ink on a textured, unevenly lit surface, worn or wearing an effect, and
+    at an angle. Textures are noise at several scales, never a photograph, so no benchmark background is learned."""
+    mask = 1 - np.asarray(image, np.float32)/255; h, w = mask.shape; g = np.random.default_rng(rng.getrandbits(32))
+    if rng.random() < .15: mask = effect(mask, rng, h)
+    if rng.random() < .3: mask = mask*np.clip(noise(g, h, w, (3, 9), 1) + rng.uniform(.4, 1.2), 0, 1)  # worn print
+    contrast = rng.uniform(.3, .9); paper = rng.uniform(max(contrast, .35), 1); ink = paper - contrast
+    if rng.random() < .3: paper, ink = ink, paper  # light letters on a dark surface
+    relief = noise(g, h, w, (4, 16, 64), rng.uniform(.02, .15))
+    angle = rng.uniform(0, 2*np.pi); y, x = np.mgrid[0:h, 0:w]
+    light = 1 + rng.uniform(0, .35)*((x/w - .5)*np.cos(angle) + (y/h - .5)*np.sin(angle))
+    if rng.random() < .3:  # glare or a cast shadow
+        cx, cy, r = rng.uniform(0, w), rng.uniform(0, h), rng.uniform(.3, 1)*max(w, h)
+        light = light + rng.choice([-1, 1])*rng.uniform(.15, .4)*np.exp(-((x - cx)**2 + (y - cy)**2)/(2*r*r))
+    value = light*((paper + relief)*(1 - mask) + (ink + relief*.5)*mask)
+    image = Image.fromarray(np.uint8(np.clip(value, 0, 1)*255))
+    if rng.random() < .4:  # a corner-jittered quadrilateral, as a camera off the surface's normal sees it
+        jitter = lambda: rng.uniform(-.08, .08)
+        corners = [(0, 0), (w, 0), (w, h), (0, h)]; moved = [(cx + jitter()*w, cy + jitter()*h) for cx, cy in corners]
+        rows = [[x1, y1, 1, 0, 0, 0, -x0*x1, -x0*y1] for (x0, y0), (x1, y1) in zip(corners, moved)] + [[0, 0, 0, x1, y1, 1, -y0*x1, -y0*y1] for (x0, y0), (x1, y1) in zip(corners, moved)]
+        coefficients = np.linalg.solve(np.array(rows, np.float64), np.array(corners, np.float64).T.ravel())
+        image = image.transform((w, h), Image.Transform.PERSPECTIVE, coefficients.tolist(), Image.Resampling.BICUBIC, fillcolor=int(image.getpixel((0, 0))))
+    return image
+
+
+def damage(image, rng, photo=False):
+    """Screenshot conditions: colour/contrast/polarity, rotation, rescaling, blur, JPEG, noise, clipped edges. With `photo`,
+    a photographed surface first (surface): texture, uneven light, worn or effected ink, perspective."""
+    if photo: image = surface(image, rng)
+    else:
+        a = np.asarray(image, np.float32)/255
+        ink, paper = rng.uniform(0, .45), rng.uniform(.75, 1)
+        if rng.random() < .3: ink, paper = paper, ink  # dark mode
+        image = Image.fromarray(np.uint8(np.clip(paper + (ink - paper)*(1 - a), 0, 1)*255))
     fill = int(image.getpixel((0, 0)))
     if rng.random() < .15: image = image.rotate(rng.uniform(-4, 4), Image.Resampling.BICUBIC, expand=True, fillcolor=fill)
     if rng.random() < .5:
@@ -210,8 +259,8 @@ def pools(families, sets):
 STATE = {}
 
 
-def init(faces, pools, drawn=0.0):
-    STATE.update(faces=faces, pools=pools, fonts=Fonts(), prepare=Preparer(), drawn=drawn)
+def init(faces, pools, drawn=0.0, photo=0.0, teacher=False):
+    STATE.update(faces=faces, pools=pools, fonts=Fonts(), prepare=Preparer(), drawn=drawn, photo=photo, teacher=teacher)
 
 
 def sample(spec):
@@ -224,17 +273,22 @@ def sample(spec):
             image = STATE['fonts'].render(face, size, lambda font: render(font, value, rng, script))
             drawn = not clean and rng.random() < STATE.get('drawn', 0)
             if drawn: image = sketch(image, rng)  # hand-drawn view: style, not identity
-            gray = np.asarray(image, np.uint8) if clean else damage(image, rng)
+            photo = not clean and not drawn and rng.random() < STATE.get('photo', 0)  # photographed surface: identity as usual
+            gray = np.asarray(image, np.uint8) if clean else damage(image, rng, photo=photo)
             windows = STATE['prepare'](gray)
-            if windows: return {'face':index,'script':script,'text':value,'windows':windows,'drawn':drawn}
+            if not windows: continue
+            view = {'face':index,'script':script,'text':value,'windows':windows,'drawn':drawn,'photo':photo}
+            # For distillation, the clean render's windows too: what the teacher sees of this view.
+            if STATE.get('teacher') and not clean: view['clean'] = STATE['prepare'](np.asarray(image, np.uint8)) or windows
+            return view
         except (OSError, ValueError): continue
     return None
 
 
 class Stream:
     """Prefetched batches of prepared views from a worker pool."""
-    def __init__(self, faces, pools, plan, workers=10, prefetch=6, drawn=0.0):
-        self.pool = multiprocessing.get_context('spawn').Pool(workers, initializer=init, initargs=(faces, pools, drawn))
+    def __init__(self, faces, pools, plan, workers=10, prefetch=6, drawn=0.0, photo=0.0, teacher=False):
+        self.pool = multiprocessing.get_context('spawn').Pool(workers, initializer=init, initargs=(faces, pools, drawn, photo, teacher))
         self.plan = plan; self.queue = queue.Queue(prefetch); self.stop = False; self.error = None
         self.thread = threading.Thread(target=self.fill, daemon=True); self.thread.start()
 

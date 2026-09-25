@@ -27,6 +27,7 @@ test('createMatcher ranks exactly as the modules it wraps, best first, and retur
   assert.deepEqual(matches, foldTwins(matchCatalog(embedding, catalog, judged), catalog, { script: judged?.script?.[0]?.label }))
   assert.ok(matches.length > 5 && matches.every((m, i) => !i || m.score <= matches[i - 1].score) && typeof matches[0].face.family === 'string')
   assert.deepEqual(await matcher.match(image(false)), [])
+  assert.equal(matcher.threshold, model.threshold, 'The matcher exposes the model\'s rejection threshold, null when it ships none')
   matcher.destroy()
 })
 
@@ -39,7 +40,7 @@ test('catalogs names every shipped catalog, and each loads with the default mode
 test('createMatcher refuses a catalog built for another model', async () => {
   const dir = await mkdtemp(join(tmpdir(), 'gpu-font-')), file = join(dir, 'catalog.json')
   await writeFile(file, JSON.stringify({ ...JSON.parse(await readFile(new URL('models/encoder/google-fonts.json', root))), encoderSha256: '0'.repeat(64) }))
-  try { await assert.rejects(createMatcher(pathToFileURL(file).href), /different encoder/) } finally { await rm(dir, { recursive: true }) }
+  try { await assert.rejects(createMatcher(pathToFileURL(file).href), /different model/) } finally { await rm(dir, { recursive: true }) }
 })
 
 test('createMatcher names the catalog or model that failed to load', async () => {

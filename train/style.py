@@ -26,12 +26,14 @@ from train.style_teacher import glyph_sets, teacher, OUT as STYLE
 from train.style_catalog import load as load_references, vectors as reference_vectors
 from train.style_bench import load as load_bench
 from train.ten import batch
-from train.ten_model import Classifier, export, pack_bits, widen, ARCHITECTURES, CORPUS_ARCH, LARGE_ARCH
+from train.ten_model import Classifier, export, export_clusters, clustered, clusters_of, plain_state, load_export, pack_bits, widen, ARCHITECTURES, CORPUS_ARCH, LARGE_ARCH
 
 DIMENSIONS = 128
 CATEGORIES = ['SANS_SERIF', 'SERIF', 'DISPLAY', 'HANDWRITING', 'MONOSPACE']
 CLASSES = ('/Sans/', '/Serif/', '/Slab/', '/Script/', '/Monospace/')
 SCALE, MARGIN, TEACHER_T, STUDENT_T, DRAWN_T, VIEW_T = 30.0, .15, .02, .05, .08, .05
+DISTILL = 10.0  # a cosine distance in [0, 2] weighed against identity's cross-entropy
+REJECTION_FLOOR = .3  # the least present coverage minus absent acceptance a shipped rejection threshold must reach
 WEIGHTS = {100:'Thin',200:'ExtraLight',300:'Light',400:'Regular',500:'Medium',600:'SemiBold',700:'Bold',800:'ExtraBold',900:'Black'}  # OpenType usWeightClass names
 
 
@@ -62,10 +64,10 @@ def themes(families):
 
 class Heads(nn.Module):
     """Typed verdicts read from the normalized embedding; shipped beside the encoder."""
-    def __init__(self, scripts, fine):
+    def __init__(self, scripts, fine, dimensions=DIMENSIONS):
         super().__init__()
-        self.weight = nn.Linear(DIMENSIONS, 1); self.italic = nn.Linear(DIMENSIONS, 1)
-        self.script = nn.Linear(DIMENSIONS, len(scripts)); self.category = nn.Linear(DIMENSIONS, len(CATEGORIES)); self.fine = nn.Linear(DIMENSIONS, len(fine))
+        self.weight = nn.Linear(dimensions, 1); self.italic = nn.Linear(dimensions, 1)
+        self.script = nn.Linear(dimensions, len(scripts)); self.category = nn.Linear(dimensions, len(CATEGORIES)); self.fine = nn.Linear(dimensions, len(fine))
 
     def forward(self, e):
         return {'weight': self.weight(e)[:, 0]*300 + 400, 'italic': self.italic(e)[:, 0], 'script': self.script(e), 'category': self.category(e), 'fine': self.fine(e)}
@@ -73,7 +75,7 @@ class Heads(nn.Module):
 
 def embed_views(model, pixels, sizes, owners, count):
     w = F.normalize(model(pixels, sizes), dim=1); keep = owners >= 0
-    return F.normalize(torch.zeros(count, DIMENSIONS, device=w.device).index_add(0, owners[keep], w[keep]), dim=1)
+    return F.normalize(torch.zeros(count, w.shape[1], device=w.device).index_add(0, owners[keep], w[keep]), dim=1)
 
 
 def references(model, source='pillow', device='mps'):
@@ -86,6 +88,11 @@ def references(model, source='pillow', device='mps'):
         for v, k in zip(vectors, keys): merged.setdefault(k, []).append(v)
     keys = sorted(merged); rows = np.stack([np.mean(merged[k], 0) for k in keys])
     return rows/np.linalg.norm(rows, axis=1, keepdims=True), keys
+
+
+def dimensions_of(state):
+    """A checkpoint's embedding width: its head's output rows."""
+    return int(state['state']['head.weight'].shape[0])
 
 
 def architecture_of(state):
@@ -106,7 +113,7 @@ def run_benchmark(run):
 def embed_manifest(model, manifest, pixels, sources, device='mps'):
     """Stored windows -> one normalized vector per source (normalize windows, average, normalize: the browser rule)."""
     mapping = {s: i for i, s in enumerate(sources)}; ids = [i for i, w in enumerate(manifest['windows']) if w['source'] in mapping]
-    out = torch.zeros(len(sources), DIMENSIONS, device=device); model.eval()
+    out = torch.zeros(len(sources), model.head.out_features, device=device); model.eval()
     with torch.no_grad():
         for start in range(0, len(ids), 512):
             chunk = ids[start:start + 512]; x, sizes = batch(pixels, manifest['windows'], chunk)
@@ -191,7 +198,8 @@ class Chromium:
         return out
 
 
-def losses(e, heads, proxies, setup, views, device, pairs=0.0):
+def losses(e, heads, proxies, setup, views, device, pairs=0.0, follow=None):
+    """`follow`: a teacher's unit embedding of each view's clean render, which the view's own embedding then follows."""
     faces = torch.tensor([setup.position[v['face']] for v in views], device=device)
     P = F.normalize(proxies, dim=1); cos = e @ P.T
     target = setup.twins[faces]; drawn = torch.tensor([bool(v.get('drawn')) for v in views], device=device)
@@ -221,16 +229,18 @@ def losses(e, heads, proxies, setup, views, device, pairs=0.0):
         positive = (setup.twins[faces][:, faces] > 0) & valid; has = positive.any(1)
         logp = F.log_softmax((e @ e.T/VIEW_T).masked_fill(~valid, -1e4), dim=1)
         if has.any(): view = (-(logp*positive).sum(1)[has]/positive.sum(1)[has]).mean()
-    parts = {'identity':identity,'geometry':geometry,'views':view,'weight':weight,'italic':italic,'script':script,'category':category,'fine':fine}
-    total = identity + geometry + pairs*view + .2*(weight + italic + script + category + fine)
+    distill = (1 - (e*follow).sum(1)).mean() if follow is not None else cos.sum()*0
+    parts = {'identity':identity,'geometry':geometry,'views':view,'distill':distill,'weight':weight,'italic':italic,'script':script,'category':category,'fine':fine}
+    total = identity + geometry + pairs*view + DISTILL*distill + .2*(weight + italic + script + category + fine)
     accuracy = (cos.argmax(1) == faces)[~drawn].float().mean() if (~drawn).any() else cos.sum()*0
     return total, parts, accuracy
 
 
-def evaluate(model, heads, setup, roles, device='mps', name='bench', source='pillow', kinds=None):
+def evaluate(model, heads, setup, roles, device='mps', name='bench', source='pillow', kinds=None, catalog=None):
     """Frozen benchmark against every face's references (all 2,004 families): identity, twins, style, weight, script.
-    `kinds` keeps only those reference lines (Latn-lower, Cyrl…); queries whose family then has none are left out."""
-    bench, bench_pixels = load_bench(name); vectors, keys = references(model, source, device)
+    `kinds` keeps only those reference lines (Latn-lower, Cyrl…); queries whose family then has none are left out.
+    `catalog`: the model's reference vectors and keys already embedded, shared between reads of one checkpoint."""
+    bench, bench_pixels = load_bench(name); vectors, keys = catalog or references(model, source, device)
     if kinds: keep = [i for i, (_, kind) in enumerate(keys) if kind in kinds]; vectors, keys = vectors[keep], [keys[i] for i in keep]
     faces = setup.faces; family_ids = sorted({faces[f]['family'] for f, _ in keys}); fpos = {f: i for i, f in enumerate(family_ids)}
     owner = np.array([fpos[faces[f]['family']] for f, _ in keys])
@@ -297,57 +307,75 @@ def run_seed(run, seed=None):
     return zlib.crc32(run.encode()) if seed is None else seed
 
 
-def train(run, roles, steps, warm, workers, check=2500, architecture=CORPUS_ARCH, lr=2e-4, drawn=0.0, pairs=0.0, seed=None, select='bench:development'):
-    """`select` names the benchmark and role that pick checkpoints: the frozen benchmark's development families, or the
+def train(run, roles, steps, warm, workers, check=2500, architecture=CORPUS_ARCH, lr=2e-4, drawn=0.0, pairs=0.0, seed=None, select='bench:development', photo=0.0, teacher=None, dimensions=DIMENSIONS, cluster=0):
+    """With `teacher` (a run), a student of `architecture` learns that run's embedding of each view's clean render while
+    seeing the damaged or photographed one, starting from the teacher's heads and proxies. Without `warm` or a teacher the
+    run starts from scratch at `dimensions`: the control that says whether the teacher was needed. With `cluster` (bits),
+    the warm model is folded and its weights clustered (train.ten_model.clustered); the codebooks, scales, biases and heads
+    train, the indices stay, and the checkpoint keeps the clusters for an exact export.
+    `select` names the benchmark and role that pick checkpoints: the frozen benchmark's development families, or the
     catalog benchmark's validation set (fresh text for every family) when the whole catalog trains. `none` saves the end."""
     bench_name, select_role = select.split(':') if select != 'none' else (None, None)
     if (bench_name, select_role) == ('bench', 'development') and 'development' in roles: raise ValueError('Development families train here: select on catalog:validation')
     seed = run_seed(run, seed); device = 'mps'; torch.manual_seed(seed); out = ROOT/'.data/style'/run; out.mkdir(parents=True, exist_ok=True)
     if (out/'progress.json').exists(): raise ValueError('Existing style run: ' + run)
     setup = Setup(roles, device)
-    start_state = torch.load(warm, map_location='cpu', weights_only=False); source = architecture_of(start_state)
-    model = Classifier(DIMENSIONS, architecture=source, dilations=[1, 1, 2, 2, 1]); model.load_state_dict(start_state['state'])
-    # A wider run starts from the narrower model's exact function: duplicated channels, divided weights, a little noise.
-    model = (model if source == architecture else widen(model, noise=1e-4, architecture=architecture)).to(device)
-    heads = Heads(setup.scripts, setup.fine).to(device)
+    teacher_model = teacher_state = None
+    if teacher: teacher_model, _, teacher_state = load_run(teacher, device); teacher_model.eval()
+    if warm:
+        start_state = torch.load(warm, map_location='cpu', weights_only=False); source = architecture_of(start_state)
+        dimensions = dimensions_of(start_state); model = Classifier(dimensions, architecture=source, dilations=[1, 1, 2, 2, 1]); model.load_state_dict(start_state['state'])
+        # A wider run starts from the narrower model's exact function: duplicated channels, divided weights, a little noise.
+        model = (model if source == architecture else widen(model, noise=1e-4, architecture=architecture)).to(device)
+    elif teacher_state: start_state = {k: v for k, v in teacher_state.items() if k != 'state'}; dimensions = dimensions_of(teacher_state); model = Classifier(dimensions, architecture=architecture, dilations=[1, 1, 2, 2, 1]).to(device)
+    else: start_state = {}; model = Classifier(dimensions, architecture=architecture, dilations=[1, 1, 2, 2, 1]).to(device)  # from scratch: the control for a student
+    if cluster: model = clustered(model, cluster).to(device)
+    heads = Heads(setup.scripts, setup.fine, dimensions).to(device)
     if 'heads' in start_state: heads.load_state_dict(start_state['heads'])  # continuing a style run
-    if 'proxies' in start_state and tuple(start_state['proxies'].shape) == (len(setup.train), DIMENSIONS):
+    if 'proxies' in start_state and tuple(start_state['proxies'].shape) == (len(setup.train), dimensions):
         init = start_state['proxies'].numpy()  # continuing a style run with the same training faces
     else:
         # Imprint proxies from each training face's catalog references, so identity starts from the warm embedding.
         refs, ref_pixels = load_references(); vectors, keys = reference_vectors(lambda m, p, s: embed_manifest(model, m, p, s, device), refs, ref_pixels)
-        init = np.random.default_rng(seed).normal(0, .01, (len(setup.train), DIMENSIONS)).astype(np.float32)
+        init = np.random.default_rng(seed).normal(0, .01, (len(setup.train), dimensions)).astype(np.float32)
         for (f, _), v in zip(keys, vectors):
             if f in setup.position: init[setup.position[f]] += v
     proxies = nn.Parameter(torch.from_numpy(np.array(init, np.float32)).to(device))
     optimizer = torch.optim.AdamW([{'params':model.parameters(),'lr':lr,'weight_decay':1e-4},
                                    {'params':[proxies],'lr':2e-3,'weight_decay':0},{'params':heads.parameters(),'lr':2e-3,'weight_decay':1e-4}])
     schedule = torch.optim.lr_scheduler.LambdaLR(optimizer, lambda s: min(1, (s + 1)/500)*(.05 + .95*.5*(1 + np.cos(np.pi*min(s, steps)/steps))))
-    stream = Stream(setup.faces, setup.pools, setup.plan(seed, pairs=pairs > 0), workers=workers, drawn=drawn)
+    stream = Stream(setup.faces, setup.pools, setup.plan(seed, pairs=pairs > 0), workers=workers, drawn=drawn, photo=photo, teacher=teacher is not None)
     chromium = Chromium(setup, ('train',) if roles == ['train'] else ('train', 'validation', 'reference', 'test')); mix = random.Random(seed + 1)
     pins = {p: sha(ROOT/p) for p in ['train/style.py', 'train/style_data.py', 'train/style_teacher.py', 'train/style_catalog.py', 'train/ten_model.py', 'bench/corpus.json', 'bench/encoder-split.json']}
     history = []; best = -1; start = time.perf_counter(); running = {}
     def checkpoint(step):
         nonlocal best
-        report = evaluate(model, heads, setup, [select_role], name=bench_name, source='browser')  # the shipped Chromium references
+        # Each read embeds the three-size references; its buffers leave the MPS cache before the next, or training swaps.
+        catalog = references(model, 'browser', device); torch.mps.empty_cache()  # the shipped Chromium references, embedded once for every read below
+        report = evaluate(model, heads, setup, [select_role], name=bench_name, source='browser', catalog=catalog)
         dev = report['scriptFiltered']['all']; value = dev['twin5']; drawn_result = None
         if drawn:  # a run that learns drawings selects on drawings too: their top-5 category agreement, development queries only
-            drawn_result = evaluate(model, heads, setup, ['development'], name='bench-sketch', source='browser')['scriptFiltered']['all']; value = (value + drawn_result['category'])/2
-        history.append({'step':step,'selection':value,'development':report['scriptFiltered']['all'],'unfiltered':report['unfiltered']['all'],'sketch':drawn_result,'seconds':time.perf_counter() - start})
+            drawn_result = evaluate(model, heads, setup, ['development'], name='bench-sketch', source='browser', catalog=catalog)['scriptFiltered']['all']; value = (value + drawn_result['category'])/2
+        # Photographs (train.style_photos), when packed: tracked at every check, never selected on.
+        photos = evaluate(model, heads, setup, ['development'], name='photos-development', source='browser', catalog=catalog)['scriptFiltered']['all'] if (STYLE/'photos-development.json').exists() else None
+        torch.mps.empty_cache()
+        history.append({'step':step,'selection':value,'development':report['scriptFiltered']['all'],'unfiltered':report['unfiltered']['all'],'sketch':drawn_result,'photos':photos,'seconds':time.perf_counter() - start})
         if value > best:
             best = value
-            torch.save({'state':{k: v.detach().cpu().clone() for k, v in model.state_dict().items()},'heads':{k: v.detach().cpu().clone() for k, v in heads.state_dict().items()},
-                        'proxies':proxies.detach().cpu().clone(),'step':step,'pins':pins,'scripts':setup.scripts,'fine':setup.fine,'architecture':architecture}, out/'best.pt')
-        save(out/'progress.json', {'run':run,'roles':roles,'steps':steps,'warm':str(warm),'lr':lr,'pairs':pairs,'seed':seed,'architecture':architecture,'select':select,'pins':pins,'history':history,'best':best})
+            torch.save({'state':plain_state(model) if cluster else {k: v.detach().cpu().clone() for k, v in model.state_dict().items()},'heads':{k: v.detach().cpu().clone() for k, v in heads.state_dict().items()},
+                        'proxies':proxies.detach().cpu().clone(),'step':step,'pins':pins,'scripts':setup.scripts,'fine':setup.fine,'architecture':architecture, **({'clusters': clusters_of(model)} if cluster else {})}, out/'best.pt')
+        save(out/'progress.json', {'run':run,'roles':roles,'steps':steps,'warm':str(warm),'teacher':teacher,'cluster':cluster,'lr':lr,'pairs':pairs,'photo':photo,'seed':seed,'architecture':architecture,'select':select,'pins':pins,'history':history,'best':best})
         print(f'check {step}: {select_role} twin-top5 {dev["twin5"]:.4f} top1 {dev["twin1"]:.4f} style20 {dev.get("style20", 0):.3f} far {dev.get("far", 0):.3f} '
-              f'weightErr {dev.get("headWeightError", 0):.0f} italic {dev.get("headItalic", 0):.3f} script {dev.get("headScript", 0):.3f}' + (f' sketch twin-top5 {drawn_result["twin5"]:.4f} category {drawn_result["category"]:.4f} selection {value:.4f}' if drawn_result else '') + f' ({time.perf_counter() - start:.0f}s)', flush=True)
+              f'weightErr {dev.get("headWeightError", 0):.0f} italic {dev.get("headItalic", 0):.3f} script {dev.get("headScript", 0):.3f}' + (f' sketch twin-top5 {drawn_result["twin5"]:.4f} category {drawn_result["category"]:.4f} selection {value:.4f}' if drawn_result else '') + (f' photos twin-top5 {photos["twin5"]:.4f} top1 {photos["twin1"]:.4f}' if photos else '') + f' ({time.perf_counter() - start:.0f}s, {torch.mps.driver_allocated_memory()/1e9:.1f} GB on the device)', flush=True)
     try:
         if select_role: checkpoint(0)
         for step in range(1, steps + 1):
             views = next(stream) + chromium.sample(mix, 32); model.train(); heads.train()
             pixels, sizes, owners = tensors(views, device)
-            e = embed_views(model, pixels, sizes, owners, len(views))
-            total, parts, accuracy = losses(e, heads, proxies, setup, views, device, pairs)
+            e = embed_views(model, pixels, sizes, owners, len(views)); follow = None
+            if teacher_model:  # the teacher reads each view's clean render; stored Chromium views have only themselves
+                with torch.no_grad(): follow = embed_views(teacher_model, *tensors([{**v, 'windows': v.get('clean', v['windows'])} for v in views], device), len(views))
+            total, parts, accuracy = losses(e, heads, proxies, setup, views, device, pairs, follow)
             optimizer.zero_grad(set_to_none=True); total.backward()
             torch.nn.utils.clip_grad_norm_([*model.parameters(), proxies, *heads.parameters()], 5); optimizer.step(); schedule.step()
             for k, v in [*parts.items(), ('accuracy', accuracy)]: running[k] = running.get(k, 0) + v.detach()
@@ -362,11 +390,11 @@ def train(run, roles, steps, warm, workers, check=2500, architecture=CORPUS_ARCH
         stream.close()
 
 
-def samples(model, heads, setup, device='mps', source='pillow'):
+def samples(model, heads, setup, device='mps', source='pillow', catalog=None):
     """The eight reported demo samples ("Quiet rivers flow", 56 px, full resolution): rank and top five under the
     per-face catalog with the script filter, exactly as the demo searches."""
     from train.encoder_quality import OUT as QUALITY
-    vectors, keys = references(model, source, device)
+    vectors, keys = catalog or references(model, source, device)
     faces = setup.faces; families = sorted({faces[f]['family'] for f, _ in keys}); fpos = {f: i for i, f in enumerate(families)}
     owner = np.array([fpos[faces[f]['family']] for f, _ in keys]); result = []
     for case in read(QUALITY/'demo-before.json'):
@@ -393,21 +421,138 @@ def load_run(run, device='mps', exported=False):
     if exported:
         from train.encoder import load_encoder
         model = load_encoder(ROOT/'.data/style'/run/'encoder.json')
-    else: model = Classifier(DIMENSIONS, architecture=architecture_of(state), dilations=[1, 1, 2, 2, 1]); model.load_state_dict(state['state'])
-    heads = Heads(state['scripts'], state['fine']); heads.load_state_dict(state['heads'])
+    else: model = Classifier(dimensions_of(state), training='clusters' not in state, architecture=architecture_of(state), dilations=[1, 1, 2, 2, 1]); model.load_state_dict(state['state'])  # a clustered run's state is folded
+    heads = Heads(state['scripts'], state['fine'], dimensions_of(state)); heads.load_state_dict(state['heads'])
     return model.to(device).eval(), heads.to(device).eval(), state
+
+
+def fold_head(state, basis):
+    """The checkpoint's head folded onto `basis` (k × dimensions, orthonormal rows): a window's output becomes basis · e,
+    whose unit vector is the direction of unit(basis · unit(e)), so the same catalog rule applies in k numbers."""
+    P = torch.as_tensor(basis, dtype=torch.float32); folded = dict(state)
+    folded['head.weight'] = P @ state['head.weight']; folded['head.bias'] = P @ state['head.bias']
+    return folded
+
+
+def project(run, dimensions=64):
+    """A run cut to `dimensions` numbers: the leading principal directions of its unit reference-line embeddings (all
+    faces, cases, scripts and sizes) become the head, and the typed heads are refit on the projected lines, labelled by
+    their faces. Saved as run `<run>-<dimensions>`, which exports and measures like any other."""
+    if dimensions % 16 or not 16 <= dimensions < DIMENSIONS: raise ValueError('Dimensions: a multiple of 16 below the encoder width')
+    model, heads, state = load_run(run); setup = Setup(['train']); refs, ref_pixels = load_references('references-browser')
+    lines = embed_manifest(model, refs, ref_pixels, list(range(len(refs['samples']))), 'mps')  # unit, one per line
+    values, vectors = np.linalg.eigh(lines.T.astype(np.float64) @ lines); order = np.argsort(values)[::-1]
+    basis = vectors[:, order[:dimensions]].T.astype(np.float32); explained = float(values[order[:dimensions]].sum()/values.sum())
+    projected = torch.from_numpy(lines @ basis.T).to('mps'); projected = F.normalize(projected, dim=1)
+    # Heads: the old ones seen through the basis start the fit, since e ≈ basisᵀ(basis · e).
+    faces = setup.faces; fitted = Heads(state['scripts'], state['fine'], dimensions).to('mps'); P = torch.from_numpy(basis).to('mps')
+    with torch.no_grad():
+        for name in ['weight', 'italic', 'script', 'category', 'fine']:
+            layer = getattr(heads, name); target = getattr(fitted, name); target.weight.copy_(layer.weight @ P.T); target.bias.copy_(layer.bias)
+    samples = refs['samples']; face_of = torch.tensor([s['face'] for s in samples], device='mps')
+    weight = torch.tensor([faces[s['face']]['weight'] for s in samples], device='mps', dtype=torch.float32)
+    italic = torch.tensor([float(faces[s['face']]['italic']) for s in samples], device='mps')
+    script = torch.tensor([state['scripts'].index(s['kind'].split('-')[0]) if s['kind'].split('-')[0] in state['scripts'] else -1 for s in samples], device='mps')
+    category = torch.tensor([setup.category.get(faces[s['face']]['family'], -1) for s in samples], device='mps')
+    tagged = torch.tensor([faces[s['face']]['family'] in setup.fine_labels for s in samples], device='mps')
+    fine = torch.tensor(np.stack([setup.fine_labels.get(faces[s['face']]['family'], np.zeros(len(state['fine']), np.float32)) for s in samples]), device='mps')
+    optimizer = torch.optim.Adam(fitted.parameters(), lr=1e-3); g = torch.Generator(device='cpu').manual_seed(run_seed(run))
+    for epoch in range(10):
+        for start in range(0, len(samples), 4096):
+            idx = torch.randperm(len(samples), generator=g)[start:start + 4096].to('mps'); out = fitted(projected[idx])
+            loss = F.smooth_l1_loss(out['weight']/300, weight[idx]/300) + F.binary_cross_entropy_with_logits(out['italic'], italic[idx])
+            known = script[idx] >= 0; loss = loss + (F.cross_entropy(out['script'][known], script[idx][known]) if known.any() else 0)
+            known = category[idx] >= 0; loss = loss + (F.cross_entropy(out['category'][known], category[idx][known]) if known.any() else 0)
+            known = tagged[idx]; loss = loss + (F.binary_cross_entropy_with_logits(out['fine'][known], fine[idx][known]) if known.any() else 0)
+            optimizer.zero_grad(); loss.backward(); optimizer.step()
+    with torch.no_grad():
+        out = fitted(projected); verdicts = {'italic': float(((out['italic'] > 0) == (italic > .5)).float().mean()),
+            'script': float((out['script'].argmax(1) == script)[script >= 0].float().mean()), 'weightError': float((out['weight'] - weight).abs().mean())}
+    target = ROOT/'.data/style'/f'{run}-{dimensions}'; target.mkdir(parents=True, exist_ok=True)
+    proxies = {'proxies': F.normalize(state['proxies'] @ torch.from_numpy(basis).T, dim=1)} if 'proxies' in state else {}
+    torch.save({**state, 'state': fold_head(state['state'], basis), 'heads': {k: v.cpu() for k, v in fitted.state_dict().items()}, **proxies,
+                'projection': {'from': run, 'dimensions': dimensions, 'explained': explained, 'lines': len(samples), 'heads': verdicts}}, target/'best.pt')
+    progress = read(ROOT/'.data/style'/run/'progress.json'); save(target/'progress.json', {**progress, 'run': f'{run}-{dimensions}', 'projection': {'from': run, 'dimensions': dimensions, 'explained': explained, 'heads': verdicts}})
+    print(f'Projected {run} to {dimensions} numbers: {100*explained:.2f}% of the reference variance; heads on the lines: italic {100*verdicts["italic"]:.1f}% script {100*verdicts["script"]:.1f}% weight error {verdicts["weightError"]:.0f}', flush=True)
+    return target
+
+
+def threshold_of(present, absent):
+    """The score below which a match is called unknown: the cut that best separates present queries (their font in the
+    catalog) from absent ones, by Youden's J = coverage of present + rejection of absent - 1, over the scores seen."""
+    present = np.sort(np.asarray(present, np.float64)); absent = np.sort(np.asarray(absent, np.float64))
+    cuts = np.unique(np.concatenate([present, absent])); best = None
+    for cut in cuts:
+        coverage = float((present >= cut).mean()); accepted = float((absent >= cut).mean()); j = coverage - accepted
+        if best is None or j > best[0]: best = (j, float(cut), coverage, accepted)
+    return {'threshold': best[1], 'presentCoverage': best[2], 'absentAcceptance': best[3]}
+
+
+def top_scores(model, heads, setup, name, roles, catalog, device='mps'):
+    """Each query's best family score under the page's search: the script the heads read filters faces that cannot draw
+    it, families score by their best face. Returns the scores and, for present queries, whether the family was found."""
+    bench, pixels = load_bench(name); vectors, keys = catalog
+    faces = setup.faces; family_ids = sorted({faces[f]['family'] for f, _ in keys}); fpos = {f: i for i, f in enumerate(family_ids)}
+    owner = np.array([fpos[faces[f]['family']] for f, _ in keys])
+    selected = [i for i, q in enumerate(bench['samples']) if q['role'] in roles]; queries = [bench['samples'][i] for i in selected]
+    q = embed_manifest(model, bench, pixels, selected, device)
+    with torch.no_grad(): script = heads(torch.from_numpy(q).to(device))['script'].argmax(1).cpu().numpy()
+    supports = {s: np.array([s in setup.pools.get(f, {}) for f in family_ids]) for s in setup.scripts}
+    sims = q @ vectors.T; scores = np.full((len(q), len(family_ids)), -2, np.float32)
+    order = np.argsort(owner, kind='stable'); starts = np.r_[0, np.flatnonzero(np.diff(owner[order])) + 1]
+    for a, b in zip(starts, np.r_[starts[1:], len(order)]): cols = order[a:b]; scores[:, owner[cols[0]]] = sims[:, cols].max(1)
+    for n in range(len(q)): scores[n][~supports[setup.scripts[int(script[n])]]] = -3
+    top = scores.max(1); found = np.array([bool(s.get('family')) and fpos.get(s['family']) is not None and fpos[s['family']] in np.argsort(-scores[n], kind='stable')[:5] for n, s in enumerate(queries)])
+    return top, found
+
+
+def calibrate_rejection(model, heads, setup, device='mps'):
+    """The shipped rejection block: a threshold from photographs of fonts the catalog holds (photos-development) against
+    photographs of fonts no catalog holds (photos-absent), with what it keeps and what it lets through."""
+    catalog = references(model, 'browser', device); torch.mps.empty_cache()
+    present, found = top_scores(model, heads, setup, 'photos-development', ['development'], catalog, device)
+    absent, _ = top_scores(model, heads, setup, 'photos-absent', ['absent'], catalog, device)
+    clean, _ = top_scores(model, heads, setup, 'catalog', ['validation'], catalog, device)
+    rule = threshold_of(present, absent); cut = rule['threshold']
+    # A rule that turns away most present photographs to catch absent ones is worse than none: it stays out of the file.
+    rule['separation'] = rule['presentCoverage'] - rule['absentAcceptance']; rule['shipped'] = rule['separation'] >= REJECTION_FLOOR
+    return {**rule, 'acceptedPresentTop5': float(found[present >= cut].mean()) if (present >= cut).any() else None, 'renderCoverage': float((clean >= cut).mean()),
+            'present': len(present), 'absent': len(absent), 'renders': len(clean),
+            'curve': [{'threshold': float(c), 'presentCoverage': float((present >= c).mean()), 'absentAcceptance': float((absent >= c).mean()), 'renderCoverage': float((clean >= c).mean())}
+                      for c in np.round(np.arange(.5, .96, .05), 2)],
+            'scope': 'WhatFontIs-Bench photographs: development pictures of catalog families against pictures of fonts in no shipped catalog; renders are catalog validation.'}
+
+
+def shipped_preparation():
+    """The window geometry the encoder was trained for, from the shipped encoder, with the hashes of the preparation
+    files as they are now: the site build refuses a model whose block names other files than the ones that run."""
+    geometry = {k: v for k, v in read(ROOT/'models/encoder/encoder.json')['preparation'].items() if k not in ('sha256', 'normalizerSha256', 'lineSha256')}
+    return {**geometry, 'sha256': sha(ROOT/'src/input.mjs'), 'normalizerSha256': sha(ROOT/'src/prepare.mjs'), 'lineSha256': sha(ROOT/'src/line.mjs')}
 
 
 def export_run(run):
     """Encoder with 6-bit weights (bench/style.md, Quantization); the typed heads travel in the same file as small float layers."""
     model, heads, state = load_run(run, 'cpu')
-    artifact, _ = export(model.train(), [str(i) for i in range(DIMENSIONS)], read(ROOT/'models/encoder/encoder.json')['preparation'], bits=6)
-    del artifact['fonts']; artifact.update(kind='font-encoder', dimensions=DIMENSIONS, normalization='l2')
+    dimensions = model.head.out_features
+    if 'clusters' in state:  # clustered weights export from their codebooks, scales and indices, exactly as trained
+        biases = [state['state'][f'{name}.bias'] for name in [*(f'convs.{i}' for i in range(len(model.convs))), 'head']]
+        artifact, _ = export_clusters(state['clusters'], biases, model.architecture, model.dilations, [str(i) for i in range(dimensions)], shipped_preparation())
+    else: artifact, _ = export(model.train(), [str(i) for i in range(dimensions)], shipped_preparation(), bits=6)
+    del artifact['fonts']; artifact.update(kind='font-encoder', dimensions=dimensions, normalization='l2')
     layers = {k: v.numpy() for k, v in state['heads'].items()}
     layer = lambda name: {'weights': np.round(layers[name + '.weight'], 6).tolist(), 'bias': np.round(layers[name + '.bias'], 6).tolist()}
     artifact['heads'] = {'weight': {**layer('weight'), 'scale': 300, 'offset': 400}, 'italic': layer('italic'),
                          'script': {**layer('script'), 'labels': state['scripts']}, 'category': {**layer('category'), 'labels': CATEGORIES},
                          'fine': {**layer('fine'), 'labels': state['fine']}}
+    # Rejection, calibrated on the exported weights, ships in the same file when the photograph sets are packed.
+    if (STYLE/'photos-absent.json').exists() and (STYLE/'photos-development.json').exists():
+        from train.encoder import load_encoder
+        setup = Setup(['train']); exported = load_export({**artifact, 'fonts': [str(i) for i in range(dimensions)]}).to('mps')
+        rejection = calibrate_rejection(exported, heads.to('mps'), setup)
+        print(f"Rejection: unknown below {rejection['threshold']:.3f} would keep {100*rejection['presentCoverage']:.1f}% of present photos, let through {100*rejection['absentAcceptance']:.1f}% of absent ones, keep {100*rejection['renderCoverage']:.1f}% of clean renders: "
+              + ('shipped' if rejection['shipped'] else f"not shipped, separation {rejection['separation']:.2f} below {REJECTION_FLOOR}"), flush=True)
+        if rejection['shipped']: artifact['rejection'] = rejection
+        save(ROOT/'.data/style'/run/'rejection.json', rejection)  # the curve stays beside the run either way
     save(ROOT/'.data/style'/run/'encoder.json', artifact); print('Exported', run, sha(ROOT/'.data/style'/run/'encoder.json'), flush=True)
 
 
@@ -446,7 +591,7 @@ def export_catalog(run, source='pillow'):
     rows = vectors/np.linalg.norm(vectors, axis=1, keepdims=True); scales = np.maximum(np.abs(rows).max(1)/7, 1e-12)
     packed = np.round(rows/scales[:, None]).clip(-7, 7).astype(np.int8)
     catalog = {'version':3,'kind':'font-catalog','encoderSha256':sha(encoder),'preparationSha256':preparation_hash(read(encoder)['preparation']),
-               'dimensions':DIMENSIONS,'sourceCommit':inventory['commit'],'referenceMethod':f'faces-cases-scripts-{source}-{"-".join(map(str, sizes))}','faces':entries,
+               'dimensions':model.head.out_features,'sourceCommit':inventory['commit'],'referenceMethod':f'faces-cases-scripts-{source}-{"-".join(map(str, sizes))}','faces':entries,
                'vectors':{'encoding':'int4-base64','shape':list(packed.shape),'data':base64.b64encode(pack_bits(packed, 4)).decode(),
                           'scales':[float(f'{v:.6g}') for v in scales],'owners':[index[f] for f, _ in keys]}}
     target = ROOT/'.data/style'/run/'google-fonts.json'; save(target, catalog)
@@ -484,8 +629,10 @@ def final(runs, source='pillow'):
     if len(set(benchmarks.values())) != 1: raise ValueError('Runs measured on different benchmarks: ' + str(benchmarks))
     name = benchmarks[runs[0]]; roles = ['seen', 'development', 'test'] if name == 'bench' else ['test']
     setup = Setup(['train']); reports = {}
-    measure = lambda model, heads: {'results': evaluate(model, heads, setup, roles, name=name, source=source), 'samples': samples(model, heads, setup, source=source),
-                                    'sketch': evaluate(model, heads, setup, ['development', 'test'], name='bench-sketch', source=source)}
+    def measure(model, heads):
+        catalog = references(model, source); torch.mps.empty_cache()  # embedded once per encoder for its three reads
+        return {'results': evaluate(model, heads, setup, roles, name=name, source=source, catalog=catalog), 'samples': samples(model, heads, setup, source=source, catalog=catalog),
+                'sketch': evaluate(model, heads, setup, ['development', 'test'], name='bench-sketch', source=source, catalog=catalog)}
     for run in runs:
         model, heads, state = load_run(run, exported=True)
         reports[run] = {'run': run, 'step': state['step'], 'architecture': architecture_of(state), 'encoderSha256': sha(ROOT/'.data/style'/run/'encoder.json'), **measure(model, heads)}
@@ -502,11 +649,12 @@ def breakdown(run):
     among lowercase references only and the reverse; other scripts among Latin only. The shipped catalog holds every case
     and script, so the cross rows measure what a catalog with fewer references still finds."""
     setup = Setup(['train']); model, heads, _ = load_run(run, exported=True); keep = lambda r: {k: r[k] for k in ['count', 'twin5', 'twin1', 'top5', 'top1'] if k in r}
-    name = run_benchmark(run); full = evaluate(model, heads, setup, ['test'], name=name, source='browser')['scriptFiltered']
+    name = run_benchmark(run); catalog = references(model, 'browser'); torch.mps.empty_cache()
+    full = evaluate(model, heads, setup, ['test'], name=name, source='browser', catalog=catalog)['scriptFiltered']
     groups = {k: keep(v) for k, v in full.items() if k.split('/')[0] in ('long', 'case', 'script', 'slice', 'style', 'tag')}; cross = {}
     for label, kinds, group in [('capitalsFromLowercase', {'Latn-lower'}, 'case/upper'), ('lowercaseFromCapitals', {'Latn-upper'}, 'case/lower'),
                                ('otherScriptsFromLatin', {'Latn-lower', 'Latn-upper'}, 'case/native'), ('hanziFromLatin', {'Latn-lower', 'Latn-upper'}, 'slice/hanzi')]:
-        cross[label] = {'references': sorted(kinds), 'queries': group, **keep(evaluate(model, heads, setup, ['test'], name=name, source='browser', kinds=kinds)['scriptFiltered'][group])}
+        cross[label] = {'references': sorted(kinds), 'queries': group, **keep(evaluate(model, heads, setup, ['test'], name=name, source='browser', kinds=kinds, catalog=catalog)['scriptFiltered'][group])}
         print(label, cross[label], flush=True)
     save(ROOT/'bench/style-breakdown.json', {'run': run, 'encoderSha256': sha(ROOT/'.data/style'/run/'encoder.json'), 'benchmark': name, 'benchmarkSha256': sha(STYLE/f'{name}.json'),
          'referencesSha256': sha(STYLE/'references-browser.json'), 'groups': groups, 'cross': cross,
@@ -522,7 +670,7 @@ def deploy(run):
     source = ROOT/'.data/style'/run; target = ROOT/'models/encoder'; report = read(ROOT/'bench/style-quality.json'); name = run_benchmark(run)
     if run not in report['reports'] or report.get('benchmark', 'bench') != name: raise ValueError('Run missing from the final report of its benchmark')
     if report['reports'][run]['encoderSha256'] != sha(source/'encoder.json'): raise ValueError('The final report measured another export of this run')
-    for name in ['encoder.json', 'google-fonts.json', 'best.pt']: shutil.copyfile(source/name, target/name)
+    for file in ['encoder.json', 'google-fonts.json', 'best.pt']: shutil.copyfile(source/file, target/file)
     test = report['reports'][run]['results']['scriptFiltered']['role/test']
     # The page quotes these; bench/style-breakdown.json adds held-out case and script figures.
     report['demo'] = {'encoderSha256':sha(target/'encoder.json'),'catalogSha256':sha(target/'google-fonts.json'),
@@ -533,13 +681,15 @@ def deploy(run):
 
 
 if __name__ == '__main__':
-    p = argparse.ArgumentParser(); p.add_argument('command', choices=['train', 'export', 'catalog', 'final', 'deploy', 'compare', 'breakdown']); p.add_argument('--run', default='evaluation')
-    p.add_argument('--roles', default='train'); p.add_argument('--steps', type=int, default=30000); p.add_argument('--workers', type=int, default=12); p.add_argument('--check', type=int, default=2500); p.add_argument('--architecture', choices=list(ARCHITECTURES), default=CORPUS_ARCH); p.add_argument('--lr', type=float, default=2e-4); p.add_argument('--drawn', type=float, default=0.0); p.add_argument('--pairs', type=float, default=0.0); p.add_argument('--seed', type=int); p.add_argument('--select', default='bench:development'); p.add_argument('--source', choices=['pillow', 'browser', 'mixed'], default='pillow')
-    p.add_argument('--warm', default=str(ROOT/'.data/encoder/case-refine/best.pt')); a = p.parse_args()
+    p = argparse.ArgumentParser(); p.add_argument('command', choices=['train', 'export', 'catalog', 'final', 'deploy', 'compare', 'breakdown', 'project']); p.add_argument('--run', default='evaluation')
+    p.add_argument('--roles', default='train'); p.add_argument('--steps', type=int, default=30000); p.add_argument('--workers', type=int, default=12); p.add_argument('--check', type=int, default=2500); p.add_argument('--architecture', choices=list(ARCHITECTURES), default=CORPUS_ARCH); p.add_argument('--lr', type=float, default=2e-4); p.add_argument('--drawn', type=float, default=0.0); p.add_argument('--photo', type=float, default=0.0); p.add_argument('--cluster', type=int, default=0, help='bits: fold and cluster the warm model, retrain its codebooks'); p.add_argument('--pairs', type=float, default=0.0); p.add_argument('--seed', type=int); p.add_argument('--dimensions', type=int, default=64); p.add_argument('--select', default='bench:development'); p.add_argument('--source', choices=['pillow', 'browser', 'mixed'], default='pillow')
+    p.add_argument('--warm', default=str(ROOT/'.data/encoder/case-refine/best.pt')); p.add_argument('--teacher'); a = p.parse_args()
+    if a.warm == 'none': a.warm = None
     torch.set_num_threads(4)
     if not torch.backends.mps.is_available(): raise ValueError('MPS unavailable')
-    if a.command == 'train': train(a.run, a.roles.split(','), a.steps, a.warm, a.workers, a.check, a.architecture, a.lr, a.drawn, a.pairs, a.seed, a.select)
+    if a.command == 'train': train(a.run, a.roles.split(','), a.steps, a.warm, a.workers, a.check, a.architecture, a.lr, a.drawn, a.pairs, a.seed, a.select, a.photo, a.teacher, a.dimensions, a.cluster)
     elif a.command == 'export': export_run(a.run)
+    elif a.command == 'project': project(a.run, a.dimensions)
     elif a.command == 'catalog': export_catalog(a.run, source=a.source)
     elif a.command == 'compare': compare_references(a.run)
     elif a.command == 'deploy': deploy(a.run)

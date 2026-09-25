@@ -6,6 +6,15 @@ import { matcher } from '../scripts/canon.mjs'
 const family = (name, status, source = 'test') => ({ name, status, source })
 const row = (classic, name, relation) => ({ classic, family: name, relation, evidence: 'https://example.invalid/' })
 
+// Fonts In Use pages are fontsinuse.com/typefaces/<number>: anything else means the wrong Wikidata property was read.
+test('every Fonts In Use identifier in the canon is a typeface page number', async () => {
+  const { typefaces } = JSON.parse(await readFile('bench/canon.json', 'utf8'))
+  const ids = typefaces.filter(face => 'fontsInUse' in face).map(face => face.fontsInUse)
+  assert.ok(ids.length > 100, `${ids.length} identifiers`)
+  assert.deepEqual(ids.filter(id => !/^[1-9]\d*$/.test(id)), [])
+  assert.equal(typefaces.find(face => face.name === 'Helvetica')?.fontsInUse, '44')
+})
+
 test('an open clone on file outranks the original held from a preview-only source', () => {
   const lookup = matcher([family('Palatino', 'held-locally', 'previews'), family('P052', 'inventoried', 'urw-base35')], [row('Palatino', 'P052', 'clone')])
   assert.deepEqual(lookup('Palatino'), { status: 'inventoried', source: 'urw-base35', via: 'P052', match: 'clone',
