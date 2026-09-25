@@ -18,8 +18,10 @@ raw/
 *.jpg
 *.jpeg
 *.webp
-# The images the site serves: the link preview (scripts/og.mjs) and a 64-pixel picture of each face (scripts/previews.py).
+# The images the site serves: the link preview (scripts/og.mjs), a 64-pixel picture of each face (scripts/previews.py) and
+# the favicons of catalogs and alternatives (scripts/favicons.mjs).
 !/og.png
 !/previews/**/*.webp
+!/favicons/*.png
 *.pt
 /promo

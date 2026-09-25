@@ -1,6 +1,7 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
 import { readFile, stat } from 'node:fs/promises'
+import { execFileSync } from 'node:child_process'
 
 test('site.json sizes the model and every catalog for download progress', async () => {
   const site = JSON.parse(await readFile('site.json', 'utf8'))
@@ -74,6 +75,8 @@ test('every favicon a page or catalog names is stored with the site', async () =
   for (const path of named) {
     const bytes = await readFile(path)
     assert.ok(path.endsWith('.svg') ? bytes.toString('utf8').startsWith('<svg') : bytes.toString('latin1', 1, 4) === 'PNG', path)
+    // Committed, not only on disk: the site serves what git holds, and .gitignore keeps images out unless it names them.
+    assert.throws(() => execFileSync('git', ['check-ignore', '-q', path]), `${path} is ignored by git`)
   }
 })
 
