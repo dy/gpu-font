@@ -17,9 +17,11 @@ const source = $('source'), ctx = source.getContext('2d', { willReadFrequently: 
 let model, heads = null, catalog, gpu, gpuReason = '', current = null, crop = null, last = null
 let revision = 0, analysis = 0, dragging = null, armed = null
 let scheduled = 0, running = false, pending = false
-// The sample the page opens with, and the text every sample and preview draws until edited.
+// The sample the page opens with, and the text every sample draws until edited. A match's preview shows its own family's
+// name until a text is chosen, by typing in a preview or by a link's ?text=, and then that text; clearing it brings the
+// names back.
 const SAMPLE = 'lora', TEXT = 'Quiet rivers flow'
-let previewText = TEXT, previewValid = true
+let previewText = TEXT, chosenText = null, previewValid = true
 // Preview text the previews accept: up to 80 printable ASCII characters, but ~ and ^.
 const validText = text => text.length <= 80 && /^[\x20-\x7e]+$/.test(text) && !/[~^]/.test(text)
 let searchCatalog = null, catalogRevision = 0
@@ -429,7 +431,7 @@ function previewElement(face, [candidate, ...rest], index) {
   const input = document.createElement('input'); input.className = 'result-preview'; input.type = 'text'; input.maxLength = 80
   input.spellcheck = false; input.autocomplete = 'off'; input.style.visibility = 'hidden' // Keeps its row while the font loads.
   input.setAttribute('aria-label', `Preview ${face.family}`); input.setAttribute('aria-describedby', 'preview-error')
-  input.readOnly = !text.latin; input.value = text.latin ? previewText : text.sampleText
+  input.readOnly = !text.latin; input.dataset.family = face.family; input.value = text.latin ? chosenText ?? face.family : text.sampleText
   input.style.fontWeight = face.weight ?? 400; input.style.fontStyle = face.style ?? 'normal'
   if (!index && text.latin) input.id = 'preview-text'
   const subset = index >= SHORT && !face.local && !face.file
@@ -561,21 +563,21 @@ const subsetRows = new Map()
 let subsetTimer = 0
 function followText(text) {
   clearTimeout(subsetTimer)
-  subsetTimer = setTimeout(() => { for (const [input, face] of subsetRows) subsetFont(face, text).then(family => { if (!input.isConnected || previewText !== text) return; input.style.setProperty('--font-specimen', `"${family}"`); input.value = text }).catch(() => {}) }, 250)
+  subsetTimer = setTimeout(() => { for (const [input, face] of subsetRows) { const shown = text ?? face.family; subsetFont(face, shown).then(family => { if (!input.isConnected || chosenText !== text) return; input.style.setProperty('--font-specimen', `"${family}"`); input.value = shown }).catch(() => {}) } }, 250)
 }
 function updatePreview(input) {
-  const text = input.value.trim() || TEXT
+  const typed = input.value.trim(), text = typed || TEXT
   previewValid = validText(text)
   $('preview-error').hidden = previewValid
   input.setAttribute('aria-invalid', String(!previewValid))
   if (!previewValid) return
-  previewText = text
+  previewText = text; chosenText = typed || null
   for (const other of $('results').querySelectorAll('.result-preview')) {
     if (other.readOnly) continue
     other.setAttribute('aria-invalid', 'false')
-    if (other !== input) other.value = text
+    if (other !== input) other.value = chosenText ?? other.dataset.family
   }
-  followText(text)
+  followText(chosenText)
 }
 function point(event) {
   const r = source.getBoundingClientRect()
@@ -778,7 +780,7 @@ async function restore() {
   const id = params.get('sample'), text = params.get('text') ?? TEXT, shared = !id && isEncoder() && params.has('style')
   const failure = shared ? showShared(params.get('style')) : id && !sampleFont(id) ? `No font sample “${id}”.` : ''
   if (shared && !failure) return
-  if (validText(text)) previewText = text
+  if (validText(text)) { previewText = text; if (params.has('text')) chosenText = text }
   const version = revision + 1
   await sample(sampleFont(id) ? id : SAMPLE)
   if (failure && version === revision) message(failure, true)

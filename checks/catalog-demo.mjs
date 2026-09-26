@@ -88,6 +88,14 @@ try {
   assert.equal(Object.keys(data.previews).length, new Set(googleFaces.map(f => f.familyId)).size, 'Every Google family has a preview entry')
   const firstFace = foldTwins(original.matches, readCatalog(await read(data.catalogs[0].file), data), { script: original.verdict?.script?.[0]?.label, limit: 1 })[0].face
   assert.deepEqual(await page.locator('.result-preview').first().evaluate(i => [i.style.fontWeight, i.style.fontStyle]), [String(firstFace.weight ?? 400), firstFace.style ?? 'normal'])
+  // Each preview shows its own family's name until a text is typed; then every preview shows that text, and clearing it
+  // brings the names back.
+  const shownTexts = () => page.locator('#results .result-preview:not([readonly])').evaluateAll(inputs => inputs.map(i => [i.value, i.closest('.result').querySelector('.font-name a').textContent.replace(' ↗', '')]))
+  assert.ok((await shownTexts()).every(([value, name]) => value === name), JSON.stringify(await shownTexts()))
+  await page.locator('#preview-text').fill('Hamburg')
+  assert.ok((await shownTexts()).every(([value]) => value === 'Hamburg'), 'A typed text shows in every preview')
+  await page.locator('#preview-text').fill('')
+  assert.ok((await shownTexts()).slice(1).every(([value, name]) => value === name), 'Clearing it brings the names back')
   assert.equal(await page.locator('header .header-icon[aria-label="GitHub repository"]').count(), 1)
   assert.equal(await page.locator('header #backend').getAttribute('class'), 'sr-only')
   assert.equal(await page.locator('footer [aria-label="GitHub repository"]').count(), 0)
@@ -190,10 +198,9 @@ try {
   await sourcesPage.goto(`${base}/catalogs.html`)
   await sourcesPage.waitForFunction(n => document.querySelectorAll('#sources tbody tr').length >= n, data.catalogs.length + 1)
   assert.equal(await sourcesPage.locator('#sources > h2').textContent(), 'Sources')
-  // A rights holder can ask to remove a font or change its link: an issue opened from the sources or from Licenses.
-  const optOut = /^https:\/\/github\.com\/dy\/gpu-font\/issues\/new\?/
-  assert.deepEqual(await sourcesPage.locator('#sources > h2 + .explanation-copy').evaluate(e => [e.textContent, e.querySelector('a').href]), ['Is your font here? Ask to remove it or change its link.', await page.locator('#legal a', { hasText: 'Ask to remove' }).evaluate(a => a.href)], 'Rights holders are asked before the table, where Licenses sends them')
-  assert.match(await page.locator('#legal a', { hasText: 'Ask to remove' }).getAttribute('href'), optOut)
+  // A rights holder can ask to remove a font or change its link: an issue opened from the sources, before the table.
+  assert.equal(await sourcesPage.locator('#sources > h2 + .explanation-copy').textContent(), 'Is your font here? Ask to remove it or change its link.')
+  assert.match(await sourcesPage.locator('#sources > h2 + .explanation-copy a').getAttribute('href'), /^https:\/\/github\.com\/dy\/gpu-font\/issues\/new\?/)
   assert.equal(await sourcesPage.locator('#sources .sources-table, [role="tab"]').count(), 1, 'One table, no tabs')
   const table = () => sourcesPage.locator('#sources tbody tr').evaluateAll(rows => rows.map(r => ({ id: r.id, member: r.classList.contains('member-row'), group: !!r.querySelector('.fold'), families: [...r.children[4].querySelectorAll(':scope > :not(.json-link)')].map(e => e.textContent).join(' '), json: r.children[4].querySelector('a[download]')?.getAttribute('href') ?? null })))
   // Folded, the table lists the shipped catalogs in site.json's order, each with its JSON under its family count, then the unsearched groups.
@@ -305,6 +312,8 @@ try {
   assert.equal(new Set(previews.map(p => p[2])).size, 1, 'Every preview has one height')
   assert.equal(await page.locator('#results .result').nth(5).locator('.result-unavailable').textContent(), 'No preview available')
   assert.ok(await page.locator('#results .result').evaluateAll(rows => rows.slice(6).every(r => r.querySelector('.result-unavailable') || (r.querySelector('.result-preview').readOnly && /^"subset-\d+"$/.test(r.querySelector('.result-preview').style.getPropertyValue('--font-specimen'))))), 'Rows past the fifth use subset faces')
+  const subsetNames = await page.locator('#results .result-preview').evaluateAll(inputs => inputs.filter(i => /^"subset-\d+"$/.test(i.style.getPropertyValue('--font-specimen'))).map(i => [i.value, i.dataset.family]))
+  assert.ok(subsetNames.length && subsetNames.every(([value, family]) => value === family), `Rows past the fifth show their own names too: ${JSON.stringify(subsetNames.slice(0, 3))}`)
   assert.ok((await page.locator('#results .font-twins').allTextContents()).every(t => t.startsWith('≈ ')), 'Twins read as ≈')
   await page.unroute(refused)
   await page.locator('#more-matches').click(); assert.equal(await page.locator('#results .result').count(), 5)
@@ -614,7 +623,10 @@ try {
   // Its text rides along unless the default; text the previews refuse is ignored, and the default drawn instead.
   for (const [text, drawnText] of [['Hamburg', 'Hamburg'], ['a~b', 'Quiet rivers flow']]) {
     const texted = await shared.newPage(); await texted.goto(`${base}/?sample=${named.id}&text=${encodeURIComponent(text)}`); const value = await result(texted)
-    assert.deepEqual([value.source.known, value.source.text], [named.id, drawnText], text); await texted.close()
+    assert.deepEqual([value.source.known, value.source.text], [named.id, drawnText], text)
+    // A link's text is a chosen text: the previews show it; one they refuse leaves each preview its own name.
+    const shown = await texted.locator('#results .result-preview:not([readonly])').evaluateAll(inputs => inputs.map(i => [i.value, i.dataset.family]))
+    assert.ok(shown.length && shown.every(([value, family]) => value === (drawnText === text ? text : family)), `${text}: ${JSON.stringify(shown)}`); await texted.close()
   }
   // A cropped sample, like any image, is named by its style; the whole sample again, by its font.
   await sender.locator('#image-frame').focus(); await sender.keyboard.press('Shift+ArrowLeft'); const sent = await result(sender)
