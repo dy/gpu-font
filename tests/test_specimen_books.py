@@ -1,6 +1,6 @@
 import unittest
 
-from scripts.specimen_books import specimen_book
+from scripts.specimen_books import public_domain, specimen_book
 
 
 class SpecimenBook(unittest.TestCase):
@@ -14,6 +14,15 @@ class SpecimenBook(unittest.TestCase):
         self.assertFalse(specimen_book({'title': 'Specimen book of type faces', 'year': None}))
         self.assertFalse(specimen_book({'title': 'The faerie queene', 'year': 1897}))  # filed under printing specimens
 
+class PublicDomain(unittest.TestCase):
+    def test_the_archive_s_mark_or_an_unmarked_date_before_1929_decides(self):
+        self.assertTrue(public_domain({'possible-copyright-status': 'NOT_IN_COPYRIGHT', 'date': '1950'}))  # the Archive's own judgement
+        self.assertTrue(public_domain({'possible-copyright-status': None, 'date': '1923'}))  # American Type Founders' 1923 catalogue
+        self.assertTrue(public_domain({'date': '1882-01-01'}))
+        self.assertFalse(public_domain({'date': '1929'}))
+        self.assertFalse(public_domain({'possible-copyright-status': 'POSSIBLE_COPYRIGHT', 'date': '1900'}))  # a mark against it wins
+        self.assertFalse(public_domain({'date': '[19--]'}))  # no year: no claim
+        self.assertFalse(public_domain({}))
 
 if __name__ == '__main__':
     unittest.main()

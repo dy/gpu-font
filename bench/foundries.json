@@ -1,6 +1,6 @@
 {
  "version": 1,
- "updated": "2026-09-25",
+ "updated": "2026-09-26",
  "purpose": "Every font source considered: what it offers, its licence, what its terms allow, and where work with it stands. Work never proceeds against a written ban without recorded permission.",
  "sources": [
   {
@@ -279,7 +279,7 @@
   },
   {
    "id": "github",
-   "name": "Open font repositories on GitHub",
+   "name": "GitHub font repositories",
    "url": "https://github.com/search?q=license%3Aofl-1.1&type=repositories",
    "kind": "platform",
    "access": "files",
@@ -293,7 +293,8 @@
    },
    "work": {
     "status": "inventoried",
-    "route": "scripts/github_fonts.py lists the repositories, open_releases.py pins each to a commit and its release folder, open_fonts.py takes each family unless a source earlier in its order has it"
+    "route": "scripts/github_fonts.py lists the repositories, open_releases.py pins each to a commit and its release folder, open_fonts.py takes each family unless a source earlier in its order has it",
+    "familiesInventoried": 3809
    },
    "familiesAvailable": 11892,
    "availableUnit": "families",
@@ -423,7 +424,7 @@
    "decision": {
     "ship": true,
     "date": "2026-09-25",
-    "note": "Shipped at the maintainer's decision, 2026-09-25: names, links and style vectors from the site's own preview images, and a 64-pixel black-and-white copy of each preview; no font files; the catalog comes down at DaFont's request."
+    "note": "Shipped at the maintainer's decision, 2026-09-25: names, links and style vectors from the site's own preview images, which the page shows loaded from DaFont's site; no images or font files kept in the release; the catalog comes down at DaFont's request."
    }
   },
   {
@@ -616,8 +617,9 @@
     "note": "Downloads are free; use follows each family's licence, CUTE for many, which sets conditions of use."
    },
    "work": {
-    "status": "planned",
-    "route": "each family's repository, with its licence recorded"
+    "status": "inventoried",
+    "route": "each family's repository, with its licence recorded",
+    "familiesInventoried": 43
    },
    "log": [
     {
@@ -639,8 +641,9 @@
     "note": "Site unreachable on 2026-09-24. Two families (Tanklager, Nyght Serif) already come from their repositories through Uncut."
    },
    "work": {
-    "status": "planned",
-    "route": "the foundry's repositories"
+    "status": "inventoried",
+    "route": "the foundry's repositories",
+    "familiesInventoried": 15
    },
    "log": [
     {
@@ -662,8 +665,9 @@
     "note": "The collective disbanded in 2025; fonts.luuse.io says \"you can download our fonts on Gitlab\", where each family's folder carries its licence."
    },
    "work": {
-    "status": "planned",
-    "route": "each family's folder in Luuse's own fonts.luuse repository on GitLab, pinned to a commit"
+    "status": "inventoried",
+    "route": "each family's folder in Luuse's own fonts.luuse repository on GitLab, pinned to a commit",
+    "familiesInventoried": 43
    },
    "log": [
     {
@@ -2341,12 +2345,28 @@
     "checked": "2026-09-23"
    },
    "work": {
-    "status": "permission-to-request"
+    "status": "declined",
+    "declined": {
+     "by": "Jonathan, Commercial Type (info@commercialtype.com)",
+     "date": "2026-09-25",
+     "via": "email reply to a request",
+     "quote": "we wish to decline politely and ask to be excluded in all facets",
+     "agreed": "the maintainer replied the same day: \"I will exclude Commercial Type from the tool\"",
+     "correction": "the maintainer then clarified: gpu-font uses none of its font files or website, and may recognise its typefaces as they appear on other sites, naming them with a link to commercialtype.com"
+    }
    },
    "log": [
     {
      "date": "2026-09-23",
      "event": "Surveyed; 123 families (Graphik, Canela); permission request drafted"
+    },
+    {
+     "date": "2026-09-25",
+     "event": "Declined by email: excluded in all facets, as the maintainer agreed. Roboto Serif, which Commercial Type drew for Google, stays: Google publishes it under the OFL"
+    },
+    {
+     "date": "2026-09-26",
+     "event": "Clarified to the foundry: nothing is taken from its files or website; its typefaces may be recognised from their public use on other sites and linked to it"
     }
    ],
    "familiesAvailable": 123,
@@ -2540,8 +2560,9 @@
     "note": "Families downloaded by hand from the foundry's own pay-what-you-want downloads, each with its OFL.txt."
    },
    "work": {
-    "status": "planned",
-    "route": "files collected by hand into .data/manual"
+    "status": "inventoried",
+    "route": "files collected by hand into .data/manual",
+    "familiesInventoried": 1
    },
    "log": [
     {

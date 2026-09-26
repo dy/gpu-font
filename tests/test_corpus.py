@@ -24,6 +24,25 @@ from train.ten_model import Classifier, export, load_export
 from train.faces import qat_snapshot, Int8Weights
 
 
+class Request(unittest.TestCase):
+    def test_an_address_with_letters_outside_ascii_is_escaped_once(self):
+        sent = []
+        class Response:
+            status = 200; __enter__ = lambda self: self; __exit__ = lambda self, *a: None; read = lambda self: b'zip'
+        with patch.object(corpus.urllib.request, 'urlopen', lambda request, timeout: sent.append(request.full_url) or Response()):
+            for url in ['https://fonderie.download/downloads/FD_Crédible.zip', 'https://raw.githubusercontent.com/a/b/c/Desktop%20Fonts/A B.otf?raw=1']:
+                self.assertEqual(corpus.request(url), b'zip')
+        self.assertEqual(sent, ['https://fonderie.download/downloads/FD_Cr%C3%A9dible.zip', 'https://raw.githubusercontent.com/a/b/c/Desktop%20Fonts/A%20B.otf?raw=1'])
+
+
+    def test_an_answer_other_than_200_is_not_the_file(self):
+        class Accepted:  # what Font Squirrel's bot wall sends: 202 and no body, which a cache would keep for good
+            status = 202; __enter__ = lambda self: self; __exit__ = lambda self, *a: None; read = lambda self: b''
+        with patch.object(corpus.urllib.request, 'urlopen', lambda request, timeout: Accepted()), patch.object(corpus.time, 'sleep') as sleep:
+            with self.assertRaisesRegex(OSError, 'Verily-Serif-Mono: HTTP 202, not the file'): corpus.request('https://www.fontsquirrel.com/fonts/download/Verily-Serif-Mono')
+        self.assertEqual([c.args for c in sleep.call_args_list], [(1,), (2,), (4,), (8,)])  # retried like any failure, then raised
+
+
 class CorpusTests(unittest.TestCase):
     def test_normal_axes_and_rendering_do_not_use_a_variable_fonts_thin_default(self):
         axes={'wght':{'min':100,'default':100,'max':900},'wdth':{'min':75,'default':75,'max':100},'opsz':{'min':8,'default':14,'max':72}}

@@ -35,9 +35,11 @@ def source_path(path):
 
 
 def request(url):
+    url = quote(url, safe=":/?#[]@!$&'()*+,;=%~")  # an address with é or a space is escaped; one already escaped stays as it is
     for attempt in range(5):
         try:
             with urllib.request.urlopen(urllib.request.Request(url, headers={'User-Agent': 'gpu-font'}), timeout=120) as response:
+                if response.status != 200: raise OSError(f'{url}: HTTP {response.status}, not the file')  # Font Squirrel's bot wall answers 202 with nothing
                 return response.read()
         except (OSError, TimeoutError):
             if attempt == 4: raise

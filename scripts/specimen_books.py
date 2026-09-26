@@ -2,10 +2,10 @@
 
 A founder's specimen book prints each typeface under its own name ("18 Point Lining Caslon
 Oldstyle No. 540") and then sets lines in it, so every specimen is a real printed line with its
-label beside it, scanned from paper. Books from before 1929 are public domain in the US; a book
-is taken only when the Archive also marks it out of copyright. The OCR's word boxes (hOCR) come
-with the pages, so captions can later be found and the lines below them boxed. One request a
-second; archive.org's robots.txt closes only /control/ and /report/.
+label beside it, scanned from paper. Books from before 1929 are public domain in the US; a book is
+taken when the Archive marks it out of copyright, or marks nothing and dates it before 1929. The
+OCR's word boxes (hOCR) come with the pages, so captions can later be found and the lines below
+them boxed. One request a second; archive.org's robots.txt closes only /control/ and /report/.
 
     python scripts/specimen_books.py list              the specimen books -> books.jsonl
     python scripts/specimen_books.py pages [id ...]    page images and word boxes (default: the founders' books below)
@@ -38,6 +38,12 @@ def specimen_book(doc):
     return 0 < year <= 1928 and bool(SPECIMEN.search(str(doc.get('title') or '')))
 
 
+def public_domain(metadata):
+    """Out of copyright by the Archive's own mark, or, where it marks nothing, by a publication date before 1929."""
+    status, year = metadata.get('possible-copyright-status'), re.match(r'\d{4}', str(metadata.get('date') or metadata.get('year') or ''))
+    return status == 'NOT_IN_COPYRIGHT' or (status is None and bool(year) and int(year.group()) <= 1928)
+
+
 def listing():
     OUT.mkdir(parents=True, exist_ok=True)
     fields = ('identifier', 'title', 'year', 'imagecount', 'publisher', 'creator')
@@ -51,8 +57,8 @@ def listing():
 def pages(ids):
     for identifier in ids or FOUNDERS:
         meta = json.loads(get(f'https://archive.org/metadata/{identifier}'))
-        status = meta.get('metadata', {}).get('possible-copyright-status')
-        if status != 'NOT_IN_COPYRIGHT': print(f'{identifier}: the Archive marks it {status!r}, skipped', flush=True); continue
+        if not public_domain(meta.get('metadata', {})):
+            print(f"{identifier}: not shown out of copyright (marked {meta.get('metadata', {}).get('possible-copyright-status')!r}), skipped", flush=True); continue
         folder = OUT / identifier / 'pages'; folder.mkdir(parents=True, exist_ok=True)
         (OUT / identifier / 'metadata.json').write_text(json.dumps(meta['metadata'], ensure_ascii=False, indent=1))
         hocr = OUT / identifier / 'hocr.html'
