@@ -81,7 +81,7 @@ async function main() {
   // A shipped catalogue is what makes a source indexed; private captures never enter this public registry.
   for (const source of registry.sources) settle(source.work, indexed.get(source.id), inventoried.get(source.id))
   registry.updated = new Date().toISOString().slice(0, 10)
-  await writeFile(REGISTRY, JSON.stringify(registry, null, 2) + '\n')
+  await writeFile(REGISTRY, JSON.stringify(registry, null, 1) + '\n')
   for (const source of registry.sources)
     console.log(`${source.name.slice(0, 30).padEnd(31)} ${source.access.padEnd(9)} ${source.terms.status.padEnd(13)} ${source.work.status.padEnd(22)} ${source.work.familiesIndexed ?? (source.work.familiesInventoried ? `${source.work.familiesInventoried} inventoried` : '-')}`)
 }

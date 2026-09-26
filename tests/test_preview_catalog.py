@@ -30,6 +30,15 @@ class PreviewCatalogTests(unittest.TestCase):
                 self.assertRaisesRegex(ValueError,message,read_catalog,{**a,'vectors':{**a['vectors'],'data':data}},encoder)
             self.assertRaisesRegex(ValueError,'shape',read_catalog,{**a,'vectors':{**a['vectors'],'encoding':'int5-base64'}},encoder)
 
+    def test_a_face_carries_the_preview_file_its_records_name_and_they_must_agree(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            encoder=Path(tmp)/'encoder.json';save(encoder,{'dimensions':128,'preparation':{'width':128,'height':48,'windows':3}})
+            record=lambda i,**extra:{'id':f'r{i}','recipeId':'provided-v1','faceId':f'f{i}','familyId':f'a{i}','family':f'A{i}','styleName':None,'weight':None,'slant':None,'axes':{},'foundry':'F','sourceUrl':'https://example.test/a','scripts':['Latn'],**extra}
+            faces=make_catalog([record(0,previewFile=3),record(1)],np.eye(2,128,dtype=np.float32),encoder,'manifest','captured')['faces']
+            self.assertEqual(faces[0]['previewFile'],3);self.assertNotIn('previewFile',faces[1])  # absent means 0, the usual one
+            clash=[{**record(0,previewFile=3),'recipeId':'words-a-v1'},{**record(0),'id':'r0b','recipeId':'words-b-v1'}]
+            self.assertRaisesRegex(ValueError,'previewFile',make_catalog,clash,np.eye(2,128,dtype=np.float32),encoder,'manifest','captured')
+
     def test_image_references_keep_regular_bold_italic_faces_and_exact_provenance(self):
         with tempfile.TemporaryDirectory() as tmp:
             encoder=Path(tmp)/'encoder.json';save(encoder,{'dimensions':128,'preparation':{'width':128,'height':48,'windows':3}})

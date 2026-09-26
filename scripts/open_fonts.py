@@ -324,7 +324,7 @@ def split_collections(members):
     from fontTools.ttLib import TTCollection
     for name, content in members:
         if content[:4] != b'ttcf': yield name, content; continue
-        try: fonts = TTCollection(io.BytesIO(content)).fonts
+        try: fonts = TTCollection(io.BytesIO(content), recalcTimestamp=False).fonts  # the font's own date: every run writes the same bytes
         except Exception: continue  # a damaged collection yields nothing
         for index, font in enumerate(fonts):
             out = io.BytesIO(); font.save(out)
@@ -337,7 +337,7 @@ def decode_webfonts(members):
     for name, content in members:
         if content[:4] not in WEBFONT: yield name, content; continue
         try:
-            font = TTFont(io.BytesIO(content)); font.flavor = None
+            font = TTFont(io.BytesIO(content), recalcTimestamp=False); font.flavor = None
             out = io.BytesIO(); font.save(out)
         except Exception: continue  # a damaged web font yields nothing
         yield str(PurePosixPath(name).with_suffix('.otf' if font.sfntVersion == 'OTTO' else '.ttf')), out.getvalue()
@@ -406,13 +406,40 @@ def fontsource_files(font):
 
 
 def family_name(path):
-    """The family a font declares; None when the file cannot be read (no name table, damaged)."""
+    """The family a font declares, by its English name where it has one (Hana Meatball, not only 花園肉丸); None when the
+    file cannot be read."""
     try:
         with TTFont(path, lazy=True) as font:
             name = font['name']
-            return (name.getDebugName(16) or name.getDebugName(1) or path.stem).strip()
+            english = lambda id: next((r.toUnicode() for r in name.names if r.nameID == id and (r.platformID, r.langID) in ((3, 0x409), (1, 0))), None)
+            return (english(16) or english(1) or name.getDebugName(16) or name.getDebugName(1) or path.stem).strip()
     except Exception:  # fontTools raises many kinds on malformed files
         return None
+
+
+def fold_slopes(groups):
+    """An italic declared as a family of its own (Paragon italic) joins its upright family where the same source has one;
+    without one (Routed Gothic Half Italic, CMU Serif Upright Italic) the name is the family's own."""
+    for (source, key), group in list(groups.items()):
+        base = re.sub(r'\s+(italic|oblique)$', '', group['name'], flags=re.I)
+        if base != group['name'] and (upright := groups.get((source, name_key(base)))):
+            upright['items'].extend(group['items']); upright['licences'] += [l for l in group['licences'] if l not in upright['licences']]
+            del groups[(source, key)]
+    return groups
+
+
+def single_line(path):
+    """Whether a font's letters enclose no area: single-line (plotter, engraving) fonts trace each stroke out and back,
+    so a filled rasteriser, any browser's included, draws nothing."""
+    from fontTools.pens.areaPen import AreaPen
+    try:
+        with TTFont(path, lazy=True) as font:
+            glyphs, em, areas = font.getGlyphSet(), font['head'].unitsPerEm, []
+            for code, glyph in list((c, g) for c, g in font.getBestCmap().items() if chr(c).isalpha())[:40]:
+                pen = AreaPen(glyphs); glyphs[glyph].draw(pen); areas.append(abs(pen.value))
+            return bool(areas) and max(areas) < 1e-3 * em * em  # a real letter's ink is hundreds of times more
+    except Exception:
+        return False
 
 
 def main(long_tail=True):
@@ -472,7 +499,7 @@ def main(long_tail=True):
             if claim('fontsource', name): add('fontsource', name, group)
         archives.append({'source': 'fontsource', 'url': FONTSOURCE_API, 'licence': 'per family (OFL-1.1, Apache-2.0, MIT, CC0-1.0, Unlicense)'})
         families, in_google, alphabet_store = [], {}, {}
-        for (source, _), group in sorted(groups.items()):
+        for (source, _), group in sorted(fold_slopes(groups).items()):
             name = group['name']
             if name_key(name) in google_names:
                 in_google.setdefault(source, []).append(name); continue
@@ -482,12 +509,16 @@ def main(long_tail=True):
                 try: faces.append(corpus.face_info(item))
                 except Exception as error: print(f"{item['path']}: unreadable, left out ({type(error).__name__}: {error})")
             if not faces: continue
+            # A single-line face draws nothing filled: it leaves the family, which is excluded only when no other face remains.
+            lines = sorted(face['path'] for face, _ in faces if single_line(STORE / face['path']))
+            faces = [pair for pair in faces if pair[0]['path'] not in lines] or faces
             selected, letters = min(faces, key=lambda pair: (pair[0]['italic'], abs(corpus.normal_axes(pair[0]).get('wght', pair[0]['weight']) - 400), pair[0]['path']))
-            reason = 'color' if selected['color'] and colour_letters(STORE / selected['path']) else 'no-letter-glyphs' if not letters else None
+            reason = 'color' if selected['color'] and colour_letters(STORE / selected['path']) else 'no-letter-glyphs' if not letters else \
+                'single-line' if selected['path'] in lines else None
             alphabets = {s: ''.join(map(chr, cps)) for s, cps in letters.items() if len(cps) >= 8 and s not in ('Zyyy', 'Zinh')}
             if not reason and not alphabets: reason = 'insufficient-letter-coverage'
             symbol = symbol_encoded(STORE / selected['path'])
-            family_id = f'{source}-{slug(name)}'
+            family_id = f"{source}-{slug(name) or slug(PurePosixPath(selected['path']).stem)}"  # a name with no Latin letters: its file's
             alphabet_store[family_id] = alphabets
             # A family's embedded licence text is kept once, not once per face.
             embedded = sorted({(face.pop('embeddedLicense') or '').strip()[:300] for face, _ in faces} - {''})
@@ -495,6 +526,7 @@ def main(long_tail=True):
                              **({'symbolEncoded': True} if symbol else {}), **group.get('extra', {}),
                              'declaredLicense': [group['spec']['licence']], 'licenses': group['licences'], 'embeddedLicences': embedded,
                              'faces': [face for face, _ in faces], 'selected': selected['path'],
+                             **({'singleLineFaces': lines} if lines and selected['path'] not in lines else {}),
                              'trainingAxes': corpus.normal_axes(selected), 'letters': {s: len(a) for s, a in alphabets.items()}, 'excluded': reason})
     finally:
         corpus.source_path = original_source_path

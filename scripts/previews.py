@@ -1,8 +1,9 @@
 """The previews stored with the site: a 64-pixel black-and-white picture of every face of a shipped catalog but Google
-Fonts' (whose faces the page sets in their own font), filed under the SHA-1 of the face id as previews.mjs finds it, so
-no catalog carries an address. DaFont's faces are the site's own stored preview of the font's name; Adobe Fonts' are the
-tester capture of a word line; every other face is its pinned font file setting the page's preview text, or the letters
-it has. Pictures of faces no longer shipped are removed; faces with nothing to draw are listed in bench/previews.json.
+Fonts' (whose faces the page sets in their own font) and DaFont's (whose own stored previews the page loads from its site),
+filed under the SHA-1 of the face id as previews.mjs finds it, so no catalog carries an address. Each shows its family's
+name in the face, so no two rows repeat one phrase: Adobe Fonts' is the tester capture of it (a word line where the face
+lacks the name's letters or has not been captured yet); every other face is its pinned font file setting it. Pictures of
+faces no longer shipped are removed; faces with nothing to draw are listed in bench/previews.json.
 
     python scripts/previews.py
 """
@@ -15,9 +16,9 @@ from fontTools.ttLib import TTFont
 ROOT = Path(__file__).resolve().parents[1]
 OUT, REPORT = ROOT / 'previews', ROOT / 'bench/previews.json'
 HEIGHT, WIDTH, MARGIN = 64, 1280, .12  # a row's line at 2x; wider than any row is never seen; white above and below the ink
-TEXT = 'Quiet rivers flow'  # the page's preview text
-ADOBE = ROOT / '.data/previews/catalog-v1/adobe-fonts-snapshot'
-RECIPES = ['words-a-v1', 'words-b-v1', 'latin-lower-v1', 'latin-upper-v1', 'provided-v1', 'digits-v1']  # the line shown, first found
+# Adobe Fonts' captures: the snapshot its catalog was compiled from, and the live archive, which holds the name lines.
+ADOBE = [ROOT / '.data/previews/catalog-v1/adobe-fonts-snapshot', ROOT / '.data/previews/catalog-v1/adobe-fonts']
+RECIPES = ['name-v1', 'words-a-v1', 'words-b-v1', 'latin-lower-v1', 'latin-upper-v1', 'provided-v1', 'digits-v1']  # the line shown, first found
 
 
 def path(face_id):
@@ -26,23 +27,29 @@ def path(face_id):
 
 
 def sources():
-    """Each face id's picture: ('image', file, crop box or None) for a captured one, ('font', file, weight, italic) for a file."""
-    found = {}
-    for manifest in (ROOT / '.data/previews/dafont-archives').glob('*/manifest.jsonl'):
-        for record in map(json.loads, manifest.open()):
-            found[record['faceId']] = ('image', str(manifest.parent / record['image']['path']), None)
-    captures = {}
-    for record in map(json.loads, (ADOBE / 'manifest.jsonl').open()):
-        captures.setdefault(record['faceId'], {})[record['recipeId']] = record
-    for face_id, lines in captures.items():
-        recipe = next((r for r in RECIPES if r in lines), None)
-        if not recipe: continue
-        record = lines[recipe]; g = record['region']
-        found[face_id] = ('image', str(ADOBE / record['image']['path']), (g['x'], g['y'], g['x'] + g['width'], g['y'] + g['height']))
+    """Each face id's picture: ('image', file, crop box or None) for a captured one, ('font', file, weight, italic, family name)
+    for a file."""
+    found = captured(ADOBE)
     inventory = json.loads((ROOT / 'bench/open-fonts.json').read_text())
     for family in inventory['families']:
         for face in family['faces']:  # the id scripts/catalog-files.mjs gives it
-            found[f"{family['id']}/{face['path'].split('/')[-1].rsplit('.', 1)[0]}"] = ('font', str(ROOT / inventory['store'] / face['path']), face['weight'], face['italic'])
+            found[f"{family['id']}/{face['path'].split('/')[-1].rsplit('.', 1)[0]}"] = ('font', str(ROOT / inventory['store'] / face['path']), face['weight'], face['italic'], family['family'])
+    return found
+
+
+def captured(archives):
+    """Each captured face's picture from tester archives: the first line RECIPES names that it has, from whichever archive
+    holds it (the name line is only in the live archive)."""
+    lines = {}
+    for archive in archives:
+        for record in map(json.loads, (archive / 'manifest.jsonl').open()):
+            lines.setdefault(record['faceId'], {})[record['recipeId']] = (archive, record)
+    found = {}
+    for face_id, held in lines.items():
+        recipe = next((r for r in RECIPES if r in held), None)
+        if not recipe: continue
+        archive, record = held[recipe]; g = record['region']
+        found[face_id] = ('image', str(archive / record['image']['path']), (g['x'], g['y'], g['x'] + g['width'], g['y'] + g['height']))
     return found
 
 
@@ -78,19 +85,23 @@ def setting(source, text, weight, italic, size):
     return canvas
 
 
-def line(font_file, weight, italic, size=96):
-    """The preview text set in the face, and whether it is faint: the capitals, or the letters it has, when it lacks the
-    lowercase. A face whose strokes are finer than a pixel at this size (Kohinoor Zerone One) is set four times larger; one
-    still faint there has outlines that enclose next to no area, lines to be stroked (FifteenTwenty UltraLight), which no
-    browser draws either."""
-    with TTFont(font_file, lazy=True, fontNumber=0) as font: cmap = font.getBestCmap() or {}
+def wording(cmap, name):
+    """What a face sets: its family's name, in capitals when it draws no lowercase, else the letters it has (a face whose
+    name is in another script, or holds a sign it lacks)."""
     has = lambda text: all(ord(c) in cmap for c in text if c != ' ')
-    text = next((t for t in (TEXT, TEXT.upper()) if has(t)), None) or ''.join(c for c in 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789' if ord(c) in cmap)[:16]
+    return next((t for t in (name, name.upper()) if t.strip() and has(t)), None) or ''.join(c for c in 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789' if ord(c) in cmap)[:16]
+
+
+def line(font_file, weight, italic, name, size=96):
+    """The face setting its wording, and whether it is faint. A face whose strokes are finer than a pixel at this size
+    (Kohinoor Zerone One) is set four times larger; one still faint there has outlines that enclose next to no area, lines to
+    be stroked (FifteenTwenty UltraLight), which no browser draws either."""
+    with TTFont(font_file, lazy=True, fontNumber=0) as font: text = wording(font.getBestCmap() or {}, name)
     if not text: raise ValueError('no Latin letters')
     try: canvas = setting(font_file, text, weight, italic, size)
     except OSError: canvas = setting(unhinted(font_file), text, weight, italic, size)  # hinting FreeType cannot run
     if canvas.getextrema()[0] < 128: return canvas, size > 96
-    if size < 384: return line(font_file, weight, italic, 4 * size)[0], True
+    if size < 384: return line(font_file, weight, italic, name, 4 * size)[0], True
     raise ValueError('its outlines enclose next to no area: lines to be stroked, which no browser draws')
 
 
@@ -121,7 +132,7 @@ def picture(item):
 
 def main():
     site = json.loads((ROOT / 'site.json').read_text())
-    shipped = {option['id']: [face['id'] for face in json.loads((ROOT / option['file']).read_text())['faces']] for option in site['catalogs'] if option['id'] != 'google-fonts'}
+    shipped = {option['id']: [face['id'] for face in json.loads((ROOT / option['file']).read_text())['faces']] for option in site['catalogs'] if option['id'] not in ('google-fonts', 'dafont')}
     found = sources()
     missing = [{'id': face_id, 'reason': 'no source picture or file'} for ids in shipped.values() for face_id in ids if face_id not in found]
     todo = [(face_id, found[face_id]) for ids in shipped.values() for face_id in ids if face_id in found]
@@ -133,7 +144,7 @@ def main():
     for folder in OUT.glob('*'):
         if folder.is_dir() and not any(folder.iterdir()): folder.rmdir()
     sizes = {face_id: size for face_id, size, reason in done if not reason}
-    report = {'height': HEIGHT, 'text': TEXT, 'catalogs': {catalog: {'faces': len(ids), 'pictures': sum(i in sizes for i in ids), 'bytes': sum(sizes.get(i, 0) for i in ids)} for catalog, ids in shipped.items()},
+    report = {'height': HEIGHT, 'text': 'the family name', 'catalogs': {catalog: {'faces': len(ids), 'pictures': sum(i in sizes for i in ids), 'bytes': sum(sizes.get(i, 0) for i in ids)} for catalog, ids in shipped.items()},
               'missing': sorted(missing, key=lambda m: m['id'])}
     REPORT.write_text(json.dumps(report, indent=1, ensure_ascii=False) + '\n')
     print(json.dumps({k: v for k, v in report.items() if k != 'missing'}, indent=1), f'\n{len(missing)} faces without a picture; {len(stale)} stale pictures removed')

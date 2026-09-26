@@ -5,7 +5,7 @@ import { execFileSync } from 'node:child_process'
 import { chromium } from 'playwright'
 import { readCatalog, subsetCatalog, matchCatalog, foldTwins, embedWindows, unit, rowBytes, unpack, readHeads, verdict, writeStyle, readStyle } from '../src/catalog.mjs'
 import { packVectors } from '../src/references.mjs'
-import { previewPath } from '../previews.mjs'
+import { previewAddress } from '../previews.mjs'
 import { readNetwork, inferCPU } from '../src/network.mjs'
 
 const read = async p => JSON.parse(await readFile(p, 'utf8'))
@@ -77,6 +77,9 @@ try {
   const page = await browser.newPage({ viewport: { width: 1440, height: 1000 } })
   page.on('pageerror', e => issues.push(e.message))
   await page.addInitScript(`globalThis.previewState = ${previewState}`)  // the page's own copy, for the checks below
+  // DaFont's previews come from a local copy of one of them: the check never loads DaFont's site.
+  const dafontPicture = await readFile('.data/previews/dafont/images/-aula-402.png')
+  await page.route('https://www.dafont.com/img/preview/**', route => route.fulfill({ contentType: 'image/png', body: dafontPicture }))
   await page.goto(base); await page.waitForFunction(() => document.body.dataset.ready === 'true')
   const original = await result(page)
   assert.equal(original.backend, 'WebGPU'); await verify(page, original, data.catalogs[0])
@@ -336,7 +339,8 @@ try {
   const shippedFaces = (await Promise.all(data.catalogs.map(c => read(c.file)))).flatMap(c => c.faces)
   assert.equal(await page.locator('#catalog-size').textContent(), `All: ${new Set(shippedFaces.map(f => f.familyId)).size.toLocaleString('en-US')} families, ${shippedFaces.length.toLocaleString('en-US')} faces`)
   await page.waitForFunction(() => document.querySelectorAll('#results .result').length >= 5)
-  assert.ok((await page.locator('#results .font-name a').first().getAttribute('href')).startsWith('https://fonts.google.com/specimen/'), 'A Google family links to its specimen under All')
+  // Under All the first row may be a clone from another catalog; the Google family among the rows links to its specimen.
+  assert.ok((await page.locator('#results .font-name a').evaluateAll(links => links.map(a => a.href))).some(href => href.startsWith('https://fonts.google.com/specimen/')), 'A Google family links to its specimen under All')
   await choose(page, 'google-fonts')
   assert.equal(await page.locator('#catalog-button > :first-child').getAttribute('src'), data.catalogs[0].icon, 'The selector shows the searched catalog\'s favicon')
   // The comparison is a table: gpu-font counts fonts as other finders do, every shipped face, and names the scripts the model detects.
@@ -409,19 +413,25 @@ try {
       assert.equal(await page.locator('.result-preview').count(), 0)
       assert.equal(await page.locator('.reference-preview').count(), 0, 'Captured specimens are never shipped')
       assert.ok((await page.locator('.result .font-name a').evaluateAll(links => links.map(a => a.href))).every(href => /^https:\/\//.test(href)), 'Each match links to its source instead')
-      // Each match shows the picture of its face stored with the site, or says it has none.
+      // Each match shows DaFont's own preview for a DaFont face, the picture stored with the site for any other, or says it has none.
       const faces = foldTwins(value.matches, readCatalog(await read(option.file), data), { script: value.verdict?.script?.[0]?.label, limit: 5 }).map(m => m.face)
       await page.waitForFunction(() => [...document.querySelectorAll('#results .result')].every(previewState))
-      assert.deepEqual(await page.locator('#results .result').evaluateAll(rows => rows.map(previewState)), await Promise.all(faces.map(async f => pictureless.has(f.id) ? 'No preview available' : `image ${base}/${await previewPath(f.id)}`)), option.id)
+      assert.deepEqual(await page.locator('#results .result').evaluateAll(rows => rows.map(previewState)), await Promise.all(faces.map(async f => pictureless.has(f.id) ? 'No preview available' : `image ${new URL(await previewAddress(f), `${base}/`)}`)), option.id)
     }
   }
   assert.deepEqual((await result(page)).matches, original.matches)
-  // A stored picture that fails to load gives way to the note, never to an empty row.
-  await page.route('**/previews/**', route => route.fulfill({ status: 404, body: '' }))
-  await choose(page, 'dafont'); await result(page)
-  await page.waitForFunction(() => [...document.querySelectorAll('#results .result')].every(previewState))
-  assert.deepEqual(await page.locator('#results .result').evaluateAll(rows => rows.map(previewState)), Array(5).fill('No preview available'))
-  await page.unroute('**/previews/**'); await choose(page, data.catalogs[0].id)
+  // A picture that fails to load, stored or DaFont's, gives way to the note, never to an empty row. A fresh page, so no
+  // picture shown above comes from the browser's memory instead of the failing address.
+  const broken = await browser.newPage({ viewport: { width: 1440, height: 1000 } })
+  await broken.addInitScript(`globalThis.previewState = ${previewState}`)
+  for (const pictures of ['**/previews/**', 'https://www.dafont.com/img/preview/**']) await broken.route(pictures, route => route.fulfill({ status: 404, body: '' }))
+  await broken.goto(base); await result(broken)
+  for (const catalogId of ['debian', 'dafont']) {
+    await choose(broken, catalogId); await result(broken)
+    await broken.waitForFunction(() => [...document.querySelectorAll('#results .result')].every(previewState))
+    assert.deepEqual(await broken.locator('#results .result').evaluateAll(rows => rows.map(previewState)), Array(5).fill('No preview available'), catalogId)
+  }
+  await broken.close()
   // Failed imports preserve the selected catalog and current answer.
   for (const payload of ['{', '{}', JSON.stringify({ ...await read(data.catalogs[0].file), encoderSha256: 'wrong' })]) {
     await page.locator('#catalog-file').setInputFiles({ name: 'bad.json', mimeType: 'application/json', buffer: Buffer.from(payload) })

@@ -1,31 +1,26 @@
 {
  "height": 64,
- "text": "Quiet rivers flow",
+ "text": "the family name",
  "catalogs": {
-  "dafont": {
-   "faces": 34975,
-   "pictures": 34975,
-   "bytes": 25834362
-  },
   "adobe-fonts": {
    "faces": 4788,
    "pictures": 4788,
-   "bytes": 5685594
+   "bytes": 3787316
   },
   "debian": {
    "faces": 4296,
    "pictures": 4287,
-   "bytes": 3464682
+   "bytes": 3400658
   },
   "fontlibrary": {
    "faces": 3977,
-   "pictures": 3973,
-   "bytes": 3047432
+   "pictures": 3970,
+   "bytes": 2452162
   },
   "other": {
    "faces": 1796,
-   "pictures": 1796,
-   "bytes": 1338680
+   "pictures": 1706,
+   "bytes": 1036670
   }
  },
  "missing": [
@@ -75,11 +70,383 @@
   },
   {
    "id": "fontlibrary-fifteentwenty/FifteenTwentyUltraLight",
-   "reason": "ValueError: its outlines enclose next to no area: lines to be stroked, which no browser draws"
+   "reason": "no source picture or file"
   },
   {
    "id": "fontlibrary-fifteentwenty/FifteenTwentyUltraLight-Oblique",
+   "reason": "no source picture or file"
+  },
+  {
+   "id": "fontlibrary-miasma-italic/MiasmaItal_1.1.1",
+   "reason": "no source picture or file"
+  },
+  {
+   "id": "fontlibrary-miasma-light-bold-oblique/MiasmaLightBoldOblique_v2-1",
+   "reason": "no source picture or file"
+  },
+  {
+   "id": "fontlibrary-miasma-light-italic/MiasmaLightItal_1.1.2",
+   "reason": "no source picture or file"
+  },
+  {
+   "id": "fontsource-adwaita-mono/latin-400-italic",
+   "reason": "no source picture or file"
+  },
+  {
+   "id": "fontsource-adwaita-mono/latin-400-normal",
+   "reason": "no source picture or file"
+  },
+  {
+   "id": "fontsource-adwaita-mono/latin-700-italic",
+   "reason": "no source picture or file"
+  },
+  {
+   "id": "fontsource-adwaita-mono/latin-700-normal",
+   "reason": "no source picture or file"
+  },
+  {
+   "id": "fontsource-commit-mono/latin-200-italic",
+   "reason": "no source picture or file"
+  },
+  {
+   "id": "fontsource-commit-mono/latin-200-normal",
+   "reason": "no source picture or file"
+  },
+  {
+   "id": "fontsource-commit-mono/latin-300-italic",
+   "reason": "no source picture or file"
+  },
+  {
+   "id": "fontsource-commit-mono/latin-300-normal",
+   "reason": "no source picture or file"
+  },
+  {
+   "id": "fontsource-commit-mono/latin-400-italic",
+   "reason": "no source picture or file"
+  },
+  {
+   "id": "fontsource-commit-mono/latin-400-normal",
+   "reason": "no source picture or file"
+  },
+  {
+   "id": "fontsource-commit-mono/latin-500-italic",
+   "reason": "no source picture or file"
+  },
+  {
+   "id": "fontsource-commit-mono/latin-500-normal",
+   "reason": "no source picture or file"
+  },
+  {
+   "id": "fontsource-commit-mono/latin-600-italic",
+   "reason": "no source picture or file"
+  },
+  {
+   "id": "fontsource-commit-mono/latin-600-normal",
+   "reason": "no source picture or file"
+  },
+  {
+   "id": "fontsource-commit-mono/latin-700-italic",
+   "reason": "no source picture or file"
+  },
+  {
+   "id": "fontsource-commit-mono/latin-700-normal",
+   "reason": "no source picture or file"
+  },
+  {
+   "id": "fontsource-firago/latin-100-italic",
+   "reason": "no source picture or file"
+  },
+  {
+   "id": "fontsource-firago/latin-100-normal",
+   "reason": "no source picture or file"
+  },
+  {
+   "id": "fontsource-firago/latin-200-italic",
+   "reason": "no source picture or file"
+  },
+  {
+   "id": "fontsource-firago/latin-200-normal",
+   "reason": "no source picture or file"
+  },
+  {
+   "id": "fontsource-firago/latin-300-italic",
+   "reason": "no source picture or file"
+  },
+  {
+   "id": "fontsource-firago/latin-300-normal",
+   "reason": "no source picture or file"
+  },
+  {
+   "id": "fontsource-firago/latin-400-italic",
+   "reason": "no source picture or file"
+  },
+  {
+   "id": "fontsource-firago/latin-400-normal",
+   "reason": "no source picture or file"
+  },
+  {
+   "id": "fontsource-firago/latin-500-italic",
+   "reason": "no source picture or file"
+  },
+  {
+   "id": "fontsource-firago/latin-500-normal",
+   "reason": "no source picture or file"
+  },
+  {
+   "id": "fontsource-firago/latin-600-italic",
+   "reason": "no source picture or file"
+  },
+  {
+   "id": "fontsource-firago/latin-600-normal",
+   "reason": "no source picture or file"
+  },
+  {
+   "id": "fontsource-firago/latin-700-italic",
+   "reason": "no source picture or file"
+  },
+  {
+   "id": "fontsource-firago/latin-700-normal",
+   "reason": "no source picture or file"
+  },
+  {
+   "id": "fontsource-firago/latin-800-italic",
+   "reason": "no source picture or file"
+  },
+  {
+   "id": "fontsource-firago/latin-800-normal",
+   "reason": "no source picture or file"
+  },
+  {
+   "id": "fontsource-firago/latin-900-italic",
+   "reason": "no source picture or file"
+  },
+  {
+   "id": "fontsource-firago/latin-900-normal",
+   "reason": "no source picture or file"
+  },
+  {
+   "id": "fontsource-fusion-kai-j/latin-400-normal",
+   "reason": "no source picture or file"
+  },
+  {
+   "id": "fontsource-fusion-kai-t/latin-400-normal",
+   "reason": "no source picture or file"
+  },
+  {
+   "id": "fontsource-hauora-sans/latin-200-normal",
+   "reason": "no source picture or file"
+  },
+  {
+   "id": "fontsource-hauora-sans/latin-300-normal",
+   "reason": "no source picture or file"
+  },
+  {
+   "id": "fontsource-hauora-sans/latin-400-normal",
+   "reason": "no source picture or file"
+  },
+  {
+   "id": "fontsource-hauora-sans/latin-500-normal",
+   "reason": "no source picture or file"
+  },
+  {
+   "id": "fontsource-hauora-sans/latin-600-normal",
+   "reason": "no source picture or file"
+  },
+  {
+   "id": "fontsource-hauora-sans/latin-700-normal",
+   "reason": "no source picture or file"
+  },
+  {
+   "id": "fontsource-hauora-sans/latin-800-normal",
+   "reason": "no source picture or file"
+  },
+  {
+   "id": "fontsource-lextrall/latin-100-normal",
+   "reason": "no source picture or file"
+  },
+  {
+   "id": "fontsource-lextrall/latin-200-normal",
+   "reason": "no source picture or file"
+  },
+  {
+   "id": "fontsource-lextrall/latin-300-normal",
+   "reason": "no source picture or file"
+  },
+  {
+   "id": "fontsource-lextrall/latin-400-normal",
+   "reason": "no source picture or file"
+  },
+  {
+   "id": "fontsource-lextrall/latin-500-normal",
+   "reason": "no source picture or file"
+  },
+  {
+   "id": "fontsource-lextrall/latin-600-normal",
+   "reason": "no source picture or file"
+  },
+  {
+   "id": "fontsource-lextrall/latin-700-normal",
+   "reason": "no source picture or file"
+  },
+  {
+   "id": "fontsource-lextrall/latin-800-normal",
+   "reason": "no source picture or file"
+  },
+  {
+   "id": "fontsource-lextrall/latin-900-normal",
+   "reason": "no source picture or file"
+  },
+  {
+   "id": "fontsource-maple-mono/latin-100-italic",
+   "reason": "no source picture or file"
+  },
+  {
+   "id": "fontsource-maple-mono/latin-100-normal",
+   "reason": "no source picture or file"
+  },
+  {
+   "id": "fontsource-maple-mono/latin-200-italic",
+   "reason": "no source picture or file"
+  },
+  {
+   "id": "fontsource-maple-mono/latin-200-normal",
+   "reason": "no source picture or file"
+  },
+  {
+   "id": "fontsource-maple-mono/latin-300-italic",
+   "reason": "no source picture or file"
+  },
+  {
+   "id": "fontsource-maple-mono/latin-300-normal",
+   "reason": "no source picture or file"
+  },
+  {
+   "id": "fontsource-maple-mono/latin-400-italic",
+   "reason": "no source picture or file"
+  },
+  {
+   "id": "fontsource-maple-mono/latin-400-normal",
+   "reason": "no source picture or file"
+  },
+  {
+   "id": "fontsource-maple-mono/latin-500-italic",
+   "reason": "no source picture or file"
+  },
+  {
+   "id": "fontsource-maple-mono/latin-500-normal",
+   "reason": "no source picture or file"
+  },
+  {
+   "id": "fontsource-maple-mono/latin-600-italic",
+   "reason": "no source picture or file"
+  },
+  {
+   "id": "fontsource-maple-mono/latin-600-normal",
+   "reason": "no source picture or file"
+  },
+  {
+   "id": "fontsource-maple-mono/latin-700-italic",
+   "reason": "no source picture or file"
+  },
+  {
+   "id": "fontsource-maple-mono/latin-700-normal",
+   "reason": "no source picture or file"
+  },
+  {
+   "id": "fontsource-maple-mono/latin-800-italic",
+   "reason": "no source picture or file"
+  },
+  {
+   "id": "fontsource-maple-mono/latin-800-normal",
+   "reason": "no source picture or file"
+  },
+  {
+   "id": "fontsource-noto-mono/latin-400-normal",
+   "reason": "no source picture or file"
+  },
+  {
+   "id": "fontsource-unifontex/latin-400-normal",
+   "reason": "no source picture or file"
+  },
+  {
+   "id": "fontsource-win95fa/latin-400-normal",
+   "reason": "no source picture or file"
+  },
+  {
+   "id": "uncut-/HanaMeatball-Medium",
+   "reason": "no source picture or file"
+  },
+  {
+   "id": "uncut-/HanaMeatball-Regular",
+   "reason": "no source picture or file"
+  },
+  {
+   "id": "uncut-b/HanaMeatballB-Regular",
+   "reason": "no source picture or file"
+  },
+  {
+   "id": "uncut-b2-b/B2HanaB-Medium",
+   "reason": "no source picture or file"
+  },
+  {
+   "id": "uncut-b2-b/B2HanaB-Regular",
+   "reason": "no source picture or file"
+  },
+  {
+   "id": "uncut-b2/B2Hana-Medium",
+   "reason": "no source picture or file"
+  },
+  {
+   "id": "uncut-b2/B2Hana-Regular",
+   "reason": "no source picture or file"
+  },
+  {
+   "id": "uncut-career/Career",
+   "reason": "no source picture or file"
+  },
+  {
+   "id": "uncut-career/Career-path",
+   "reason": "no source picture or file"
+  },
+  {
+   "id": "uncut-manifont-grotesk/ManifontGroteskBoldItalic",
+   "reason": "no source picture or file"
+  },
+  {
+   "id": "uncut-manifont-grotesk/ManifontGroteskBook",
+   "reason": "no source picture or file"
+  },
+  {
+   "id": "uncut-manifont-grotesk/ManifontGroteskBookItalic",
+   "reason": "no source picture or file"
+  },
+  {
+   "id": "uncut-paragon-italic/Paragonitalic-Regular",
+   "reason": "no source picture or file"
+  },
+  {
+   "id": "use-and-modify-selectric/SelectricMono",
+   "reason": "no source picture or file"
+  },
+  {
+   "id": "use-and-modify-selectric/SelectricRoman",
+   "reason": "no source picture or file"
+  },
+  {
+   "id": "velvetyne-basalte/Basalte-Multicolor",
    "reason": "ValueError: its outlines enclose next to no area: lines to be stroked, which no browser draws"
+  },
+  {
+   "id": "velvetyne-florderuina/FlorDeRuina-Flor",
+   "reason": "no source picture or file"
+  },
+  {
+   "id": "velvetyne-florderuina/FlorDeRuina-Germen",
+   "reason": "no source picture or file"
+  },
+  {
+   "id": "velvetyne-florderuina/FlorDeRuina-Semilla",
+   "reason": "no source picture or file"
   }
  ]
 }

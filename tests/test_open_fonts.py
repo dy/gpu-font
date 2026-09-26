@@ -10,9 +10,13 @@ from fontTools.pens.ttGlyphPen import TTGlyphPen
 from scripts.open_fonts import MANIFEST, ROOT, colour_letters, debian_licences, decode_webfonts, family_name, is_font, members, name_key, one_format, split_collections, symbol_encoded
 
 
-def build(folder, names, coloured=()):
-    """A tiny TrueType font mapping A and B to glyphs of the given names; `coloured` get COLR layers."""
-    pen = TTGlyphPen(None); pen.moveTo((0, 0)); pen.lineTo((0, 500)); pen.lineTo((400, 0)); pen.closePath()
+def build(folder, names, coloured=(), stroke=False, family='Test'):
+    """A tiny TrueType font mapping A and B to glyphs of the given names; `coloured` get COLR layers.
+    `stroke` draws each glyph as a single line traced out and back, as plotter fonts do."""
+    pen = TTGlyphPen(None); pen.moveTo((0, 0)); pen.lineTo((0, 500))
+    if stroke: pen.lineTo((0, 0))
+    else: pen.lineTo((400, 0))
+    pen.closePath()
     square = pen.glyph()
     order = ['.notdef', *names, 'layer']
     fb = FontBuilder(1000, isTTF=True)
@@ -21,7 +25,7 @@ def build(folder, names, coloured=()):
     fb.setupGlyf({name: square for name in order})
     fb.setupHorizontalMetrics({name: (500, 0) for name in order})
     fb.setupHorizontalHeader(ascent=800, descent=-200)
-    fb.setupNameTable({'familyName': 'Test', 'styleName': 'Regular'})
+    fb.setupNameTable({'familyName': family, 'styleName': 'Regular'})
     fb.setupOS2(); fb.setupPost()
     if coloured:
         fb.setupCPAL([[(0, 0, 0, 1)]])
@@ -69,6 +73,43 @@ class FamilyName(unittest.TestCase):
             self.assertIsNone(family_name(path))
             path.write_bytes(b'\x00\x01\x00\x00 truncated')
             self.assertIsNone(family_name(path))
+
+    def test_the_english_name_comes_first_and_an_appended_slope_word_is_dropped(self):
+        from fontTools.ttLib import TTFont
+        with tempfile.TemporaryDirectory() as folder:
+            path = build(folder, ['A', 'B'], family='Hana Meatball')
+            font = TTFont(path); font['name'].setName('花園肉丸', 16, 3, 1, 0x404); font.save(path)  # a typographic name in Chinese only
+            self.assertEqual(family_name(path), 'Hana Meatball')
+            font = TTFont(path); font['name'].removeNames(nameID=1); font.save(path)
+            self.assertEqual(family_name(path), '花園肉丸')  # no English name: the one there is
+
+
+class FoldSlopes(unittest.TestCase):
+    def test_an_italic_named_as_a_family_joins_its_upright_only_where_the_source_has_one(self):
+        from scripts.open_fonts import fold_slopes
+        group = lambda name, item, licence='OFL.txt': {'name': name, 'items': [item], 'licences': [licence]}
+        groups = fold_slopes({('uncut', 'paragon'): group('Paragon', 'R'), ('uncut', 'paragonitalic'): group('Paragon italic', 'I', 'LICENSE'),
+                              ('uncut', 'paragonoblique'): group('Paragon Oblique', 'O'), ('github', 'paragonitalic'): group('Paragon Italic', 'X'),
+                              ('debian', 'routedgothichalfitalic'): group('Routed Gothic Half Italic', 'H'), ('uncut', 'italica'): group('Italica', 'A'),
+                              ('uncut', 'italic'): group('Italic', 'N')})  # a family named only Italic names no upright
+        self.assertEqual(groups[('uncut', 'paragon')]['items'], ['R', 'I', 'O'])
+        self.assertEqual(groups[('uncut', 'paragon')]['licences'], ['OFL.txt', 'LICENSE'])  # each licence once
+        self.assertEqual(sorted(groups), [('debian', 'routedgothichalfitalic'), ('github', 'paragonitalic'), ('uncut', 'italic'), ('uncut', 'italica'), ('uncut', 'paragon')])
+
+
+class SingleLine(unittest.TestCase):
+    def test_letters_that_enclose_no_area_are_single_line(self):
+        from scripts.open_fonts import single_line
+        with tempfile.TemporaryDirectory() as folder:
+            self.assertTrue(single_line(build(folder, ['A', 'B'], stroke=True)))
+            self.assertFalse(single_line(build(folder, ['a', 'b'])))
+            empty = Path(folder) / 'broken.ttf'; empty.write_bytes(b'\x00\x01\x00\x00 truncated')
+            self.assertFalse(single_line(empty))  # unreadable decides nothing here
+            from fontTools.ttLib import TTFont
+            digits = build(folder, ['one', 'two'], stroke=True); font = TTFont(digits)
+            for table in font['cmap'].tables: table.cmap = {ord('1'): 'one', ord('2'): 'two'}
+            font.save(digits)
+            self.assertFalse(single_line(digits))  # no letters mapped: nothing to judge, so not single-line
 
 
 class FontSignature(unittest.TestCase):
@@ -283,6 +324,25 @@ class SplitCollections(unittest.TestCase):
                 self.assertEqual(family_name(path), 'Test')
 
 
+class Reproducible(unittest.TestCase):
+    """A split collection and a decoded web font keep the font's own date, so every run writes the same bytes and pins hold."""
+    def test_a_split_or_decoded_font_keeps_its_timestamp(self):
+        import io
+        from fontTools.ttLib import TTFont
+        from fontTools.ttLib.ttCollection import TTCollection
+        with tempfile.TemporaryDirectory() as folder:
+            font = TTFont(build(folder, ['A', 'B']), recalcTimestamp=False); font['head'].modified = 3_000_000_000  # 1999
+            plain = io.BytesIO(); font.save(plain, reorderTables=False)
+            collection = TTCollection(); collection.fonts = [TTFont(io.BytesIO(plain.getvalue()), recalcTimestamp=False)] * 2
+            ttc = io.BytesIO(); collection.save(ttc)
+            woff = TTFont(io.BytesIO(plain.getvalue()), recalcTimestamp=False); woff.flavor = 'woff'; web = io.BytesIO(); woff.save(web)
+            for members in [split_collections([('a.ttc', ttc.getvalue())]), decode_webfonts([('a.woff', web.getvalue())])]:
+                for name, content in members:
+                    self.assertEqual(TTFont(io.BytesIO(content))['head'].modified, 3_000_000_000, name)
+            twice = [list(split_collections([('a.ttc', ttc.getvalue())])) for _ in range(2)]
+            self.assertEqual(twice[0], twice[1])
+
+
 class DecodeWebfonts(unittest.TestCase):
     def test_a_web_font_becomes_the_font_it_compresses(self):
         import io
@@ -340,15 +400,23 @@ class Inventory(unittest.TestCase):
         names = [name_key(f['family']) for f in self.inventory['families']]
         self.assertEqual(sorted({n for n in names if names.count(n) > 1}), [])
 
+    def test_a_single_line_face_leaves_its_family_and_only_a_family_of_them_is_excluded(self):
+        for family in self.inventory['families']:
+            dropped = set(family.get('singleLineFaces', []))
+            self.assertFalse(dropped & {face['path'] for face in family['faces']}, family['id'])  # never kept beside the drawable faces
+            self.assertFalse(dropped and family['excluded'] == 'single-line', family['id'])  # a family with drawable faces is not excluded for them
+
     def test_ids_are_unique_and_each_family_selects_one_of_its_faces(self):
         ids = [f['id'] for f in self.inventory['families']]
         self.assertEqual(len(ids), len(set(ids)))
+        self.assertEqual([i for i in ids if i.endswith('-')], [])  # a name with no Latin letters still gives an id
         for family in self.inventory['families']:
             self.assertIn(family['selected'], [face['path'] for face in family['faces']], family['family'])
 
     def test_the_committed_inventory_stays_small(self):
         # Letters are counted here and kept in full beside the files; licence text is kept once per family.
-        self.assertLess(MANIFEST.stat().st_size, 12_000_000)
+        # About 2 KB a family (faces, pins, licence paths): bloat such as letters inline or licence text per face shows here.
+        self.assertLess(MANIFEST.stat().st_size, 2_500 * len(self.inventory['families']))
         for family in self.inventory['families']:
             self.assertNotIn('alphabets', family)
             self.assertTrue(all(isinstance(count, int) and count >= 8 for count in family['letters'].values()), family['family'])

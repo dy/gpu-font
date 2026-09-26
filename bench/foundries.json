@@ -423,7 +423,7 @@
    "decision": {
     "ship": true,
     "date": "2026-09-25",
-    "note": "Shipped at the maintainer's decision, 2026-09-25: names, links and style vectors from the site's own preview images, and a 64-pixel black-and-white copy of each preview; no font files; the catalog comes down at DaFont's request."
+    "note": "Shipped at the maintainer's decision, 2026-09-25: names, links and style vectors from the site's own preview images, which the page shows loaded from DaFont's site; no images or font files kept in the release; the catalog comes down at DaFont's request."
    }
   },
   {

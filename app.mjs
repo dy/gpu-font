@@ -5,7 +5,7 @@ import { readNetwork, inferCPU, rankWindows } from './src/network.mjs'
 import { createNetworkGPU } from './src/network-gpu.mjs'
 import { readCatalog, unionCatalogs, subsetCatalog, matchCatalog, foldTwins, embedWindows, sha256, preparationHash, readHeads, verdict, writeStyle, readStyle } from './src/catalog.mjs'
 import { readMyFonts } from './my-fonts.mjs'
-import { previewPath } from './previews.mjs'
+import { previewAddress } from './previews.mjs'
 
 const $ = id => document.getElementById(id)
 // The address the page opened with: ?catalog= names what to search, ?style= a shared crop's style, ?embed shows the
@@ -408,11 +408,11 @@ function encoderResult(match, index) {
   item.append(matchLine(match, index), previewElement(face, previewSources(face), index))
   return item
 }
-// Where a match can be seen, in order: its own font setting the preview text (Google Fonts, or installed), else the
-// picture stored with the site for every other face of a shipped catalog.
+// Where a match can be seen, in order: its own font setting the preview text (Google Fonts, or installed), else its
+// picture: DaFont's own preview for a DaFont face, the one stored with the site for any other face of a shipped catalog.
 function previewSources(face) {
   const google = searchCatalog.builtin && catalog.previews[face.familyId]
-  return google ? [{ text: google }] : face.local ? [{ text: { latin: true } }] : searchCatalog.builtin ? [{ stored: face.id }] : []
+  return google ? [{ text: google }] : face.local ? [{ text: { latin: true } }] : searchCatalog.builtin ? [{ picture: face }] : []
 }
 // The first source that shows: one that fails to load gives way to the next, the last to a note. Never a fallback face
 // displayed as if it were a matching specimen.
@@ -422,9 +422,9 @@ function previewElement(face, [candidate, ...rest], index) {
     const note = document.createElement('p'); note.className = 'result-unavailable'; note.textContent = 'No preview available'
     return note
   }
-  if (candidate.stored) {
+  if (candidate.picture) {
     const image = new Image(); image.className = 'result-image'; image.alt = `Preview of ${face.family}`; image.loading = 'lazy'; image.decoding = 'async'
-    image.addEventListener('error', next(image)); previewPath(candidate.stored).then(path => { image.src = path })
+    image.addEventListener('error', next(image)); Promise.resolve(previewAddress(candidate.picture)).then(address => { image.src = address })
     return image
   }
   const { text } = candidate

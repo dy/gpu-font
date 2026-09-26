@@ -1,3 +1,4 @@
+import json
 from pathlib import Path
 import sys
 import tempfile
@@ -35,6 +36,26 @@ def stroke(pen):  # out and back along one line: a contour that encloses no area
 
 
 class PreviewTests(unittest.TestCase):
+    def test_a_face_sets_its_family_name_in_capitals_or_its_own_letters_when_it_cannot(self):
+        latin = {ord(c) for c in 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789'}
+        self.assertEqual(P.wording(latin, 'Mr Eaves XL'), 'Mr Eaves XL')
+        self.assertEqual(P.wording({ord(c) for c in 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'}, 'Kayak'), 'KAYAK')  # capitals only
+        self.assertEqual(P.wording(latin, '花園肉丸'), 'ABCDEFGHIJKLMNOP')  # a name in another script
+        self.assertEqual(P.wording({ord(c) for c in 'Rose Knight'}, 'Rose & Knight'), 'KReghinost')  # a sign it lacks: its own letters
+        self.assertEqual(P.wording(set(), 'Anything'), '')
+
+    def test_a_captured_face_shows_its_name_line_from_whichever_archive_holds_it_else_a_word_line(self):
+        with tempfile.TemporaryDirectory() as folder:
+            snapshot, live = Path(folder) / 'snapshot', Path(folder) / 'live'
+            line = lambda face, recipe: {'faceId': face, 'recipeId': recipe, 'image': {'path': f'images/{face}-{recipe}.png'}, 'region': {'x': 1, 'y': 2, 'width': 3, 'height': 4}}
+            for archive, records in ((snapshot, [line('a', 'words-a-v1'), line('a', 'latin-lower-v1'), line('b', 'words-b-v1'), line('c', 'digits-v1')]), (live, [line('a', 'name-v1')])):
+                archive.mkdir(); (archive / 'manifest.jsonl').write_text(''.join(json.dumps(r) + '\n' for r in records))
+            found = P.captured([snapshot, live])
+            self.assertEqual(found['a'], ('image', str(live / 'images/a-name-v1.png'), (1, 2, 4, 6)))
+            self.assertEqual(found['b'][1], str(snapshot / 'images/b-words-b-v1.png'))
+            self.assertEqual(found['c'][1], str(snapshot / 'images/c-digits-v1.png'))
+            self.assertEqual(P.captured([]), {})
+
     def test_black_ink_is_cut_at_the_middle_and_a_faint_face_keeps_every_mark_clearly_darker_than_white(self):
         black = Image.new('L', (8, 8), 255); black.putpixel((0, 0), 0); black.putpixel((1, 0), 140)
         self.assertEqual(P.cut(black, False), 128)
@@ -54,15 +75,15 @@ class PreviewTests(unittest.TestCase):
 
     def test_a_face_that_encloses_no_area_says_so_and_a_filled_one_is_not_faint(self):
         with tempfile.TemporaryDirectory() as folder:
-            canvas, faint = P.line(font_file(folder, square), 400, False)
+            canvas, faint = P.line(font_file(folder, square), 400, False, 'Test')
             self.assertFalse(faint); self.assertEqual(canvas.getextrema()[0], 0)
-            with self.assertRaisesRegex(ValueError, 'enclose next to no area'): P.line(font_file(folder, stroke), 400, False)
+            with self.assertRaisesRegex(ValueError, 'enclose next to no area'): P.line(font_file(folder, stroke), 400, False, 'Test')
 
     def test_a_hinting_program_freetype_cannot_run_is_dropped_and_the_face_still_renders(self):
         with tempfile.TemporaryDirectory() as folder:
             broken = font_file(folder, square, fpgm=b'\x91')  # 0x91 is no TrueType instruction, as in Ume P Gothic S4
             with self.assertRaisesRegex(OSError, 'invalid opcode'): P.setting(broken, 'Quiet', 400, False, 96)
-            canvas, faint = P.line(broken, 400, False)
+            canvas, faint = P.line(broken, 400, False, 'Test')
             self.assertFalse(faint); self.assertEqual(canvas.getextrema()[0], 0)
             self.assertNotIn('fpgm', TTFont(P.unhinted(broken)))
 
