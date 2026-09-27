@@ -23,6 +23,11 @@ CACHE = ROOT / '.data/google' / COMMIT
 MANIFEST = ROOT / 'bench/corpus.json'
 
 
+def font_path(face):
+    """A face's font file: under the pinned Google checkout, or under the store the face names (open font files)."""
+    return ROOT / face['store'] / face['path'] if face.get('store') else CACHE / face['path']
+
+
 def blob(data):
     return hashlib.sha1(b'blob ' + str(len(data)).encode() + b'\0' + data).hexdigest()
 

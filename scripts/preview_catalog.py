@@ -31,12 +31,12 @@ def make_catalog(records,vectors,encoder_path,manifest_hash,recipe):
     for face_id in face_ids:
         rows=[r for r in selected if r['faceId']==face_id];first=rows[0]
         if recipe not in PARTIAL and {r['recipeId'] for r in rows}!=RECIPES[recipe]:raise ValueError('Incomplete recipe for '+face_id)
-        for key in ['familyId','family','styleName','weight','slant','axes','foundry']:
-            if len({json.dumps(r[key],sort_keys=True) for r in rows})!=1:raise ValueError('Conflicting face metadata: '+key)
+        for key in ['familyId','family','styleName','weight','slant','axes','foundry','previewFile']:
+            if len({json.dumps(r.get(key),sort_keys=True) for r in rows})!=1:raise ValueError('Conflicting face metadata: '+key)
         faces.append({'id':face_id,'familyId':first['familyId'],'family':first['family'],'styleName':first['styleName'],
                       'weight':first['weight'],'style':'normal' if first['slant']=='upright' else first['slant'],
                       'axes':first['axes'],'foundry':first['foundry'],'scripts':sorted({s for r in rows for s in r['scripts']}),
-                      'sourceUrl':first['sourceUrl'],'referenceIds':[r['id'] for r in rows]})
+                      'sourceUrl':first['sourceUrl'],**({'previewFile':first['previewFile']} if first.get('previewFile') else {}),'referenceIds':[r['id'] for r in rows]})
     rows=sorted(range(len(selected)),key=lambda k:(face_ids.index(selected[k]['faceId']),selected[k]['id']))
     # Four bits a dimension, as the shipped catalogs pack their rows (bench/style.md, Quantization).
     unit=vectors[ids][rows];unit=unit/np.linalg.norm(unit,axis=1,keepdims=True);scales=np.maximum(np.abs(unit).max(1)/7,1e-12)

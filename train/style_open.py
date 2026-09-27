@@ -19,6 +19,7 @@ from train.encoder_data import save
 from train.robustness import read, sha
 from train.style_bench import OUT, PINS, query_text
 from train.style_data import FREQUENT
+from train.style_fonts import open_role
 from train.ten_model import unpack_bits
 
 SEED = 20260925
@@ -36,9 +37,10 @@ def queryable(alphabet):
     return sum(c in alphabet for c in set(FREQUENT)) >= 8
 
 
-def plan():
+def plan(held_out=False):
+    """`held_out`: only the open families the fixed rule keeps out of training (train.style_fonts.open_role), for a model that trained on the rest."""
     inventory = read(ROOT/'bench/open-fonts.json'); alphabets = read(ROOT/inventory['store']/'alphabets.json'); indexed = shipped_faces()
-    families = [f for f in inventory['families'] if not f.get('excluded') and queryable(alphabets.get(f['id'], {}).get('Latn', ''))]
+    families = [f for f in inventory['families'] if not f.get('excluded') and queryable(alphabets.get(f['id'], {}).get('Latn', '')) and (not held_out or open_role(f['id']) == 'held-out')]
     rng = random.Random(SEED); queries = []; instances = {}
     for family in sorted(families, key=lambda f: f['id']):
         face = next((x for x in family['faces'] if x['path'] == family['selected']), None)
@@ -53,7 +55,7 @@ def plan():
             queries.append({**base, 'condition': 'clean'})
             if n == 0: queries.append({**base, 'condition': 'degraded'})
     pins = {p: sha(ROOT/p) for p in PINS} | {'train/style_open.py': sha(ROOT/'train/style_open.py'), 'bench/open-fonts.json': sha(ROOT/'bench/open-fonts.json')}
-    save(OUT/'open-plan.json', {'pins': pins, 'seed': SEED, 'queries': queries}); save(OUT/'open-instances.json', instances)
+    save(OUT/'open-plan.json', {'pins': pins, 'seed': SEED, 'heldOut': held_out, 'queries': queries}); save(OUT/'open-instances.json', instances)
     print('Open benchmark plan:', len(queries), 'queries of', len(instances), 'families', flush=True)
 
 
@@ -106,5 +108,6 @@ def evaluate(run):
 
 
 if __name__ == '__main__':
-    p = argparse.ArgumentParser(); p.add_argument('command', choices=['plan', 'evaluate']); p.add_argument('--run', default='student-30k'); a = p.parse_args()
-    plan() if a.command == 'plan' else evaluate(a.run)
+    p = argparse.ArgumentParser(); p.add_argument('command', choices=['plan', 'evaluate']); p.add_argument('--run', default='student-30k')
+    p.add_argument('--held-out', action='store_true', help='query only the open families never trained on'); a = p.parse_args()
+    plan(a.held_out) if a.command == 'plan' else evaluate(a.run)

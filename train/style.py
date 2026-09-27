@@ -23,6 +23,7 @@ from train.encoder_data import save, SPLIT
 from train.robustness import read, sha
 from train.style_data import Stream, pools as make_pools, tensors
 from train.style_teacher import glyph_sets, teacher, OUT as STYLE
+from train.style_fonts import training_families, open_role
 from train.style_catalog import load as load_references, vectors as reference_vectors
 from train.style_bench import load as load_bench
 from train.ten import batch
@@ -39,7 +40,7 @@ WEIGHTS = {100:'Thin',200:'ExtraLight',300:'Light',400:'Regular',500:'Medium',60
 
 def taxonomy(families):
     """Google's own style labels: METADATA category per family, weighted fine-class tags (multi-label)."""
-    folder = {f['id']: f['folder'] for f in families}; names = {f['family']: f['id'] for f in families}
+    folder = {f['id']: f['folder'] for f in families if 'metadataBlob' in f}; names = {f['family']: f['id'] for f in families}  # open families have no METADATA
     category = {}
     for fid, path in folder.items():
         m = re.search(r'category:\s*"(\w+)"', (CACHE/path/'METADATA.pb').read_text())
@@ -62,10 +63,25 @@ def themes(families):
     return out
 
 
+def adapt_heads(state, scripts, fine, current):
+    """A checkpoint's heads for this setup's labels: script and tag rows both know carry over by name, labels new to this
+    setup (scripts the open fonts brought) keep their fresh initialization; the other heads copy as they are."""
+    out = dict(current)
+    for name, old, new in [('script', state['scripts'], scripts), ('fine', state['fine'], fine)]:
+        for key in ('weight', 'bias'):
+            tensor = out[f'{name}.{key}'].clone(); source = state['heads'][f'{name}.{key}']
+            for i, label in enumerate(new):
+                if label in old: tensor[i] = source[old.index(label)]
+            out[f'{name}.{key}'] = tensor
+    for key, value in state['heads'].items():
+        if not key.startswith(('script.', 'fine.')): out[key] = value
+    return out
+
+
 class Heads(nn.Module):
     """Typed verdicts read from the normalized embedding; shipped beside the encoder."""
     def __init__(self, scripts, fine, dimensions=DIMENSIONS):
-        super().__init__()
+        super().__init__(); self.script_labels = list(scripts); self.fine_labels = list(fine)  # the labels behind each output, the checkpoint's own
         self.weight = nn.Linear(dimensions, 1); self.italic = nn.Linear(dimensions, 1)
         self.script = nn.Linear(dimensions, len(scripts)); self.category = nn.Linear(dimensions, len(CATEGORIES)); self.fine = nn.Linear(dimensions, len(fine))
 
@@ -125,12 +141,14 @@ def embed_manifest(model, manifest, pixels, sources, device='mps'):
 class Setup:
     """Faces, labels, teacher geometry and twins for a chosen set of training families."""
     def __init__(self, roles, device='mps'):
-        self.inventory = read(ROOT/'bench/corpus.json'); families = [f for f in self.inventory['families'] if not f['excluded']]
-        self.split = read(SPLIT); self.faces = read(STYLE/'faces.json')['faces']
-        self.sets = glyph_sets(families); self.scripts = sorted(self.sets); self.pools = make_pools(families, self.sets)
+        families = training_families(); self.split = read(SPLIT); self.faces = read(STYLE/'faces.json')['faces']
+        self.sets = glyph_sets(families); self.pools = make_pools(families, self.sets)
+        # Scripts are those the teacher was built for; an inventory that grew since then (more families of a script) waits for a rebuild.
+        self.scripts = [s for s in sorted(self.sets) if (STYLE/f'teacher-{s}.npz').exists()]; unbuilt = sorted(set(self.sets) - set(self.scripts))
+        if unbuilt: print(f"Scripts without a teacher, left out until `train.style_teacher build`: {', '.join(unbuilt)}", flush=True)
         self.category, self.fine_labels, self.fine = taxonomy(families); self.themes = themes(families)
         self.floor = read(STYLE/'noise-floor.json')['median']
-        self.train = [i for i, f in enumerate(self.faces) if self.split['families'][f['family']] in roles and self.pools.get(f['family'])]
+        self.train = [i for i, f in enumerate(self.faces) if self.role(f['family']) in roles and self.pools.get(f['family'])]
         self.position = {f: i for i, f in enumerate(self.train)}
         n = len(self.train); distance = np.full((n, n), np.inf, np.float32)
         # Latin geometry for every face with Latin; faces without Latin use their own script's teacher.
@@ -153,6 +171,10 @@ class Setup:
         for k, i in enumerate(self.train): self.by_family.setdefault(self.faces[i]['family'], []).append(k)
         print('Training faces', n, 'families', len(self.by_family), 'faces with a twin', int((near.sum(1) > 1).sum()), flush=True)
 
+    def role(self, family):
+        """A Google family's role from the drawn split; an open family's from the fixed rule (one in ten held out)."""
+        return self.split['families'].get(family) or open_role(family)
+
     def plan(self, seed, views=2, faces=64, pairs=False):
         """Batches of faces and their nearest designs. Paired views cross case (one lowercase, one capitals or title) and
         often script, so the view loss learns what retrieval needs: one face from different letters."""
@@ -174,26 +196,39 @@ class Setup:
         return make
 
 
-class Chromium:
-    """Stored Chromium renders (development and case-diverse data) of the training families: the browser rasterizer,
-    which the on-the-fly Pillow views do not reproduce. Labeled with each family's default face, as rendered."""
-    SOURCES = [('.data/encoder/development.json', '.data/encoder/development.u8'), ('.data/encoder/case-training/manifest.json', '.data/encoder/case-training/pixels.u8')]
+class StoredViews:
+    """Stored views of the training families beside the on-the-fly Pillow renders: Chromium renders (development and
+    case-diverse data), the browser rasterizer Pillow does not reproduce, labeled with each family's default face; and
+    photographs, the WhatFontIs development images of Google families (train.style_photos), labeled with the family's face
+    of the photographed weight and style. The final photographs are never a source: they stay the held-out read."""
+    SOURCES = [('.data/encoder/development.json', '.data/encoder/development.u8', 'chromium'),
+               ('.data/encoder/case-training/manifest.json', '.data/encoder/case-training/pixels.u8', 'chromium'),
+               ('.data/style/photos-development.json', '.data/style/photos-development.u8', 'photo')]
 
-    def __init__(self, setup, roles=('train',)):
-        default = {f['family']: i for i, f in enumerate(setup.faces) if f['default']}; self.pixels = []; self.views = []
-        for manifest_path, pixels_path in self.SOURCES:
+    def __init__(self, setup, roles=('train',), sources=None):
+        default = {f['family']: i for i, f in enumerate(setup.faces) if f['default']}
+        styled = {(f['family'], f['weight'], f['italic']): i for i, f in enumerate(setup.faces)}
+        self.pixels = []; self.views = []; self.photos = []; counts = {}
+        for manifest_path, pixels_path, renderer in sources or self.SOURCES:
+            if not (ROOT/manifest_path).exists(): continue
             manifest = read(ROOT/manifest_path); self.pixels.append(np.memmap(ROOT/pixels_path, dtype=np.uint8, mode='r')); owner = len(self.pixels) - 1
             windows = {}
             for w in manifest['windows']: windows.setdefault(w['source'], []).append((w['offset'], w['width'], w['height']))
             for i, s in enumerate(manifest['samples']):
-                face = default.get(s['family'])
-                if s['renderer'] == 'chromium' and s['role'] in roles and face in setup.position and s['script'] in setup.scripts:
-                    self.views.append((owner, face, s['script'], windows[i]))
-        print('Chromium training views', len(self.views), flush=True)
+                # A photograph is its own development split: every image counts, in the face of its weight and style when the family has it.
+                photo = renderer == 'photo'
+                face = styled.get((s['family'], s.get('weight'), s.get('italic')), default.get(s['family'])) if photo else default.get(s['family'])
+                if s.get('renderer', renderer) == renderer and (photo or s['role'] in roles) and face in setup.position and s['script'] in setup.scripts and i in windows:
+                    (self.photos if photo else self.views).append((owner, face, s['script'], windows[i])); counts[renderer] = counts.get(renderer, 0) + 1
+        print('Stored training views', ', '.join(f'{n} {r}' for r, n in counts.items()) or 0, flush=True)
+
+    PHOTO_SHARE = .125  # photographs are few (thousands against hundreds of thousands of renders): a fixed share of each step's stored views
 
     def sample(self, rng, count):
-        out = []
-        for owner, face, script, windows in rng.sample(self.views, count):
+        """`count` stored views: a fixed share photographs when there are any, the rest renders."""
+        photos = min(len(self.photos), round(count*self.PHOTO_SHARE)); renders = min(len(self.views), count - photos)
+        photos = min(len(self.photos), count - renders); out = []  # a short list of either kind is filled from the other
+        for owner, face, script, windows in rng.sample(self.photos, photos) + rng.sample(self.views, renders):
             p = self.pixels[owner]; out.append({'face':face,'script':script,'windows':[np.asarray(p[o:o + w*h]).reshape(h, w) for o, w, h in windows]})
         return out
 
@@ -259,13 +294,14 @@ def evaluate(model, heads, setup, roles, device='mps', name='bench', source='pil
     fam_rows = np.array([row.get(default[f], -1) for f in family_ids]); have = fam_rows >= 0
     D = np.full((len(family_ids), len(family_ids)), np.inf, np.float32); D[np.ix_(have, have)] = matrix[np.ix_(fam_rows[have], fam_rows[have])]
     rank_of = np.argsort(np.argsort(np.where(np.isfinite(D), D, 9), axis=1, kind='stable'), axis=1)
-    supports = {s: np.array([s in setup.pools.get(f, {}) for f in family_ids]) for s in setup.scripts}
+    scripts = heads.script_labels if heads is not None else setup.scripts  # verdicts decode by the checkpoint's own labels
+    supports = {s: np.array([s in setup.pools.get(f, {}) for f in family_ids]) for s in scripts}
     rows = []
     for n, s in enumerate(queries):
         t = fpos[s['family']]
         for filtered in (False, True) if verdict is not None else (False,):
             sc = scores[n].copy()
-            if filtered: sc[~supports[setup.scripts[int(verdict['script'][n].argmax())]]] = -3
+            if filtered: sc[~supports[scripts[int(verdict['script'][n].argmax())]]] = -3
             top = np.argsort(-sc, kind='stable')[:5]
             twin = [(j == t) or (D[t, j] < setup.floor) for j in top]
             face = faces[int(keys[best[n, top[0]]][0])]
@@ -280,7 +316,7 @@ def evaluate(model, heads, setup, roles, device='mps', name='bench', source='pil
                          'faceItalic':face['italic'] == s['italic'] if top[0] == t or twin[0] else None,
                          'headWeightError':abs(float(verdict['weight'][n]) - s['weight']) if verdict is not None else None,
                          'headItalic':(verdict['italic'][n] > 0) == s['italic'] if verdict is not None else None,
-                         'headScript':setup.scripts[int(verdict['script'][n].argmax())] == s['script'] if verdict is not None else None,
+                         'headScript':scripts[int(verdict['script'][n].argmax())] == s['script'] if verdict is not None else None,
                          'style':CATEGORIES[setup.category[s['family']]] if s['family'] in setup.category else None,
                          'tags':[tag for tag, w in zip(setup.fine, setup.fine_labels.get(s['family'], [])) if w >= .5] + sorted(setup.themes.get(s['family'], ()))})
     def summarize(subset):
@@ -331,7 +367,7 @@ def train(run, roles, steps, warm, workers, check=2500, architecture=CORPUS_ARCH
     else: start_state = {}; model = Classifier(dimensions, architecture=architecture, dilations=[1, 1, 2, 2, 1]).to(device)  # from scratch: the control for a student
     if cluster: model = clustered(model, cluster).to(device)
     heads = Heads(setup.scripts, setup.fine, dimensions).to(device)
-    if 'heads' in start_state: heads.load_state_dict(start_state['heads'])  # continuing a style run
+    if 'heads' in start_state: heads.load_state_dict(adapt_heads(start_state, setup.scripts, setup.fine, heads.state_dict()))  # continuing a style run
     if 'proxies' in start_state and tuple(start_state['proxies'].shape) == (len(setup.train), dimensions):
         init = start_state['proxies'].numpy()  # continuing a style run with the same training faces
     else:
@@ -345,7 +381,7 @@ def train(run, roles, steps, warm, workers, check=2500, architecture=CORPUS_ARCH
                                    {'params':[proxies],'lr':2e-3,'weight_decay':0},{'params':heads.parameters(),'lr':2e-3,'weight_decay':1e-4}])
     schedule = torch.optim.lr_scheduler.LambdaLR(optimizer, lambda s: min(1, (s + 1)/500)*(.05 + .95*.5*(1 + np.cos(np.pi*min(s, steps)/steps))))
     stream = Stream(setup.faces, setup.pools, setup.plan(seed, pairs=pairs > 0), workers=workers, drawn=drawn, photo=photo, teacher=teacher is not None)
-    chromium = Chromium(setup, ('train',) if roles == ['train'] else ('train', 'validation', 'reference', 'test')); mix = random.Random(seed + 1)
+    stored = StoredViews(setup, ('train',) if roles == ['train'] else ('train', 'validation', 'reference', 'test')); mix = random.Random(seed + 1)
     pins = {p: sha(ROOT/p) for p in ['train/style.py', 'train/style_data.py', 'train/style_teacher.py', 'train/style_catalog.py', 'train/ten_model.py', 'bench/corpus.json', 'bench/encoder-split.json']}
     history = []; best = -1; start = time.perf_counter(); running = {}
     def checkpoint(step):
@@ -370,7 +406,7 @@ def train(run, roles, steps, warm, workers, check=2500, architecture=CORPUS_ARCH
     try:
         if select_role: checkpoint(0)
         for step in range(1, steps + 1):
-            views = next(stream) + chromium.sample(mix, 32); model.train(); heads.train()
+            views = next(stream) + stored.sample(mix, 32); model.train(); heads.train()
             pixels, sizes, owners = tensors(views, device)
             e = embed_views(model, pixels, sizes, owners, len(views)); follow = None
             if teacher_model:  # the teacher reads each view's clean render; stored Chromium views have only themselves
@@ -404,7 +440,7 @@ def samples(model, heads, setup, device='mps', source='pillow', catalog=None):
         q = embed_manifest(model, {'windows': windows}, np.concatenate(chunks), [0], device)
         allowed = np.ones(len(families), bool)
         if heads is not None:
-            with torch.no_grad(): script = setup.scripts[int(heads(torch.from_numpy(q).to(device))['script'][0].argmax())]
+            with torch.no_grad(): script = heads.script_labels[int(heads(torch.from_numpy(q).to(device))['script'][0].argmax())]
             covered = np.array([script in setup.pools.get(f, {}) for f in families])
             if covered.any(): allowed = covered
         sims = (q @ vectors.T)[0]; scores = np.full(len(families), -2.0)
@@ -497,11 +533,11 @@ def top_scores(model, heads, setup, name, roles, catalog, device='mps'):
     selected = [i for i, q in enumerate(bench['samples']) if q['role'] in roles]; queries = [bench['samples'][i] for i in selected]
     q = embed_manifest(model, bench, pixels, selected, device)
     with torch.no_grad(): script = heads(torch.from_numpy(q).to(device))['script'].argmax(1).cpu().numpy()
-    supports = {s: np.array([s in setup.pools.get(f, {}) for f in family_ids]) for s in setup.scripts}
+    supports = {s: np.array([s in setup.pools.get(f, {}) for f in family_ids]) for s in heads.script_labels}
     sims = q @ vectors.T; scores = np.full((len(q), len(family_ids)), -2, np.float32)
     order = np.argsort(owner, kind='stable'); starts = np.r_[0, np.flatnonzero(np.diff(owner[order])) + 1]
     for a, b in zip(starts, np.r_[starts[1:], len(order)]): cols = order[a:b]; scores[:, owner[cols[0]]] = sims[:, cols].max(1)
-    for n in range(len(q)): scores[n][~supports[setup.scripts[int(script[n])]]] = -3
+    for n in range(len(q)): scores[n][~supports[heads.script_labels[int(script[n])]]] = -3
     top = scores.max(1); found = np.array([bool(s.get('family')) and fpos.get(s['family']) is not None and fpos[s['family']] in np.argsort(-scores[n], kind='stable')[:5] for n, s in enumerate(queries)])
     return top, found
 

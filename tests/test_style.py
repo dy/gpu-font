@@ -2,6 +2,8 @@ import base64
 import json
 import random
 import subprocess
+import tempfile
+from pathlib import Path
 from types import SimpleNamespace
 import unittest
 
@@ -13,9 +15,14 @@ from scripts.corpus import ROOT
 from train.style_data import Preparer, text, tensors, skeleton, sketch, COMMON
 from train.style_teacher import distances, twins, enumerate_faces
 from train.style_catalog import kinds, LATIN
-from train.style import Heads, Setup, losses, architecture_of, benchmark_of, run_seed, train, CATEGORIES
+from train.style import Heads, Setup, losses, architecture_of, benchmark_of, run_seed, train, CATEGORIES, StoredViews, adapt_heads
+from train.style_data import damage, init as init_stream, sample as sample_view, STATE
+from train.encoder_data import save
 from train.ten_model import Classifier, CORPUS_ARCH, LARGE_ARCH, WIDER_ARCH
 from train.style_open import queryable
+from train.style_fonts import open_role, open_families, HELD_OUT
+from train.style_teacher import enumerate_faces, render_job, SIZE
+from scripts.corpus import font_path, CACHE, ROOT as REPO
 
 
 def line(width=90, height=30, seed=0):
@@ -113,7 +120,7 @@ class TeacherTests(unittest.TestCase):
                        {'path': 'vi.ttf', 'blob': 'y', 'weight': 400, 'italic': True, 'axes': {'wght': {'min': 250, 'default': 400, 'max': 700}}}]},
             {'id': 's', 'family': 'S', 'excluded': False, 'selected': 's-b.ttf', 'trainingAxes': {}, 'alphabets': {'Latn': 'ab'},
              'faces': [{'path': 's-b.ttf', 'blob': 'z', 'weight': 700, 'italic': False, 'axes': {}}]}]}
-        faces = enumerate_faces(inventory)
+        faces = enumerate_faces(inventory['families'])
         self.assertEqual([f['id'] for f in faces if f['family'] == 'v'], ['v/300', 'v/400', 'v/500', 'v/600', 'v/700', 'v/300i', 'v/400i', 'v/500i', 'v/600i', 'v/700i'])
         self.assertEqual([f['id'] for f in faces if f['default']], ['v/400', 's/700'])
 
@@ -253,4 +260,94 @@ class StyleOpenTests(unittest.TestCase):
         self.assertFalse(queryable('ABCDEFGHIJKLMNOPQRSTUVWXYZ'))
         self.assertFalse(queryable('eta'))
         self.assertFalse(queryable(''))
+
+
+class StyleFontsTests(unittest.TestCase):
+    def test_open_faces_carry_their_store_and_google_faces_do_not(self):
+        google = {'id': 'g', 'family': 'G', 'faces': [{'path': 'ofl/g/G.ttf', 'blob': 'b', 'weight': 400, 'italic': False, 'axes': {}}], 'selected': 'ofl/g/G.ttf', 'trainingAxes': {}, 'alphabets': {'Latn': 'abc'}, 'excluded': None}
+        open_ = {**google, 'id': 'o', 'family': 'O', 'store': '.data/fonts-open'}
+        faces = enumerate_faces([google, open_])
+        self.assertEqual([('store' in f, str(font_path(f))) for f in faces], [(False, str(CACHE/'ofl/g/G.ttf')), (True, str(REPO/'.data/fonts-open/ofl/g/G.ttf'))])
+
+    def test_one_open_family_in_ten_is_held_out_by_its_id_alone(self):
+        ids = [f'family-{i}' for i in range(5000)]; held = [i for i in ids if open_role(i) == 'held-out']
+        self.assertEqual({open_role(i) for i in ids}, {'train', 'held-out'})  # never a role a training run names, such as test
+        self.assertTrue(0.08 < len(held)/len(ids) < 0.12, len(held))
+        self.assertEqual([open_role(i) for i in ids[:50]], [open_role(i) for i in ids[:50]])  # the rule, not a draw
+        self.assertEqual(open_role('debian-dejavu'), open_role('debian-dejavu'))
+
+    def test_open_families_need_letters_to_draw_and_keep_their_alphabets(self):
+        inventory = {'store': '.data/fonts-open', 'families': [
+            {'id': 'a', 'family': 'A', 'faces': [], 'excluded': None}, {'id': 'b', 'family': 'B', 'faces': [], 'excluded': 'colour'},
+            {'id': 'c', 'family': 'C', 'faces': [], 'excluded': None, 'symbolEncoded': True}, {'id': 'd', 'family': 'D', 'faces': [], 'excluded': None}]}
+        alphabets = {'a': {'Latn': 'abcdefghijklmnopqrstuvwxyz', 'Grek': 'αβγ'}, 'b': {'Latn': 'abcdefghijklmnopqrstuvwxyz'}, 'c': {'Latn': 'abcdefghijklmnopqrstuvwxyz'}, 'd': {'Latn': 'abc'}}
+        families = open_families(inventory, alphabets)
+        self.assertEqual([(f['id'], f['store'], sorted(f['alphabets'])) for f in families], [('a', '.data/fonts-open', ['Latn'])])
+
+
+class StoredViewTests(unittest.TestCase):
+    def test_flat_renders_sometimes_wear_a_display_effect(self):
+        image = Image.fromarray(line(120, 40)); base = np.asarray(image, np.float32)
+        base_ink = float((np.abs(base - 255) > 60).mean()); heavier = 0
+        for seed in range(80):
+            a = damage(image, random.Random(seed)).astype(np.float32); paper = np.median(a)
+            heavier += float((np.abs(a - paper) > 60).mean()) > 1.3*base_ink
+        self.assertTrue(4 <= heavier <= 40, heavier)  # an outline, shadow or extrusion adds ink to about one render in seven
+
+    def test_photographs_are_stored_views_in_the_face_of_their_weight_and_every_image_counts(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            pixels = Path(tmp)/'p.u8'; pixels.write_bytes(bytes(range(24)))
+            manifest = Path(tmp)/'m.json'
+            save(manifest, {'samples': [{'family': 'a', 'weight': 700, 'italic': False, 'script': 'Latn', 'role': 'development'},
+                                        {'family': 'a', 'weight': 100, 'italic': True, 'script': 'Latn', 'role': 'development'},
+                                        {'family': 'b', 'weight': 400, 'italic': False, 'script': 'Latn', 'role': 'development'}],
+                            'windows': [{'source': 0, 'offset': 0, 'width': 4, 'height': 3}, {'source': 1, 'offset': 12, 'width': 4, 'height': 3}, {'source': 2, 'offset': 0, 'width': 4, 'height': 3}]})
+            faces = [{'family': 'a', 'weight': 400, 'italic': False, 'default': True}, {'family': 'a', 'weight': 700, 'italic': False, 'default': False}]
+            setup = SimpleNamespace(faces=faces, position={0: 0, 1: 1}, scripts=['Latn'])
+            stored = StoredViews(setup, ('train',), sources=[(str(manifest), str(pixels), 'photo')])
+            # The 700 photograph takes the 700 face; the 100 italic one, which the family lacks, its default face; family b is not trained.
+            self.assertEqual([(face, script) for _, face, script, _ in stored.photos], [(1, 'Latn'), (0, 'Latn')])
+            view = stored.sample(random.Random(0), 1)[0]; self.assertEqual(view['windows'][0].shape, (3, 4))
+            self.assertEqual((len(stored.photos), len(stored.views)), (2, 0))  # photographs keep their own list, for their share of a step
+            chromium = StoredViews(setup, ('train',), sources=[(str(manifest), str(pixels), 'chromium')])
+            self.assertEqual(chromium.views, [])  # a Chromium source keeps to the roles asked for; these are development
+
+    def test_a_damaged_font_file_draws_nothing_instead_of_stopping_the_teacher_build(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            (Path(tmp)/'broken.ttf').write_bytes(b'\x00\x01\x00\x00' + bytes(range(256))*4)
+            face = {'id': 'x/400', 'family': 'x', 'weight': 400, 'italic': False, 'path': 'broken.ttf', 'axes': {}, 'scripts': ['Latn'], 'store': tmp}
+            glyphs, have = render_job((face, 'Latn', 'abc'))
+            self.assertEqual((glyphs.shape, have.tolist()), ((3, SIZE, SIZE), [False, False, False]))
+
+
+class StreamTests(unittest.TestCase):
+    def test_a_damaged_font_yields_no_view_and_is_named_once_instead_of_failing_the_stream(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            (Path(tmp)/'broken.ttf').write_bytes(b'\x00\x01\x00\x00' + bytes(range(256))*4)
+            face = {'id': 'x/400', 'family': 'x', 'weight': 400, 'italic': False, 'path': 'broken.ttf', 'axes': {}, 'scripts': ['Latn'], 'default': True, 'store': tmp}
+            init_stream([face], {'x': {'Latn': 'abcdefghijklmnopqrstuvwxyz'}})
+            self.assertIsNone(sample_view((0, 'Latn', 1, True, None))); self.assertIn('x/400', STATE['failed'])
+
+
+class WarmStartTests(unittest.TestCase):
+    def test_a_checkpoint_s_heads_follow_their_labels_into_a_setup_with_more_scripts(self):
+        torch.manual_seed(1); old = Heads(['Cyrl', 'Latn'], ['a', 'b'], 8); state = {'scripts': ['Cyrl', 'Latn'], 'fine': ['a', 'b'], 'heads': old.state_dict()}
+        new = Heads(['Grek', 'Latn', 'Cyrl'], ['b', 'c'], 8); fresh = {k: v.clone() for k, v in new.state_dict().items()}
+        new.load_state_dict(adapt_heads(state, ['Grek', 'Latn', 'Cyrl'], ['b', 'c'], new.state_dict())); loaded = new.state_dict()
+        torch.testing.assert_close(loaded['script.weight'][1], old.script.weight[1]); torch.testing.assert_close(loaded['script.weight'][2], old.script.weight[0])
+        torch.testing.assert_close(loaded['script.bias'][0], fresh['script.bias'][0])  # Grek is new: its row stays as initialized
+        torch.testing.assert_close(loaded['fine.weight'][0], old.fine.weight[1]); torch.testing.assert_close(loaded['fine.weight'][1], fresh['fine.weight'][1])
+        for key in ('weight.weight', 'italic.bias', 'category.weight'): torch.testing.assert_close(loaded[key], old.state_dict()[key])
+
+    def test_photographs_take_a_fixed_share_of_each_step_s_stored_views(self):
+        stored = StoredViews.__new__(StoredViews); stored.pixels = [np.arange(12, dtype=np.uint8)]
+        stored.views = [(0, 0, 'Latn', [(0, 4, 3)])]*100; stored.photos = [(0, 1, 'Latn', [(0, 4, 3)])]*10
+        faces = [v['face'] for v in stored.sample(random.Random(0), 32)]
+        self.assertEqual((faces.count(1), faces.count(0)), (4, 28))
+        stored.photos = []; self.assertEqual([v['face'] for v in stored.sample(random.Random(0), 8)], [0]*8)  # no photographs: renders only
+        stored.photos = [(0, 1, 'Latn', [(0, 4, 3)])]*3; stored.views = []; self.assertEqual([v['face'] for v in stored.sample(random.Random(0), 8)], [1]*3)  # no renders: the photographs there are
+
+    def test_heads_keep_the_labels_behind_their_outputs(self):
+        heads = Heads(['Latn', 'Cyrl'], ['a'], 8); self.assertEqual((heads.script_labels, heads.fine_labels), (['Latn', 'Cyrl'], ['a']))
+        self.assertEqual(heads.script.out_features, 2); self.assertEqual(heads.fine.out_features, 1)
 

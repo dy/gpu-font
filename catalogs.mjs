@@ -21,7 +21,7 @@ $('sources-summary').textContent = `${plural(site.families, 'family', 'families'
 const byId = new Map(data.sources.map(s => [s.id, s])), searched = new Set(site.catalogs.flatMap(option => option.sources?.map(s => s.id) ?? [option.id]))
 // Each shipped catalog downloads as the JSON the search reads.
 const size = bytes => bytes >= 1e6 ? `${(bytes / 1e6).toFixed(1)} MB` : `${Math.round(bytes / 1e3)} KB`
-const agree = members => ({ status: members.every(s => s.terms.status === members[0].terms.status) ? members[0].terms.status : 'mixed' })
+const agree = members => ({ status: members.length && members.every(s => s.terms.status === members[0].terms.status) ? members[0].terms.status : 'mixed' })  // an empty group (every open source searched) has no status to agree on
 // Families counted by the work done, else the approximate size the source advertises.
 const families = source => source.work.familiesIndexed ?? source.work.familiesInventoried ?? source.familiesAvailable ?? null
 const shipped = site.catalogs.map(({ id, name, sources, families, faces, file, bytes }) => {

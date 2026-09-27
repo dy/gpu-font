@@ -11,6 +11,7 @@ export const catalogs = {
   'google-fonts': new URL('../models/encoder/google-fonts.json', import.meta.url),
   dafont: new URL('../models/encoder/catalogs/dafont.json', import.meta.url),
   'adobe-fonts': new URL('../models/encoder/catalogs/adobe-fonts.json', import.meta.url),
+  github: new URL('../models/encoder/catalogs/github.json', import.meta.url),
   debian: new URL('../models/encoder/catalogs/debian.json', import.meta.url),
   fontlibrary: new URL('../models/encoder/catalogs/fontlibrary.json', import.meta.url),
   other: new URL('../models/encoder/catalogs/other.json', import.meta.url)

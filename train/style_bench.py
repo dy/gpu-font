@@ -21,7 +21,7 @@ from fontTools.ttLib import TTFont
 from fontTools.varLib.instancer import instantiateVariableFont
 from PIL import Image
 
-from scripts.corpus import ROOT, CACHE
+from scripts.corpus import ROOT, font_path
 from train.encoder_data import save, validate_shard, SPLIT
 from train.robustness import read, sha
 from train.style_data import pools as make_pools, FREQUENT
@@ -112,7 +112,7 @@ def instance(face):
     """Static instance for the browser, so optical size and other variable defaults cannot change the face."""
     path = OUT/'instances'/(face['id'].replace('/', '--') + '.ttf')
     if path.exists(): return str(path)
-    raw = (CACHE/face['path']).read_bytes()
+    raw = font_path(face).read_bytes()
     if face['axes']:
         with TTFont(io.BytesIO(raw), recalcTimestamp=False) as font:
             instantiateVariableFont(font, face['axes'], inplace=True); stream = io.BytesIO(); font.save(stream); raw = stream.getvalue()

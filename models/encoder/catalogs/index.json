@@ -8,6 +8,10 @@
     "name": "Adobe Fonts"
   },
   {
+    "id": "github",
+    "name": "GitHub font repositories"
+  },
+  {
     "id": "debian",
     "name": "Debian font packages"
   },
@@ -19,11 +23,13 @@
     "id": "other",
     "name": "Other",
     "sources": [
-      "uncut",
       "use-and-modify",
+      "uncut",
       "velvetyne",
       "fontshare",
       "fontsource",
+      "bye-bye-binary",
+      "luuse",
       "collletttivo",
       "latin-modern",
       "tex-gyre",
@@ -43,6 +49,8 @@
       "gnu-freefont",
       "hershey",
       "liberation",
+      "material-symbols",
+      "font-awesome",
       "ocr-skala",
       "cc-accidenz-commons",
       "chicago-kare",
@@ -53,6 +61,7 @@
       "opendyslexic",
       "railway-sans",
       "sil",
+      "smufl",
       "ubuntu-titling"
     ]
   }

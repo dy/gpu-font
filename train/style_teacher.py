@@ -15,9 +15,10 @@ import torch
 from PIL import Image, ImageDraw, ImageFont
 from fontTools.ttLib import TTFont
 
-from scripts.corpus import ROOT, CACHE
+from scripts.corpus import ROOT, font_path
 from train.corpus_data import without_hints
 from train.encoder_data import save
+from train.style_fonts import training_families, OPEN
 from train.robustness import read, sha
 
 OUT = ROOT/'.data/style'
@@ -46,11 +47,12 @@ def glyph_sets(families):
     return sets
 
 
-def enumerate_faces(inventory):
-    """Every face: static files at their weight, variable files at each hundred within their weight axis."""
+def enumerate_faces(families):
+    """Every face: static files at their weight, variable files at each hundred within their weight axis. A face of a
+    family that names a store (open font files) carries it, for `font_path`."""
     faces = []; seen = set()
-    for family in inventory['families']:
-        if family['excluded']: continue
+    for family in families:
+        if family.get('excluded'): continue
         for face in family['faces']:
             spec = face['axes'].get('wght')
             weights = [w for w in range(100, 1000, 100) if spec['min'] <= w <= spec['max']] if spec else [face['weight']]
@@ -61,7 +63,8 @@ def enumerate_faces(inventory):
                 axes = {tag: float(weight if tag == 'wght' else value['default']) for tag, value in face['axes'].items()}
                 default = face['path'] == family['selected'] and axes == {k: float(v) for k, v in family['trainingAxes'].items()}
                 faces.append({'id':identity,'family':family['id'],'name':family['family'],'weight':weight,'italic':face['italic'],
-                              'path':face['path'],'blob':face['blob'],'axes':axes,'scripts':sorted(family['alphabets']),'default':default})
+                              'path':face['path'],'blob':face['blob'],'axes':axes,'scripts':sorted(family['alphabets']),'default':default,
+                              **({'store': family['store']} if 'store' in family else {})})
     defaults = Counter(f['family'] for f in faces if f['default'])
     for family in {f['family'] for f in faces} - set(defaults):
         # Static families: the selected file is the default face.
@@ -72,9 +75,9 @@ def enumerate_faces(inventory):
 
 
 def load_font(face, size, unhinted=None):
-    font = ImageFont.truetype(io.BytesIO(unhinted) if unhinted else str(CACHE/face['path']), size, layout_engine=ImageFont.Layout.RAQM)
+    font = ImageFont.truetype(io.BytesIO(unhinted) if unhinted else str(font_path(face)), size, layout_engine=ImageFont.Layout.RAQM)
     if face['axes']:
-        with TTFont(CACHE/face['path'], lazy=True) as tt: order = [a.axisTag for a in tt['fvar'].axes]
+        with TTFont(font_path(face), lazy=True) as tt: order = [a.axisTag for a in tt['fvar'].axes]
         font.set_variation_by_axes([face['axes'].get(tag, 0) for tag in order])
     return font
 
@@ -82,13 +85,13 @@ def load_font(face, size, unhinted=None):
 def draw(face, script, chars, shift=0.0, hinted=True):
     """Glyphs on a SIZE×SIZE canvas, reference height normalized, baseline aligned, centred by advance."""
     reference, target, baseline = LAYOUT.get(script, OTHER)
-    with TTFont(CACHE/face['path'], lazy=True) as tt: cmap = tt.getBestCmap() or {}
+    with TTFont(font_path(face), lazy=True) as tt: cmap = tt.getBestCmap() or {}
     have = np.array([ord(c) in cmap for c in chars]); out = np.zeros((len(chars), SIZE, SIZE), np.uint8)
     if not have.any(): return out, have
     unhinted = None
     if not hinted:
-        try: unhinted = without_hints(CACHE/face['path'])
-        except ValueError: pass  # CFF outlines: no TrueType program to remove
+        try: unhinted = without_hints(font_path(face))
+        except (ValueError, IndexError): pass  # CFF outlines have no TrueType program to remove; a damaged glyf table cannot be rewritten
     try:
         probe = load_font(face, 200, unhinted)
         if reference and ord(reference) in cmap:
@@ -113,7 +116,8 @@ def draw(face, script, chars, shift=0.0, hinted=True):
 
 def render_job(job):
     face, script, chars = job
-    return draw(face, script, chars)
+    try: return draw(face, script, chars)
+    except Exception: return np.zeros((len(chars), SIZE, SIZE), np.uint8), np.zeros(len(chars), bool)  # a damaged font draws nothing and leaves the teacher
 
 
 def blur(x, sigma=1.1):
@@ -186,10 +190,9 @@ def summarize(floor):
 
 
 def build(workers=10):
-    inventory = read(ROOT/'bench/corpus.json'); families = [f for f in inventory['families'] if not f['excluded']]
-    faces = enumerate_faces(inventory); sets = glyph_sets(families)
+    families = training_families(); faces = enumerate_faces(families); sets = glyph_sets(families)
     OUT.mkdir(parents=True, exist_ok=True)
-    save(OUT/'faces.json', {'inventorySha256':sha(ROOT/'bench/corpus.json'),'faces':faces})
+    save(OUT/'faces.json', {'inventorySha256':sha(ROOT/'bench/corpus.json'),'openInventorySha256':sha(OPEN),'faces':faces})
     floor = noise_floor(faces, sets['Latn']); print('Noise floor', floor, flush=True)
     save(OUT/'noise-floor.json', floor)
     for script, chars in sorted(sets.items(), key=lambda s: s[0] != 'Latn'):

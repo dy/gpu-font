@@ -10,7 +10,7 @@
 
 ## Run the demo
 
-The page runs straight from the repository, as [GitHub Pages](https://dy.github.io/gpu-font/) serves it: no build and no font files. It reads the model and catalogs from `models/encoder/`, the other catalogs' match previews from `previews/`, and loads every font from Google Fonts.
+The page runs straight from the repository, as [GitHub Pages](https://dy.github.io/gpu-font/) serves it: no build and no font files. It reads the model and catalogs from `models/encoder/`, the other catalogs' match previews from `previews/` (DaFont's from DaFont's site), and loads every font from Google Fonts.
 
 ```sh
 npm run demo          # http://localhost:4179

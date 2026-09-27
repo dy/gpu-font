@@ -16,7 +16,7 @@ import numpy as np
 from PIL import Image, ImageDraw, ImageFilter, ImageFont
 from fontTools.ttLib import TTFont
 
-from scripts.corpus import ROOT, CACHE
+from scripts.corpus import ROOT, font_path
 
 SIZES = [14, 16, 18, 20, 24, 28, 32, 40, 48, 56, 64, 72]
 SPACED = {'Latn', 'Cyrl', 'Grek', 'Arab', 'Hebr', 'Deva', 'Beng', 'Gujr', 'Guru', 'Knda', 'Mlym', 'Taml', 'Telu', 'Sinh', 'Copt', 'Armn', 'Geor'}
@@ -59,24 +59,24 @@ class Fonts:
 
     def broken(self, face):
         from train.corpus_data import without_hints
-        self.unhinted[face['path']] = without_hints(CACHE/face['path'])
+        self.unhinted[face['path']] = without_hints(font_path(face))
         for key in [k for k in self.cache if k[0] == face['id']]: del self.cache[key]
 
     def render(self, face, size, draw):
-        """draw(font) with the hinted face, or once more unhinted if its hinting program overflows."""
+        """draw(font) with the hinted face, or once more unhinted if its hinting program fails (overflows, an invalid opcode)."""
         try: return draw(self(face, size))
-        except OSError as error:
-            if 'execution context too long' not in str(error) or face['path'] in self.unhinted: raise
+        except OSError:
+            if face['path'] in self.unhinted: raise
             self.broken(face); return draw(self(face, size))
 
     def __call__(self, face, size):
         key = (face['id'], size)
         if key in self.cache: self.cache.move_to_end(key); return self.cache[key]
-        source = io.BytesIO(self.unhinted[face['path']]) if face['path'] in self.unhinted else str(CACHE/face['path'])
+        source = io.BytesIO(self.unhinted[face['path']]) if face['path'] in self.unhinted else str(font_path(face))
         font = ImageFont.truetype(source, size, layout_engine=ImageFont.Layout.RAQM)
         if face['axes']:
             if face['path'] not in self.order:
-                with TTFont(CACHE/face['path'], lazy=True) as tt: self.order[face['path']] = [a.axisTag for a in tt['fvar'].axes]
+                with TTFont(font_path(face), lazy=True) as tt: self.order[face['path']] = [a.axisTag for a in tt['fvar'].axes]
             font.set_variation_by_axes([face['axes'].get(tag, 0) for tag in self.order[face['path']]])
         self.cache[key] = font
         if len(self.cache) > self.limit: self.cache.popitem(last=False)
@@ -204,11 +204,13 @@ def surface(image, rng):
 
 
 def damage(image, rng, photo=False):
-    """Screenshot conditions: colour/contrast/polarity, rotation, rescaling, blur, JPEG, noise, clipped edges. With `photo`,
-    a photographed surface first (surface): texture, uneven light, worn or effected ink, perspective."""
+    """Screenshot conditions: colour/contrast/polarity, rotation, rescaling, blur, JPEG, noise, clipped edges, and now and then
+    a display effect on the flat letters. With `photo`, a photographed surface first (surface): texture, uneven light, worn or
+    effected ink, perspective."""
     if photo: image = surface(image, rng)
     else:
         a = np.asarray(image, np.float32)/255
+        if rng.random() < .15: a = 1 - effect(1 - a, rng, a.shape[0])  # a flat graphic with an outline, a shadow or an extrusion, as forum pictures are
         ink, paper = rng.uniform(0, .45), rng.uniform(.75, 1)
         if rng.random() < .3: ink, paper = paper, ink  # dark mode
         image = Image.fromarray(np.uint8(np.clip(paper + (ink - paper)*(1 - a), 0, 1)*255))
@@ -281,7 +283,8 @@ def sample(spec):
             # For distillation, the clean render's windows too: what the teacher sees of this view.
             if STATE.get('teacher') and not clean: view['clean'] = STATE['prepare'](np.asarray(image, np.uint8)) or windows
             return view
-        except (OSError, ValueError): continue
+        except Exception as error:  # unrenderable text, or a damaged font file; the last attempt says which face, once per worker
+            if attempt == 5 and face['id'] not in STATE.setdefault('failed', set()): STATE['failed'].add(face['id']); print(f"unrenderable face {face['id']}: {type(error).__name__}", flush=True)
     return None
 
 
