@@ -9,8 +9,8 @@
   },
   "github": {
    "faces": 10884,
-   "pictures": 10882,
-   "bytes": 7980288
+   "pictures": 10884,
+   "bytes": 7982538
   },
   "debian": {
    "faces": 4288,
@@ -30,16 +30,8 @@
  },
  "missing": [
   {
-   "id": "github-ng-fonticon/ng-fonticon",
-   "reason": "OSError: invalid outline"
-  },
-  {
-   "id": "github-zuriel/Zuriel-Angel",
-   "reason": "OSError: raster overflow"
-  },
-  {
    "id": "velvetyne-basalte/Basalte-Multicolor",
-   "reason": "ValueError: its outlines enclose next to no area: lines to be stroked, which no browser draws"
+   "reason": "ValueError: its letters enclose no area: empty outlines, or lines meant to be stroked, which no browser draws; Chromium draws nothing either"
   }
  ]
 }

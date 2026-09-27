@@ -2,12 +2,13 @@
 Fonts' (whose faces the page sets in their own font) and DaFont's (whose own stored previews the page loads from its site),
 filed under the SHA-1 of the face id as previews.mjs finds it, so no catalog carries an address. Each shows its family's
 name in the face, so no two rows repeat one phrase: Adobe Fonts' is the tester capture of it (a word line where the face
-lacks the name's letters or has not been captured yet); every other face is its pinned font file setting it. Pictures of
+lacks the name's letters or has not been captured yet); every other face is its pinned font file setting it, drawn by
+FreeType, or by Chromium where FreeType cannot draw it (scripts/preview-chromium.mjs). Pictures of
 faces no longer shipped are removed; faces with nothing to draw are listed in bench/previews.json.
 
     python scripts/previews.py
 """
-import hashlib, io, json, os
+import hashlib, io, json, os, subprocess, tempfile
 from multiprocessing import Pool
 from pathlib import Path
 from PIL import Image, ImageDraw, ImageFilter, ImageFont, ImageOps
@@ -94,15 +95,15 @@ def wording(cmap, name):
 
 def line(font_file, weight, italic, name, size=96):
     """The face setting its wording, and whether it is faint. A face whose strokes are finer than a pixel at this size
-    (Kohinoor Zerone One) is set four times larger; one still faint there has outlines that enclose next to no area, lines to
-    be stroked (FifteenTwenty UltraLight), which no browser draws either."""
+    (Kohinoor Zerone One) is set four times larger; one still faint there has letters that enclose no area,
+    empty outlines (Basalte Multicolor, whose colour is SVG) or lines to be stroked, which no browser draws either."""
     with TTFont(font_file, lazy=True, fontNumber=0) as font: text = wording(font.getBestCmap() or {}, name)
     if not text: raise ValueError('no Latin letters')
     try: canvas = setting(font_file, text, weight, italic, size)
     except OSError: canvas = setting(unhinted(font_file), text, weight, italic, size)  # hinting FreeType cannot run
     if canvas.getextrema()[0] < 128: return canvas, size > 96
     if size < 384: return line(font_file, weight, italic, name, 4 * size)[0], True
-    raise ValueError('its outlines enclose next to no area: lines to be stroked, which no browser draws')
+    raise ValueError('its letters enclose no area: empty outlines, or lines meant to be stroked, which no browser draws')
 
 
 def picture(item):
@@ -130,6 +131,20 @@ def picture(item):
     except Exception as error: return face_id, 0, f'{type(error).__name__}: {error}'
 
 
+def drawn_by_chromium(failed):
+    """Font faces FreeType could not draw, drawn by Chromium as the catalogs index them (scripts/preview-chromium.mjs), then
+    pictured as any capture is. A face Chromium draws blank too (an SVG colour font over empty outlines) keeps both reasons."""
+    with tempfile.TemporaryDirectory() as folder:
+        faces = []
+        for face_id, (_, font_file, weight, italic, name), _reason in failed:
+            with TTFont(font_file, lazy=True, fontNumber=0) as font: text = wording(font.getBestCmap() or {}, name)
+            faces.append({'file': font_file, 'text': text, 'weight': weight, 'italic': italic, 'out': str(Path(folder) / f'{len(faces)}.png')})
+        (Path(folder) / 'faces.json').write_text(json.dumps(faces))
+        subprocess.run(['node', str(ROOT / 'scripts/preview-chromium.mjs'), str(Path(folder) / 'faces.json')], check=True, cwd=ROOT)
+        redone = [picture((face_id, ('image', face['out'], None))) for (face_id, *_), face in zip(failed, faces)]
+    return [(face_id, size, reason and f'{earlier}; Chromium draws nothing either') for (face_id, size, reason), (_, _, earlier) in zip(redone, failed)]
+
+
 def main():
     site = json.loads((ROOT / 'site.json').read_text())
     shipped = {option['id']: [face['id'] for face in json.loads((ROOT / option['file']).read_text())['faces']] for option in site['catalogs'] if option['id'] not in ('google-fonts', 'dafont')}
@@ -139,6 +154,10 @@ def main():
     # At most 12 workers, each restarted after four chunks of 64 faces: the largest fonts (a 99 MB file) peak at half a
     # gigabyte a worker, so the run stays near 6 GB whatever the machine.
     with Pool(min(os.cpu_count(), 12), maxtasksperchild=4) as pool: done = pool.map(picture, todo, chunksize=64)
+    failed = [(face_id, found[face_id], reason) for face_id, _, reason in done if reason and found[face_id][0] == 'font' and 'no Latin letters' not in reason]
+    if failed:
+        again = {face_id: result for face_id, *result in drawn_by_chromium(failed)}
+        done = [(face_id, *again[face_id]) if face_id in again else (face_id, size, reason) for face_id, size, reason in done]
     missing += [{'id': face_id, 'reason': reason} for face_id, _, reason in done if reason]
     kept = {path(face_id) for face_id, _, reason in done if not reason}
     stale = [file for file in OUT.glob('*/*.webp') if file not in kept]

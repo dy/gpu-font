@@ -56,6 +56,15 @@ class PreviewTests(unittest.TestCase):
             self.assertEqual(found['c'][1], str(snapshot / 'images/c-digits-v1.png'))
             self.assertEqual(P.captured([]), {})
 
+    def test_a_face_freetype_fails_on_is_drawn_by_chromium_and_one_chromium_draws_blank_keeps_both_reasons(self):
+        with tempfile.TemporaryDirectory() as folder:
+            P.OUT = Path(folder) / 'previews'
+            drawn, empty = font_file(folder, square), font_file(folder, lambda pen: None)  # empty: outlines with nothing in them
+            (_, size, reason), (_, _, blank) = P.drawn_by_chromium([('drawn', ('font', drawn, 400, False, 'Test'), 'OSError: raster overflow'),
+                                                                    ('empty', ('font', empty, 400, False, 'Test'), 'ValueError: draws nothing')])
+            self.assertIsNone(reason); self.assertGreater(size, 0); self.assertEqual(Image.open(P.path('drawn')).height, P.HEIGHT)
+            self.assertEqual(blank, 'ValueError: draws nothing; Chromium draws nothing either')
+
     def test_black_ink_is_cut_at_the_middle_and_a_faint_face_keeps_every_mark_clearly_darker_than_white(self):
         black = Image.new('L', (8, 8), 255); black.putpixel((0, 0), 0); black.putpixel((1, 0), 140)
         self.assertEqual(P.cut(black, False), 128)
@@ -77,7 +86,7 @@ class PreviewTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as folder:
             canvas, faint = P.line(font_file(folder, square), 400, False, 'Test')
             self.assertFalse(faint); self.assertEqual(canvas.getextrema()[0], 0)
-            with self.assertRaisesRegex(ValueError, 'enclose next to no area'): P.line(font_file(folder, stroke), 400, False, 'Test')
+            with self.assertRaisesRegex(ValueError, 'enclose no area'): P.line(font_file(folder, stroke), 400, False, 'Test')
 
     def test_a_hinting_program_freetype_cannot_run_is_dropped_and_the_face_still_renders(self):
         with tempfile.TemporaryDirectory() as folder:
