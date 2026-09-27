@@ -8,10 +8,10 @@ Find the font in an image, in your browser. Crop a line of text from a screensho
 
 - Runs on the user's device, on WebGPU or the CPU: no server, no API key, the image is never uploaded.
 - Names the face, not only the family: Bold Italic, Light and so on.
-- Searches 2,004 Google Fonts families, every weight and italic, or one of six other catalogs: DaFont, Adobe Fonts, GitHub font repositories, Debian, Font Library and Other, 53,321 distinct families in all.
+- Searches 2,004 Google Fonts families, every weight and italic, or one of six other catalogs: DaFont, Adobe Fonts, GitHub font repositories, Debian, Font Library and Other, 102,517 distinct families in all.
 - Kinds of one family with identical letters fold into one row: IBM Plex Sans KR and IBM Plex Sans Arabic show under IBM Plex Sans. A different font that borrows the letters, like Parastoo with Lora's Latin, keeps its own row.
 
-It is experimental: on rendered crops of every Google Fonts family, on text it never trained on, the right family is in the top five 92% of the time and first 72%.
+It is experimental: on rendered crops of every Google Fonts family, on text it never trained on, the right family is in the top five 92% of the time and first 73%.
 
 ## Usage
 
@@ -46,7 +46,7 @@ Without a bundler, import it from a CDN:
 
 ```html
 <script type="module">
-  import { createMatcher } from 'https://cdn.jsdelivr.net/npm/gpu-font@0.1/src/match.mjs'
+  import { createMatcher } from 'https://cdn.jsdelivr.net/npm/gpu-font@0.2/src/match.mjs'
 </script>
 ```
 
@@ -74,16 +74,16 @@ const matcher = await createMatcher(catalogs.debian)
 | `google-fonts` (default) | 2,004 | [Google Fonts](https://fonts.google.com) |
 | `debian` | 2,169 | [Debian's font packages](https://packages.debian.org/sid/fonts/) |
 | `fontlibrary` | 1,222 | [Font Library](https://fontlibrary.org/) |
-| `dafont` | 41,113 | [DaFont](https://www.dafont.com/), from its preview images: one face a family, weight and style unknown |
+| `dafont` | 96,212 | [DaFont](https://www.dafont.com/), from its preview images: one face a family, weight and style unknown |
 | `adobe-fonts` | 4,784 | [Adobe Fonts](https://fonts.adobe.com/), from its specimen pages: one face a family |
 | `github` | 3,572 | Openly licensed font repositories on GitHub, from their files |
-| `other` | 564 | Sources under 100 families: Uncut, Use & Modify, Velvetyne, Fontshare, Fontsource, Bye Bye Binary, Collletttivo, Latin Modern, TeX Gyre and more |
+| `other` | 580 | Sources under 100 families: Uncut, Use & Modify, Velvetyne, Fontshare, Fontsource, Bye Bye Binary, Collletttivo, Tunera, Latin Modern, TeX Gyre and more |
 
 DaFont and Adobe Fonts are indexed from the images their sites show, not from font files, and ship as names, links and style vectors by the maintainer's decision; their terms are recorded in [bench/foundries.json](https://github.com/dy/gpu-font/blob/main/bench/foundries.json), and either catalog comes down at its source's request.
 
 A catalog built for this model also works from its URL: `createMatcher('https://example.com/my-catalog.json')`. To build one from your own font files, index them on the [Catalogs](https://dy.github.io/gpu-font/catalogs.html#my-fonts) page and press Download JSON.
 
-A catalog fits only the model that built it: `createMatcher` refuses one whose `encoderSha256` differs. Each new model comes in a new minor version (0.2, 0.3…) with the shipped catalogs rebuilt, and the page always runs the latest. npm's default range, `^0.1.0`, stays within 0.1, so your catalog keeps working until you upgrade; then build it again.
+A catalog fits only the model that built it: `createMatcher` refuses one whose `encoderSha256` differs. Each new model comes in a new minor version (0.3, 0.4…) with the shipped catalogs rebuilt, and the page always runs the latest. npm's default range, `^0.2.0`, stays within 0.2, so your catalog keeps working until you upgrade; then build it again.
 
 ## Offline
 
@@ -106,22 +106,22 @@ On rendered crops of 5–10 characters from every Google Fonts family, on text t
 | | |
 |---|---:|
 | Right family in the top five | 92% |
-| Right family first | 72% |
-| Top five: Latin, other scripts, Chinese | 93%, 86%, 64% |
-| Top five at 16 px, at 32 px and larger | 86%, 93% |
-| Weight of the matched face, 100–900 | off by 6 on average |
-| Italic or upright | 99.9% right |
+| Right family first | 73% |
+| Top five: Latin, other scripts, Chinese | 93%, 84%, 65% |
+| Top five at 16 px, at 32 px and larger | 87%, 93% |
+| Weight of the matched face, 100–900 | off by 5 on average |
+| Italic or upright | 99.8% right |
 
-Families the model never trained on are found as often as Google's own: 720 held-out open families, searched with all seven catalogs at once (55,428 families) and scored on the exact family, 72% top five, against 72% for Google Fonts families under the same search ([other catalogs](https://github.com/dy/gpu-font/blob/main/bench/style.md#other-catalogs)).
+Families the model never trained on are found as often as Google's own: 721 held-out open families, searched with all seven catalogs at once (110,543 families) and scored on the exact family, 72% top five, against 71% for Google Fonts families under the same search ([other catalogs](https://github.com/dy/gpu-font/blob/main/bench/style.md#other-catalogs)).
 
-On photographs of one word printed or painted on real surfaces ([WhatFontIs-Bench](https://github.com/dy/gpu-font/blob/main/bench/photos.md)), searched across all seven catalogs (55,000 families): 44% top five and 61% top twenty on the 4,015 images of 201 fonts the model never trained on, 25% first. On DaFont forum requests, cropped by hand, 54% top five. It does best on one line in one font, several letters, on a plain background.
+On photographs of one word printed or painted on real surfaces ([WhatFontIs-Bench](https://github.com/dy/gpu-font/blob/main/bench/photos.md)), searched across all seven catalogs (110,000 families): 41% top five and 57% top twenty on the 4,435 images of 222 fonts the model never trained on, 22% first. On DaFont forum requests, cropped by hand, 41% top five, with two thirds of the forum's confirmed answers indexed. Both are lower than the previous release's 44% and 54%: the catalogs doubled since, most of the new faces known by one preview image each, and they crowd the ranking; the model itself reads a point and a half higher on the same images. On 19,382 lines cut from the top websites' homepages, labelled by the font the browser drew them with, 13% top five, 20% for the web fonts the pages load: half the lines are body text at 14–19 px, which the model never trained on as a browser draws it ([web screens](https://github.com/dy/gpu-font/blob/main/bench/photos.md#web-screens)). On Wikimedia Commons photographs of typefaces in use, whose label names the photo and not the line, 2% ([Commons](https://github.com/dy/gpu-font/blob/main/bench/photos.md#commons-photographs)). It does best on one line in one font, several letters long, at 16 px or larger.
 
 Not yet: hand-drawn letters, icons, symbols and emoji, and matching capitals when a catalog holds only lowercase (57% top five).
 
 ## Speed and size
 
-- `createMatcher()` downloads about 1.3 MB, compressed: the model (6-bit weights, 0.37 MB) and the Google Fonts catalog (4-bit vectors, 0.87 MB). DaFont's catalog adds 2.7 MB, Adobe Fonts 0.95 MB, GitHub 0.79 MB, Debian 0.30 MB, Font Library 0.28 MB, and Other 0.15 MB; the page's All downloads them all, about 6.4 MB.
-- With WebGPU, a match takes about 0.05 s. Without it, it runs on the CPU: about 1.2 s in Chromium and 1.1–1.7 s in Node. All measured on an Apple M4 Max.
+- `createMatcher()` downloads about 1.2 MB, compressed: the model (6-bit weights, 0.33 MB) and the Google Fonts catalog (4-bit vectors, 0.87 MB). DaFont's catalog adds 5.7 MB, Adobe Fonts 0.84 MB, GitHub 0.80 MB, Debian 0.30 MB, Font Library 0.28 MB, and Other 0.15 MB; the page's All downloads them all, about 9.3 MB.
+- With WebGPU, a match takes about 0.06 s. Without it, it runs on the CPU: about 1.2 s in Chromium and 1.1–1.7 s in Node. All measured on an Apple M4 Max.
 
 ## Development
 

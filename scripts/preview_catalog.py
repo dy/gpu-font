@@ -45,7 +45,7 @@ def make_catalog(records,vectors,encoder_path,manifest_hash,recipe):
     catalog={'version':3,'kind':'font-catalog','encoderSha256':sha(encoder_path),'preparationSha256':preparation_hash(encoder['preparation']),
              'dimensions':encoder['dimensions'],'sourceManifestSha256':manifest_hash,'referenceRecipe':recipe,
              'faces':faces,'vectors':{'encoding':'int4-base64','shape':list(packed.shape),'data':base64.b64encode(pack_bits(packed,4)).decode(),
-                                       'scales':scales.tolist(),'owners':owners.tolist()}}
+                                       'scales':[float(f'{v:.6g}') for v in scales],'owners':owners.tolist()}}  # six digits, as Google's rows: a float32 listed whole prints seventeen
     decoded,decoded_owners,labels=read_catalog(catalog,encoder_path)
     rows4=packed*scales[:,None];np.testing.assert_allclose(decoded,rows4/np.linalg.norm(rows4,axis=1,keepdims=True),atol=1e-6);np.testing.assert_array_equal(decoded_owners,owners)
     if labels!=face_ids:raise ValueError('Changed face order')

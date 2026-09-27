@@ -1,6 +1,6 @@
 {
   "name": "gpu-font",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Find the font in an image of text: ranks 2,000+ free font families by look, on the user's device with WebGPU",
   "type": "module",
   "exports": {

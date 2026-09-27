@@ -55,6 +55,23 @@ A catalog is a JSON file of reference vectors, bound to the exact model that mad
 
 A new shipped catalog also needs its entry in `catalogs` (`src/match.mjs`) and its id in `src/match.d.ts`; the tests fail until both list it.
 
+## Data
+
+Everything collected lives under `.data/` and is used for training, for a read, or for a catalog; a set collected for a read not yet written is listed as such. `bench/foundries.json` records each source's terms.
+
+| Set | Where | Used for |
+|---|---|---|
+| Google Fonts, 2,004 families | `.data/fonts`, `bench/corpus.json` | training; the catalog benchmark; the Google Fonts catalog |
+| Open font files, 8,517 families from GitHub, Debian, Font Library and 30 more sources, hand-downloaded ones in `.data/manual` | `.data/fonts-open`, `bench/open-fonts.json`, `bench/open-releases.json` | training (nine families in ten); the held-out read (`train.style_open`, one in ten); the file-built catalogs |
+| Adobe Fonts and DaFont captures, the pilot sets | `.data/previews` | the capture-built catalogs (`scripts.preview_catalog`); MyFonts stays local, its terms a ban |
+| WhatFontIs-Bench photographs | `.data/whatfontis` | development part: training views and checkpoint selection; final part: the photo read (`scripts/whatfontis.mjs`) |
+| Photographs of fonts in no catalog | `.data/style/photos-absent.*` | rejection calibration at export |
+| DaFont forum requests, the finder set, the photo controls | `.data/dafont`, `.data/finders`, `.data/photo-controls` | reads (`scripts/dafont.mjs`, `scripts/finders.mjs`, `scripts/photo-controls.mjs`) |
+| Web screenshots: lines from the top sites' homepages, labelled by the font Chromium drew | `.data/screens` (`scripts/web_screens.mjs`) | the screens read (`scripts/screens.mjs`); other people's designs, never shipped |
+| Wikimedia Commons photographs filed by typeface | `.data/photos/commons` (`scripts/commons_typefaces.py`, `scripts/text_boxes.py`) | the Commons read (`scripts/commons.mjs`) |
+| Type specimen books from archive.org | `.data/specimens` (`scripts/specimen_books.py`) | collected for a historical print read; captions still to be parsed into labels |
+| Wikidata typefaces, Fonts In Use ids, popularity | `.data/canon` (`scripts/canon.mjs`) | `bench/canon.json`, the typefaces worth collecting |
+
 ## Test
 
 ```sh

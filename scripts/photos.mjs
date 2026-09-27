@@ -13,6 +13,16 @@ export function rankOf(rows, truth) {
   return i < 0 ? null : i + 1
 }
 
+// Accuracy of scored items ({ truth: { family }, rank }) over the items, and over families with each counted once, so a
+// family with thousands of pictures does not speak for the rest. Shares are null when nothing was scored.
+export function accuracy(list) {
+  const share = test => list.length ? Math.round(1e4 * list.filter(test).length / list.length) / 1e4 : null
+  const families = [...list.reduce((m, s) => m.set(s.truth.family, [...(m.get(s.truth.family) || []), s]), new Map()).values()]
+  const mean = test => families.length ? Math.round(1e4 * families.reduce((sum, f) => sum + f.filter(test).length / f.length, 0) / families.length) / 1e4 : null
+  const first = s => s.rank === 1, five = s => s.rank !== null && s.rank <= 5
+  return { families: families.length, top1: share(first), top5: share(five), top20: share(s => s.rank !== null), byFamily: { top1: mean(first), top5: mean(five) } }
+}
+
 // Family names of every shipped catalog, normalized, with the catalog each belongs to.
 // A family name may sit in several catalogs (Lato in Google Fonts and Adobe Fonts): `catalog` is the first that holds it in the
 // shipped order, Google Fonts first, so its training role applies; `catalogs` lists them all.

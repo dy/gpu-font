@@ -20,7 +20,8 @@ class PreviewCatalogTests(unittest.TestCase):
             vectors=np.random.default_rng(3).normal(size=(6,128)).astype(np.float32);a=make_catalog(records,vectors,encoder,'manifest','words')
             self.assertEqual((a['vectors']['encoding'],a['dimensions'],a['vectors']['shape']),('int4-base64',128,[6,128]))
             unit=vectors/np.linalg.norm(vectors,axis=1,keepdims=True);scales=np.abs(unit).max(1)/7;four=np.round(unit/scales[:,None]).clip(-7,7).astype(np.int8)
-            self.assertEqual(a['vectors']['data'],base64.b64encode(pack_bits(four,4)).decode());np.testing.assert_allclose(a['vectors']['scales'],scales,rtol=1e-6)
+            self.assertEqual(a['vectors']['data'],base64.b64encode(pack_bits(four,4)).decode());np.testing.assert_allclose(a['vectors']['scales'],scales,rtol=5e-6)
+            self.assertTrue(all(s==float(f'{s:.6g}') for s in a['vectors']['scales']))  # six digits each: a float32 listed whole prints seventeen
             decoded,owners,labels=read_catalog(a,encoder)
             # Each row is its 4-bit values times its scale, normalized; an 8-bit copy of the same values reads the same.
             np.testing.assert_allclose(decoded*np.linalg.norm(four*scales[:,None],axis=1,keepdims=True),four*scales[:,None],rtol=1e-5,atol=1e-7)

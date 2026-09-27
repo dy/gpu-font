@@ -1,52 +1,52 @@
 {
-  "encoderSha256": "864560320ab4a3fe038e5a7487fb7fb4aeebce9f4755a7b50ee22579f8f7ae89",
+  "encoderSha256": "7993b256cf118495f245a9b3b51648b43c36605518c45213ef988ce626853303",
   "catalogs": [
     {
       "id": "google-fonts",
-      "sha256": "7f48eaf3291c7d257720f2b4ba15fecffaccf73fc7f27f3122e263d6116e4bbf",
+      "sha256": "783943483f648929bae9bb518d3dbc865817107859542d4f10e8176afef17408",
       "families": 2004,
       "faces": 8132
     },
     {
       "id": "dafont",
-      "sha256": "dc1be5a2df965ce936d7bc34c2158b6ecdfc1e77abb97761b53b0a32c5ad4d09",
-      "families": 41113,
-      "faces": 41113
+      "sha256": "c1eb09891d18fde5eafd30be5959752897d7535b9fbc987aa0ff75f53d979575",
+      "families": 96212,
+      "faces": 96212
     },
     {
       "id": "adobe-fonts",
-      "sha256": "ee4edb94328601619046b6a90ad7fdcf7c5395e326891afd87f5334b56e75d68",
+      "sha256": "eb8df4ab2528839a4a2addf7705e90b8d79660e50ba46ebd2168179be2b8102e",
       "families": 4784,
       "faces": 4788
     },
     {
       "id": "github",
-      "sha256": "f6adbd4db31bc2df0c145be965e7ac5c93b28098a2d8a7d09798c0e4991b0ea5",
+      "sha256": "722d1c1f8067e0ae319212fad5304268a1c074e6b78af70ce5da6a800e5665f6",
       "families": 3572,
       "faces": 10884
     },
     {
       "id": "debian",
-      "sha256": "6724ac248ac9802c3aaed16e32388a98aeff4d7e7aca9093bf6488c9e15b9f60",
+      "sha256": "b3066ade4665e58026fca4ce06b0b1b1af4d2dad9e4ccd49f4424b9c74bcf51e",
       "families": 2169,
       "faces": 4288
     },
     {
       "id": "fontlibrary",
-      "sha256": "224a8c31f21ef13f185aa7fcc1100b0186ed1f7fa5b8372d6459a33b86d9ec5d",
+      "sha256": "944ffd67882ffd9c3e8d0ba70170f12dae542e3c7482682036d43ab58e97b91f",
       "families": 1222,
       "faces": 3973
     },
     {
       "id": "other",
-      "sha256": "fba02d60ff56c0d6b5000d7dcb8df1070e048ed2b7178f97abf059433f1c8198",
-      "families": 564,
-      "faces": 1984
+      "sha256": "3287e6fbe1e22229623ff17b9e492feaabb74824b9d1cf58c829904641225b26",
+      "families": 580,
+      "faces": 2032
     }
   ],
-  "cpuError": 1.1920928955078125e-7,
-  "gpuError": 2.4586915969848633e-7,
-  "detectionMilliseconds": 55.400000002235174,
+  "cpuError": 2.0489096641540527e-7,
+  "gpuError": 1.7881393432617188e-7,
+  "detectionMilliseconds": 51.099999994039536,
   "checks": [
     "native CPU/PyTorch/WebGPU projections",
     "exact displayed tensors and input stats",

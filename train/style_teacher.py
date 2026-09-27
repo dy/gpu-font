@@ -9,6 +9,7 @@ from collections import Counter
 from concurrent.futures import ProcessPoolExecutor
 import io
 import random
+import resource
 
 import numpy as np
 import torch
@@ -126,15 +127,28 @@ def blur(x, sigma=1.1):
     return torch.nn.functional.conv2d(x, k.view(1, 1, -1, 1), padding=(3, 0))[:, 0]
 
 
-def distances(glyphs, have, device='mps'):
-    """Mean normalized squared difference over glyphs both faces contain; inf where fewer than 60% are shared."""
-    n, count = have.shape; num = torch.zeros(n, n, device=device); shared = torch.zeros(n, n, device=device)
+def bound(gigabytes):
+    """The GPU's share of memory, which the machine's RAM pays for too: an allocation past it fails instead of swapping."""
+    if torch.backends.mps.is_available(): torch.mps.set_per_process_memory_fraction(min(1., gigabytes*2**30/torch.mps.recommended_max_memory()))
+
+
+def distances(glyphs, have, device='mps', rows=None, block=1024):
+    """Mean normalized squared difference over glyphs both faces contain; inf where fewer than 60% are shared.
+    `glyphs` may be a file on disk (a memmap) and `rows` the faces of it to compare. Memory is bounded for any number of
+    faces n: the sums stay on the device (n² floats and n² bytes), pairs are taken a block of rows at a time, and nothing
+    else of size n² exists until the result."""
+    rows = np.arange(len(have)) if rows is None else np.asarray(rows); n, count = len(rows), have.shape[1]
+    num = torch.zeros(n, n, device=device); shared = torch.zeros(n, n, device=device, dtype=torch.uint8)
     for i in range(count):
-        x = blur(torch.from_numpy(glyphs[:, i].astype(np.float32) / 255).to(device)).flatten(1)
-        h = torch.from_numpy(have[:, i]).to(device).float(); sq = (x*x).sum(1)
-        d = ((sq[:, None] + sq[None] - 2*x@x.T) / (sq[:, None] + sq[None] + 1e-6)).clamp(min=0)
-        mask = h[:, None]*h[None]; num += d*mask; shared += mask
-    result = (num/shared.clamp(min=1)).cpu().numpy(); result[shared.cpu().numpy() < .6*count] = np.inf
+        x = blur(torch.from_numpy(np.asarray(glyphs[rows, i], np.float32) / 255).to(device)).flatten(1)
+        h = torch.from_numpy(have[rows, i]).to(device); sq = (x*x).sum(1)
+        for a in range(0, n, block):
+            b = slice(a, a + block)
+            d = ((sq[b, None] + sq[None] - 2*x[b]@x.T) / (sq[b, None] + sq[None] + 1e-6)).clamp(min=0)
+            mask = h[b, None] & h[None]; num[b] += d*mask; shared[b] += mask.to(torch.uint8)
+    result = np.empty((n, n), np.float32)
+    for a in range(0, n, block):
+        b = slice(a, a + block); part = num[b]/shared[b].clamp(min=1); part[shared[b] < .6*count] = float('inf'); result[b] = part.cpu().numpy()
     np.fill_diagonal(result, 0)
     return result
 
@@ -157,9 +171,10 @@ def noise_floor(faces, chars, count=300):
 
 
 def teacher(script):
-    """Face indices and their distance matrix for one script."""
+    """Face indices and their distance matrix for one script, as stored: 16-bit floats, which a caller widens after it
+    has taken the rows it needs (the matrix of every Latin face is n² values)."""
     data = np.load(OUT/f'teacher-{script}.npz')
-    return data['faces'], data['distances'].astype(np.float32)
+    return data['faces'], data['distances']
 
 
 def twins(matrix, threshold):
@@ -195,15 +210,20 @@ def build(workers=10):
     save(OUT/'faces.json', {'inventorySha256':sha(ROOT/'bench/corpus.json'),'openInventorySha256':sha(OPEN),'faces':faces})
     floor = noise_floor(faces, sets['Latn']); print('Noise floor', floor, flush=True)
     save(OUT/'noise-floor.json', floor)
+    bound(8)
     for script, chars in sorted(sets.items(), key=lambda s: s[0] != 'Latn'):
         members = [i for i, f in enumerate(faces) if script in f['scripts']]
+        # Glyphs go to a file as they are drawn (every Latin face is gigabytes of pixels), and only the kept faces' columns are read back.
+        path = OUT/f'glyphs-{script}.npy'; glyphs = np.lib.format.open_memmap(path, mode='w+', dtype=np.uint8, shape=(len(members), len(chars), SIZE, SIZE))
+        have = np.zeros((len(members), len(chars)), bool)
         with ProcessPoolExecutor(workers) as pool:
-            rendered = list(pool.map(render_job, [(faces[i], script, chars) for i in members], chunksize=16))
-        glyphs = np.stack([g for g, _ in rendered]); have = np.stack([h for _, h in rendered])
-        keep = have.sum(1) >= .6*len(chars); members = [m for m, k in zip(members, keep) if k]; glyphs, have = glyphs[keep], have[keep]
-        matrix = distances(glyphs, have)
-        np.savez_compressed(OUT/f'teacher-{script}.npz', faces=np.array(members), distances=matrix.astype(np.float16), chars=np.array(list(chars)))
-        print(script, 'faces', len(members), flush=True)
+            for k, (g, h) in enumerate(pool.map(render_job, [(faces[i], script, chars) for i in members], chunksize=16)): glyphs[k] = g; have[k] = h
+        keep = np.flatnonzero(have.sum(1) >= .6*len(chars)); members = [members[k] for k in keep]
+        matrix = distances(glyphs, have, rows=keep).astype(np.float16)
+        del glyphs; path.unlink()
+        np.savez_compressed(OUT/f'teacher-{script}.npz', faces=np.array(members), distances=matrix, chars=np.array(list(chars)))
+        del matrix; torch.mps.empty_cache()
+        print(script, 'faces', len(members), f'(peak {resource.getrusage(resource.RUSAGE_SELF).ru_maxrss/2**30:.1f} GB in this process, {torch.mps.driver_allocated_memory()/2**30:.1f} GB on the device)', flush=True)
     print(summarize(floor)['scripts'], flush=True)
 
 

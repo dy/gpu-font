@@ -290,18 +290,25 @@ def sample(spec):
 
 class Stream:
     """Prefetched batches of prepared views from a worker pool."""
+    PATIENCE = 600  # seconds a batch may take before its workers count as lost
+
     def __init__(self, faces, pools, plan, workers=10, prefetch=6, drawn=0.0, photo=0.0, teacher=False):
-        self.pool = multiprocessing.get_context('spawn').Pool(workers, initializer=init, initargs=(faces, pools, drawn, photo, teacher))
-        self.plan = plan; self.queue = queue.Queue(prefetch); self.stop = False; self.error = None
+        self.workers = lambda: multiprocessing.get_context('spawn').Pool(workers, initializer=init, initargs=(faces, pools, drawn, photo, teacher))
+        self.pool = self.workers(); self.plan = plan; self.queue = queue.Queue(prefetch); self.stop = False; self.error = None
         self.thread = threading.Thread(target=self.fill, daemon=True); self.thread.start()
 
     def fill(self):
+        """Batches in order, three in flight. A batch that never returns means its workers are gone (killed from outside,
+        or one crashed inside a font library): the pool is rebuilt and the run goes on with fresh batches."""
         pending = []
         try:
             while not self.stop:
                 pending.append(self.pool.map_async(sample, self.plan(), chunksize=4))
                 if len(pending) >= 3:
-                    result = pending.pop(0).get()
+                    try: result = pending.pop(0).get(self.PATIENCE)
+                    except multiprocessing.TimeoutError:
+                        print('View workers lost; the pool is rebuilt', flush=True)
+                        self.pool.terminate(); self.pool = self.workers(); pending = []; continue
                     self.queue.put([r for r in result if r is not None])
         except BaseException as error:
             self.error = error; self.queue.put(None)

@@ -158,8 +158,8 @@ def export_clusters(clusters, biases, architecture, dilations, fonts, preparatio
     for cluster, bias, target in zip(clusters, biases, [*restored.convs, restored.head]):
         book, index, scale, bits = cluster['codebook'], cluster['index'], cluster['scale'], cluster['bits']
         with torch.no_grad(): target.weight.copy_(torch.from_numpy(book[index] * scale[:, None]).view(target.weight.shape)); target.bias.copy_(torch.as_tensor(bias))
-        layers.append({'shape': list(target.weight.shape), 'scale': scale.tolist(), 'bits': bits, 'codebook': book.tolist(),
-                       'weights': base64.b64encode(pack_bits((index - 2 ** (bits - 1)).astype(np.int8), bits)).decode(), 'bias': np.asarray(bias, np.float32).tolist()})
+        layers.append({'shape': list(target.weight.shape), 'scale': shortest(scale), 'bits': bits, 'codebook': book.tolist(),
+                       'weights': base64.b64encode(pack_bits((index - 2 ** (bits - 1)).astype(np.int8), bits)).decode(), 'bias': shortest(bias)})
     return {'version': 1, 'architecture': architecture, 'dilations': dilations, 'fonts': fonts, 'preparation': preparation, 'layers': layers}, restored
 
 
@@ -180,6 +180,12 @@ def load_export(artifact):
             target.weight.copy_(torch.from_numpy(weights.reshape(layer['shape'])))
             target.bias.copy_(torch.tensor(layer['bias']))
     return model
+
+
+def shortest(values):
+    """Float32 numbers as the shortest text that reads back to the same float32. Listed whole, each prints the seventeen
+    digits of its double: a quarter of an encoder file's text for nothing."""
+    return [float(str(v)) for v in np.asarray(values, np.float32)]
 
 
 def export(model, fonts, preparation, bits=8, codebook=False):
@@ -203,6 +209,6 @@ def export(model, fonts, preparation, bits=8, codebook=False):
         with torch.no_grad():
             target.weight.copy_(torch.from_numpy(decoded.reshape(weight.shape)))
             target.bias.copy_(source.bias)
-        layers.append({'shape': list(weight.shape), 'scale': scale.tolist(), **extra,
-                       'weights': base64.b64encode(pack_bits(quant, bits)).decode(), 'bias': source.bias.detach().tolist()})
+        layers.append({'shape': list(weight.shape), 'scale': shortest(scale), **extra,
+                       'weights': base64.b64encode(pack_bits(quant, bits)).decode(), 'bias': shortest(source.bias.detach())})
     return {'version': 1, 'architecture': model.architecture, 'dilations': model.dilations, 'fonts': fonts, 'preparation': preparation, 'layers': layers}, restored

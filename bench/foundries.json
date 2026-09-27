@@ -636,9 +636,11 @@
    "access": "files",
    "licence": "OFL-1.1 (as stated publicly)",
    "terms": {
-    "checked": "2026-09-24",
-    "status": "not-verified",
-    "note": "Site unreachable on 2026-09-24. Two families (Tanklager, Nyght Serif) already come from their repositories through Uncut."
+    "status": "permitted",
+    "checked": "2026-09-27",
+    "url": "https://www.tunera.xyz/",
+    "quote": "Free to use · Free to distribute · Free to modify · You should credit Tunera and the designer · Learn more about SIL Open Font License",
+    "note": "robots.txt: \"User-agent: *\" with only \"Crawl-delay: 10\". Each family page states the terms quoted, with a download."
    },
    "work": {
     "status": "inventoried",
@@ -649,6 +651,10 @@
     {
      "date": "2026-09-24",
      "event": "Surveyed; site unreachable, to re-check"
+    },
+    {
+     "date": "2026-09-27",
+     "event": "Site reachable again: every family page says free to use, distribute and modify with credit, under the OFL; its families ship"
     }
    ]
   },
@@ -2555,9 +2561,9 @@
    "access": "files",
    "licence": "OFL-1.1 (per family)",
    "terms": {
-    "checked": "2026-09-25",
-    "status": "not-verified",
-    "note": "Families downloaded by hand from the foundry's own pay-what-you-want downloads, each with its OFL.txt."
+    "status": "none-found",
+    "checked": "2026-09-27",
+    "note": "robots.txt closes only /wp-admin/; the site has no terms page; the fonts carry the SIL Open Font License."
    },
    "work": {
     "status": "inventoried",
@@ -2568,6 +2574,10 @@
     {
      "date": "2026-09-25",
      "event": "DT Getai Grotesk Display (listed by Uncut) and DT Octopia Neue collected by hand, both OFL"
+    },
+    {
+     "date": "2026-09-27",
+     "event": "Terms read: robots.txt closes only /wp-admin/ and no terms page exists; its OFL family ships"
     }
    ]
   },

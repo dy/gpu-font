@@ -22,7 +22,7 @@ from scripts.corpus import ROOT, CACHE
 from train.encoder_data import save, SPLIT
 from train.robustness import read, sha
 from train.style_data import Stream, pools as make_pools, tensors
-from train.style_teacher import glyph_sets, teacher, OUT as STYLE
+from train.style_teacher import glyph_sets, teacher, bound, OUT as STYLE
 from train.style_fonts import training_families, open_role
 from train.style_catalog import load as load_references, vectors as reference_vectors
 from train.style_bench import load as load_bench
@@ -138,6 +138,29 @@ def embed_manifest(model, manifest, pixels, sources, device='mps'):
     return F.normalize(out, dim=1).cpu().numpy()
 
 
+def nearest(distance, floor, count=16, block=1024):
+    """Each face's nearest other faces and how many faces have a twin (another face closer than the renderer's noise),
+    a block of rows at a time."""
+    n = len(distance); out = np.zeros((n, min(count, n - 1)), np.int64); twinned = 0
+    for a in range(0, n, block):
+        rows = distance[a:a + block].float(); own = torch.arange(len(rows), device=rows.device)
+        twinned += int(((rows < floor).sum(1) > 1).sum()); rows[own, own + a] = float('inf')
+        out[a:a + block] = rows.topk(out.shape[1], largest=False).indices.cpu().numpy()
+    return out, twinned
+
+
+def twin_rows(setup, faces):
+    """A batch's rows of pair distances, and its twins among all faces: closer than the renderer's noise, a face its own."""
+    rows = setup.distance[faces].float(); near = rows < setup.floor; near[torch.arange(len(faces), device=rows.device), faces] = True
+    return rows, near
+
+
+# The device's share of a 32 GB budget while training: a step's activations with gradients, the distillation teacher's forward and
+# the allocator's cached blocks take 10 to 11 GB, the pair distances 1 to 2; the processes' own memory (trainer, data workers) about 12.
+DEVICE_GB = 16
+PARTS = 2  # shares a step's batch is taken in
+
+
 class Setup:
     """Faces, labels, teacher geometry and twins for a chosen set of training families."""
     def __init__(self, roles, device='mps'):
@@ -150,7 +173,9 @@ class Setup:
         self.floor = read(STYLE/'noise-floor.json')['median']
         self.train = [i for i, f in enumerate(self.faces) if self.role(f['family']) in roles and self.pools.get(f['family'])]
         self.position = {f: i for i, f in enumerate(self.train)}
-        n = len(self.train); distance = np.full((n, n), np.inf, np.float32)
+        # Pair distances as the teacher stores them, 16-bit floats, on the device: n² pairs is gigabytes at 32 bits with every
+        # collected face in, and a step reads a batch of rows of it. Twins are read off those rows, never held as a matrix.
+        n = len(self.train); distance = np.full((n, n), np.inf, np.float16)
         # Latin geometry for every face with Latin; faces without Latin use their own script's teacher.
         for script in ['Latn'] + [s for s in self.scripts if s != 'Latn']:
             members, matrix = teacher(script); rows = [self.position.get(int(m), -1) for m in members]; keep = [k for k, r in enumerate(rows) if r >= 0]
@@ -162,14 +187,11 @@ class Setup:
                 for r, ok in zip(idx, fresh):
                     if ok: distance[r, idx] = block[list(idx).index(r)]
         np.fill_diagonal(distance, 0)
-        self.distance = torch.from_numpy(distance).to(device)
-        near = (distance < self.floor); np.fill_diagonal(near, True)
-        self.twins = torch.from_numpy(near / near.sum(1, keepdims=True)).to(device, torch.float32)
-        finite = np.where(np.isfinite(distance), distance, np.inf); np.fill_diagonal(finite, np.inf)
-        self.neighbours = np.argsort(finite, axis=1)[:, :16]
+        self.distance = torch.from_numpy(distance).to(device); del distance
+        self.neighbours, twinned = nearest(self.distance, self.floor)
         self.by_family = {}
         for k, i in enumerate(self.train): self.by_family.setdefault(self.faces[i]['family'], []).append(k)
-        print('Training faces', n, 'families', len(self.by_family), 'faces with a twin', int((near.sum(1) > 1).sum()), flush=True)
+        print('Training faces', n, 'families', len(self.by_family), 'faces with a twin', twinned, flush=True)
 
     def role(self, family):
         """A Google family's role from the drawn split; an open family's from the fixed rule (one in ten held out)."""
@@ -237,12 +259,12 @@ def losses(e, heads, proxies, setup, views, device, pairs=0.0, follow=None):
     """`follow`: a teacher's unit embedding of each view's clean render, which the view's own embedding then follows."""
     faces = torch.tensor([setup.position[v['face']] for v in views], device=device)
     P = F.normalize(proxies, dim=1); cos = e @ P.T
-    target = setup.twins[faces]; drawn = torch.tensor([bool(v.get('drawn')) for v in views], device=device)
+    rows, near = twin_rows(setup, faces); target = near/near.sum(1, keepdim=True); drawn = torch.tensor([bool(v.get('drawn')) for v in views], device=device)
     # A drawing keeps a font's style but not its exact letterforms: it learns the style neighbourhood (a broad
     # letter-by-letter target), never the identity of one face.
     each = -(target*F.log_softmax(SCALE*(cos - MARGIN*(target > 0)), dim=1)).sum(1)
     identity = each[~drawn].mean() if (~drawn).any() else cos.sum()*0
-    rows = setup.distance[faces]; valid = torch.isfinite(rows); temperature = torch.where(drawn, DRAWN_T, TEACHER_T)[:, None]
+    valid = torch.isfinite(rows); temperature = torch.where(drawn, DRAWN_T, TEACHER_T)[:, None]
     teacher_p = F.softmax(torch.where(valid, -rows/temperature, torch.full_like(rows, -1e4)), dim=1)
     student = F.log_softmax(torch.where(valid, cos/STUDENT_T, torch.full_like(cos, -1e4)), dim=1)
     geometry = (teacher_p*(torch.log(teacher_p.clamp(min=1e-12)) - student)).sum(1).mean()
@@ -261,7 +283,7 @@ def losses(e, heads, proxies, setup, views, device, pairs=0.0, follow=None):
     view = cos.sum()*0
     if pairs:
         valid = ~drawn[:, None] & ~drawn[None, :] & ~torch.eye(len(views), dtype=torch.bool, device=device)
-        positive = (setup.twins[faces][:, faces] > 0) & valid; has = positive.any(1)
+        positive = near[:, faces] & valid; has = positive.any(1)
         logp = F.log_softmax((e @ e.T/VIEW_T).masked_fill(~valid, -1e4), dim=1)
         if has.any(): view = (-(logp*positive).sum(1)[has]/positive.sum(1)[has]).mean()
     distill = (1 - (e*follow).sum(1)).mean() if follow is not None else cos.sum()*0
@@ -355,6 +377,7 @@ def train(run, roles, steps, warm, workers, check=2500, architecture=CORPUS_ARCH
     if (bench_name, select_role) == ('bench', 'development') and 'development' in roles: raise ValueError('Development families train here: select on catalog:validation')
     seed = run_seed(run, seed); device = 'mps'; torch.manual_seed(seed); out = ROOT/'.data/style'/run; out.mkdir(parents=True, exist_ok=True)
     if (out/'progress.json').exists(): raise ValueError('Existing style run: ' + run)
+    bound(DEVICE_GB)
     setup = Setup(roles, device)
     teacher_model = teacher_state = None
     if teacher: teacher_model, _, teacher_state = load_run(teacher, device); teacher_model.eval()
@@ -406,17 +429,27 @@ def train(run, roles, steps, warm, workers, check=2500, architecture=CORPUS_ARCH
     try:
         if select_role: checkpoint(0)
         for step in range(1, steps + 1):
-            views = next(stream) + stored.sample(mix, 32); model.train(); heads.train()
-            pixels, sizes, owners = tensors(views, device)
-            e = embed_views(model, pixels, sizes, owners, len(views)); follow = None
-            if teacher_model:  # the teacher reads each view's clean render; stored Chromium views have only themselves
-                with torch.no_grad(): follow = embed_views(teacher_model, *tensors([{**v, 'windows': v.get('clean', v['windows'])} for v in views], device), len(views))
-            total, parts, accuracy = losses(e, heads, proxies, setup, views, device, pairs, follow)
-            optimizer.zero_grad(set_to_none=True); total.backward()
+            views = next(stream) + stored.sample(mix, 32); mix.shuffle(views); model.train(); heads.train()
+            optimizer.zero_grad(set_to_none=True)
+            # A step's activations with gradients are most of the device's memory. Every loss but the view pairs is a mean over
+            # views, so the shuffled batch is taken in PARTS interleaved shares whose gradients add up to the whole batch's.
+            # Batch statistics are then each share's own (hundreds of windows, shuffled so the shares are alike); view pairs,
+            # which couple the batch's views, keep it whole.
+            for part in [views] if pairs else [views[k::PARTS] for k in range(PARTS)]:
+                pixels, sizes, owners = tensors(part, device)
+                e = embed_views(model, pixels, sizes, owners, len(part)); follow = None
+                if teacher_model:  # the teacher reads each view's clean render; stored Chromium views have only themselves
+                    with torch.no_grad(): follow = embed_views(teacher_model, *tensors([{**v, 'windows': v.get('clean', v['windows'])} for v in part], device), len(part))
+                total, parts, accuracy = losses(e, heads, proxies, setup, part, device, pairs, follow)
+                share = len(part)/len(views); (total*share).backward()
+                for k, v in [*parts.items(), ('accuracy', accuracy)]: running[k] = running.get(k, 0) + v.detach()*share
+                del pixels, e, follow, total, parts
             torch.nn.utils.clip_grad_norm_([*model.parameters(), proxies, *heads.parameters()], 5); optimizer.step(); schedule.step()
-            for k, v in [*parts.items(), ('accuracy', accuracy)]: running[k] = running.get(k, 0) + v.detach()
+            # Batches differ in their number of windows, and the allocator keeps a block of every size it has met: released
+            # every few steps, the device holds a step's working set instead of growing to the cap.
+            if step % 25 == 0: torch.mps.empty_cache()
             if step % 500 == 0:  # one device sync per report, not per step
-                print(f'step {step}: ' + ' '.join(f'{k} {float(v)/500:.3f}' for k, v in running.items()) + f' ({time.perf_counter() - start:.0f}s)', flush=True); running = {}
+                print(f'step {step}: ' + ' '.join(f'{k} {float(v)/500:.3f}' for k, v in running.items()) + f' ({time.perf_counter() - start:.0f}s, {torch.mps.driver_allocated_memory()/2**30:.1f} GB on the device)', flush=True); running = {}
             if step % check == 0 and select_role: checkpoint(step)
         if not select_role:
             torch.save({'state':{k: v.detach().cpu().clone() for k, v in model.state_dict().items()},'heads':{k: v.detach().cpu().clone() for k, v in heads.state_dict().items()},
@@ -566,6 +599,16 @@ def shipped_preparation():
     return {**geometry, 'sha256': sha(ROOT/'src/input.mjs'), 'normalizerSha256': sha(ROOT/'src/prepare.mjs'), 'lineSha256': sha(ROOT/'src/line.mjs')}
 
 
+HEAD_DECIMALS = 4  # past four places a head's logit moves under 0.0004 and a predicted weight under 0.12 units (64 numbers of unit length)
+
+
+def head_layer(weight, bias, decimals=HEAD_DECIMALS):
+    """A head's layer as JSON numbers. Rounded as doubles: a rounded float32 prints every digit of its nearest double,
+    seventeen where four were meant."""
+    numbers = lambda values: np.round(np.asarray(values, np.float64), decimals).tolist()
+    return {'weights': numbers(weight), 'bias': numbers(bias)}
+
+
 def export_run(run):
     """Encoder with 6-bit weights (bench/style.md, Quantization); the typed heads travel in the same file as small float layers."""
     model, heads, state = load_run(run, 'cpu')
@@ -576,7 +619,7 @@ def export_run(run):
     else: artifact, _ = export(model.train(), [str(i) for i in range(dimensions)], shipped_preparation(), bits=6)
     del artifact['fonts']; artifact.update(kind='font-encoder', dimensions=dimensions, normalization='l2')
     layers = {k: v.numpy() for k, v in state['heads'].items()}
-    layer = lambda name: {'weights': np.round(layers[name + '.weight'], 6).tolist(), 'bias': np.round(layers[name + '.bias'], 6).tolist()}
+    layer = lambda name: head_layer(layers[name + '.weight'], layers[name + '.bias'])
     artifact['heads'] = {'weight': {**layer('weight'), 'scale': 300, 'offset': 400}, 'italic': layer('italic'),
                          'script': {**layer('script'), 'labels': state['scripts']}, 'category': {**layer('category'), 'labels': CATEGORIES},
                          'fine': {**layer('fine'), 'labels': state['fine']}}

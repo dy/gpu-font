@@ -1,3 +1,4 @@
+import json
 import base64
 import tempfile
 from pathlib import Path
@@ -61,6 +62,13 @@ class CapacityTests(unittest.TestCase):
         self.assertEqual({l['bits'] for l in six['layers']},{6})
         self.assertEqual(len(base64.b64decode(six['layers'][1]['weights'])),64*32*9*6//8)
         with torch.no_grad():torch.testing.assert_close(load_export(six)(x),restored(x),atol=0,rtol=0)
+        # Scales and biases are written as the shortest text of their float32, nine digits at most, and read back to it.
+        folded=model.folded();written=[n for l in six['layers'] for n in l['scale']+l['bias']]
+        self.assertLessEqual(max(len(json.dumps(n).lstrip('-').split('e')[0].replace('.','').strip('0')) for n in written),9)
+        for layer,source in zip(six['layers'],[*folded.convs,folded.head]):np.testing.assert_array_equal(np.array(layer['bias'],np.float32),source.bias.detach().numpy())
+        from train.ten_model import shortest
+        edges=np.array([0,-0.0,1e-12,-2.5e-7,1/3,16777217,3e38],np.float32)  # zero, the scale floor, a small bias, a repeating fraction, past 2^24, near the largest
+        np.testing.assert_array_equal(np.array(json.loads(json.dumps(shortest(edges))),np.float32),edges);self.assertEqual(shortest(np.zeros(0,np.float32)),[])
         # As train.style.load_run(exported=True) reads it: an encoder file names its dimensions instead of fonts.
         with tempfile.TemporaryDirectory() as tmp:
             path=Path(tmp)/'encoder.json';save(path,{**{k:v for k,v in six.items() if k!='fonts'},'kind':'font-encoder','dimensions':128,'normalization':'l2'})
