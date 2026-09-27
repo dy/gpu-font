@@ -46,7 +46,7 @@
   ],
   "cpuError": 1.1920928955078125e-7,
   "gpuError": 2.4586915969848633e-7,
-  "detectionMilliseconds": 43.60000038146973,
+  "detectionMilliseconds": 76.30000000004657,
   "checks": [
     "native CPU/PyTorch/WebGPU projections",
     "exact displayed tensors and input stats",

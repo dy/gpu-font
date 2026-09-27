@@ -136,7 +136,9 @@ def main():
     found = sources()
     missing = [{'id': face_id, 'reason': 'no source picture or file'} for ids in shipped.values() for face_id in ids if face_id not in found]
     todo = [(face_id, found[face_id]) for ids in shipped.values() for face_id in ids if face_id in found]
-    with Pool(os.cpu_count()) as pool: done = pool.map(picture, todo, chunksize=64)
+    # At most 12 workers, each restarted after four chunks of 64 faces: the largest fonts (a 99 MB file) peak at half a
+    # gigabyte a worker, so the run stays near 6 GB whatever the machine.
+    with Pool(min(os.cpu_count(), 12), maxtasksperchild=4) as pool: done = pool.map(picture, todo, chunksize=64)
     missing += [{'id': face_id, 'reason': reason} for face_id, _, reason in done if reason]
     kept = {path(face_id) for face_id, _, reason in done if not reason}
     stale = [file for file in OUT.glob('*/*.webp') if file not in kept]
