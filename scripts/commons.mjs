@@ -7,7 +7,7 @@
 //   node scripts/commons.mjs     needs `npm run demo`
 import { readFile, writeFile } from 'node:fs/promises'
 import { createHash } from 'node:crypto'
-import { matchPhotos, rankOf, catalogNames, normalize, accuracy } from './photos.mjs'
+import { matchPhotos, rankOf, twinSets, catalogNames, normalize, accuracy } from './photos.mjs'
 
 const ROOT = '.data/photos/commons', CONFIDENCE = .5, LETTERS = 3
 
@@ -34,7 +34,7 @@ async function main() {
   const info = new Map((await readFile(`${ROOT}/info.jsonl`, 'utf8')).trim().split('\n').map(l => JSON.parse(l)).map(i => [i.title, i]))
   const { kept, left } = indexed(photos, await catalogNames())
   const { browser, adapter, encoderSha256, results } = await matchPhotos(kept.map(k => ({ path: `${ROOT}/images/${k.photo.file}`, box: k.line.box })))
-  const scored = kept.map((item, i) => ({ ...item, ...results[i], rank: rankOf(results[i].rows, item.truth.family) }))
+  const twins = await twinSets(), scored = kept.map((item, i) => ({ ...item, ...results[i], rank: rankOf(results[i].rows, item.truth.family, twins.get(item.truth.familyId)) }))
   const slices = (key, list = scored) => Object.fromEntries([...new Set(list.map(key))].sort().map(value => [value, summary(list.filter(s => key(s) === value))]))
   const often = new Set([...scored.reduce((m, s) => m.set(s.truth.family, (m.get(s.truth.family) || 0) + 1), new Map())].filter(([, n]) => n >= 10).map(([family]) => family))
   const times = scored.map(s => s.ms).sort((a, b) => a - b), time = p => Math.round(times[Math.floor(p * (times.length - 1))])

@@ -87,7 +87,8 @@ SOURCES += [
     {'source': 'ubuntu-titling', 'licence': 'OFL-1.1', 'url': 'https://deb.debian.org/debian/pool/main/f/fonts-ubuntu-title/fonts-ubuntu-title_0.3.orig.tar.gz', 'include': r'\.ttf$'},
 ]
 # Icons, music notation and emoji: open fonts whose glyphs are pictures, not letters. They are
-# inventoried for recognising symbols; text catalogues skip them as fonts without letters.
+# inventoried for recognising symbols; text catalogues skip them as fonts without letters, or
+# whose letters only spell icons' names (spells_icons).
 MATERIAL = 'https://raw.githubusercontent.com/google/material-design-icons/27e9ef1dbeedc13d682fece4a58e1eda4cb0961a/variablefont/'
 BRAVURA = 'https://github.com/steinbergmedia/bravura/releases/download/bravura-1.482/'
 PETALUMA = 'https://raw.githubusercontent.com/steinbergmedia/petaluma/95d295f722128cfc8521c2899366615732896373/redist/'
@@ -250,6 +251,24 @@ def symbol_encoded(path):
         return foreign > own
 
 
+def spells_icons(path, letters):
+    """Whether a face's letters are there to spell icons. Icon fonts (Font Awesome, Material Symbols) carry an alphabet so
+    that a ligature turns a name, "bell", into its icon, which also has a code point of its own in the Private Use Area.
+    A face whose letters spell more such icons than it has `letters` is a set of icons; a text face's ligatures to private
+    glyphs (a medieval abbreviation, an inclusive "·e") are far fewer than its letters."""
+    with TTFont(path, lazy=True) as font:
+        cmap = font.getBestCmap() or {}
+        icons = {name for code, name in cmap.items() if 0xE000 <= code <= 0xF8FF or code >= 0xF0000}
+        if len(icons) <= letters or 'GSUB' not in font or not font['GSUB'].table.LookupList: return False
+        latin = {name for code, name in cmap.items() if chr(code).isascii() and chr(code).isalpha()}
+        spelled = set()
+        for lookup in font['GSUB'].table.LookupList.Lookup:
+            for table in lookup.SubTable:
+                for first, ligatures in getattr(table.ExtSubTable if lookup.LookupType == 7 else table, 'ligatures', {}).items():
+                    if first in latin: spelled |= {l.LigGlyph for l in ligatures if len(l.Component) >= 2 and set(l.Component) <= latin and l.LigGlyph in icons}
+        return len(spelled) > letters
+
+
 def colour_letters(path):
     """Whether colour data draws the letters themselves. OpenDyslexic colours only a few
     stylistic alternates; its text renders in plain outlines."""
@@ -363,8 +382,13 @@ def debian_sources():
     for block in index.split('\n\n'):
         field = dict(re.findall(r'^([A-Za-z0-9-]+): (.*)$', block, re.M))
         if field.get('Section') != 'fonts' or DEBIAN_SKIP.match(field.get('Package', '')): continue
-        yield {'source': 'debian', 'url': DEBIAN + field['Filename'], 'sha256': field['SHA256'], 'format': 'deb', 'listed': True,
+        yield {'source': 'debian', 'url': DEBIAN + field['Filename'], 'sha256': field['SHA256'], 'format': 'deb', 'listed': True, 'page': debian_page(field['Package']),
                'licence': 'see the package copyright file', 'include': r'usr/share/(fonts|texlive/texmf-dist/fonts)/(truetype|opentype)/.+\.(ttf|otf|ttc)$'}
+
+
+def debian_page(package):
+    """A family from Debian links to its package's page, which names its upstream and licence."""
+    return f'https://packages.debian.org/sid/fonts/{package}'
 
 
 def debian_licences(copyright):
@@ -514,7 +538,8 @@ def main(long_tail=True):
             faces = [pair for pair in faces if pair[0]['path'] not in lines] or faces
             selected, letters = min(faces, key=lambda pair: (pair[0]['italic'], abs(corpus.normal_axes(pair[0]).get('wght', pair[0]['weight']) - 400), pair[0]['path']))
             reason = 'color' if selected['color'] and colour_letters(STORE / selected['path']) else 'no-letter-glyphs' if not letters else \
-                'single-line' if selected['path'] in lines else None
+                'single-line' if selected['path'] in lines else \
+                'icons' if any(spells_icons(STORE / face['path'], sum(face['scripts'].values())) for face, _ in faces) else None
             alphabets = {s: ''.join(map(chr, cps)) for s, cps in letters.items() if len(cps) >= 8 and s not in ('Zyyy', 'Zinh')}
             if not reason and not alphabets: reason = 'insufficient-letter-coverage'
             symbol = symbol_encoded(STORE / selected['path'])

@@ -255,6 +255,8 @@ Completion is measured coverage per release, not an assertion of universal recog
 
 ## Start here
 
+Milestone 0.3.0 (2026-09-28): the eighth-step model, trained for photographs on a CC0 texture bank and the web screens; twin credit across catalogs in every read and the page's folding; the WhatFontIs slice; 69 Adobe titles matched by store words; 6-bit rows in every reader. Photographs never trained on 41.0% top five across every catalog (40.4% before), forum crops 46.4% (44.4%), held-out open families 74% (72%), rendered first place 72% (73%). Next: the DaFont forum's 456,000 requests as a read and, boxed by line, as training data; small text as a browser draws it; the specimen books' captions.
+
 Milestone 0.2.0 (2026-09-27): the seventh-step model, seven catalogs with all of DaFont, every collected set used for training, a read or a catalog except the specimen books (captions still to be parsed) and MyFonts (its terms a ban). Next: weigh single-preview references by their evidence, since the catalogs' growth cost photographs and forum requests more than the model gained; soften the script filter; twins across catalogs in the open read.
 
 - [x] Build the pinned full-corpus data pipeline and wider browser-compatible encoder.

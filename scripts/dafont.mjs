@@ -3,7 +3,7 @@
 // answers a shipped catalog holds; the pictures of those, cut by hand to the asked-about line (bench/dafont-crops.json),
 // measure gpu-font beside the chatbots he scored. Pictures stay in .data/: they belong to the people who posted them.
 import { readFile, writeFile, mkdir, access } from 'node:fs/promises'
-import { matchPhotos, rankOf, catalogNames, normalize } from './photos.mjs'
+import { matchPhotos, rankOf, twinSets, catalogNames, normalize } from './photos.mjs'
 
 const COMMIT = '810d681299104de5e5affded5b2f7cb7ef7d8918', RAW = `https://raw.githubusercontent.com/MaxHalford/llm-font-recognition/${COMMIT}/src/data`
 const ROOT = '.data/dafont', AGENT = 'gpu-font benchmark (+https://github.com/dy/gpu-font)'
@@ -38,7 +38,8 @@ if (uncut.length) console.log(`${uncut.length} indexed requests have no crop in 
 if (!cropped.length) process.exit()
 for (const t of cropped) t.path = `${ROOT}/images/${t.task_id}${new URL(t.img_url).pathname.match(/\.\w+$/)[0]}`, await fetched(t.img_url, t.path)
 const { browser, adapter, encoderSha256, results } = await matchPhotos(cropped.map(t => ({ path: t.path, box: crops[t.task_id] })))
-const ours = cropped.map((t, i) => ({ task: t.task_id, font: t.identified_font, ...(results[i].status !== 'ok' && { status: results[i].status }), rank: rankOf(results[i].rows, t.identified_font), first: results[i].rows[0]?.name ?? null,
+const twins = await twinSets()
+const ours = cropped.map((t, i) => ({ task: t.task_id, font: t.identified_font, ...(results[i].status !== 'ok' && { status: results[i].status }), rank: rankOf(results[i].rows, t.identified_font, twins.get(names.get(normalize(t.identified_font)).familyId)), first: results[i].rows[0]?.name ?? null,
   score: results[i].rows[0] ? Math.round(results[i].rows[0].score * 1e3) / 1e3 : null, rows: results[i].rows }))
 const share = (list, test) => list.length ? Math.round(1e4 * list.filter(test).length / list.length) / 1e4 : null
 const scores = list => ({ requests: list.length, top1: share(list, r => r.rank === 1), top5: share(list, r => r.rank && r.rank <= 5) })

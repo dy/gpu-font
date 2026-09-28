@@ -7,7 +7,7 @@ import { readFile, writeFile, mkdir } from 'node:fs/promises'
 import { createHash } from 'node:crypto'
 import { chromium } from 'playwright'
 import { whatfontisSet, REPO, COMMIT } from './whatfontis.mjs'
-import { matchPhotos, rankOf } from './photos.mjs'
+import { matchPhotos, rankOf, twinSets, catalogNames, normalize } from './photos.mjs'
 
 const OUT = '.data/finders', REPORT = 'bench/finders.json', INSTANCES = '.data/style/instances'
 const PHOTO = { license: 'CC BY 4.0 (WhatFontIs-Bench v1.0; backgrounds CC0 1.0)', source: `${REPO}/tree/${COMMIT}/v1` }
@@ -121,9 +121,10 @@ try {
 // gpu-font reads each PNG whole; the other finders keep whatever bench/finders.json already holds for them.
 const { adapter, results } = await matchPhotos(images.map(image => ({ path: image.file, box: [0, 0, 1e9, 1e9] })), { log: () => {} })
 const previous = JSON.parse(await readFile(REPORT, 'utf8').catch(() => '{}'))
+const twins = await twinSets(), names = await catalogNames()
 const answers = Object.fromEntries(images.map((image, i) => {
   const rows = results[i].rows.slice(0, 5), first = rows[0]
-  return [image.id, { top5: rows.map(r => r.name), rank: rankOf(rows, image.family), face: first ? `${first.weight} ${first.style}` : null, ms: Math.round(results[i].ms) }]
+  return [image.id, { top5: rows.map(r => r.name), rank: rankOf(rows, image.family, twins.get(names.get(normalize(image.family))?.familyId)), face: first ? `${first.weight} ${first.style}` : null, ms: Math.round(results[i].ms) }]
 }))
 const report = {
   issue: 'https://github.com/dy/gpu-font/issues/1',

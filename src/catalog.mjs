@@ -24,8 +24,8 @@ export function unpack(bytes, bits, count) {
   }
   return values
 }
-// Catalog vectors: `dimensions` numbers a row (the encoder's output, 128 or 64), one scale per row, 8 or 4 bits a number.
-const VECTOR_BITS = { 'int8-base64': 8, 'int4-base64': 4 }
+// Catalog vectors: `dimensions` numbers a row (the encoder's output, 128 or 64), one scale per row, 8, 6 or 4 bits a number.
+const VECTOR_BITS = { 'int8-base64': 8, 'int6-base64': 6, 'int4-base64': 4 }
 // An embedding has a multiple of 16 numbers, 16 to 1024: what a style link or a catalog row can be read as.
 export const validDimensions = d => Number.isInteger(d) && d >= 16 && d <= 1024 && d % 16 === 0
 export function rowBytes(vectors, dimensions) {
@@ -155,23 +155,60 @@ export function verdict(embedding, heads) {
     fine: ranked(heads.fine.labels, affine(heads.fine, x).map(sigmoid)) }
 }
 
-// One row per family: a family whose letters in the query's script are indistinguishable from a higher-ranked one's (the
-// catalog's per-script twins) folds into it when one name holds the other's first word (IBM Plex Sans KR under IBM Plex Sans,
-// Ek Mukta with Mukta), never by chains. Parastoo, which borrows Lora's Latin letters, is a font of its own and keeps its row.
-// A group is named by the member whose name sits inside the most others and scored by its best member, as a family is by its
-// best face. Without a script nothing folds. `limit` bounds the groups; later families still join kept ones.
+// One row per family: a family whose letters are indistinguishable from a higher-ranked one's folds into it when one name
+// holds the other's first word (IBM Plex Sans KR under IBM Plex Sans, Ek Mukta with Mukta), never by chains. Indistinguishable
+// means the catalog's twins in the query's script, or, in any catalog, one row: the two matched references hold the same
+// numbers, as Khmer OS Fasthand's and Khmer OS Freehand's Latin letters do, so they rank alike for every query. Parastoo,
+// which borrows Lora's Latin letters, is a font of its own and keeps its row. A group is named by the member whose name sits
+// inside the most others and scored by its best member, as a family is by its best face. `matches` rank best first, as
+// rankCatalog returns them. `limit` bounds the groups; later families still join kept ones.
 const twinIndex = new WeakMap()
+// One row to within rounding: in every shipped catalog, related names' rows match to a cosine of 1e-5 or part by over 5e-4.
+// Such rows score within NEAR of each other for any query.
+const SAME = 1e-4, NEAR = Math.sqrt(2 * SAME)
 export function foldTwins(matches, catalog, { script, limit = Infinity } = {}) {
   if (!twinIndex.has(catalog)) twinIndex.set(catalog, new Map())
   const index = twinIndex.get(catalog)
-  if (!index.has(script)) index.set(script, new Map(catalog.faces.filter(f => Array.isArray(f.twins?.[script])).map(f => [f.familyId, new Set(f.twins[script])])))
-  const twins = index.get(script), words = m => m.face.family.split(' ')
-  const named = (a, b) => words(b).includes(words(a)[0]) || words(a).includes(words(b)[0])
-  const related = (a, b) => (twins.get(a.family)?.has(b.family) || twins.get(b.family)?.has(a.family)) && named(a, b), groups = []
+  if (!index.has(script)) {
+    // Each family's twins both ways: those it lists and those listing it.
+    const twins = new Map(), pair = (a, b) => twins.has(a) ? twins.get(a).add(b) : twins.set(a, new Set([b]))
+    for (const [family, list] of new Map(catalog.faces.filter(f => Array.isArray(f.twins?.[script])).map(f => [f.familyId, f.twins[script]]))) for (const twin of list) { pair(family, twin); pair(twin, family) }
+    index.set(script, twins)
+  }
+  const twins = index.get(script), { vectors, dimensions: d } = catalog
+  // Unit rows hold a cosine of 1 − SAME or more when their squared distance is 2·SAME or less, which most pairs fail within a few numbers.
+  const same = (a, b) => {
+    if (!vectors || a.row === undefined || b.row === undefined || Math.abs(a.score - b.score) > NEAR) return false
+    let far = 0
+    for (let i = 0; i < d && far <= 2 * SAME; i++) { const x = vectors[a.row * d + i] - vectors[b.row * d + i]; far += x * x }
+    return far <= 2 * SAME
+  }
+  const named = (a, b) => b.includes(a[0]) || a.includes(b[0])
+  // Each group by its first family, its first word and each word of its name. A family meets only the groups its twins
+  // head, and of those whose name holds its first word or whose first word its name holds, the ones scoring within NEAR
+  // above it: a catalog of 100,000 families folds in one pass.
+  const groups = [], names = [], heads = new Map(), firsts = new Map(), holds = new Map()
+  const add = (map, key, i) => map.has(key) ? map.get(key).push(i) : map.set(key, [i])
+  // In `list`, rising group indices whose first families fall in score, the first group before `found` sharing `match`'s row.
+  const near = (list, match, found) => {
+    if (!list) return found
+    let lo = 0, hi = list.length
+    while (lo < hi) { const mid = (lo + hi) >> 1; if (groups[list[mid]][0].score - match.score > NEAR) lo = mid + 1; else hi = mid }
+    for (let k = lo; k < list.length && list[k] < found; k++) if (same(groups[list[k]][0], match)) return list[k]
+    return found
+  }
   for (const match of matches) {
-    const group = groups.find(g => related(g[0], match))
-    if (group) group.push(match)
-    else if (groups.length < limit) groups.push([match])
+    // Past the limit, a family no twin and scoring over NEAR below the last group joins none.
+    if (groups.length >= limit && !twins.has(match.family) && !(groups.at(-1)?.[0].score - match.score <= NEAR)) continue
+    const words = match.face.family.split(' ')
+    let found = near(holds.get(words[0]), match, groups.length)
+    for (const w of words) found = near(firsts.get(w), match, found)
+    for (const twin of twins.get(match.family) ?? []) { const i = heads.get(twin); if (i < found && named(names[i], words)) found = i }
+    if (found < groups.length) groups[found].push(match)
+    else if (groups.length < limit) {
+      if (!heads.has(match.family)) heads.set(match.family, found)
+      names.push(words); add(firsts, words[0], found); for (const w of new Set(words)) add(holds, w, found); groups.push([match])
+    }
   }
   return groups.map(group => {
     const padded = m => ` ${m.face.family} `, within = m => group.filter(o => padded(o).includes(padded(m))).length
@@ -186,7 +223,8 @@ export function matchCatalog(embedding, catalog, judged = null) {
   return matches.length ? matches : rankCatalog(embedding, catalog)
 }
 
-// `script` skips faces that cannot draw it; faces without declared coverage stay eligible.
+// `script` skips faces that cannot draw it; faces without declared coverage stay eligible. Each family's match names the
+// row, the reference, that scored it.
 export function rankCatalog(embedding, catalog, { script } = {}) {
   const d = catalog.dimensions
   if (embedding?.length !== d) throw new Error('Invalid embedding dimensions')
@@ -198,7 +236,7 @@ export function rankCatalog(embedding, catalog, { script } = {}) {
     for (let i = 0; i < d; i++) score += query[i] * catalog.vectors[row * d + i]
     score = Math.max(-1, Math.min(1, score))
     const previous = best.get(face.familyId)
-    if (!previous || score > previous.score || (score === previous.score && face.id < previous.face.id)) best.set(face.familyId, { family: face.familyId, score, face })
+    if (!previous || score > previous.score || (score === previous.score && face.id < previous.face.id)) best.set(face.familyId, { family: face.familyId, score, face, row })
   }
   return [...best.values()].sort((a, b) => b.score - a.score || (a.family < b.family ? -1 : a.family > b.family ? 1 : 0))
 }

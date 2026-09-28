@@ -1,6 +1,6 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
-import { familyOf, indexed, summary } from '../scripts/screens.mjs'
+import { familyOf, indexed, summary, siteRole } from '../scripts/screens.mjs'
 import { normalize } from '../scripts/photos.mjs'
 
 const names = new Map(['Roboto', 'Montserrat', 'Google Sans', 'Roboto Condensed', 'Inter'].map(family => [normalize(family), { family, catalog: 'google-fonts' }]))
@@ -34,4 +34,11 @@ test('accuracy is given over crops and over families, each family once', () => {
   assert.deepEqual([s.crops, s.families, s.top1, s.top5, s.top20], [6, 2, 0.5, 0.6667, 0.8333])
   assert.deepEqual(s.byFamily, { top1: 0.375, top5: 0.5 })
   assert.deepEqual(summary([]), { crops: 0, families: 0, sites: 0, top1: null, top5: null, top20: null, byFamily: { top1: null, top5: null } })
+})
+
+test('a site is held out by the hash of its origin, one in ten, the same rule as train.style_screens', () => {
+  assert.deepEqual(['https://www.chess.com', 'https://m.youtube.com', 'https://site3.test', 'https://site13.test'].map(siteRole), ['development', 'held-out', 'development', 'held-out'])
+  const held = Array.from({ length: 2000 }, (_, i) => `https://site${i}.test`).filter(o => siteRole(o) === 'held-out').length
+  assert.ok(held > 150 && held < 250, `${held} of 2000 held out`)
+  assert.equal(indexed([record('Roboto')], names).kept[0].role, 'development')
 })

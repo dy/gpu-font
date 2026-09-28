@@ -5,33 +5,942 @@
   "adobe-fonts": {
    "faces": 4788,
    "pictures": 4788,
-   "bytes": 3294914
+   "bytes": 6020412
   },
   "github": {
-   "faces": 10884,
-   "pictures": 10884,
-   "bytes": 7982538
+   "faces": 10873,
+   "pictures": 10873,
+   "bytes": 14491928
   },
   "debian": {
-   "faces": 4288,
-   "pictures": 4288,
-   "bytes": 3401334
+   "faces": 4282,
+   "pictures": 4282,
+   "bytes": 6173796
   },
   "fontlibrary": {
-   "faces": 3973,
-   "pictures": 3973,
-   "bytes": 2454408
+   "faces": 3969,
+   "pictures": 3969,
+   "bytes": 4361264
+  },
+  "whatfontis": {
+   "faces": 226,
+   "pictures": 0,
+   "bytes": 0
   },
   "other": {
-   "faces": 2032,
-   "pictures": 2031,
-   "bytes": 1244970
+   "faces": 2026,
+   "pictures": 2025,
+   "bytes": 2250304
   }
  },
  "missing": [
   {
    "id": "velvetyne-basalte/Basalte-Multicolor",
    "reason": "ValueError: its letters enclose no area: empty outlines, or lines meant to be stroked, which no browser draws; Chromium draws nothing either"
+  },
+  {
+   "id": "whatfontis:face:adbe_abril-display-regular-4ffebe57",
+   "reason": "no source picture or file"
+  },
+  {
+   "id": "whatfontis:face:adbe_adaptivemono-ot-regular-a96db397",
+   "reason": "no source picture or file"
+  },
+  {
+   "id": "whatfontis:face:adbe_adobe-caslon-pro-regular-ecc95b79",
+   "reason": "no source picture or file"
+  },
+  {
+   "id": "whatfontis:face:adbe_alternate-gothic-atf-regular-9ce3ef0c",
+   "reason": "no source picture or file"
+  },
+  {
+   "id": "whatfontis:face:adbe_american-typewriter-itc-pro-condensed-411b8025",
+   "reason": "no source picture or file"
+  },
+  {
+   "id": "whatfontis:face:adbe_anziano-pro-regular-d11875fc",
+   "reason": "no source picture or file"
+  },
+  {
+   "id": "whatfontis:face:adbe_atten-round-new-medium-aa5473b1",
+   "reason": "no source picture or file"
+  },
+  {
+   "id": "whatfontis:face:adbe_attribute-mono-regular-479f79d8",
+   "reason": "no source picture or file"
+  },
+  {
+   "id": "whatfontis:face:adbe_ballinger-mono-x-light-9f275d9d",
+   "reason": "no source picture or file"
+  },
+  {
+   "id": "whatfontis:face:adbe_base-mono-narrow-ot-reg-6496114a",
+   "reason": "no source picture or file"
+  },
+  {
+   "id": "whatfontis:face:adbe_belizio-regular-eda286db",
+   "reason": "no source picture or file"
+  },
+  {
+   "id": "whatfontis:face:adbe_benguiat-pro-itc-book-a33cb9e4",
+   "reason": "no source picture or file"
+  },
+  {
+   "id": "whatfontis:face:adbe_big-caslon-fb-regular-9fcb12a7",
+   "reason": "no source picture or file"
+  },
+  {
+   "id": "whatfontis:face:adbe_bokutohrera-5-f253e447",
+   "reason": "no source picture or file"
+  },
+  {
+   "id": "whatfontis:face:adbe_cabrito-cond-exbold-bf9ffb04",
+   "reason": "no source picture or file"
+  },
+  {
+   "id": "whatfontis:face:adbe_caecilia-lt-pro-55-roman-0cbd0a31",
+   "reason": "no source picture or file"
+  },
+  {
+   "id": "whatfontis:face:adbe_clarendon-text-pro-regular-3d76d050",
+   "reason": "no source picture or file"
+  },
+  {
+   "id": "whatfontis:face:adbe_clarendon-urw-extra-narrow-regular-62d4afa8",
+   "reason": "no source picture or file"
+  },
+  {
+   "id": "whatfontis:face:adbe_constructa-bold-ed442f92",
+   "reason": "no source picture or file"
+  },
+  {
+   "id": "whatfontis:face:adbe_copperplate-light-6c13fe4d",
+   "reason": "no source picture or file"
+  },
+  {
+   "id": "whatfontis:face:adbe_courier-std-medium-cd14bd5e",
+   "reason": "no source picture or file"
+  },
+  {
+   "id": "whatfontis:face:adbe_dico-typewriter-slab-cfcdffe4",
+   "reason": "no source picture or file"
+  },
+  {
+   "id": "whatfontis:face:adbe_din-1451-lt-pro-engschrift-29fc9031",
+   "reason": "no source picture or file"
+  },
+  {
+   "id": "whatfontis:face:adbe_domus-titling-regular-5237383a",
+   "reason": "no source picture or file"
+  },
+  {
+   "id": "whatfontis:face:adbe_etna-condensed-regular-3c0d5e3b",
+   "reason": "no source picture or file"
+  },
+  {
+   "id": "whatfontis:face:adbe_fairplex-narrow-ot-book-abd83e3d",
+   "reason": "no source picture or file"
+  },
+  {
+   "id": "whatfontis:face:adbe_fieldwork-hum-regular-d79e1846",
+   "reason": "no source picture or file"
+  },
+  {
+   "id": "whatfontis:face:adbe_fot-chiaro-std-b-c1a80cad",
+   "reason": "no source picture or file"
+  },
+  {
+   "id": "whatfontis:face:adbe_garamond-atf-text-regular-3a3e3ea7",
+   "reason": "no source picture or file"
+  },
+  {
+   "id": "whatfontis:face:adbe_haboro-soft-norm-exbold-8e6aac5f",
+   "reason": "no source picture or file"
+  },
+  {
+   "id": "whatfontis:face:adbe_haboro-soft-norm-regular-5b08f772",
+   "reason": "no source picture or file"
+  },
+  {
+   "id": "whatfontis:face:adbe_handel-gothic-d-medium-0601b89b",
+   "reason": "no source picture or file"
+  },
+  {
+   "id": "whatfontis:face:adbe_hero-new-regular-ad29b5bc",
+   "reason": "no source picture or file"
+  },
+  {
+   "id": "whatfontis:face:adbe_hightower-textroman-7dce699a",
+   "reason": "no source picture or file"
+  },
+  {
+   "id": "whatfontis:face:adbe_itc-giovanni-std-book-21a90ed5",
+   "reason": "no source picture or file"
+  },
+  {
+   "id": "whatfontis:face:adbe_kansasnew-regular-bf6ba625",
+   "reason": "no source picture or file"
+  },
+  {
+   "id": "whatfontis:face:adbe_karbid-slab-pro-regular-5ff699e2",
+   "reason": "no source picture or file"
+  },
+  {
+   "id": "whatfontis:face:adbe_kegger-collegiate-regular-3ebbb102",
+   "reason": "no source picture or file"
+  },
+  {
+   "id": "whatfontis:face:adbe_kings-caslon-display-regular-95a48908",
+   "reason": "no source picture or file"
+  },
+  {
+   "id": "whatfontis:face:adbe_larabiefont-bold-29ac03f8",
+   "reason": "no source picture or file"
+  },
+  {
+   "id": "whatfontis:face:adbe_letter-gothic-std-medium-142f69fd",
+   "reason": "no source picture or file"
+  },
+  {
+   "id": "whatfontis:face:adbe_los-feliz-ot-roman-5f27435a",
+   "reason": "no source picture or file"
+  },
+  {
+   "id": "whatfontis:face:adbe_ltc-goudy-oldstyle-pro-regular-57dc4b0d",
+   "reason": "no source picture or file"
+  },
+  {
+   "id": "whatfontis:face:adbe_matrix-ii-ot-book-a53338bb",
+   "reason": "no source picture or file"
+  },
+  {
+   "id": "whatfontis:face:adbe_meta-serif-pro-book-636a9d4b",
+   "reason": "no source picture or file"
+  },
+  {
+   "id": "whatfontis:face:adbe_modesto-initials-fill-bd46d48d",
+   "reason": "no source picture or file"
+  },
+  {
+   "id": "whatfontis:face:adbe_mono45-headline-bold-dae9b745",
+   "reason": "no source picture or file"
+  },
+  {
+   "id": "whatfontis:face:adbe_neue-aachen-pro-regular-caf1d37e",
+   "reason": "no source picture or file"
+  },
+  {
+   "id": "whatfontis:face:adbe_neue-haas-grotesk-text-pro-65-medium-dfc3d5da",
+   "reason": "no source picture or file"
+  },
+  {
+   "id": "whatfontis:face:adbe_new-science-mono-regular-ffec0e7c",
+   "reason": "no source picture or file"
+  },
+  {
+   "id": "whatfontis:face:adbe_nexus-typewriter-pro-regular-5e110291",
+   "reason": "no source picture or file"
+  },
+  {
+   "id": "whatfontis:face:adbe_nimbus-roman-d-regular-6d0b754b",
+   "reason": "no source picture or file"
+  },
+  {
+   "id": "whatfontis:face:adbe_nimbus-sans-dv-regular-5759e1ba",
+   "reason": "no source picture or file"
+  },
+  {
+   "id": "whatfontis:face:adbe_nitti-typewriter-normal-3c13e5d1",
+   "reason": "no source picture or file"
+  },
+  {
+   "id": "whatfontis:face:adbe_novecento-slab-normal-53311aec",
+   "reason": "no source picture or file"
+  },
+  {
+   "id": "whatfontis:face:adbe_novel-mono-pro-cmp-regular-97a93365",
+   "reason": "no source picture or file"
+  },
+  {
+   "id": "whatfontis:face:adbe_ocr-a-std-regular-d1106485",
+   "reason": "no source picture or file"
+  },
+  {
+   "id": "whatfontis:face:adbe_orator-std-medium-a14dcb0f",
+   "reason": "no source picture or file"
+  },
+  {
+   "id": "whatfontis:face:adbe_orpheus-pro-regular-4ab73084",
+   "reason": "no source picture or file"
+  },
+  {
+   "id": "whatfontis:face:adbe_p22-mackinac-pro-book-41a9fbed",
+   "reason": "no source picture or file"
+  },
+  {
+   "id": "whatfontis:face:adbe_poster-gothic-round-excond-atf-regular-3ec8dcf5",
+   "reason": "no source picture or file"
+  },
+  {
+   "id": "whatfontis:face:adbe_poynter-oldstyle-text-roman-e2c05ac3",
+   "reason": "no source picture or file"
+  },
+  {
+   "id": "whatfontis:face:adbe_prestige-elite-std-regular-1ce65272",
+   "reason": "no source picture or file"
+  },
+  {
+   "id": "whatfontis:face:adbe_rustica-semi-light-6ca305b4",
+   "reason": "no source picture or file"
+  },
+  {
+   "id": "whatfontis:face:adbe_sutro-light-53255d54",
+   "reason": "no source picture or file"
+  },
+  {
+   "id": "whatfontis:face:adbe_trajan-pro-3-regular-8eea8fa5",
+   "reason": "no source picture or file"
+  },
+  {
+   "id": "whatfontis:face:adbe_trajan-sans-pro-regular-8a1a263d",
+   "reason": "no source picture or file"
+  },
+  {
+   "id": "whatfontis:face:adbe_typeka-bold-aceb779f",
+   "reason": "no source picture or file"
+  },
+  {
+   "id": "whatfontis:face:adbe_vinyl-ot-regular-c9520052",
+   "reason": "no source picture or file"
+  },
+  {
+   "id": "whatfontis:face:adbe_vista-slab-otce-reg-19473d26",
+   "reason": "no source picture or file"
+  },
+  {
+   "id": "whatfontis:face:adbe_wedding-gothic-atf-regular-9835eb8e",
+   "reason": "no source picture or file"
+  },
+  {
+   "id": "whatfontis:face:adbe_whitman-roman-430daccf",
+   "reason": "no source picture or file"
+  },
+  {
+   "id": "whatfontis:face:adbe_williamscaslontext-regular-c4ad5a7a",
+   "reason": "no source picture or file"
+  },
+  {
+   "id": "whatfontis:face:adbe_yorkten-slab-cond-regular-616df5d8",
+   "reason": "no source picture or file"
+  },
+  {
+   "id": "whatfontis:face:adbe_yorkten-slab-norm-exbold-eddabf04",
+   "reason": "no source picture or file"
+  },
+  {
+   "id": "whatfontis:face:cf_ablafit-regular-2c27f632",
+   "reason": "no source picture or file"
+  },
+  {
+   "id": "whatfontis:face:cf_adhira-regular-0c645640",
+   "reason": "no source picture or file"
+  },
+  {
+   "id": "whatfontis:face:cf_adirek-slab-regular-04416538",
+   "reason": "no source picture or file"
+  },
+  {
+   "id": "whatfontis:face:cf_agenor-regular-d74d31e3",
+   "reason": "no source picture or file"
+  },
+  {
+   "id": "whatfontis:face:cf_akustiq-43b3cbc8",
+   "reason": "no source picture or file"
+  },
+  {
+   "id": "whatfontis:face:cf_alicegottardodisplay-f42d5802",
+   "reason": "no source picture or file"
+  },
+  {
+   "id": "whatfontis:face:cf_alterousdisplay-0a6116ec",
+   "reason": "no source picture or file"
+  },
+  {
+   "id": "whatfontis:face:cf_amtw-reg-71f19bf5",
+   "reason": "no source picture or file"
+  },
+  {
+   "id": "whatfontis:face:cf_ancutz-0dd24046",
+   "reason": "no source picture or file"
+  },
+  {
+   "id": "whatfontis:face:cf_angesicht-rounded-medium-758ff923",
+   "reason": "no source picture or file"
+  },
+  {
+   "id": "whatfontis:face:cf_arcamajora3-bold-0655c396",
+   "reason": "no source picture or file"
+  },
+  {
+   "id": "whatfontis:face:cf_astoria-classic-roman-466cff8f",
+   "reason": "no source picture or file"
+  },
+  {
+   "id": "whatfontis:face:cf_astrakhan-regular-24c8ed7a",
+   "reason": "no source picture or file"
+  },
+  {
+   "id": "whatfontis:face:cf_barley-regular-9c323e56",
+   "reason": "no source picture or file"
+  },
+  {
+   "id": "whatfontis:face:cf_baroque-medium-341e4a46",
+   "reason": "no source picture or file"
+  },
+  {
+   "id": "whatfontis:face:cf_baskerville-light-6b6698ed",
+   "reason": "no source picture or file"
+  },
+  {
+   "id": "whatfontis:face:cf_bilingual-serif-font-regular-75594e4c",
+   "reason": "no source picture or file"
+  },
+  {
+   "id": "whatfontis:face:cf_billysans-15a414a0",
+   "reason": "no source picture or file"
+  },
+  {
+   "id": "whatfontis:face:cf_bohgaku-regular-f03e79e2",
+   "reason": "no source picture or file"
+  },
+  {
+   "id": "whatfontis:face:cf_bouldersbeachserif-regular-2cb9f99f",
+   "reason": "no source picture or file"
+  },
+  {
+   "id": "whatfontis:face:cf_brandalsalternate-b2ea4270",
+   "reason": "no source picture or file"
+  },
+  {
+   "id": "whatfontis:face:cf_brastika-light-a8413ed1",
+   "reason": "no source picture or file"
+  },
+  {
+   "id": "whatfontis:face:cf_browncollege-regular-340a3594",
+   "reason": "no source picture or file"
+  },
+  {
+   "id": "whatfontis:face:cf_buyan-regular-582dd01d",
+   "reason": "no source picture or file"
+  },
+  {
+   "id": "whatfontis:face:cf_cadass-serif-09bfd469",
+   "reason": "no source picture or file"
+  },
+  {
+   "id": "whatfontis:face:cf_calvous-regular-53c2d757",
+   "reason": "no source picture or file"
+  },
+  {
+   "id": "whatfontis:face:cf_cammron-regular-76432e98",
+   "reason": "no source picture or file"
+  },
+  {
+   "id": "whatfontis:face:cf_coldiac-regular-d1379cc1",
+   "reason": "no source picture or file"
+  },
+  {
+   "id": "whatfontis:face:cf_college-baseball-16e1e796",
+   "reason": "no source picture or file"
+  },
+  {
+   "id": "whatfontis:face:cf_college-project-regular-5157e1ee",
+   "reason": "no source picture or file"
+  },
+  {
+   "id": "whatfontis:face:cf_consulate-3f392698",
+   "reason": "no source picture or file"
+  },
+  {
+   "id": "whatfontis:face:cf_courage-union-64f58fb2",
+   "reason": "no source picture or file"
+  },
+  {
+   "id": "whatfontis:face:cf_crekings-25826159",
+   "reason": "no source picture or file"
+  },
+  {
+   "id": "whatfontis:face:cf_cygnitomonopro-ralt-7c509e0f",
+   "reason": "no source picture or file"
+  },
+  {
+   "id": "whatfontis:face:cf_diesel-bold-df05dc93",
+   "reason": "no source picture or file"
+  },
+  {
+   "id": "whatfontis:face:cf_eaglesight-f68066a2",
+   "reason": "no source picture or file"
+  },
+  {
+   "id": "whatfontis:face:cf_eastic-regular-628bc1f0",
+   "reason": "no source picture or file"
+  },
+  {
+   "id": "whatfontis:face:cf_elizea-regular-f4404d05",
+   "reason": "no source picture or file"
+  },
+  {
+   "id": "whatfontis:face:cf_ellington-regular-e76b4596",
+   "reason": "no source picture or file"
+  },
+  {
+   "id": "whatfontis:face:cf_eloise-fca62cee",
+   "reason": "no source picture or file"
+  },
+  {
+   "id": "whatfontis:face:cf_fairtrade-espresso-5dd5a5e0",
+   "reason": "no source picture or file"
+  },
+  {
+   "id": "whatfontis:face:cf_fashion-slash-light-e743002a",
+   "reason": "no source picture or file"
+  },
+  {
+   "id": "whatfontis:face:cf_forland-8ee41369",
+   "reason": "no source picture or file"
+  },
+  {
+   "id": "whatfontis:face:cf_gamarasa-bold-5853aecb",
+   "reason": "no source picture or file"
+  },
+  {
+   "id": "whatfontis:face:cf_garfield-fade-9cc74cf2",
+   "reason": "no source picture or file"
+  },
+  {
+   "id": "whatfontis:face:cf_garmani-regular-1ca51189",
+   "reason": "no source picture or file"
+  },
+  {
+   "id": "whatfontis:face:cf_gendis-823fd287",
+   "reason": "no source picture or file"
+  },
+  {
+   "id": "whatfontis:face:cf_geometos-soft-regular-60063074",
+   "reason": "no source picture or file"
+  },
+  {
+   "id": "whatfontis:face:cf_gheliq-85f6fdb2",
+   "reason": "no source picture or file"
+  },
+  {
+   "id": "whatfontis:face:cf_happynicth-regular-38a86e8e",
+   "reason": "no source picture or file"
+  },
+  {
+   "id": "whatfontis:face:cf_harvely-d95b264b",
+   "reason": "no source picture or file"
+  },
+  {
+   "id": "whatfontis:face:cf_herz-light-fdffc1f7",
+   "reason": "no source picture or file"
+  },
+  {
+   "id": "whatfontis:face:cf_hubhead-210051a2",
+   "reason": "no source picture or file"
+  },
+  {
+   "id": "whatfontis:face:cf_hustle-kindness-5aa5c35b",
+   "reason": "no source picture or file"
+  },
+  {
+   "id": "whatfontis:face:cf_ibm-selectric-bookface-regular-be9d0c34",
+   "reason": "no source picture or file"
+  },
+  {
+   "id": "whatfontis:face:cf_ibm-selectric-courier-regular-0b0bd976",
+   "reason": "no source picture or file"
+  },
+  {
+   "id": "whatfontis:face:cf_ibm-selectric-orator-regular-7ae3252b",
+   "reason": "no source picture or file"
+  },
+  {
+   "id": "whatfontis:face:cf_indonesia-light-aa889dfe",
+   "reason": "no source picture or file"
+  },
+  {
+   "id": "whatfontis:face:cf_jaxou-regular-b5d1a60a",
+   "reason": "no source picture or file"
+  },
+  {
+   "id": "whatfontis:face:cf_jerawagberroys-8ebaddad",
+   "reason": "no source picture or file"
+  },
+  {
+   "id": "whatfontis:face:cf_kalepro-regular-5d0b8664",
+   "reason": "no source picture or file"
+  },
+  {
+   "id": "whatfontis:face:cf_knigsberg-light-5c5d538b",
+   "reason": "no source picture or file"
+  },
+  {
+   "id": "whatfontis:face:cf_kulachat-slab-regular-f688c815",
+   "reason": "no source picture or file"
+  },
+  {
+   "id": "whatfontis:face:cf_lavirati-2917ac74",
+   "reason": "no source picture or file"
+  },
+  {
+   "id": "whatfontis:face:cf_lemon-milk-pro-ftr-regular-267f9134",
+   "reason": "no source picture or file"
+  },
+  {
+   "id": "whatfontis:face:cf_libertad-mono-regular-ea73775b",
+   "reason": "no source picture or file"
+  },
+  {
+   "id": "whatfontis:face:cf_livemono-regular-0a6eca06",
+   "reason": "no source picture or file"
+  },
+  {
+   "id": "whatfontis:face:cf_located-28016fe7",
+   "reason": "no source picture or file"
+  },
+  {
+   "id": "whatfontis:face:cf_logster-59ba846e",
+   "reason": "no source picture or file"
+  },
+  {
+   "id": "whatfontis:face:cf_lsf-front-porch-b1e582e4",
+   "reason": "no source picture or file"
+  },
+  {
+   "id": "whatfontis:face:cf_madelin-round-be3ceabb",
+   "reason": "no source picture or file"
+  },
+  {
+   "id": "whatfontis:face:cf_malaka-regular-a337d439",
+   "reason": "no source picture or file"
+  },
+  {
+   "id": "whatfontis:face:cf_marcana-regular-ee84b992",
+   "reason": "no source picture or file"
+  },
+  {
+   "id": "whatfontis:face:cf_maron-rose-fb025dda",
+   "reason": "no source picture or file"
+  },
+  {
+   "id": "whatfontis:face:cf_megeon-61907fd1",
+   "reason": "no source picture or file"
+  },
+  {
+   "id": "whatfontis:face:cf_mhm-perdida-cfe0b7db",
+   "reason": "no source picture or file"
+  },
+  {
+   "id": "whatfontis:face:cf_miamo-regular-0f8dac20",
+   "reason": "no source picture or file"
+  },
+  {
+   "id": "whatfontis:face:cf_mollieglaston-2959810f",
+   "reason": "no source picture or file"
+  },
+  {
+   "id": "whatfontis:face:cf_mom-sew-solid-0c7ef818",
+   "reason": "no source picture or file"
+  },
+  {
+   "id": "whatfontis:face:cf_mono-91-c-01ba8bf1",
+   "reason": "no source picture or file"
+  },
+  {
+   "id": "whatfontis:face:cf_monos-regular-d8ac477d",
+   "reason": "no source picture or file"
+  },
+  {
+   "id": "whatfontis:face:cf_montage-serif-font-regular-7a6da608",
+   "reason": "no source picture or file"
+  },
+  {
+   "id": "whatfontis:face:cf_moule-f01a0634",
+   "reason": "no source picture or file"
+  },
+  {
+   "id": "whatfontis:face:cf_n19_pinned-regular-bf364573",
+   "reason": "no source picture or file"
+  },
+  {
+   "id": "whatfontis:face:cf_narayana-f85372e5",
+   "reason": "no source picture or file"
+  },
+  {
+   "id": "whatfontis:face:cf_nern-regular-e00eed68",
+   "reason": "no source picture or file"
+  },
+  {
+   "id": "whatfontis:face:cf_newport-tracks-colour-d3be1c4f",
+   "reason": "no source picture or file"
+  },
+  {
+   "id": "whatfontis:face:cf_nn-mask-serif-440c72e5",
+   "reason": "no source picture or file"
+  },
+  {
+   "id": "whatfontis:face:cf_noplato-mono-1c5f8480",
+   "reason": "no source picture or file"
+  },
+  {
+   "id": "whatfontis:face:cf_nutch-regular-48f30e95",
+   "reason": "no source picture or file"
+  },
+  {
+   "id": "whatfontis:face:cf_oceanwide-regular-b160fd50",
+   "reason": "no source picture or file"
+  },
+  {
+   "id": "whatfontis:face:cf_officermans-bold-c90d5d0a",
+   "reason": "no source picture or file"
+  },
+  {
+   "id": "whatfontis:face:cf_oil-field-bold-bold-f0fe96c1",
+   "reason": "no source picture or file"
+  },
+  {
+   "id": "whatfontis:face:cf_old-scotch-clean-7bcd15fd",
+   "reason": "no source picture or file"
+  },
+  {
+   "id": "whatfontis:face:cf_origo-pro-regular-71762ee1",
+   "reason": "no source picture or file"
+  },
+  {
+   "id": "whatfontis:face:cf_osgood-sans-blur-medium-5b2042fd",
+   "reason": "no source picture or file"
+  },
+  {
+   "id": "whatfontis:face:cf_palermo-6db742ec",
+   "reason": "no source picture or file"
+  },
+  {
+   "id": "whatfontis:face:cf_platde-mono-59e8ea30",
+   "reason": "no source picture or file"
+  },
+  {
+   "id": "whatfontis:face:cf_pledge-regular-c6451fe6",
+   "reason": "no source picture or file"
+  },
+  {
+   "id": "whatfontis:face:cf_poco-logo-6f179575",
+   "reason": "no source picture or file"
+  },
+  {
+   "id": "whatfontis:face:cf_polly-rounded-regular-23596710",
+   "reason": "no source picture or file"
+  },
+  {
+   "id": "whatfontis:face:cf_porthem-rounded-55f82261",
+   "reason": "no source picture or file"
+  },
+  {
+   "id": "whatfontis:face:cf_postmark-regular-a4e32a4e",
+   "reason": "no source picture or file"
+  },
+  {
+   "id": "whatfontis:face:cf_protomono-semibold-5a65dbfa",
+   "reason": "no source picture or file"
+  },
+  {
+   "id": "whatfontis:face:cf_qualion-611ffb87",
+   "reason": "no source picture or file"
+  },
+  {
+   "id": "whatfontis:face:cf_quickly-bold-474dce79",
+   "reason": "no source picture or file"
+  },
+  {
+   "id": "whatfontis:face:cf_radley-serif-cut-d27da606",
+   "reason": "no source picture or file"
+  },
+  {
+   "id": "whatfontis:face:cf_redgarslab-e6b82e39",
+   "reason": "no source picture or file"
+  },
+  {
+   "id": "whatfontis:face:cf_revans-normal-4d491649",
+   "reason": "no source picture or file"
+  },
+  {
+   "id": "whatfontis:face:cf_roadrace-stamp-cc6d7413",
+   "reason": "no source picture or file"
+  },
+  {
+   "id": "whatfontis:face:cf_romeoface-55212282",
+   "reason": "no source picture or file"
+  },
+  {
+   "id": "whatfontis:face:cf_rosvelit-7dab46dd",
+   "reason": "no source picture or file"
+  },
+  {
+   "id": "whatfontis:face:cf_rutan-medium-bc427d77",
+   "reason": "no source picture or file"
+  },
+  {
+   "id": "whatfontis:face:cf_sanhurst-condensed-regular-cbc91411",
+   "reason": "no source picture or file"
+  },
+  {
+   "id": "whatfontis:face:cf_selectric-adjutant-regular-44bb3dbd",
+   "reason": "no source picture or file"
+  },
+  {
+   "id": "whatfontis:face:cf_seroona-b957b718",
+   "reason": "no source picture or file"
+  },
+  {
+   "id": "whatfontis:face:cf_shaaron-regular-51f307d8",
+   "reason": "no source picture or file"
+  },
+  {
+   "id": "whatfontis:face:cf_shoffer-e8d4e5d5",
+   "reason": "no source picture or file"
+  },
+  {
+   "id": "whatfontis:face:cf_sichuan-a2f4b456",
+   "reason": "no source picture or file"
+  },
+  {
+   "id": "whatfontis:face:cf_silk-remington-reg-ed568280",
+   "reason": "no source picture or file"
+  },
+  {
+   "id": "whatfontis:face:cf_slaberg-78f5dbd4",
+   "reason": "no source picture or file"
+  },
+  {
+   "id": "whatfontis:face:cf_smith-corona-ec1100-prestige-41246f51",
+   "reason": "no source picture or file"
+  },
+  {
+   "id": "whatfontis:face:cf_so-vogue-ea78d77a",
+   "reason": "no source picture or file"
+  },
+  {
+   "id": "whatfontis:face:cf_solosans-regular-266f1965",
+   "reason": "no source picture or file"
+  },
+  {
+   "id": "whatfontis:face:cf_sous-sol-cba786df",
+   "reason": "no source picture or file"
+  },
+  {
+   "id": "whatfontis:face:cf_sport-champs-simple-regular-01ac6c07",
+   "reason": "no source picture or file"
+  },
+  {
+   "id": "whatfontis:face:cf_ss-greyhood-two-b0717158",
+   "reason": "no source picture or file"
+  },
+  {
+   "id": "whatfontis:face:cf_ssnicksonfive-b0eb5c15",
+   "reason": "no source picture or file"
+  },
+  {
+   "id": "whatfontis:face:cf_stacked-college-regular-035c90e2",
+   "reason": "no source picture or file"
+  },
+  {
+   "id": "whatfontis:face:cf_stolzl-regular-48191b3c",
+   "reason": "no source picture or file"
+  },
+  {
+   "id": "whatfontis:face:cf_summerday-bold-0cbf4cbe",
+   "reason": "no source picture or file"
+  },
+  {
+   "id": "whatfontis:face:cf_swansound-2d28051c",
+   "reason": "no source picture or file"
+  },
+  {
+   "id": "whatfontis:face:cf_swordhaven-regular-a4f90158",
+   "reason": "no source picture or file"
+  },
+  {
+   "id": "whatfontis:face:cf_sykemono-regular-9f2908d3",
+   "reason": "no source picture or file"
+  },
+  {
+   "id": "whatfontis:face:cf_tautz-medium-5df68844",
+   "reason": "no source picture or file"
+  },
+  {
+   "id": "whatfontis:face:cf_terbang-d332eacc",
+   "reason": "no source picture or file"
+  },
+  {
+   "id": "whatfontis:face:cf_toenasbangsaslab-bold-48a1ef2a",
+   "reason": "no source picture or file"
+  },
+  {
+   "id": "whatfontis:face:cf_touchdown-font-regular-861ff7d1",
+   "reason": "no source picture or file"
+  },
+  {
+   "id": "whatfontis:face:cf_triunfo-condensed-139939c4",
+   "reason": "no source picture or file"
+  },
+  {
+   "id": "whatfontis:face:cf_trt-terminal-mono-light-a94b69d7",
+   "reason": "no source picture or file"
+  },
+  {
+   "id": "whatfontis:face:cf_twinable-e2b15f43",
+   "reason": "no source picture or file"
+  },
+  {
+   "id": "whatfontis:face:cf_useful-effort-solid-c6fc9904",
+   "reason": "no source picture or file"
+  },
+  {
+   "id": "whatfontis:face:cf_valleyregular-8d2ea99c",
+   "reason": "no source picture or file"
+  },
+  {
+   "id": "whatfontis:face:cf_victoria-tech-bold-1d0cb3d0",
+   "reason": "no source picture or file"
+  },
+  {
+   "id": "whatfontis:face:cf_virian-regular-7321cbf4",
+   "reason": "no source picture or file"
+  },
+  {
+   "id": "whatfontis:face:cf_wacian-regular-62efa904",
+   "reason": "no source picture or file"
+  },
+  {
+   "id": "whatfontis:face:cf_wallman-love-bold-d889e301",
+   "reason": "no source picture or file"
+  },
+  {
+   "id": "whatfontis:face:cf_winter-unicorn-436690cc",
+   "reason": "no source picture or file"
+  },
+  {
+   "id": "whatfontis:face:cf_wisper-regular-f20d6660",
+   "reason": "no source picture or file"
+  },
+  {
+   "id": "whatfontis:face:cf_wuinbold-c54eaee4",
+   "reason": "no source picture or file"
+  },
+  {
+   "id": "whatfontis:face:cf_ziral-regular-323ffc7e",
+   "reason": "no source picture or file"
   }
  ]
 }

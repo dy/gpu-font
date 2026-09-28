@@ -22,16 +22,16 @@
   <script>if (new URLSearchParams(location.search).has('embed')) { document.documentElement.dataset.embed = ''; document.head.append(Object.assign(document.createElement('base'), { target: '_blank' })) }</script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <script type="importmap">{"imports":{"./crop.mjs":"./crop.mjs?v=550aca56ca","./my-fonts.mjs":"./my-fonts.mjs?v=d075f19d67","./previews.mjs":"./previews.mjs?v=e948849c9a","./src/catalog.mjs":"./src/catalog.mjs?v=2e88db909a","./src/input.mjs":"./src/input.mjs?v=2cf5262269","./src/line.mjs":"./src/line.mjs?v=8d5dd4c551","./src/network-gpu.mjs":"./src/network-gpu.mjs?v=2330f1934b","./src/network.mjs":"./src/network.mjs?v=2af6a9d6db","./src/prepare.mjs":"./src/prepare.mjs?v=f4a0b31a2a"}}</script>
+  <script type="importmap">{"imports":{"./crop.mjs":"./crop.mjs?v=550aca56ca","./my-fonts.mjs":"./my-fonts.mjs?v=d075f19d67","./previews.mjs":"./previews.mjs?v=c13de4f2cc","./src/catalog.mjs":"./src/catalog.mjs?v=dd4c309675","./src/input.mjs":"./src/input.mjs?v=2cf5262269","./src/line.mjs":"./src/line.mjs?v=8d5dd4c551","./src/network-gpu.mjs":"./src/network-gpu.mjs?v=2330f1934b","./src/network.mjs":"./src/network.mjs?v=2af6a9d6db","./src/prepare.mjs":"./src/prepare.mjs?v=f4a0b31a2a"}}</script>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter&family=Source+Serif+4&display=swap">
   <link rel="stylesheet" href="./tokens.css?v=ea64f7eff0">
-  <link rel="stylesheet" href="./style.css?v=088c014bcc">
+  <link rel="stylesheet" href="./style.css?v=1cc51b51fb">
 </head>
 <body>
   <a class="skip" href="#workbench">Skip to workbench</a>
   <header class="masthead">
     <a href="./" class="wordmark" aria-label="gpu-font home">gpu-font</a>
-    <span id="backend" class="sr-only" role="status">Loading…</span><a class="header-icon" href="https://github.com/dy/gpu-font" aria-label="GitHub repository" title="GitHub"><svg width="20" height="20" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M6.766 11.328c-2.063-.25-3.516-1.734-3.516-3.656 0-.781.281-1.625.75-2.188-.203-.515-.172-1.609.063-2.062.625-.078 1.468.25 1.968.703.594-.187 1.219-.281 1.985-.281.765 0 1.39.094 1.953.265.484-.437 1.344-.765 1.969-.687.218.422.25 1.515.046 2.047.5.593.766 1.39.766 2.203 0 1.922-1.453 3.375-3.547 3.64.531.344.89 1.094.89 1.954v1.625c0 .468.391.734.86.547C13.781 14.359 16 11.53 16 8.03 16 3.61 12.406 0 7.984 0 3.563 0 0 3.61 0 8.031a7.88 7.88 0 0 0 5.172 7.422c.422.156.828-.125.828-.547v-1.25c-.219.094-.5.156-.75.156-1.031 0-1.64-.562-2.078-1.609-.172-.422-.36-.672-.719-.719-.187-.015-.25-.093-.25-.187 0-.188.313-.328.625-.328.453 0 .844.281 1.25.86.313.452.64.655 1.031.655s.641-.14 1-.5c.266-.265.47-.5.657-.656"/></svg></a>
+    <span id="backend" class="sr-only" role="status">Loading…</span><nav class="site-nav" aria-label="Site"><a href="./catalogs.html">Catalogs</a><a class="version" href="https://github.com/dy/gpu-font/releases/tag/v0.3.0">v0.3.0</a></nav><a class="header-icon" href="https://github.com/dy/gpu-font" aria-label="GitHub repository" title="GitHub"><svg width="20" height="20" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M6.766 11.328c-2.063-.25-3.516-1.734-3.516-3.656 0-.781.281-1.625.75-2.188-.203-.515-.172-1.609.063-2.062.625-.078 1.468.25 1.968.703.594-.187 1.219-.281 1.985-.281.765 0 1.39.094 1.953.265.484-.437 1.344-.765 1.969-.687.218.422.25 1.515.046 2.047.5.593.766 1.39.766 2.203 0 1.922-1.453 3.375-3.547 3.64.531.344.89 1.094.89 1.954v1.625c0 .468.391.734.86.547C13.781 14.359 16 11.53 16 8.03 16 3.61 12.406 0 7.984 0 3.563 0 0 3.61 0 8.031a7.88 7.88 0 0 0 5.172 7.422c.422.156.828-.125.828-.547v-1.25c-.219.094-.5.156-.75.156-1.031 0-1.64-.562-2.078-1.609-.172-.422-.36-.672-.719-.719-.187-.015-.25-.093-.25-.187 0-.188.313-.328.625-.328.453 0 .844.281 1.25.86.313.452.64.655 1.031.655s.641-.14 1-.5c.266-.265.47-.5.657-.656"/></svg></a>
   </header>
   <main>
     <section class="intro" aria-labelledby="intro-title">
@@ -93,6 +93,7 @@
       <div class="results-column">
         <div class="column-head">
           <h2 id="matches-title" class="column-title">Matches</h2>
+          <label id="find" class="find" title="Find a font by name" hidden><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="6"/><path d="m20 20-4.5-4.5"/></svg><input id="find-input" type="search" placeholder=" " aria-label="Find a font among the matches" aria-controls="results" autocomplete="off" spellcheck="false"></label>
           <section id="catalog-control" class="catalog-panel" aria-labelledby="catalog-title" hidden>
             <h2 id="catalog-title" class="sr-only">Catalog</h2>
             <button id="catalog-button" class="text-button" aria-controls="catalog-menu" aria-haspopup="dialog" aria-expanded="false" aria-label="Choose search catalog"><svg class="catalog-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 3 3 7.5 12 12l9-4.5L12 3Z" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"/><path d="m3 12 9 4.5 9-4.5M3 16.5 12 21l9-4.5" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"/></svg><span id="catalog-label"></span><svg class="chevron" width="14" height="14" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="m4 6 4 4 4-4" stroke="currentColor" stroke-width="1.2"/></svg></button>
@@ -106,6 +107,7 @@
         <section id="results-panel" class="results-panel" aria-labelledby="matches-title">
           <div class="loader"><span aria-hidden="true">Loading <span id="catalog-loading-name"></span> <span id="catalog-loading-percent"></span></span><progress id="catalog-loading" aria-label="Loading the catalog"></progress></div>
           <p id="preview-error" class="message" data-error role="status" hidden>These font previews don’t support this character.</p>
+          <p id="find-empty" class="message" role="status" hidden></p>
           <div id="twins-tip" class="popover twins-tip" popover="manual" role="tooltip"></div>
           <ol id="results" class="results" aria-label="Ranked font matches" aria-describedby="score-note"></ol>
           <div class="results-foot"><button id="more-matches" class="text-button more-matches" aria-controls="results" aria-expanded="false" inert>More matches<svg class="chevron" width="14" height="14" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="m4 6 4 4 4-4" stroke="currentColor" stroke-width="1.2"/></svg></button><button id="copy-link" class="text-button" aria-label="Copy link" title="Copy a link to these matches" disabled><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 14a4 4 0 0 0 5.66 0l3-3a4 4 0 0 0-5.66-5.66l-1 1"/><path d="M14 10a4 4 0 0 0-5.66 0l-3 3a4 4 0 0 0 5.66 5.66l1-1"/></svg>Link</button><button id="save" class="text-button" aria-label="Download JSON" title="Download the result as JSON" disabled><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 4h-.5C8.1 4 7.5 4.6 7.5 6v3.5c0 1.4-.8 2.5-2 2.5 1.2 0 2 1.1 2 2.5V18c0 1.4.6 2 2 2h.5M14 4h.5c1.4 0 2 .6 2 2v3.5c0 1.4.8 2.5 2 2.5-1.2 0-2 1.1-2 2.5V18c0 1.4-.6 2-2 2H14"/></svg>JSON</button></div>
@@ -229,7 +231,7 @@
     <section id="legal" class="explanation" aria-labelledby="legal-title">
       <h2 id="legal-title">Licenses</h2>
       <div class="explanation-copy">
-        <p>No font files ship here: previews load from <a href="https://fonts.google.com/">Google Fonts</a> under each family’s license, or are small black-and-white pictures of each font, stored with the site or, for DaFont, loaded from its site, and the catalogs hold only names, links and style numbers.</p>
+        <p>No font files ship here: previews load from <a href="https://fonts.google.com/">Google Fonts</a> under each family’s license, or are small greyscale pictures of each font, stored with the site or, for DaFont, loaded from its site, and the catalogs hold only names, links and style numbers.</p>
         <p>A match is not a license: check a font’s terms with its foundry. Font names are their owners’ trademarks; gpu-font isn’t affiliated with them.</p>
         <p>The code is <a href="https://github.com/dy/gpu-font/blob/main/LICENSE" rel="license">MIT-licensed</a> and comes without warranty.</p>
       </div>
@@ -238,6 +240,6 @@
   <footer><p class="credit">Made by <a href="https://github.com/dy">dy</a>.</p><div class="footer-links"><a class="footer-license" href="https://github.com/dy/gpu-font/blob/main/LICENSE" rel="license">MIT</a><a class="footer-icon omkara" href="https://github.com/krishnized/license" aria-label="Krishnized license" title="Krishnized license"><span aria-hidden="true">ॐ</span></a></div></footer>
 
 
-  <script type="module" src="./app.mjs?v=323575a353"></script>
+  <script type="module" src="./app.mjs?v=071a0803a1"></script>
 </body>
 </html>

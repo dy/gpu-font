@@ -70,7 +70,7 @@ def read_catalog(catalog,encoder_path):
     if not isinstance(vectors,dict) or not isinstance(vectors.get('shape'),list) or len(vectors['shape'])!=2:raise ValueError('Invalid vector shape')
     rows=vectors['shape'][0] if catalog['version']==3 else len(faces)*catalog['referencesPerFace']
     if type(rows)is not int or not len(faces)<=rows<=640000:raise ValueError('Invalid reference count')
-    bits={'int8-base64':8,'int4-base64':4}.get(vectors.get('encoding'))  # src/catalog.mjs reads the same two
+    bits={'int8-base64':8,'int6-base64':6,'int4-base64':4}.get(vectors.get('encoding'))  # src/catalog.mjs reads the same three
     dimensions=catalog['dimensions']
     if not bits or vectors.get('shape')!=[rows,dimensions] or any(type(n)is not int for n in vectors['shape']):raise ValueError('Invalid vector shape')
     try:raw=base64.b64decode(vectors['data'],validate=True)

@@ -761,536 +761,536 @@
    "how": "By hand: Fontspring terms forbid scripted queries."
   },
   "gpu-font": {
-   "date": "2026-09-27",
+   "date": "2026-09-28",
    "how": "From scripts/finders.mjs. Catalog All, Chromium on apple metal-3.",
    "answers": {
     "control-1": {
      "top5": [
-      "Zen Sen Gothic",
-      "Zen Maru Gothic",
-      "Quicksand",
-      "IcoMoon-Free",
-      "Hershey-Noailles-Futura"
+      "Zen Kaku Gothic Antique",
+      "DIN-Rotring",
+      "AnjaliOldLipi",
+      "Fredoka",
+      "Hezaedrus"
      ],
-     "rank": 2,
+     "rank": 1,
      "face": "400 normal",
-     "ms": 205
+     "ms": 151
     },
     "control-2": {
      "top5": [
-      "Economica",
-      "Hubot Sans Condensed",
-      "Instrument Sans Condensed",
-      "Open Sans IPA",
-      "Hubot Sans"
+      "Khand",
+      "Saira Extra Condensed",
+      "UmePlus CL Gothic",
+      "Noto Sans Hebrew ExtraCondensed",
+      "Open Sans IPA"
      ],
-     "rank": null,
+     "rank": 1,
      "face": "400 normal",
-     "ms": 147
+     "ms": 109
     },
     "control-3": {
      "top5": [
-      "Fast_Sans",
-      "Motomachi",
+      "Zutat Sans",
+      "Hada Sans",
       "Familjen Grotesk",
-      "Tarsiger Sans Bold",
-      "Ramabhadra"
+      "Coloso Font",
+      "UnDotum"
      ],
      "rank": null,
-     "face": "400 normal",
-     "ms": 168
+     "face": "700 normal",
+     "ms": 118
     },
     "control-4": {
      "top5": [
       "Inria Serif",
-      "Droid Serif",
-      "Noto Serif",
+      "DejaVu Serif",
+      "Abril Titling",
       "Bagatela",
-      "Hermeneus One"
+      "Noto Serif"
      ],
-     "rank": null,
+     "rank": 5,
      "face": "400 normal",
-     "ms": 171
+     "ms": 115
     },
     "control-5": {
      "top5": [
+      "Nicholas",
+      "QTWeise",
       "Capitolium 2",
       "Klei",
-      "Nocturne Serif",
-      "Beaufort Pro",
-      "Grand Central"
+      "Runoka"
      ],
      "rank": null,
      "face": "null normal",
-     "ms": 160
+     "ms": 103
     },
     "control-6": {
      "top5": [
-      "Manuale",
-      "Martel",
-      "Portada",
       "Faustina",
-      "Expo Serif"
+      "XCharter",
+      "Manuale",
+      "Expo Serif",
+      "Martel"
      ],
-     "rank": 4,
+     "rank": 1,
      "face": "400 normal",
-     "ms": 154
+     "ms": 99
     },
     "control-7": {
      "top5": [
       "Graduate",
       "Hoover",
-      "Iosevka Etoile",
       "Kelly Slab",
+      "Tower Print",
       "Iosevka Slab"
      ],
      "rank": 1,
      "face": "400 normal",
-     "ms": 161
+     "ms": 115
     },
     "control-8": {
      "top5": [
       "Hepta Slab",
-      "Latin Modern Mono Prop Light",
-      "MVB Fantabular",
       "Sanchez",
-      "BioRhyme"
+      "BioRhyme",
+      "Panel",
+      "Kiwi Maru"
      ],
      "rank": 1,
      "face": "400 normal",
-     "ms": 142
+     "ms": 88
     },
     "control-9": {
      "top5": [
-      "Computer Modern Graded G10 Typewriter",
+      "ALM Fixed",
       "Latin Modern Mono",
-      "Computer Modern Graded G0 Typewriter",
+      "NewComputerModern Mono",
       "UM Typewriter",
-      "ALM Fixed"
+      "Computer Modern Graded G0 Typewriter"
      ],
      "rank": null,
      "face": "400 normal",
-     "ms": 164
+     "ms": 113
     },
     "control-10": {
      "top5": [
       "Xanh Mono",
-      "MS Mincho",
+      "SuperHan3ivd",
       "SuperHan2ivd",
       "SuperHan0ivd",
-      "SuperHan3ivd"
+      "Aujournuit"
      ],
      "rank": 1,
      "face": "400 normal",
-     "ms": 133
+     "ms": 87
     },
     "classic-1": {
      "top5": [
       "Elza",
-      "Vinron",
-      "Abacaxi Latin Variable",
-      "Abacaxi Devanagari",
-      "Bricolage Grotesque 48pt"
+      "Diamond Grotesk",
+      "Open Sauce One",
+      "Gargi",
+      "NanumSquare Neo"
      ],
      "rank": null,
      "face": "null normal",
-     "ms": 178
+     "ms": 118
     },
     "classic-2": {
      "top5": [
       "Now Alt",
-      "Now",
       "Glacial Indifference",
+      "Now",
       "Futura Pro Book For SIEA",
       "Jost"
      ],
      "rank": null,
      "face": "400 normal",
-     "ms": 125
+     "ms": 80
     },
     "classic-3": {
      "top5": [
-      "Sotyr Fangsong (S2T)",
-      "Tejuela",
-      "Priori Serif",
-      "aCina Adde 1",
+      "Adobe Arabic",
+      "Cochineal",
+      "Sophonetica",
+      "Adde 1",
       "aCinAdde 1"
      ],
      "rank": null,
-     "face": "400 normal",
-     "ms": 133
+     "face": "null normal",
+     "ms": 93
     },
     "classic-4": {
      "top5": [
-      "Ume Hy Gothic O5",
+      "SMT Sans",
+      "SF Pro Display",
+      "SFNS Display",
       "Fluidez Text",
-      "Fustat",
-      "Plus Jakarta Display",
-      "Russisch Sans"
+      "Sepehr"
      ],
      "rank": null,
      "face": "400 normal",
-     "ms": 148
+     "ms": 90
     },
     "classic-5": {
      "top5": [
-      "Aktiv Grotesk Georgian",
       "Aktiv Grotesk",
-      "Aktiv Grotesk Arabic",
-      "Aktiv Grotesk Armenian",
-      "Aktiv Grotesk Devanagari"
+      "Aktiv Grotesk Georgian",
+      "Aktiv Grotesk Thai",
+      "Franklin Gothic URW",
+      "Pragmatica"
      ],
-     "rank": null,
+     "rank": 4,
      "face": "null normal",
-     "ms": 141
+     "ms": 91
     },
     "classic-6": {
      "top5": [
       "Crusoe Text",
-      "Agora",
-      "Urbanist",
-      "Unageo",
-      "Google Sans Flex 24pt"
+      "Sulphur Point",
+      "Gauge",
+      "Tommy Hilfiger AF",
+      "Agora"
      ],
      "rank": null,
      "face": "400 normal",
-     "ms": 159
+     "ms": 113
     },
     "classic-7": {
      "top5": [
-      "Hepta Slab",
       "GeoSlab703 Md BT",
-      "Rockwell",
       "Doughty",
-      "Stint Pro"
+      "Rockwell Nova",
+      "Rockwell",
+      "Hepta Slab"
      ],
-     "rank": 3,
-     "face": "500 normal",
-     "ms": 151
+     "rank": 4,
+     "face": "400 normal",
+     "ms": 109
     },
     "classic-8": {
      "top5": [
       "Trajanus Bricks",
-      "Sailor Vito",
       "Fipty Serif",
-      "Marbre Sans",
-      "Walterosse"
+      "Assassin",
+      "Sailor Vito",
+      "Trajan Pro 3"
      ],
-     "rank": null,
+     "rank": 5,
      "face": "null null",
-     "ms": 142
+     "ms": 92
     },
     "classic-9": {
      "top5": [
-      "Vanio",
+      "Cormorant Infant",
       "Rialto dF",
-      "Garamond",
       "FZSongS-Extended",
-      "FZSongS-Extended(SIP)"
+      "FZSongS-Extended(SIP)",
+      "Vanio"
      ],
      "rank": null,
-     "face": "null null",
-     "ms": 143
+     "face": "400 normal",
+     "ms": 89
     },
     "classic-10": {
      "top5": [
       "Brandon Grotesque",
+      "cwTeXHeiBold",
       "New Atten",
       "Jost",
-      "Futura PT",
-      "Europa"
+      "Futura PT"
      ],
      "rank": 1,
      "face": "null normal",
-     "ms": 136
+     "ms": 84
     },
     "hard-shadow": {
      "top5": [
+      "Viroqua",
       "Merriweather",
-      "Merriweather 24pt",
-      "Richmond Text",
+      "Alike",
       "Charter BT",
-      "Merriweather 120pt"
+      "Richmond Text"
      ],
      "rank": null,
-     "face": "400 normal",
-     "ms": 151
+     "face": "null normal",
+     "ms": 102
     },
     "hard-glare": {
      "top5": [
-      "Noto Serif Display",
       "Bodoni Moda 48pt",
-      "Bodoni Moda 18pt",
-      "Fraunces 144pt",
-      "oat serif"
+      "Noto Serif Display",
+      "Stardom",
+      "BodoniFLF",
+      "Literata 72pt"
      ],
      "rank": null,
      "face": "700 normal",
-     "ms": 143
+     "ms": 101
     },
     "hard-wear": {
      "top5": [
-      "Imbue 50pt",
-      "Vincente",
+      "Imbue",
       "Imbue Variable",
-      "Imbue 100pt",
-      "Aujournuit"
+      "Vincente",
+      "Aujournuit",
+      "Le Grimoire du Bonheur"
      ],
-     "rank": null,
+     "rank": 1,
      "face": "400 normal",
-     "ms": 129
+     "ms": 84
     },
     "hard-contrast": {
      "top5": [
-      "Groundhog",
+      "Acid",
       "Mesmerize",
-      "Handypot",
-      "Childlike Wonder",
-      "Bramalea Beauty"
+      "Dosis",
+      "Jabore",
+      "Groundhog"
      ],
-     "rank": null,
+     "rank": 3,
      "face": "null null",
-     "ms": 150
+     "ms": 92
     },
     "hard-caps": {
      "top5": [
       "TT Interphases Pro Mono",
+      "Code Saver",
+      "Martian Mono",
       "Subtle Sans",
-      "Epic Awesomeness",
-      "Crystal",
-      "Namche Shadow Mono"
+      "Yes Yes No"
      ],
      "rank": null,
      "face": "null null",
-     "ms": 136
+     "ms": 91
     },
     "short-1": {
      "top5": [
-      "Cormorant",
-      "Cormorant SC",
       "Cormorant Unicase",
-      "Shippori Mincho",
-      "IvyOra"
+      "Cormorant",
+      "Cormorant Infant",
+      "Cormorant Upright",
+      "KhushaNuma Regular"
      ],
      "rank": null,
      "face": "700 normal",
-     "ms": 119
+     "ms": 70
     },
     "short-2": {
      "top5": [
       "Florencesans SC",
-      "Galvote",
       "Ginóra Sans",
-      "Florencesans",
-      "Opificio Serif"
+      "Opificio Neue",
+      "Angesicht Rounded",
+      "Galvote"
      ],
      "rank": null,
      "face": "null null",
-     "ms": 114
+     "ms": 66
     },
     "short-3": {
      "top5": [
       "Azeret Mono",
-      "Martian Mono SemiExpanded",
       "Martian Mono",
-      "Space Mono",
-      "LT Superior Mono"
+      "Namche Shadow Mono",
+      "Server Mono",
+      "Yeomil Mono"
      ],
      "rank": 1,
      "face": "400 normal",
-     "ms": 144
+     "ms": 86
     },
     "short-4": {
      "top5": [
       "Scary Things",
-      "XB Zar",
       "Vegetal",
-      "Nesdate October Ten",
+      "Ambicase Fatface",
+      "Elsie",
       "Didoni URW"
      ],
      "rank": null,
      "face": "null null",
-     "ms": 133
+     "ms": 84
     },
     "hard-perspective": {
      "top5": [
       "JJMiniArcade",
+      "Sofia Narrow",
       "Fudd",
-      "Teachers",
-      "Urbanist",
-      "A Pompadour"
+      "UPM256",
+      "Seiden Sans"
      ],
      "rank": null,
      "face": "null normal",
-     "ms": 119
+     "ms": 76
     },
     "hard-outline": {
      "top5": [
       "Tourney Condensed",
-      "Londrina Outline",
       "Mondial",
-      "SriRajuOutlineUnicode",
-      "Londrina Sketch"
+      "Londrina Outline",
+      "Vanchrome",
+      "Rudasteria St"
      ],
      "rank": null,
      "face": "100 normal",
-     "ms": 119
+     "ms": 80
     },
     "hard-small": {
      "top5": [
-      "DejaVu Sans",
-      "Nunito Sans 10pt Condensed",
-      "Albert Sans Narrow",
+      "IBM Plex Sans",
       "Nunito Sans Condensed",
-      "Bert Sans"
+      "NanumGothic Eco",
+      "HMI Sans",
+      "Barlow"
      ],
      "rank": null,
-     "face": "400 normal",
-     "ms": 126
+     "face": "300 normal",
+     "ms": 78
     },
     "hard-condensed": {
      "top5": [
       "Bertioga Sans",
-      "Sign Text Narrow",
+      "Liberation Sans Narrow",
       "Archivo Narrow",
-      "Pragati Narrow",
-      "SMT Sans"
+      "Inconsolatazi4",
+      "Pragati Narrow"
      ],
-     "rank": 4,
+     "rank": 3,
      "face": "800 normal",
-     "ms": 120
+     "ms": 88
     },
     "hard-script": {
      "top5": [
       "Euphoria Script",
-      "Brodast",
       "Patronia Script",
-      "Stephanie",
-      "Billy Stranger"
+      "Brodast",
+      "Billy Stranger",
+      "Something in the Night"
      ],
      "rank": 1,
      "face": "400 normal",
-     "ms": 117
+     "ms": 77
     },
     "script-cyrillic": {
      "top5": [
       "Comfortaa",
-      "SN Pro",
       "LINE Seed JP",
-      "Zen Maru Gothic",
-      "Nunito"
+      "Nunito",
+      "Didact Gothic",
+      "Raleway"
      ],
      "rank": 1,
      "face": "400 normal",
-     "ms": 27
+     "ms": 24
     },
     "script-greek": {
      "top5": [
       "Caudex",
       "Charis SIL",
       "Cardo",
-      "Arima",
-      "GFS Didot"
-     ],
-     "rank": 1,
-     "face": "400 normal",
-     "ms": 24
-    },
-    "script-arabic": {
-     "top5": [
-      "Cairo",
-      "Noto Kufi Arabic",
-      "Changa",
-      "Almarai",
-      "Mada"
+      "Tinos",
+      "Chiron Sung HK"
      ],
      "rank": 1,
      "face": "400 normal",
      "ms": 23
     },
-    "script-hebrew": {
+    "script-arabic": {
      "top5": [
-      "Frank Ruhl Libre",
-      "Cardo",
-      "Noto Serif Hebrew",
-      "Tinos",
-      "Noto Rashi Hebrew"
+      "Cairo",
+      "Noto Kufi Arabic",
+      "Almarai",
+      "Changa",
+      "Kufam"
      ],
      "rank": 1,
      "face": "400 normal",
      "ms": 20
     },
+    "script-hebrew": {
+     "top5": [
+      "Frank Ruhl Libre",
+      "Noto Serif Hebrew",
+      "Cardo",
+      "Tinos",
+      "Libertinus Serif Display"
+     ],
+     "rank": 1,
+     "face": "400 normal",
+     "ms": 19
+    },
     "script-devanagari": {
      "top5": [
+      "Martel Sans",
+      "Mukta",
       "Noto Sans",
-      "Cambay",
-      "Khula",
-      "Kadwa",
-      "Google Sans"
+      "Google Sans",
+      "Hind"
      ],
-     "rank": null,
-     "face": "400 italic",
-     "ms": 22
+     "rank": 5,
+     "face": "400 normal",
+     "ms": 19
     },
     "script-chinese": {
      "top5": [
-      "Noto Sans HK",
+      "LINE Seed JP",
+      "Noto Sans CJK TC",
+      "Sawarabi Gothic",
       "Chocolate Classical Sans",
-      "BIZ UDGothic",
-      "Chiron Hei HK",
-      "Sawarabi Gothic"
+      "Kiwi Maru"
      ],
-     "rank": 4,
+     "rank": 2,
      "face": "400 normal",
-     "ms": 22
+     "ms": 23
     },
     "probe-weight-300": {
      "top5": [
-      "Figtree",
-      "Vigil",
-      "Zx Gamut",
-      "Mluvka",
-      "Koreene Sans"
+      "Playground Sans",
+      "Koreene Sans",
+      "Onest",
+      "Google Sans",
+      "HK Grotesk"
      ],
-     "rank": 1,
-     "face": "300 normal",
-     "ms": 120
+     "rank": null,
+     "face": "400 normal",
+     "ms": 78
     },
     "probe-weight-700": {
      "top5": [
-      "Wanted Sans",
-      "Gabarito",
       "Product Sans",
-      "Vigil",
-      "Figtree"
+      "Gabarito",
+      "Television Sans",
+      "Product Sans Black",
+      "Wanted Sans"
      ],
-     "rank": 5,
+     "rank": null,
      "face": "700 normal",
-     "ms": 123
+     "ms": 78
     },
     "probe-upright": {
      "top5": [
       "Faustina",
-      "Brawler",
-      "Tasman",
+      "FF More",
       "Rival",
-      "Malaga"
+      "Tasman",
+      "Brawler"
      ],
      "rank": 1,
      "face": "400 normal",
-     "ms": 143
+     "ms": 84
     },
     "probe-italic": {
      "top5": [
       "Faustina",
-      "DejaVu Serif",
       "Noticia Text",
-      "Manuale",
-      "Neuton"
+      "DejaVu Serif",
+      "Enra Slab Variable",
+      "Manuale"
      ],
      "rank": 1,
      "face": "400 italic",
-     "ms": 129
+     "ms": 83
     }
    }
   }

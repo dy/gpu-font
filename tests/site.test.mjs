@@ -67,10 +67,11 @@ test('per-script accuracy on the page comes from the shipped breakdown', async (
   assert.deepEqual([metrics.latinTop5, metrics.cyrillicTop5, metrics.arabicTop5], ['script/Latn', 'script/Cyrl', 'script/Arab'].map(key => groups[key].twin5))
 })
 
-// Favicons are stored with the site, one PNG per host (scripts/favicons.mjs): each a page names and each a catalog shows.
-test('every favicon a page or catalog names is stored with the site', async () => {
+// Favicons are stored with the site, one PNG per host (scripts/favicons.mjs): each a page names, each a catalog shows and
+// each a source of a grouped catalog marks its matches with.
+test('every favicon a page, catalog or source names is stored with the site', async () => {
   const site = JSON.parse(await readFile('site.json', 'utf8')), pages = await Promise.all(['index.html', 'catalogs.html'].map(page => readFile(page, 'utf8')))
-  const named = [...new Set([...pages.flatMap(html => [...html.matchAll(/"\.\/(favicons\/[^"]+)"/g)].map(m => m[1])), ...site.catalogs.map(c => c.icon).filter(Boolean)])]
+  const named = [...new Set([...pages.flatMap(html => [...html.matchAll(/"\.\/(favicons\/[^"]+)"/g)].map(m => m[1])), ...site.catalogs.flatMap(c => [c, ...c.sources ?? []]).map(c => c.icon).filter(Boolean)])]
   assert.ok(named.length > site.catalogs.length)
   for (const path of named) {
     const bytes = await readFile(path)

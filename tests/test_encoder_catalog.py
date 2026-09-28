@@ -87,3 +87,18 @@ class EncoderCatalogTests(unittest.TestCase):
 
 
 if __name__=='__main__':unittest.main()
+
+
+
+class SixBitRowTests(unittest.TestCase):
+    def test_six_bit_rows_read_as_eight_bit_ones_at_three_quarters_of_the_bytes(self):
+        from train.ten_model import pack_bits
+        with tempfile.TemporaryDirectory() as tmp:
+            encoder = Path(tmp)/'encoder.json'; save(encoder, {'dimensions': 128, 'preparation': {'width': 128, 'height': 48, 'windows': 3}})
+            values = ((np.arange(3*128)*7) % 63 - 31).astype(np.int8).reshape(3, 128)  # -31..31, the six-bit range
+            faces = [{'id': f'f{i}', 'familyId': f'f{i}', 'family': f'F{i}', 'styleName': 'Regular', 'weight': 400, 'style': 'normal', 'scripts': ['Latn']} for i in range(3)]
+            catalog = lambda bits: {'version': 3, 'kind': 'font-catalog', 'encoderSha256': sha(encoder), 'preparationSha256': preparation_hash({'width': 128, 'height': 48, 'windows': 3}), 'dimensions': 128, 'faces': faces,
+                                    'vectors': {'encoding': f'int{bits}-base64', 'shape': [3, 128], 'data': base64.b64encode(pack_bits(values, bits)).decode(), 'scales': [1/31]*3, 'owners': [0, 1, 2]}}
+            six, eight = read_catalog(catalog(6), encoder), read_catalog(catalog(8), encoder)
+            self.assertEqual(len(base64.b64decode(catalog(6)['vectors']['data'])), 3*128*6//8)
+            np.testing.assert_array_equal(six[0], eight[0]); np.testing.assert_array_equal(six[1], eight[1]); self.assertEqual(six[2], eight[2])

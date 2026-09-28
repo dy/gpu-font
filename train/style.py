@@ -221,11 +221,13 @@ class Setup:
 class StoredViews:
     """Stored views of the training families beside the on-the-fly Pillow renders: Chromium renders (development and
     case-diverse data), the browser rasterizer Pillow does not reproduce, labeled with each family's default face; and
-    photographs, the WhatFontIs development images of Google families (train.style_photos), labeled with the family's face
-    of the photographed weight and style. The final photographs are never a source: they stay the held-out read."""
+    captures: the WhatFontIs development photographs of Google families (train.style_photos) and the web screens of the
+    development sites (train.style_screens), labeled with the family's face of the drawn weight and style. The final
+    photographs and the held-out sites are never a source: they stay the reads."""
     SOURCES = [('.data/encoder/development.json', '.data/encoder/development.u8', 'chromium'),
                ('.data/encoder/case-training/manifest.json', '.data/encoder/case-training/pixels.u8', 'chromium'),
-               ('.data/style/photos-development.json', '.data/style/photos-development.u8', 'photo')]
+               ('.data/style/photos-development.json', '.data/style/photos-development.u8', 'photo'),
+               ('.data/style/screens-development.json', '.data/style/screens-development.u8', 'screen')]
 
     def __init__(self, setup, roles=('train',), sources=None):
         default = {f['family']: i for i, f in enumerate(setup.faces) if f['default']}
@@ -237,17 +239,17 @@ class StoredViews:
             windows = {}
             for w in manifest['windows']: windows.setdefault(w['source'], []).append((w['offset'], w['width'], w['height']))
             for i, s in enumerate(manifest['samples']):
-                # A photograph is its own development split: every image counts, in the face of its weight and style when the family has it.
-                photo = renderer == 'photo'
+                # A capture is its own development split: every one counts, in the face of its weight and style when the family has it.
+                photo = renderer in ('photo', 'screen')
                 face = styled.get((s['family'], s.get('weight'), s.get('italic')), default.get(s['family'])) if photo else default.get(s['family'])
                 if s.get('renderer', renderer) == renderer and (photo or s['role'] in roles) and face in setup.position and s['script'] in setup.scripts and i in windows:
                     (self.photos if photo else self.views).append((owner, face, s['script'], windows[i])); counts[renderer] = counts.get(renderer, 0) + 1
         print('Stored training views', ', '.join(f'{n} {r}' for r, n in counts.items()) or 0, flush=True)
 
-    PHOTO_SHARE = .125  # photographs are few (thousands against hundreds of thousands of renders): a fixed share of each step's stored views
+    PHOTO_SHARE = .25  # captures are few (tens of thousands against hundreds of thousands of renders): a fixed share of each step's stored views
 
     def sample(self, rng, count):
-        """`count` stored views: a fixed share photographs when there are any, the rest renders."""
+        """`count` stored views: a fixed share captures (photographs and screens) when there are any, the rest renders."""
         photos = min(len(self.photos), round(count*self.PHOTO_SHARE)); renders = min(len(self.views), count - photos)
         photos = min(len(self.photos), count - renders); out = []  # a short list of either kind is filled from the other
         for owner, face, script, windows in rng.sample(self.photos, photos) + rng.sample(self.views, renders):
@@ -635,7 +637,37 @@ def export_run(run):
     save(ROOT/'.data/style'/run/'encoder.json', artifact); print('Exported', run, sha(ROOT/'.data/style'/run/'encoder.json'), flush=True)
 
 
-def export_catalog(run, source='pillow'):
+def family_twins():
+    """Per default face of every family the teacher spans, Google's and the open ones, the families whose letters in each
+    script are closer than the noise floor: {family id: {script: [family ids, nearest first]}}. Twins cross catalogs, so a
+    clone in another catalog (Liberation Sans for Arimo) counts as the same design on the page and in the reads. Computed
+    once a process and written to .data/style/twins.json, which scripts/catalog-files.mjs reads for the file-built catalogs."""
+    if not hasattr(family_twins, 'cache'):
+        faces = read(STYLE/'faces.json')['faces']; noise = read(STYLE/'noise-floor.json')['p95']; out = {}
+        for path in sorted(STYLE.glob('teacher-*.npz')):
+            script = path.stem.split('-', 1)[1]; members, matrix = teacher(script); row = {int(m): i for i, m in enumerate(members)}
+            defaults = [i for i, f in enumerate(faces) if f['default'] and i in row]
+            block = matrix[np.ix_([row[i] for i in defaults], [row[i] for i in defaults])]
+            for n, i in enumerate(defaults):
+                near = [faces[defaults[j]]['family'] for j in np.argsort(block[n], kind='stable') if j != n and block[n, j] < noise]
+                if near: out.setdefault(faces[i]['family'], {})[script] = near
+        family_twins.cache = out; save(STYLE/'twins.json', {'noise': noise, 'families': out})
+    return family_twins.cache
+
+
+def own_twins(twin_map, families):
+    """The twin map kept to `families` on both sides: families outside are dropped from every list, and scripts and
+    families left with nothing are dropped with them."""
+    kept = {}
+    for family, scripts in twin_map.items():
+        if family not in families: continue
+        near = {script: [f for f in listed if f in families] for script, listed in scripts.items()}
+        near = {script: listed for script, listed in near.items() if listed}
+        if near: kept[family] = near
+    return kept
+
+
+def export_catalog(run, source='pillow', bits=4):
     """Per-face Google Fonts catalog (version 3): every face with its references, weight, style and script coverage.
     Default faces list, per script, the families whose letters there are indistinguishable from their own (closer than 95%
     of one face's re-renders), so the page folds kinds of one family into a row: IBM Plex Sans KR under IBM Plex Sans for Latin,
@@ -646,16 +678,11 @@ def export_catalog(run, source='pillow'):
     encoder = ROOT/'.data/style'/run/'encoder.json'; model, _, _ = load_run(run, exported=True); vectors, keys = references(model, source)
     sizes = sorted({s.get('size', 48) for name in {'pillow': ['references'], 'browser': ['references-browser'], 'mixed': ['references', 'references-browser']}[source] for s in load_references(name)[0]['samples']})
     inventory = read(ROOT/'bench/corpus.json'); by_id = {f['id']: f for f in inventory['families'] if not f['excluded']}
-    faces = read(STYLE/'faces.json')['faces']; noise = read(STYLE/'noise-floor.json')['p95']
+    faces = read(STYLE/'faces.json')['faces']
     chosen = sorted({f for f, _ in keys}, key=lambda i: (faces[i]['family'], faces[i]['italic'], faces[i]['weight'])); index = {f: n for n, f in enumerate(chosen)}
-    twins = {}
-    for path in sorted(STYLE.glob('teacher-*.npz')):
-        script = path.stem.split('-', 1)[1]; members, matrix = teacher(script); row = {int(m): i for i, m in enumerate(members)}
-        defaults = [i for i in chosen if faces[i]['default'] and i in row]
-        block = matrix[np.ix_([row[i] for i in defaults], [row[i] for i in defaults])]
-        for n, i in enumerate(defaults):
-            near = [faces[defaults[j]]['family'] for j in np.argsort(block[n], kind='stable') if j != n and block[n, j] < noise]
-            if near: twins.setdefault(i, {})[script] = near
+    # Google's faces list only Google twins: the file-built catalogs list theirs across every catalog, and the page folds a
+    # pair when either side names the other, so the default download carries no ids it cannot use.
+    twins = own_twins(family_twins(), {faces[i]['family'] for i in chosen}); twins = {i: twins[faces[i]['family']] for i in chosen if faces[i]['default'] and faces[i]['family'] in twins}
     entries = []
     for i in chosen:
         f = faces[i]; family = by_id[f['family']]
@@ -666,12 +693,12 @@ def export_catalog(run, source='pillow'):
         if i in twins: entry['twins'] = twins[i]
         entries.append(entry)
     if sorted(e['familyId'] for e in entries if e.get('default')) != sorted({e['familyId'] for e in entries}): raise ValueError('Every family needs exactly one default face')
-    # Four bits a dimension rank as well as eight (bench/style.md, Quantization) at half the download.
-    rows = vectors/np.linalg.norm(vectors, axis=1, keepdims=True); scales = np.maximum(np.abs(rows).max(1)/7, 1e-12)
-    packed = np.round(rows/scales[:, None]).clip(-7, 7).astype(np.int8)
+    # Four bits a dimension rank nearly as eight (bench/style.md, Quantization) at half the download; six keep the last two points of first place.
+    levels = 2**(bits - 1) - 1; rows = vectors/np.linalg.norm(vectors, axis=1, keepdims=True); scales = np.maximum(np.abs(rows).max(1)/levels, 1e-12)
+    packed = np.round(rows/scales[:, None]).clip(-levels, levels).astype(np.int8)
     catalog = {'version':3,'kind':'font-catalog','encoderSha256':sha(encoder),'preparationSha256':preparation_hash(read(encoder)['preparation']),
                'dimensions':model.head.out_features,'sourceCommit':inventory['commit'],'referenceMethod':f'faces-cases-scripts-{source}-{"-".join(map(str, sizes))}','faces':entries,
-               'vectors':{'encoding':'int4-base64','shape':list(packed.shape),'data':base64.b64encode(pack_bits(packed, 4)).decode(),
+               'vectors':{'encoding':f'int{bits}-base64','shape':list(packed.shape),'data':base64.b64encode(pack_bits(packed, bits)).decode(),
                           'scales':[float(f'{v:.6g}') for v in scales],'owners':[index[f] for f, _ in keys]}}
     target = ROOT/'.data/style'/run/'google-fonts.json'; save(target, catalog)
     decoded, owners, labels = read_catalog(read(target), encoder)
@@ -723,6 +750,20 @@ def final(runs, source='pillow'):
     return reports
 
 
+def photos(runs, source='browser'):
+    """The packed photographs read for each run's exported model against the Google references: development (trained on
+    since the sixth step) and final (never trained on), twin credit as the main report. A comparison between runs, not a
+    report: bench/photos.md quotes scripts/whatfontis.mjs, the page's read across every catalog."""
+    setup = Setup(['train']); out = {}
+    for run in runs:
+        model, heads, _ = load_run(run, exported=True); catalog = references(model, source); torch.mps.empty_cache(); out[run] = {}
+        for part, role in [('development', 'development'), ('final', 'final')]:
+            if not (STYLE/f'photos-{part}.json').exists(): continue
+            r = evaluate(model, heads, setup, [role], name=f'photos-{part}', source=source, catalog=catalog)['scriptFiltered']['all']
+            out[run][part] = r; print(f"{run} photographs {part}: {r['count']} images, top5 {100*r['twin5']:.1f} first {100*r['twin1']:.1f}", flush=True)
+    return out
+
+
 def breakdown(run):
     """Held-out families by requirement: length, Google category and style tag against every reference; capitals searched
     among lowercase references only and the reverse; other scripts among Latin only. The shipped catalog holds every case
@@ -760,8 +801,8 @@ def deploy(run):
 
 
 if __name__ == '__main__':
-    p = argparse.ArgumentParser(); p.add_argument('command', choices=['train', 'export', 'catalog', 'final', 'deploy', 'compare', 'breakdown', 'project']); p.add_argument('--run', default='evaluation')
-    p.add_argument('--roles', default='train'); p.add_argument('--steps', type=int, default=30000); p.add_argument('--workers', type=int, default=12); p.add_argument('--check', type=int, default=2500); p.add_argument('--architecture', choices=list(ARCHITECTURES), default=CORPUS_ARCH); p.add_argument('--lr', type=float, default=2e-4); p.add_argument('--drawn', type=float, default=0.0); p.add_argument('--photo', type=float, default=0.0); p.add_argument('--cluster', type=int, default=0, help='bits: fold and cluster the warm model, retrain its codebooks'); p.add_argument('--pairs', type=float, default=0.0); p.add_argument('--seed', type=int); p.add_argument('--dimensions', type=int, default=64); p.add_argument('--select', default='bench:development'); p.add_argument('--source', choices=['pillow', 'browser', 'mixed'], default='pillow')
+    p = argparse.ArgumentParser(); p.add_argument('command', choices=['train', 'export', 'catalog', 'twins', 'final', 'photos', 'deploy', 'compare', 'breakdown', 'project']); p.add_argument('--run', default='evaluation')
+    p.add_argument('--roles', default='train'); p.add_argument('--steps', type=int, default=30000); p.add_argument('--workers', type=int, default=12); p.add_argument('--check', type=int, default=2500); p.add_argument('--architecture', choices=list(ARCHITECTURES), default=CORPUS_ARCH); p.add_argument('--lr', type=float, default=2e-4); p.add_argument('--drawn', type=float, default=0.0); p.add_argument('--photo', type=float, default=0.0); p.add_argument('--cluster', type=int, default=0, help='bits: fold and cluster the warm model, retrain its codebooks'); p.add_argument('--pairs', type=float, default=0.0); p.add_argument('--seed', type=int); p.add_argument('--dimensions', type=int, default=64); p.add_argument('--select', default='bench:development'); p.add_argument('--source', choices=['pillow', 'browser', 'mixed'], default='pillow'); p.add_argument('--bits', type=int, choices=[4, 6, 8], default=4, help='bits a catalog number')
     p.add_argument('--warm', default=str(ROOT/'.data/encoder/case-refine/best.pt')); p.add_argument('--teacher'); a = p.parse_args()
     if a.warm == 'none': a.warm = None
     torch.set_num_threads(4)
@@ -769,8 +810,10 @@ if __name__ == '__main__':
     if a.command == 'train': train(a.run, a.roles.split(','), a.steps, a.warm, a.workers, a.check, a.architecture, a.lr, a.drawn, a.pairs, a.seed, a.select, a.photo, a.teacher, a.dimensions, a.cluster)
     elif a.command == 'export': export_run(a.run)
     elif a.command == 'project': project(a.run, a.dimensions)
-    elif a.command == 'catalog': export_catalog(a.run, source=a.source)
+    elif a.command == 'catalog': export_catalog(a.run, source=a.source, bits=a.bits)
+    elif a.command == 'twins': print('Twins of', len(family_twins()), 'families in .data/style/twins.json')
     elif a.command == 'compare': compare_references(a.run)
     elif a.command == 'deploy': deploy(a.run)
     elif a.command == 'breakdown': breakdown(a.run)
+    elif a.command == 'photos': photos(a.run.split(','), a.source)
     else: final(a.run.split(','), a.source)

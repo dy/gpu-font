@@ -223,6 +223,15 @@ class CatalogAndLossTests(unittest.TestCase):
         self.assertAlmostEqual(float(parts_away['distill']), 1, places=6); self.assertAlmostEqual(float(away - total), DISTILL, places=4)
 
 
+class TwinExportTests(unittest.TestCase):
+    def test_a_catalog_keeps_the_twins_among_its_own_families(self):
+        from train.style import own_twins
+        twins = {'arimo': {'Latn': ['github-liberation', 'lato'], 'Cyrl': ['github-liberation']}, 'lato': {'Latn': ['arimo']}, 'github-liberation': {'Latn': ['arimo']}}
+        self.assertEqual(own_twins(twins, {'arimo', 'lato', 'roboto'}), {'arimo': {'Latn': ['lato']}, 'lato': {'Latn': ['arimo']}})  # the open family and the script left empty go
+        self.assertEqual(own_twins(twins, {'github-liberation', 'arimo'}), {'arimo': {'Latn': ['github-liberation'], 'Cyrl': ['github-liberation']}, 'github-liberation': {'Latn': ['arimo']}})
+        self.assertEqual(own_twins(twins, {'roboto'}), {}); self.assertEqual(own_twins({}, {'arimo'}), {})
+
+
 class HeadExportTests(unittest.TestCase):
     def test_a_head_is_written_at_four_decimals(self):
         import json
@@ -239,6 +248,36 @@ if __name__ == '__main__': unittest.main()
 
 
 class PhotoViewTests(unittest.TestCase):
+    def test_a_surface_takes_its_grain_from_the_bank_and_stands_without_it(self):
+        from train.style_data import surface, STATE, textures
+        image = Image.fromarray(line(160, 40, 3)); mask = np.asarray(image) < 128
+        stripes = np.uint8(np.tile(np.linspace(150, 255, 64), (512, 8))); STATE['textures'] = [stripes]
+        try:
+            # Ink and paper stay apart at the letters' places, either way round, except where an outline effect hollows the
+            # letters or a camera well off the normal moves them (a quarter of the views at most).
+            apart = lambda out: abs(out[mask].mean() - out[~mask].mean()) > 20
+            outs = [np.asarray(surface(image, random.Random(seed)), np.float32) for seed in range(12)]
+            self.assertTrue(all(o.shape == mask.shape and o[~mask].std() > 0 for o in outs))  # the paper carries the texture, never one flat level
+            self.assertGreaterEqual(sum(apart(o) for o in outs), 8)
+            tiny = Image.fromarray(line(14, 18, 5))  # one letter at a small size: the smallest view the stream renders
+            self.assertTrue(all(surface(tiny, random.Random(seed)).size == tiny.size for seed in range(24)))
+            STATE['textures'] = []
+            self.assertGreaterEqual(sum(apart(np.asarray(surface(image, random.Random(seed)), np.float32)) for seed in range(12)), 8)  # noise relief stands in
+        finally: STATE.pop('textures', None)
+
+    def test_the_bank_loads_once_and_leaves_a_broken_file_out(self):
+        import contextlib, io, tempfile
+        from pathlib import Path
+        from train import style_data
+        with tempfile.TemporaryDirectory() as tmp:
+            Image.fromarray(np.full((64, 64), 200, np.uint8)).save(Path(tmp)/'plaster.jpg'); (Path(tmp)/'broken.jpg').write_bytes(b'not a jpeg')
+            bank = style_data.TEXTURES; style_data.TEXTURES = Path(tmp); style_data.STATE.pop('textures', None)
+            try:
+                with contextlib.redirect_stdout(io.StringIO()) as out: loaded = style_data.textures()
+                self.assertEqual([t.shape for t in loaded], [(512, 512)]); self.assertIn('unreadable texture broken.jpg', out.getvalue())
+                self.assertIs(style_data.textures(), loaded)  # loaded once a process
+            finally: style_data.TEXTURES = bank; style_data.STATE.pop('textures', None)
+
     def test_photo_views_keep_the_letters_findable_and_differ_by_seed(self):
         from train.style_data import damage, effect
         image = Image.fromarray(line(200, 40, 3)); prepare = Preparer()
@@ -324,6 +363,8 @@ class StoredViewTests(unittest.TestCase):
             self.assertEqual((len(stored.photos), len(stored.views)), (2, 0))  # photographs keep their own list, for their share of a step
             chromium = StoredViews(setup, ('train',), sources=[(str(manifest), str(pixels), 'chromium')])
             self.assertEqual(chromium.views, [])  # a Chromium source keeps to the roles asked for; these are development
+            screens = StoredViews(setup, ('train',), sources=[(str(manifest), str(pixels), 'photo'), (str(manifest), str(pixels), 'screen')])
+            self.assertEqual((len(screens.photos), len(screens.views)), (4, 0))  # screens are captures too: they join the photographs' list and share
 
     def test_a_damaged_font_file_draws_nothing_instead_of_stopping_the_teacher_build(self):
         with tempfile.TemporaryDirectory() as tmp:
@@ -356,7 +397,7 @@ class WarmStartTests(unittest.TestCase):
         stored = StoredViews.__new__(StoredViews); stored.pixels = [np.arange(12, dtype=np.uint8)]
         stored.views = [(0, 0, 'Latn', [(0, 4, 3)])]*100; stored.photos = [(0, 1, 'Latn', [(0, 4, 3)])]*10
         faces = [v['face'] for v in stored.sample(random.Random(0), 32)]
-        self.assertEqual((faces.count(1), faces.count(0)), (4, 28))
+        self.assertEqual((faces.count(1), faces.count(0)), (8, 24))  # a quarter of the stored views are captures
         stored.photos = []; self.assertEqual([v['face'] for v in stored.sample(random.Random(0), 8)], [0]*8)  # no photographs: renders only
         stored.photos = [(0, 1, 'Latn', [(0, 4, 3)])]*3; stored.views = []; self.assertEqual([v['face'] for v in stored.sample(random.Random(0), 8)], [1]*3)  # no renders: the photographs there are
 

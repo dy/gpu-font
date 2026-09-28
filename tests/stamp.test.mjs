@@ -9,10 +9,11 @@ test('every page pins its stylesheets and modules to their current content', asy
     const html = await readFile(page, 'utf8')
     assert.equal(html, await stamp(html), `${page} is stale: run node scripts/stamp.mjs`)
     assert.doesNotMatch(html, /(href|src)="\.\/[^"?]+\.(css|mjs)"/, `${page} loads a local file without a stamp`)
+    assert.match(html, /<a class="version" href="https:\/\/github\.com\/dy\/gpu-font\/releases\/tag\/v[\d.]+">v[\d.]+<\/a>/, `${page} shows no version`)
   }
 })
 
 test('stamping replaces old stamps and the old import map instead of adding more', async () => {
-  const html = await readFile('index.html', 'utf8'), stale = html.replaceAll(/\?v=\w+/g, '?v=0000000000')
+  const html = await readFile('index.html', 'utf8'), stale = html.replaceAll(/\?v=\w+/g, '?v=0000000000').replace(/tag\/v[\d.]+">v[\d.]+/, 'tag/v0.0.0">v0.0.0')
   assert.equal(await stamp(stale), html)
 })

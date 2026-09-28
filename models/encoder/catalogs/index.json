@@ -20,6 +20,10 @@
     "name": "Font Library"
   },
   {
+    "id": "whatfontis",
+    "name": "WhatFontIs"
+  },
+  {
     "id": "other",
     "name": "Other",
     "sources": [
@@ -50,8 +54,6 @@
       "gnu-freefont",
       "hershey",
       "liberation",
-      "material-symbols",
-      "font-awesome",
       "ocr-skala",
       "cc-accidenz-commons",
       "chicago-kare",

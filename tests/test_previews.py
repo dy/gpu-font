@@ -71,16 +71,16 @@ class PreviewTests(unittest.TestCase):
         grey = Image.new('L', (8, 8), 255); grey.putpixel((0, 0), 200)
         self.assertAlmostEqual(P.cut(grey, True), 200 + 55 * 5 / 6)
 
-    def test_a_picture_in_grey_ink_keeps_its_letters_and_one_in_black_is_cut_as_before(self):
+    def test_a_picture_keeps_smooth_edges_in_four_greys_and_its_darkest_ink_black_whether_black_or_grey(self):
         with tempfile.TemporaryDirectory() as folder:
             P.OUT = Path(folder)
             for fill in (0, 200):  # black ink, then grey
-                image = Image.new('L', (400, 80), 255); ImageDraw.Draw(image).rectangle((20, 10, 380, 70), fill=fill)
+                image = Image.new('L', (400, 80), 255); ImageDraw.Draw(image).polygon([(20, 70), (200, 10), (380, 70)], fill=fill)  # slopes cross pixels
                 source = Path(folder) / f'{fill}.png'; image.save(source)
                 face_id, size, reason = P.picture((f'face-{fill}', ('image', str(source), None)))
-                self.assertIsNone(reason, fill); picture = Image.open(P.path(face_id))
-                self.assertEqual(picture.height, P.HEIGHT); self.assertEqual([v for v, n in enumerate(picture.convert('L').histogram()) if n], [0, 255], 'black and white only')
-                self.assertEqual(picture.convert('L').getpixel((picture.width // 2, P.HEIGHT // 2)), 0, 'the ink stays ink')
+                self.assertIsNone(reason, fill); picture = Image.open(P.path(face_id)).convert('L')
+                self.assertEqual(picture.height, P.HEIGHT); self.assertEqual([v for v, n in enumerate(picture.histogram()) if n], [0, 85, 170, 255], 'four greys')
+                self.assertEqual(picture.getpixel((picture.width // 2, P.HEIGHT * 2 // 3)), 0, 'the ink stays ink')
 
     def test_a_face_that_encloses_no_area_says_so_and_a_filled_one_is_not_faint(self):
         with tempfile.TemporaryDirectory() as folder:

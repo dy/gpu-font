@@ -63,6 +63,35 @@ class ColourLetters(unittest.TestCase):
             self.assertFalse(colour_letters(build(folder, ['A', 'B'], coloured=['layer'])))
 
 
+def icon_font(folder, icons, spelled, extension=False):
+    """A font of the letters a to z and `icons` pictures on Private Use code points, the first `spelled` of them also reached
+    by ligating a four-letter word, as Font Awesome's "bell" reaches its bell; with `extension`, from an extension lookup, as
+    Font Awesome 7 and Material Symbols hold theirs."""
+    letters = 'abcdefghijklmnopqrstuvwxyz'; names = [*letters, *[f'icon{i}' for i in range(icons)]]
+    pen = TTGlyphPen(None); pen.moveTo((0, 0)); pen.lineTo((0, 500)); pen.lineTo((400, 0)); pen.closePath(); shape = pen.glyph()
+    fb = FontBuilder(1000, isTTF=True); fb.setupGlyphOrder(['.notdef', *names])
+    fb.setupCharacterMap({**{ord(c): c for c in letters}, **{0xE000 + i: f'icon{i}' for i in range(icons)}})
+    fb.setupGlyf({name: shape for name in ['.notdef', *names]}); fb.setupHorizontalMetrics({name: (500, 0) for name in ['.notdef', *names]})
+    fb.setupHorizontalHeader(ascent=800, descent=-200); fb.setupNameTable({'familyName': 'Icons', 'styleName': 'Regular'}); fb.setupOS2(); fb.setupPost()
+    words = [' '.join(letters[(i + k) % 26] for k in range(3)) + f' {letters[i // 26]}' for i in range(spelled)]
+    rules = ''.join(f'  sub {word} by icon{i};\n' for i, word in enumerate(words))
+    if spelled: fb.addOpenTypeFeatures(f'lookup spell useExtension {{\n{rules}}} spell;\nfeature liga {{ lookup spell; }} liga;\n' if extension else f'feature liga {{\n{rules}}} liga;\n')
+    path = Path(folder) / f'icons-{icons}-{spelled}{"-extension" if extension else ""}.ttf'; fb.save(str(path))
+    return path
+
+
+class IconFonts(unittest.TestCase):
+    def test_letters_that_spell_more_icons_than_there_are_letters_are_an_icon_font(self):
+        from scripts.open_fonts import spells_icons
+        with tempfile.TemporaryDirectory() as folder:
+            self.assertTrue(spells_icons(icon_font(folder, 40, 30), 26))
+            self.assertTrue(spells_icons(icon_font(folder, 40, 30, extension=True), 26))
+            self.assertFalse(spells_icons(icon_font(folder, 40, 20), 26))  # a text face's few ligatures to private glyphs
+            self.assertFalse(spells_icons(icon_font(folder, 40, 30), 52))  # counted against every letter the face inks
+            self.assertFalse(spells_icons(icon_font(folder, 40, 0), 26))   # icons on private code points, none spelled
+            self.assertFalse(spells_icons(build(folder, ['A', 'B']), 2))
+
+
 class FamilyName(unittest.TestCase):
     def test_a_font_declares_its_family_and_an_unreadable_one_has_none(self):
         from fontTools.ttLib import TTFont
@@ -421,6 +450,13 @@ class Inventory(unittest.TestCase):
             self.assertNotIn('alphabets', family)
             self.assertTrue(all(isinstance(count, int) and count >= 8 for count in family['letters'].values()), family['family'])
             self.assertTrue(all('embeddedLicense' not in face for face in family['faces']), family['family'])
+
+    def test_a_debian_family_links_to_the_page_of_a_package_that_ships_it(self):
+        from scripts.open_fonts import debian_page
+        for family in self.inventory['families']:
+            if family['source'] != 'debian': continue
+            packages = {debian_page(face['path'].split('/')[1].split('_')[0]) for face in family['faces']}  # debian/<package>_<version>_<arch>.deb/…
+            self.assertIn(family.get('sourceUrl'), packages, family['id'])
 
     def test_every_archive_is_pinned_by_hash(self):
         # The Fontshare and Fontsource APIs are listings, not archives; their files are pinned per face by blob.

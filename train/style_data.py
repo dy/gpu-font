@@ -166,10 +166,14 @@ def noise(g, h, w, scales, amplitude):
     return total
 
 
+def shift(m, dx, dy):
+    """`m` moved by (dx, dy) pixels within its frame, the uncovered edge zero."""
+    return np.pad(m, ((max(dy, 0), max(-dy, 0)), (max(dx, 0), max(-dx, 0))))[max(-dy, 0):max(-dy, 0) + m.shape[0], max(-dx, 0):max(-dx, 0) + m.shape[1]]
+
+
 def effect(mask, rng, size, kind=None):
     """Ink coverage with a display effect: hollow outline, a drop shadow under the letters, or an extrusion behind them."""
     kind = kind or rng.choice(['outline', 'shadow', 'extrusion']); step = max(1, round(size*rng.uniform(.04, .1)))
-    shift = lambda m, dx, dy: np.pad(m, ((max(dy, 0), max(-dy, 0)), (max(dx, 0), max(-dx, 0))))[max(-dy, 0):max(-dy, 0) + m.shape[0], max(-dx, 0):max(-dx, 0) + m.shape[1]]
     if kind == 'outline':
         dilated = np.asarray(Image.fromarray(np.uint8(mask*255)).filter(ImageFilter.MaxFilter(2*step + 1)), np.float32)/255
         return np.clip(dilated - mask, 0, 1)
@@ -178,24 +182,58 @@ def effect(mask, rng, size, kind=None):
     return np.maximum(mask, behind*rng.uniform(.4, .7)*(1 - mask))
 
 
+TEXTURES = ROOT/'.data/textures'
+
+
+def textures():
+    """The bank's surfaces (scripts/textures.mjs: CC0 textures, none of the benchmark's) as grey arrays of 512 px, loaded
+    once per worker on first use; an empty list without the bank, when noise relief stands in."""
+    if 'textures' not in STATE:
+        STATE['textures'] = []
+        for f in sorted(TEXTURES.glob('*.jpg')):
+            try: STATE['textures'].append(np.asarray(Image.open(f).convert('L').resize((512, 512), Image.Resampling.BOX)))  # 96 MB a worker as bytes
+            except OSError: print(f'unreadable texture {f.name}', flush=True)  # a broken download is left out, not retried at every view
+    return STATE['textures']
+
+
+def shading(rng, g, h, w):
+    """The surface under the ink, as a factor of mean one: a crop of a bank texture at a random scale, coarse grain to
+    fine, or noise relief at three scales when there is no bank."""
+    bank = textures()
+    if not bank or rng.random() < .1: return 1 + noise(g, h, w, (4, 16, 64), rng.uniform(.02, .15))
+    t = bank[rng.randrange(len(bank))]; side = rng.uniform(.15, 1)
+    ch = max(2, int(t.shape[0]*side)); cw = max(2, min(t.shape[1], int(ch*w/h)))
+    y, x = rng.randint(0, t.shape[0] - ch), rng.randint(0, t.shape[1] - cw)
+    crop = np.asarray(Image.fromarray(t[y:y + ch, x:x + cw]).resize((w, h), Image.Resampling.BILINEAR), np.float32)
+    return crop/max(float(crop.mean()), 1)  # bytes in, a factor of mean one out
+
+
 def surface(image, rng):
-    """A rendered line as a photograph shows it: ink on a textured, unevenly lit surface, worn or wearing an effect, and
-    at an angle. Textures are noise at several scales, never a photograph, so no benchmark background is learned."""
+    """A rendered line as a photograph shows it, as WhatFontIs-Bench composites its pictures (its development labels give
+    the ranges): ink on a textured surface that shades the letters too, contrast from a quarter up, light letters on dark
+    now and then, a cast shadow or glare, worn print or a display effect, uneven light, mild blur and sensor noise, and a
+    camera a little off the surface's normal, sometimes well off it. Textures come from the bank, never a benchmark background."""
     mask = 1 - np.asarray(image, np.float32)/255; h, w = mask.shape; g = np.random.default_rng(rng.getrandbits(32))
     if rng.random() < .15: mask = effect(mask, rng, h)
-    if rng.random() < .3: mask = mask*np.clip(noise(g, h, w, (3, 9), 1) + rng.uniform(.4, 1.2), 0, 1)  # worn print
-    contrast = rng.uniform(.3, .9); paper = rng.uniform(max(contrast, .35), 1); ink = paper - contrast
-    if rng.random() < .3: paper, ink = ink, paper  # light letters on a dark surface
-    relief = noise(g, h, w, (4, 16, 64), rng.uniform(.02, .15))
-    angle = rng.uniform(0, 2*np.pi); y, x = np.mgrid[0:h, 0:w]
-    light = 1 + rng.uniform(0, .35)*((x/w - .5)*np.cos(angle) + (y/h - .5)*np.sin(angle))
-    if rng.random() < .3:  # glare or a cast shadow
+    if rng.random() < .2: mask = mask*np.clip(noise(g, h, w, (3, 9), 1) + rng.uniform(.4, 1.2), 0, 1)  # worn print
+    shade = shading(rng, g, h, w); paper = rng.uniform(.35, .95)
+    ink = rng.uniform(paper + .25, 1) if paper < .6 and rng.random() < .2 else rng.uniform(.02, max(.03, paper - .25))  # light letters on a dark surface, else dark ink
+    value = paper*shade*(1 - mask) + ink*shade**rng.uniform(.3, 1)*mask
+    y, x = np.mgrid[0:h, 0:w]
+    if rng.random() < .27:  # a cast shadow beside the letters
+        step = max(1, round(h*rng.uniform(.02, .06))); dx, dy = step*rng.choice([-1, 1]), step*rng.choice([-1, 1])
+        shadow = np.asarray(Image.fromarray(np.uint8(shift(mask, dx, dy)*255)).filter(ImageFilter.GaussianBlur(h*rng.uniform(.01, .04))), np.float32)/255
+        value = value*(1 - rng.uniform(.25, .55)*shadow*(1 - mask))
+    if rng.random() < .6:  # uneven light across the surface
+        angle = rng.uniform(0, 2*np.pi); value = value*(1 + rng.uniform(0, .35)*((x/w - .5)*np.cos(angle) + (y/h - .5)*np.sin(angle)))
+    if rng.random() < .22:  # glare
         cx, cy, r = rng.uniform(0, w), rng.uniform(0, h), rng.uniform(.3, 1)*max(w, h)
-        light = light + rng.choice([-1, 1])*rng.uniform(.15, .4)*np.exp(-((x - cx)**2 + (y - cy)**2)/(2*r*r))
-    value = light*((paper + relief)*(1 - mask) + (ink + relief*.5)*mask)
+        value = value + rng.uniform(.15, .4)*np.exp(-((x - cx)**2 + (y - cy)**2)/(2*r*r))
+    if rng.random() < .7: value = value + g.normal(0, rng.uniform(1, 6)/255, value.shape)  # sensor noise
     image = Image.fromarray(np.uint8(np.clip(value, 0, 1)*255))
-    if rng.random() < .4:  # a corner-jittered quadrilateral, as a camera off the surface's normal sees it
-        jitter = lambda: rng.uniform(-.08, .08)
+    if rng.random() < .6: image = image.filter(ImageFilter.GaussianBlur(rng.uniform(.2, 1)*h/64))
+    if rng.random() < .5:  # a corner-jittered quadrilateral, as a camera off the surface's normal sees it: usually a little, at times a lot
+        reach = .015 if rng.random() < .7 else .08; jitter = lambda: rng.uniform(-reach, reach)
         corners = [(0, 0), (w, 0), (w, h), (0, h)]; moved = [(cx + jitter()*w, cy + jitter()*h) for cx, cy in corners]
         rows = [[x1, y1, 1, 0, 0, 0, -x0*x1, -x0*y1] for (x0, y0), (x1, y1) in zip(corners, moved)] + [[0, 0, 0, x1, y1, 1, -y0*x1, -y0*y1] for (x0, y0), (x1, y1) in zip(corners, moved)]
         coefficients = np.linalg.solve(np.array(rows, np.float64), np.array(corners, np.float64).T.ravel())
@@ -205,8 +243,8 @@ def surface(image, rng):
 
 def damage(image, rng, photo=False):
     """Screenshot conditions: colour/contrast/polarity, rotation, rescaling, blur, JPEG, noise, clipped edges, and now and then
-    a display effect on the flat letters. With `photo`, a photographed surface first (surface): texture, uneven light, worn or
-    effected ink, perspective."""
+    a display effect on the flat letters. With `photo`, a photographed surface first (surface): texture from the bank, uneven
+    light, shadow and glare, worn or effected ink, blur, noise, perspective."""
     if photo: image = surface(image, rng)
     else:
         a = np.asarray(image, np.float32)/255

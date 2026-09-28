@@ -4,7 +4,7 @@
 // blob. Writes .data/catalogs/files/<source>.json; `npm run demo:build` ships those whose terms allow it.
 //
 //   node scripts/catalog-files.mjs [source ...]     with the demo server running (npm run demo)
-import { readFile, writeFile, mkdir } from 'node:fs/promises'
+import { readFile, writeFile, mkdir, rm } from 'node:fs/promises'
 import { createHash } from 'node:crypto'
 import { spawnSync } from 'node:child_process'
 import { chromium } from 'playwright'
@@ -15,7 +15,7 @@ const [inventory, registry, site] = await Promise.all(['bench/open-fonts.json', 
 const names = new Map(registry.sources.map(s => [s.id, s.name.replace(/\s*\(.*\)$/, '')])), homes = new Map(registry.sources.map(s => [s.id, s.url]))
 const WEIGHTS = { 100: 'Thin', 200: 'ExtraLight', 300: 'Light', 400: 'Regular', 500: 'Medium', 600: 'SemiBold', 700: 'Bold', 800: 'ExtraBold', 900: 'Black' }
 const styleName = (weight, italic) => { const name = WEIGHTS[Math.min(900, Math.max(100, Math.round(weight / 100) * 100))]; return italic ? (name === 'Regular' ? 'Italic' : `${name} Italic`) : name }
-// Text catalogs index families with Latin letters; colour, letterless and symbol-encoded families wait for a glyph mode.
+// Text catalogs index families with Latin letters; colour, letterless, icon and symbol-encoded families wait for a glyph mode.
 const eligible = family => !family.excluded && !family.symbolEncoded && family.letters?.Latn
 const wanted = process.argv.slice(2), sources = Map.groupBy(inventory.families.filter(f => eligible(f) && (!wanted.length || wanted.includes(f.source))), f => f.source)
 const blob = bytes => createHash('sha1').update(`blob ${bytes.length}\0`).update(bytes).digest('hex')
@@ -64,14 +64,18 @@ async function build(faces, source) {
     return { catalog: built.length ? built.reduce((all, next) => joinCatalogs(all, next)) : null, skipped: parts.flatMap(p => p.skipped) }
   }
 }
+// Twins across every catalog, from the teacher (train.style twins): a default face names the families its letters cannot be told from.
+const twins = await readFile('.data/style/twins.json', 'utf8').then(text => JSON.parse(text).families, () => { console.log('No .data/style/twins.json: faces carry no twins; run node scripts/python.mjs -m train.style twins'); return {} })
 const BATCH = 100
 try {
   await mkdir('.data/catalogs/files', { recursive: true })
+  // A source left with no family to index (Font Awesome's, whose letters only spell icons) loses its earlier catalog.
+  for (const source of new Set(inventory.families.map(f => f.source))) if (!sources.has(source) && (!wanted.length || wanted.includes(source))) await rm(`.data/catalogs/files/${source}.json`, { force: true })
   for (const [source, families] of sources) {
     const faces = families.flatMap(family => family.faces.map(face => ({
       id: `${family.id}/${face.path.split('/').at(-1).replace(/\.[^.]+$/, '')}`, familyId: family.id, family: family.family,
       styleName: styleName(face.weight, face.italic), weight: face.weight, style: face.italic ? 'italic' : 'normal', scripts: Object.keys(family.letters).sort(),
-      sourceUrl: family.sourceUrl ?? homes.get(source), ...(face.path === family.selected ? { default: true } : {}), // A family without its own page links to its source's.
+      sourceUrl: family.sourceUrl ?? homes.get(source), ...(face.path === family.selected ? { default: true, ...(twins[family.id] ? { twins: twins[family.id] } : {}) } : {}), // A family without its own page links to its source's.
       source: `url("/fonts-open/${face.path.split('/').map(encodeURIComponent).join('/')}")` })))
     let catalog = null, skipped = []
     for (let i = 0; i < faces.length; i += BATCH) {

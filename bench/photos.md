@@ -1,10 +1,10 @@
 # Photos and real requests
 
-The [frozen benchmark](style.md#frozen-benchmark) reads Chromium renders. The results below are the shipped model (`open2-30k`, SHA-256 `7993b256…`), which trained on the development photographs, so only the final part is a read; the failure analyses under them were made with the earlier encoder (`wider-20k`) and describe what goes wrong, with that model's numbers where they give any. People bring photos, screenshots and logos. Three sets measure that, each read as the page reads it (`scripts/photos.mjs`): every shipped catalog searched as one (the page's All), the crop at full resolution, rows folded as the page shows them. A result is right when the true family, or a family folded into its row, is among the first five rows; any weight counts.
+The [frozen benchmark](style.md#frozen-benchmark) reads Chromium renders. The results below are the shipped model (`photo-30k`, SHA-256 `0ac8707e…`), which trained on the development photographs and the development sites' screens, so only the final part is a read; the failure analyses under them were made with the earlier encoder (`wider-20k`) and describe what goes wrong, with that model's numbers where they give any. People bring photos, screenshots and logos. Three sets measure that, each read as the page reads it (`scripts/photos.mjs`): every shipped catalog searched as one (the page's All), the crop at full resolution, rows folded as the page shows them. A result is right when the true family, or a family folded into its row, is among the first five rows; any weight counts.
 
 | Set | What it holds | gpu-font can answer | Licence | Crop |
 |---|---|---|---|---|
-| [WhatFontIs-Bench v1.0](https://github.com/whatfontis/WhatFontIs-Bench) | 11,995 photos of one word, 7–12 letters, printed or painted on real surfaces, walls and objects; 600 fonts, 20 images each | 7,415 images of 371 fonts: 191 Google Fonts families (9 of them Adobe Fonts entries that are free families: Lato, Lora, Raleway…), 180 fonts of DaFont, Adobe Fonts, GitHub and the file-built catalogs | CC BY 4.0, backgrounds CC0 1.0 | the set's own `crop_box` |
+| [WhatFontIs-Bench v1.0](https://github.com/whatfontis/WhatFontIs-Bench) | 11,995 photos of one word, 7–12 letters, printed or painted on real surfaces, walls and objects; 600 fonts, 20 images each | 11,935 images of 597 fonts: 191 Google Fonts families, 116 of Adobe Fonts (69 found by the store words in their titles), 61 of DaFont, 3 of GitHub, and the 226 no other catalog held, from WhatFontIs's own renders; 3 fonts are gone from every source | CC BY 4.0, backgrounds CC0 1.0 | the set's own `crop_box` |
 | DaFont forum requests, from [Max Halford's LLM benchmark](https://github.com/MaxHalford/llm-font-recognition) | 4,887 "what font is this?" posts, 1,573 with an answer the forum confirmed | 1,017 answers (64.7%), 775 of them DaFont's own fonts; 151 cropped, the rest not yet | pictures belong to their posters: links only, kept in `.data/` | by hand, [dafont-crops.json](dafont-crops.json) |
 | Finder set, [issue #1](https://github.com/dy/gpu-font/issues/1) | 44 crops: 10 Google families, 10 commercial classics, 10 hard cases, 6 scripts, 4 of one to three letters, 4 probe images | 30 scored crops; classics judged as substitutes | CC BY 4.0 photos and renders of OFL fonts | fixed PNG per crop |
 | Web screens, `scripts/web_screens.mjs` | lines cut from the homepages of the Chrome UX Report's top sites where robots.txt allows, each labelled by the font file Chromium drew it with; 29,301 crops from 5,694 sites at the read | 19,382 crops of 397 families; 472 with no usable font name, 9,447 in no catalog | other sites' designs: local only | the collector's line crop |
@@ -16,48 +16,50 @@ WhatFontIs-Bench ([report](whatfontis.json)). Final: fonts that never entered tr
 
 | | Images | Top-1 | Top-5 | Top-20 |
 |---|---:|---:|---:|---:|
-| gpu-font, final | 4,435 | 22.1% | 41.2% | 57.1% |
-| gpu-font, development (trained on since the sixth step) | 2,980 | 22.6% | 47.1% | 67.9% |
+| gpu-font, final | 8,955 | 20.2% | 41.4% | 59.0% |
+| gpu-font, development (trained on since the sixth step) | 2,980 | 29.7% | 56.2% | 75.0% |
+| gpu-font, all | 11,935 | 22.6% | 45.1% | 63.0% |
 | WhatFontIs API, all images, among 1.2 million fonts (published by the set's authors) | 11,995 | 83.7% | 93.3% | 96.5% |
 
-The rows are not the same images: WhatFontIs publishes only totals, and it indexes all 600 fonts, since the set was built from its catalogue. gpu-font searches 110,543 families, 371 of the set's fonts among them, 180 of those outside Google Fonts, most as one preview each with weight and style unknown.
+The rows are not the same images: WhatFontIs publishes only totals, and it indexes all 600 fonts, since the set was built from its catalogue. gpu-font searches 110,752 families, 597 of the set's 600 fonts among them, 406 of those outside Google Fonts, most as one to three preview lines each with weight and style unknown. A row of a family the teacher cannot tell from the true one counts as right, as on the rendered benchmark.
 
-The catalogs, not the model, set these figures. The seventh step's model reads 1.6 points above the sixth's on the same images against the same catalogs (43.6% against 42.0% on all 7,415), and the previous release's 44.2% final was read among 55,428 families with 41,113 of DaFont's: under this model DaFont's eight parts shipped then, grown to 49,449 faces, read 44.1% on all 7,335 images they index and 42.0% final on 4,355; all fourteen parts, 96,212 faces, read 43.6% and 41.2% while indexing 80 more images, and on the 7,335 images both scopes index they lose 3 hits of 3,233. Each DaFont face is one preview image, weighed in the ranking like a Chromium reference of a face with every case and size; the 50,000 such faces shipped since the student cost about eight points on the images every search shares, the sixth step's photographs gave back two, and the seventh step one and a half. The whole of DaFont ships, since the fonts people ask for are there ([DaFont requests](#results) below), and weighing single-image references by their evidence is the next step for the ranking.
+By the catalog that holds the font: Google Fonts 55.3% top five (3,820 images of 191 fonts), Adobe Fonts 49.4% (2,315 of 116), the WhatFontIs slice 39.1% (4,520 of 226, each font known by three lines of WhatFontIs's own render), GitHub 36.7% (60 of 3), DaFont 27.8% (1,220 of 61, each font one preview). What a catalog knows of a font decides the read as much as the model does.
 
-By kind (gpu-font top-5, all 7,415): printed objects 51.0%, textures 45.2%, scenes 35.9%; easy 51.1%, medium 50.1%, hard 36.5%. Google families the model trained on read 47.1%, the style split's test families 39.9%, the 180 fonts of the other catalogs 41.5%. Median time 192 ms a photo, p95 274 ms, WebGPU on an M4 Max, against 65 ms among half the rows.
+Like for like, on the 8,915 images seven catalogs index and with twin credit for both, the eighth step reads 46.1% top five against the seventh's 45.2%, 62.5% against 60.9% top twenty, and 41.0% against 40.4% on the 5,935 final images; twin credit itself is worth eight points of top five on the development photographs (55.0% from 47.1% for the seventh step). Earlier: the sixth step read 44.2% final among 55,428 families with 41,113 of DaFont's; the 50,000 single-preview faces shipped since cost about five points on the images every search shares, and DaFont whole (96,212 faces against the 49,449 of its first eight parts) three hits of 3,233. The wrong first answers do not come from the single-preview rows: on the development photographs DaFont supplies 30% of them for 52% of the rows searched, Adobe Fonts and the file-built catalogs one and a half to two times their share, a fifth to a third of those clones the twin credit now counts.
 
-DaFont requests ([report](dafont.json)): 16.6% top-1, 41.1% top-5 on the 151 cropped requests, searched across all seven catalogs. The previous release read 24.5% and 53.6% with 41,113 DaFont faces; this model with the eight parts shipped then (49,449 faces) reads 19.9% and 47.0%, and with all fourteen 41.1%, while the answers it indexes rise from 774 to 1,017 of the 1,573 confirmed: nine of the 151 crops lost against 243 requests it can now answer at all (the crops were all made for answers the smaller scope held, so they overstate the loss). The student read 28.5% and 47.7%; the four file-built catalogs alone, before DaFont's own fonts were indexed, 34.4% and 55.0%. Each chatbot answered a different share, so gpu-font is scored beside it on exactly the requests it answered:
+By kind (gpu-font top-5, all 11,935): printed objects 53.3%, textures 47.1%, scenes 36.2%; easy 53.4%, medium 49.4%, hard 38.8%. Google families the model trained on read 55.7%, the style split's test families 52.0%, the 406 fonts of the other catalogs 40.3%. Median time 94 ms a photo, p95 138 ms, WebGPU on an M4 Max.
+
+DaFont requests ([report](dafont.json)): 22.5% top-1, 46.4% top-5 on the 151 cropped requests, searched across all eight catalogs with twin credit (the seventh step by the same rule: 21.2% and 44.4%; without the credit 16.6% and 41.1%). The sixth step read 24.5% and 53.6% with 41,113 DaFont faces, when the answers indexed were 687 of the 1,573 confirmed; they are 1,017 now, and the crops were all made for answers the smaller scope held, so they overstate what the larger catalog cost. Each chatbot answered a different share, so gpu-font is scored beside it on exactly the requests it answered:
 
 | On the same requests | Requests | Chatbot top-5 | gpu-font top-5 |
 |---|---:|---:|---:|
-| Gemini 2.5 Flash (preview, 2025) | 65 | 6.2% | 36.9% |
-| GPT-4o-mini | 37 | 18.9% | 37.8% |
+| Gemini 2.5 Flash (preview, 2025) | 65 | 6.2% | 43.1% |
+| GPT-4o-mini | 37 | 18.9% | 46.0% |
 
 On every answered request, including answers gpu-font does not index, the chatbots reach 1.5% (753) and 2.2% (360); gpu-font's ceiling there is the 64.7% it indexes. The chatbots saw whole pictures; gpu-font saw a hand crop.
 
-Finder set ([answers](finders.json)), gpu-font top-5: Google families 5 of 10, hard cases 2 of 10, scripts 5 of 6, one to three letters 1 of 4. Probes: the matched face has the query's style (upright, italic) and weight (300, 700), the 300 and the upright and italic probes first, the 700 fifth. Classics await a judgement of each look-alike. [finders.json](finders.json) keeps a place for each of the eight finders the page compares, with how it may be run: WhatFontIs through its API, Lens and gpu-font from a script, the other five by hand, as their terms or form require.
+Finder set ([answers](finders.json)), gpu-font top-5: 18 of the 30 scored crops, 13 first (the seventh step: 13 and 9). Probes: the matched face has the query's style (upright, italic) and weight (300, 700), the 300 and the upright and italic probes first, the 700 fifth. Classics await a judgement of each look-alike. [finders.json](finders.json) keeps a place for each of the eight finders the page compares, with how it may be run: WhatFontIs through its API, Lens and gpu-font from a script, the other five by hand, as their terms or form require.
 
 ## Web screens
 
-Lines from the top sites' homepages, as the browser drew them ([report](screens.json)); no crop was trained on. The label is the font file, so a page set in Arial or Helvetica is labelled with a font no catalog holds, and the exact-family rule counts the answer wrong even when it names a clone: Times crops come back as TeX Gyre Termes and Playfair Display, Hiragino as Gothic A1 and IBM Plex Sans JP. So the installed fonts, 8,503 crops of 38 names, are a floor, and the web fonts the pages load, 10,879 crops of 369 families, are the read:
+Lines from the top sites' homepages, as the browser drew them ([report](screens.json)): 52,590 crops from 10,233 sites at the read, 35,281 of them naming a family a catalog holds. Sites are split by the hash of their origin: nine in ten are development, whose crops train the model since the eighth step; the held-out tenth is the read. The label is the font file, so a page set in Arial or Helvetica is labelled with a font no catalog holds, and the exact-family rule counts the answer wrong even when it names a clone (a twin by the teacher's distance now counts, as in every read): so the installed fonts are a floor, and the web fonts the pages load are the read.
 
 | | Crops | Families | Top-1 | Top-5 | By family, top-1 | By family, top-5 |
 |---|---:|---:|---:|---:|---:|---:|
-| All | 19,382 | 397 | 4.3% | 13.3% | 10.8% | 25.4% |
-| Web fonts | 10,879 | 369 | 5.7% | 19.6% | 11.4% | 26.7% |
-| Installed fonts | 8,503 | 38 | 2.4% | 5.1% | 7.1% | 13.2% |
-| Under 14 px | 4,883 | 218 | 2.1% | 8.0% | 4.0% | 15.5% |
-| 14–19 px | 9,910 | 329 | 4.3% | 13.3% | 10.4% | 23.1% |
-| 20–31 px | 3,112 | 248 | 7.6% | 21.7% | 12.5% | 29.4% |
-| 32 px and over | 1,477 | 192 | 4.3% | 13.1% | 9.6% | 22.5% |
+| Held-out sites | 3,503 | 169 | 11.6% | 27.7% | 15.2% | 31.7% |
+| Development sites, trained on | 31,778 | 510 | 12.0% | 27.2% | 17.1% | 32.6% |
+| Web fonts, all sites | 20,676 | 509 | 18.4% | 40.6% | 17.8% | 33.1% |
+| Installed fonts, all sites | 14,605 | 44 | 2.9% | 8.3% | 6.9% | 19.2% |
+| Under 14 px | 8,543 | 301 | 7.4% | 19.0% | 8.4% | 24.3% |
+| 14–19 px | 18,028 | 428 | 12.1% | 28.3% | 17.2% | 32.0% |
+| 20–31 px | 5,887 | 370 | 18.3% | 37.5% | 22.3% | 40.9% |
+| 32 px and over | 2,823 | 286 | 11.9% | 24.2% | 17.6% | 32.1% |
 
-By family, each counted once, so Arial's 2,552 crops do not speak for the rest. Google families read 21.4% top-5 (9,594 crops), Adobe Fonts' 5.3% (7,693, most of them Helvetica, Arial and Times by name): Roboto 18.8% (2,013 crops), Inter 12.3%, Open Sans 9.6%, Poppins 15.7%, Montserrat 23.0%, Verdana 30.7%, Noto Sans 31.0%. Half the crops are 14 to 19 px, where the frozen benchmark reads 87% on clean renders of 5 to 10 letters; a line of body text at 16 px on a page, anti-aliased, with its words spaced, reads 13%. 758 crops (3.9%) came back blank and 121 low-contrast. Median 112 ms a crop, p95 143 ms, WebGPU on an M4 Max.
-
-This is the lowest read of the set and the closest to what people bring. The whole gap is at the sizes the benchmark calls small, and the model has never trained on a browser's own text rendering at those sizes: only on canvas renders and photographs. Training on page renders at 12 to 20 px is the next step for it.
+By family, each counted once, so Arial's thousands of crops do not speak for the rest. The seventh step read 13.3% top five on the 19,382 crops collected by then, 19.6% on web fonts and 8.0% under 14 px, with no twin credit and no site held out; training on the development sites' lines doubled the read, and the held-out sites read as the development ones do. Half the crops are 14 to 19 px, where the frozen benchmark reads 87% on clean renders of 5 to 10 letters; body text at those sizes on a page, anti-aliased, its words spaced, reads 28.3%. Median 70 ms a crop, p95 90 ms, WebGPU on an M4 Max.
 
 ## Commons photographs
 
-Photographs of typefaces in use from Wikimedia Commons ([report](commons.json)), the 1,138 of 48 typefaces whose name a shipped catalog holds and in which a line of text was found; none trained on. gpu-font puts the typeface in the top five for 2.4% of them (27 photos), first for 0.7%, by typeface 1.0%: Futura 18 of 327, Brush Script 3 of 25, Helvetica 0 of 313, Arial 0 of 65, ITC Benguiat 0 of 54. Median 201 ms a photo, p95 384 ms.
+Photographs of typefaces in use from Wikimedia Commons ([report](commons.json)), the 1,138 of 48 typefaces whose name a shipped catalog holds and in which a line of text was found; none trained on. gpu-font puts the typeface in the top five for 3.8% of them (43 photos), first for 1.1%, by typeface 1.5%: Futura 31 of 327, Helvetica 0 of 313, Arial 0 of 65, ITC Benguiat 0 of 54; the seventh step read 2.4%.
 
 The read measures its label and its catalogs as much as the model. The category names the photo, not the line: a Futura plate's tallest line reads "Berthold AG Berlin", a street sign's the town's name in another face, and the line read is whatever lettering is largest. The catalog's namesake is often not the typeface: Futura is a font of that name in a GitHub repository, Helvetica and Arial are Adobe Fonts entries indexed from one specimen line each, Gill Sans a DaFont look-alike. And the photographs are signage in perspective, carved, cast and weathered, at every angle. What the set does give is a floor for photographs nobody framed for a benchmark, and a list of what such a photograph needs: a line chosen for its typeface, not its size, references of the real typeface with more than one line of evidence, and perspective corrected before the crop. Until then it is kept as a floor, not a gate.
 
@@ -67,11 +69,11 @@ The read measures its label and its catalogs as much as the model. The category 
 
 | The same word in the same face | Top-1 | Top-5 |
 |---|---:|---:|
-| Clean Chromium render, 64 px | 52.8% | 81.9% |
-| Photo, binarized (Otsu) | 23.6% | 53.8% |
-| Photo | 26.1% | 48.2% |
+| Clean Chromium render, 64 px | 47.7% | 78.9% |
+| Photo, binarized (Otsu) | 28.1% | 57.3% |
+| Photo | 27.6% | 53.8% |
 
-With the earlier encoder a threshold recovered half of a 45-point gap between photo and render (45.2% against 90.0%), so texture, coloured ink and uneven light passing through preparation into the windows cost most of it. The shipped model, trained on photographed surfaces and on the development photographs themselves, reads these 199 at 48.2%, and a threshold adds 5.5 points (53.8%): the surface is mostly learned away, and the 34 points to the clean render are the photograph's geometry and blur, which no threshold restores. Thresholding still costs clean renders (72.4% top-5 from 81.9%) and moves the forum crops, mostly flat graphics, from 41.1% to 40.4%. The clean render of these 199 now reads 81.9% against 73.4% for the sixth step: the same words in the same faces, so the seventh step reads rendered Google families better and photographs of them a little worse.
+With the earlier encoder a threshold recovered half of a 45-point gap between photo and render (45.2% against 90.0%), so texture, coloured ink and uneven light passing through preparation into the windows cost most of it. The shipped model, trained on textured surfaces from the bank and on the development photographs themselves, reads these 199 at 53.8%, and a threshold adds 3.5 points (57.3%): the surface is mostly learned away, and the 25 points to the clean render are the photograph's geometry and blur, which no threshold restores. The seventh step read them at 48.2% against 81.9% for the clean render, a gap of 34 points; the eighth step's surfaces closed it to 25, three points of it paid on the clean render. Thresholding still costs clean renders (69.3% top-5 from 78.9%).
 
 **No answer on legible photos, fixed.** Preparation called 173 of the 3,880 photos (4.5%) low contrast and returned nothing: 159 of them scenes, whose text the set keeps at least 70 grey levels from its surroundings (50 on the hard level). Every one was a polarity error. The median of the crop's outer ring sets the paper, and a ring darker than middle grey means light text; dark letters on a darkish wall were read as light ones, and no ink cleared the cutoff (contrast 0.04–0.08 against 0.35–0.45 the other way). Preparation now reads the other side when the first guess finds no ink above the cutoff and the other side's does. Only crops that failed before can change: the frozen benchmark's 9,409 and 27,703 samples all prepared, and its 9,409 renders and their inversions prepare byte for byte as before. With the same model, all 173 photos now get an answer, 74 with the right family in the top five (33 first): top-5 44.5% overall (1,726 of 3,880), 45.2% final, 44.3% development, scenes 33.8%. The rule has no fitted parameter; the rejected photos it was read on came from both parts.
 
@@ -119,6 +121,7 @@ node scripts/photo-controls.mjs  # writes bench/photo-controls.json
 node scripts/screens.mjs         # the web screens read of .data/screens (scripts/web_screens.mjs collects them), writes bench/screens.json
 node scripts/commons.mjs         # the Commons read of .data/photos/commons (scripts/commons_typefaces.py collects them), writes bench/commons.json
 node scripts/python.mjs -m train.style_photos   # packs the Google-family pictures for train.style: photos-development, tracked at every checkpoint, and photos-final
+node scripts/python.mjs -m train.style photos --run open2-30k,photo-30k   # two runs' exported models on the packed photographs, development and final, against the Google references: a comparison, not the page's read
 ```
 
 `.data/dafont/gpu-font-guesses.json` holds gpu-font's answers in the LLM benchmark's own format.

@@ -3,7 +3,7 @@
 ## Before a pull request
 
 - `npm test`: the JavaScript suite (also run by CI on every push) and the Python suite.
-- `npm run stamp` after changing a page, stylesheet or module, so the pages pin the new content.
+- `npm run stamp` after changing a page, stylesheet, module or the version, so the pages pin the new content and link the new release.
 - `node checks/catalog-demo.mjs` with `npm run demo` running, after changing the page or the matcher: the browser suite.
 - A model or catalog change goes through `node checks/encoder.mjs` and `npm run demo:build`, which rebind `site.json`; the figures in README and bench come from those files, never by hand.
 - Benchmarks are frozen: a change to a pinned preparation file needs the byte-for-byte check and a `repins` entry (bench/style.md).
@@ -18,7 +18,7 @@ node scripts/og.mjs   # og.png, the link preview, captured from the running page
 node scripts/python.mjs scripts/previews.py   # previews/, a 64-pixel picture of each shipped face, after demo:build
 ```
 
-`npm run demo:build` refreshes `site.json` (catalog list, checksums, byte sizes, measured figures) after the model or a catalog changes. WebGPU needs localhost or HTTPS.
+`npm run demo:build` refreshes `site.json` (catalog list, checksums, byte sizes, measured figures) after the model or a catalog changes. The page keeps the model and each catalog in Cache Storage under those checksums, so a browser downloads again only the files whose checksum changed. WebGPU needs localhost or HTTPS.
 
 `npm run stamp` pins each page's stylesheets and modules to their content hashes (`?v=` and an import map). GitHub Pages lets browsers cache every file for ten minutes on its own, so without it a page can run another deploy's script. Run it after changing any page, stylesheet or module; `tests/stamp.test.mjs` fails until you do.
 
@@ -51,7 +51,7 @@ A catalog is a JSON file of reference vectors, bound to the exact model that mad
 
 - **Google Fonts**: every family except color, emoji and letterless ones, from Chromium renders of each face.
 - **Other free sources** (Fontsource, Fontshare, Uncut, Velvetyne and more; each under its own licence): `node scripts/catalog-files.mjs` indexes the font files pinned in `bench/open-fonts.json`, in Chromium, with the same builder My fonts uses. Only names, links and vectors are committed; the fonts stay in `.data/`.
-- Sources without verified permission ship only by a decision recorded in `bench/foundries.json` (DaFont, Adobe Fonts); MyFonts stays local. `catalogs.html` shows each source's terms.
+- Sources without verified permission ship only by a decision recorded in `bench/foundries.json` (DaFont, Adobe Fonts); MyFonts stays local. WhatFontIs, whose terms say nothing on collection, ships from its own renders (`.data/previews/whatfontis-archives`). `catalogs.html` shows each source's terms.
 
 A new shipped catalog also needs its entry in `catalogs` (`src/match.mjs`) and its id in `src/match.d.ts`; the tests fail until both list it.
 
@@ -67,7 +67,9 @@ Everything collected lives under `.data/` and is used for training, for a read, 
 | WhatFontIs-Bench photographs | `.data/whatfontis` | development part: training views and checkpoint selection; final part: the photo read (`scripts/whatfontis.mjs`) |
 | Photographs of fonts in no catalog | `.data/style/photos-absent.*` | rejection calibration at export |
 | DaFont forum requests, the finder set, the photo controls | `.data/dafont`, `.data/finders`, `.data/photo-controls` | reads (`scripts/dafont.mjs`, `scripts/finders.mjs`, `scripts/photo-controls.mjs`) |
-| Web screenshots: lines from the top sites' homepages, labelled by the font Chromium drew | `.data/screens` (`scripts/web_screens.mjs`) | the screens read (`scripts/screens.mjs`); other people's designs, never shipped |
+| Web screenshots: lines from the top sites' homepages, labelled by the font Chromium drew | `.data/screens` (`scripts/web_screens.mjs`) | sites split by hash: nine in ten pack as training views (`train.style_screens`), one in ten is the screens read (`scripts/screens.mjs`); other people's designs, never shipped |
+| Surface textures, 383 CC0 diffuse maps from Poly Haven, none the benchmark used | `.data/textures` (`scripts/textures.mjs`) | photographed training views (`train.style_data.surface`) |
+| Twins across every catalog, per default face and script, from the teacher | `.data/style/twins.json` (`train.style twins`, also written by the catalog export) | the file-built catalogs' faces (`scripts/catalog-files.mjs`), and twin credit in every read (`scripts/photos.mjs`) |
 | Wikimedia Commons photographs filed by typeface | `.data/photos/commons` (`scripts/commons_typefaces.py`, `scripts/text_boxes.py`) | the Commons read (`scripts/commons.mjs`) |
 | Type specimen books from archive.org | `.data/specimens` (`scripts/specimen_books.py`) | collected for a historical print read; captions still to be parsed into labels |
 | Wikidata typefaces, Fonts In Use ids, popularity | `.data/canon` (`scripts/canon.mjs`) | `bench/canon.json`, the typefaces worth collecting |

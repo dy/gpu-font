@@ -14,6 +14,7 @@ export const catalogs = {
   github: new URL('../models/encoder/catalogs/github.json', import.meta.url),
   debian: new URL('../models/encoder/catalogs/debian.json', import.meta.url),
   fontlibrary: new URL('../models/encoder/catalogs/fontlibrary.json', import.meta.url),
+  whatfontis: new URL('../models/encoder/catalogs/whatfontis.json', import.meta.url),
   other: new URL('../models/encoder/catalogs/other.json', import.meta.url)
 }
 

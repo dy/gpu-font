@@ -1,7 +1,8 @@
 // Pins each page to the exact stylesheets and modules it was written with. GitHub Pages lets a browser keep every file for
 // ten minutes on its own, so after a deploy a page could run with another deploy's script or styles. Each stylesheet and
 // the entry module get their content hash in the URL, and an import map does the same for every module the entry
-// imports. Run after changing any page, stylesheet or module: node scripts/stamp.mjs
+// imports. The header's version links to its release, read from package.json. Run after changing any page, stylesheet,
+// module or the version: node scripts/stamp.mjs
 import { readFile, writeFile } from 'node:fs/promises'
 import { createHash } from 'node:crypto'
 import { posix } from 'node:path'
@@ -19,6 +20,8 @@ async function graph(path, seen = new Set()) {
 
 // A page with current stamps; unchanged when they already are.
 export async function stamp(html) {
+  const { version } = JSON.parse(await readFile('package.json', 'utf8'))
+  html = html.replace(/<a class="version" href="[^"]*">[^<]*<\/a>/, `<a class="version" href="https://github.com/dy/gpu-font/releases/tag/v${version}">v${version}</a>`)
   const versioned = async path => `./${path}?v=${await hash(path)}`
   for (const [tag, path] of html.matchAll(/<link rel="stylesheet" href="\.\/([^"?]+\.css)(?:\?v=\w+)?">/g)) html = html.replace(tag, `<link rel="stylesheet" href="${await versioned(path)}">`)
   const [tag, entry] = html.match(/<script type="module" src="\.\/([^"?]+\.mjs)(?:\?v=\w+)?"><\/script>/)

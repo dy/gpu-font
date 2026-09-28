@@ -1,52 +1,58 @@
 {
-  "encoderSha256": "7993b256cf118495f245a9b3b51648b43c36605518c45213ef988ce626853303",
+  "encoderSha256": "0ac8707ef54e1a1f0f6759e8a57d42ef6797c24f5009a7454b2c7d718de74d37",
   "catalogs": [
     {
       "id": "google-fonts",
-      "sha256": "783943483f648929bae9bb518d3dbc865817107859542d4f10e8176afef17408",
+      "sha256": "b52753fa4261d314460518f73568a44a5576348024db69d377ca61c988c03e43",
       "families": 2004,
       "faces": 8132
     },
     {
       "id": "dafont",
-      "sha256": "c1eb09891d18fde5eafd30be5959752897d7535b9fbc987aa0ff75f53d979575",
+      "sha256": "d47a78e7c10d42be7e1f9c80f29ea60781c2970e9c95e5c8f226cc6cb87ab247",
       "families": 96212,
       "faces": 96212
     },
     {
       "id": "adobe-fonts",
-      "sha256": "eb8df4ab2528839a4a2addf7705e90b8d79660e50ba46ebd2168179be2b8102e",
+      "sha256": "4749473de5230ac0311e481e7872e23bc70f08bd4759a41c344375f91e7c4f10",
       "families": 4784,
       "faces": 4788
     },
     {
       "id": "github",
-      "sha256": "722d1c1f8067e0ae319212fad5304268a1c074e6b78af70ce5da6a800e5665f6",
-      "families": 3572,
-      "faces": 10884
+      "sha256": "a3b2827e45120683635971979ff1d9c64908d92d04a81e4714f2d0dfa320832e",
+      "families": 3565,
+      "faces": 10873
     },
     {
       "id": "debian",
-      "sha256": "b3066ade4665e58026fca4ce06b0b1b1af4d2dad9e4ccd49f4424b9c74bcf51e",
-      "families": 2169,
-      "faces": 4288
+      "sha256": "b295d7ff7c8be1e9577fb19d1d7854c5a1d02d735406b006fe2ac95ca8d445f1",
+      "families": 2165,
+      "faces": 4282
     },
     {
       "id": "fontlibrary",
-      "sha256": "944ffd67882ffd9c3e8d0ba70170f12dae542e3c7482682036d43ab58e97b91f",
-      "families": 1222,
-      "faces": 3973
+      "sha256": "4101cd7336c89a3bdf98c9d612412acb3bc47a1381d5a3a38e8c1898f1080f7b",
+      "families": 1221,
+      "faces": 3969
+    },
+    {
+      "id": "whatfontis",
+      "sha256": "ab4451b67b739d4d2c00ef85f6521f9809f2047348719a2d4b8fd1be8fc9df74",
+      "families": 226,
+      "faces": 226
     },
     {
       "id": "other",
-      "sha256": "3287e6fbe1e22229623ff17b9e492feaabb74824b9d1cf58c829904641225b26",
-      "families": 580,
-      "faces": 2032
+      "sha256": "d16fd718b5da3873b908a63e02803927c4e093dfca5e0a6d9750a8874b8e1e08",
+      "families": 575,
+      "faces": 2026
     }
   ],
-  "cpuError": 2.0489096641540527e-7,
-  "gpuError": 1.7881393432617188e-7,
-  "detectionMilliseconds": 51.099999994039536,
+  "cpuError": 2.0116567611694336e-7,
+  "gpuError": 2.682209014892578e-7,
+  "detectionMilliseconds": 49.400000005960464,
   "checks": [
     "native CPU/PyTorch/WebGPU projections",
     "exact displayed tensors and input stats",

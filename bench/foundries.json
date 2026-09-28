@@ -1,6 +1,6 @@
 {
  "version": 1,
- "updated": "2026-09-26",
+ "updated": "2026-09-27",
  "purpose": "Every font source considered: what it offers, its licence, what its terms allow, and where work with it stands. Work never proceeds against a written ban without recorded permission.",
  "sources": [
   {
@@ -195,7 +195,7 @@
    "work": {
     "status": "indexed",
     "route": "families resolved to their designers' repositories or sites and pinned; bench/open-releases.json lists each one and every family left out",
-    "familiesIndexed": 76
+    "familiesIndexed": 71
    },
    "log": [
     {
@@ -228,7 +228,7 @@
    "work": {
     "status": "indexed",
     "route": "its own (non-Google) fonts from the public API, pinned to each npm release; a family its foundry publishes is taken from the foundry",
-    "familiesIndexed": 61
+    "familiesIndexed": 50
    },
    "log": [
     {
@@ -257,7 +257,7 @@
    "work": {
     "status": "indexed",
     "route": "every package in the fonts section of Debian's archive, TeX Live's two font packages (CTAN's OpenType and TrueType fonts) included, pinned to the SHA-256 its index publishes; collections split into their fonts; families a rights holder publishes are taken from the rights holder",
-    "familiesIndexed": 2174
+    "familiesIndexed": 2165
    },
    "log": [
     {
@@ -292,9 +292,9 @@
     "note": "Found through GitHub's search API, pinned through its API, and fetched as the release folder's font files at the pinned commit from raw.githubusercontent.com."
    },
    "work": {
-    "status": "inventoried",
+    "status": "indexed",
     "route": "scripts/github_fonts.py lists the repositories, open_releases.py pins each to a commit and its release folder, open_fonts.py takes each family unless a source earlier in its order has it",
-    "familiesInventoried": 3809
+    "familiesIndexed": 3565
    },
    "familiesAvailable": 11892,
    "availableUnit": "families",
@@ -350,7 +350,7 @@
    "work": {
     "status": "indexed",
     "route": "every family page read at 1.8-second spacing; each openly licensed family's zip downloaded once and pinned",
-    "familiesIndexed": 1226
+    "familiesIndexed": 1221
    },
    "log": [
     {
@@ -617,9 +617,9 @@
     "note": "Downloads are free; use follows each family's licence, CUTE for many, which sets conditions of use."
    },
    "work": {
-    "status": "inventoried",
+    "status": "indexed",
     "route": "each family's repository, with its licence recorded",
-    "familiesInventoried": 43
+    "familiesIndexed": 43
    },
    "log": [
     {
@@ -643,9 +643,9 @@
     "note": "robots.txt: \"User-agent: *\" with only \"Crawl-delay: 10\". Each family page states the terms quoted, with a download."
    },
    "work": {
-    "status": "inventoried",
+    "status": "indexed",
     "route": "the foundry's repositories",
-    "familiesInventoried": 15
+    "familiesIndexed": 15
    },
    "log": [
     {
@@ -671,9 +671,9 @@
     "note": "The collective disbanded in 2025; fonts.luuse.io says \"you can download our fonts on Gitlab\", where each family's folder carries its licence."
    },
    "work": {
-    "status": "inventoried",
+    "status": "indexed",
     "route": "each family's folder in Luuse's own fonts.luuse repository on GitLab, pinned to a commit",
-    "familiesInventoried": 43
+    "familiesIndexed": 42
    },
    "log": [
     {
@@ -755,7 +755,7 @@
    "terms": {
     "checked": "2026-09-24",
     "status": "none-found",
-    "note": "A link directory; files live with their designers, each licence checked there."
+    "note": "A link directory; files live with their designers, each licence checked there. Galgo's designer, Giulia Boggio, confirmed by email that Galgo is under the SIL Open Font License."
    },
    "work": {
     "status": "indexed",
@@ -781,6 +781,10 @@
     {
      "date": "2026-09-25",
      "event": "Galgo Condensed taken: its designer confirmed the SIL Open Font License by email; the one face the site serves for now, the whole family from the designer"
+    },
+    {
+     "date": "2026-09-25",
+     "event": "Giulia Boggio, Galgo's designer, confirmed by email: \"Galgo is under SIL\"; she offers other file formats on request"
     }
    ]
   },
@@ -1504,8 +1508,7 @@
    },
    "work": {
     "status": "inventoried",
-    "route": "pinned release; glyphs are pictures, not letters, so text catalogues skip it until recognition matches symbols",
-    "familiesInventoried": 3
+    "route": "pinned release; glyphs are pictures, not letters, so text catalogues skip it until recognition matches symbols"
    },
    "log": [
     {
@@ -1534,8 +1537,7 @@
    },
    "work": {
     "status": "inventoried",
-    "route": "pinned release; glyphs are pictures, not letters, so text catalogues skip it until recognition matches symbols",
-    "familiesInventoried": 2
+    "route": "pinned release; glyphs are pictures, not letters, so text catalogues skip it until recognition matches symbols"
    },
    "log": [
     {
@@ -1680,9 +1682,9 @@
     "checked": "2026-09-23"
    },
    "work": {
-    "status": "inventoried",
+    "status": "indexed",
     "route": "pinned release; glyphs are pictures, not letters, so text catalogues skip it until recognition matches symbols",
-    "familiesInventoried": 1
+    "familiesIndexed": 1
    },
    "log": [
     {
@@ -2393,12 +2395,22 @@
     "checked": "2026-09-23"
    },
    "work": {
-    "status": "permission-to-request"
+    "status": "planned",
+    "permission": {
+     "grantedBy": "Ethan Cohen, Dinamo",
+     "date": "2026-09-28",
+     "via": "email reply to a request",
+     "scope": "including its typefaces in gpu-font"
+    }
    },
    "log": [
     {
      "date": "2026-09-23",
      "event": "Surveyed; ~50 families (Favorit, Diatype); permission request drafted"
+    },
+    {
+     "date": "2026-09-28",
+     "event": "Permission to include its typefaces, by email from Ethan Cohen: \"Happy to be included\""
     }
    ],
    "familiesAvailable": 50,
@@ -2566,9 +2578,9 @@
     "note": "robots.txt closes only /wp-admin/; the site has no terms page; the fonts carry the SIL Open Font License."
    },
    "work": {
-    "status": "inventoried",
+    "status": "indexed",
     "route": "files collected by hand into .data/manual",
-    "familiesInventoried": 1
+    "familiesIndexed": 1
    },
    "log": [
     {
@@ -2608,6 +2620,36 @@
      "event": "robots.txt re-read: /Fonts/ is closed only to Mediapartners-Google and Browsershots, not to other agents"
     }
    ]
+  },
+  {
+   "id": "whatfontis",
+   "name": "WhatFontIs",
+   "url": "https://www.whatfontis.com/",
+   "kind": "aggregator",
+   "access": "previews",
+   "licence": "mixed per font: free, personal use only, commercial",
+   "terms": {
+    "status": "none-found",
+    "checked": "2026-09-27",
+    "url": "https://www.whatfontis.com/terms.html",
+    "note": "The terms say nothing on collection; robots.txt closes only search, redirect and tag paths to every agent, and the whole site to the Meta crawlers. Font pages and their images on d1ly52g9wjvbd2.cloudfront.net are open."
+   },
+   "work": {
+    "status": "planned"
+   },
+   "log": [
+    {
+     "date": "2026-09-27",
+     "event": "Surveyed: 1,299,586 font pages in the image sitemaps, about 761,000 families; each page carries the site's own renders of A-Z, a-z and 0-9 and its identification votes"
+    },
+    {
+     "date": "2026-09-27",
+     "event": "Indexing decided by the maintainer: the most-voted families as a general source, and the 226 WhatFontIs-Bench fonts no catalog held as a slice reported on its own"
+    }
+   ],
+   "familiesAvailable": 1299586,
+   "availableUnit": "fonts",
+   "availableNote": "font pages listed in the image sitemaps of https://www.whatfontis.com/sitemap.xml, 2026-09-27"
   }
  ]
 }

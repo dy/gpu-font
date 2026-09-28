@@ -10,7 +10,7 @@ import { readNetwork, inferCPU } from '../src/network.mjs'
 
 const read = async p => JSON.parse(await readFile(p, 'utf8'))
 // The site runs from the repository: site.json names the model and catalogs in place.
-const data = await read('site.json'), artifact = await read(data.model), model = readNetwork(artifact)
+const data = await read('site.json'), artifact = await read(data.model), model = readNetwork(artifact), { version } = await read('package.json')
 // Faces scripts/previews.py found nothing to draw for; every other non-Google face has a picture stored with the site.
 const pictureless = new Set((await read('bench/previews.json')).missing.map(m => m.id))
 // Shipped distinct families and catalogs, fixed at load; accuracy is not credited to a selected or imported catalog.
@@ -40,6 +40,9 @@ async function result(page) {
     return value
   })
 }
+// Every file a page asks for, by its path; and a page gone idle, its idle work begun.
+function requested(page) { const files = new Set(); page.on('request', request => files.add(new URL(request.url()).pathname.slice(1))); return files }
+const idle = page => page.evaluate(() => new Promise(resolve => requestIdleCallback(() => setTimeout(resolve, 500))))
 async function choose(page, id) {
   await page.locator('#catalog-button').click()
   await page.locator(`[data-catalog="${id}"]`).click()
@@ -150,6 +153,10 @@ try {
   // The other questions flow in two columns, each a heading over its answer, text only.
   const questions = await page.locator('.questions > .qa').evaluateAll(items => items.map(q => [q.children[0].tagName, q.children[1].tagName, Math.round(q.getBoundingClientRect().left), q.children.length]))
   assert.ok(questions.length >= 7 && questions.every(([h, p, , count]) => h === 'H3' && p === 'P' && count === 2) && new Set(questions.map(q => q[2])).size === 2, JSON.stringify(questions))
+  // A tablet keeps the introduction and the questions in two columns and stacks the workbench; a phone stacks them all.
+  const columns = () => page.evaluate(() => ['.intro', '.questions', '.workbench'].map(s => getComputedStyle(document.querySelector(s)).gridTemplateColumns.split(' ').length))
+  for (const [width, expected] of [[768, [2, 2, 1]], [767, [1, 1, 1]], [375, [1, 1, 1]]]) { await page.setViewportSize({ width, height: 1000 }); assert.deepEqual(await columns(), expected, `Columns at ${width} px`) }
+  await page.setViewportSize({ width: 1440, height: 1000 })
   // Accuracy: a tab for each kind of input, rendered text first. Each panel has two bars, the first result and the top 5,
   // filled to its shipped metric, and ends with what was measured. No title over the other questions.
   const panels = () => page.locator('#how-accurate [role="tabpanel"]').evaluateAll(ps => ps.map(p => [p.id, p.inert, p.checkVisibility({ visibilityProperty: true }), [...p.querySelectorAll('.meter')].map(e => [e.previousElementSibling.textContent, e.dataset.metric, Number(e.style.getPropertyValue('--value'))]), p.querySelector('.meters-note').textContent]))
@@ -193,7 +200,9 @@ try {
   assert.equal(await page.locator('#how-it-works .facts #parameters, #how-it-works .facts #device, #how-it-works .facts #catalog-size').count(), 3)
   assert.doesNotMatch(await page.locator('main').innerText(), /·/, 'Lists read with commas, not middle dots')
   assert.equal(await page.locator('details.about, #about').count(), 0)
-  assert.equal(await page.locator('.site-nav, a[href="./catalogs.html"], a[href="./catalogs.html#sources"]').count(), 0, 'Catalogs stays out of the menu and the page; only My fonts links to it')
+  // The header: Catalogs, then the version linking to its release, then GitHub.
+  assert.deepEqual(await page.locator('.masthead :is(.site-nav a, .header-icon)').evaluateAll(es => es.map(e => e.textContent || e.title)), ['Catalogs', `v${version}`, 'GitHub'], 'The header links Catalogs, the release and GitHub, in that order')
+  assert.equal(await page.locator('.site-nav .version').getAttribute('href'), `https://github.com/dy/gpu-font/releases/tag/v${version}`)
   // Catalogs page: one Sources table. The catalogs a search covers as site.json ships them, each downloadable; then the
   // sources not searched, grouped. Each group folds open into its sources, sorted by the chosen column inside it. A ban or
   // restriction always shows its quoted clause and where it was read; held-locally families never read as coverage.
@@ -287,12 +296,20 @@ try {
   const opened = await gap(); await page.mouse.wheel(0, 150); await page.waitForTimeout(200)
   assert.equal(await gap(), opened, 'An open dropdown scrolls with its trigger')
   await page.keyboard.press('Escape'); await page.evaluate(() => scrollTo(0, 0))
-  // More matches grows the list in place to the top 50, previews and all; Fewer matches folds it back to five.
-  const all = foldTwins(original.matches, readCatalog(await read(data.catalogs[0].file), data), { script: original.verdict?.script?.[0]?.label, limit: 50 })
+  // More matches grows the list in place to the top 100, previews and all; Fewer matches folds it back to five.
+  const whole = foldTwins(original.matches, readCatalog(await read(data.catalogs[0].file), data), { script: original.verdict?.script?.[0]?.label }), all = whole.slice(0, 100)
   // A face Google Fonts refuses says so instead of leaving a gap (the sixth row's subset request is made to fail).
   const refused = url => url.href.includes('&text=') && url.href.includes(`family=${encodeURIComponent(all[5].face.family).replaceAll('%20', '+')}`)
   await page.route(refused, route => route.fulfill({ status: 400, body: '' }))
-  await page.locator('#more-matches').click()
+  const asked = [], ask = request => asked.push(request.url()); page.on('request', ask)
+  // Unfolding, the list takes its full height at once and shows its new rows down to the bottom of the view.
+  await page.locator('#more-matches').scrollIntoViewIfNeeded()
+  const unfold = await page.evaluate(() => {
+    document.querySelector('#more-matches').click()
+    const list = document.querySelector('#results'), [animation] = list.getAnimations()
+    return { hidden: parseFloat(animation?.effect.getKeyframes().at(-1).clipPath.split(' ').at(-1)), below: list.getBoundingClientRect().bottom - innerHeight }
+  })
+  assert.ok(Math.abs(unfold.hidden - unfold.below) < 1, `The list unfolds to the view's bottom: ${JSON.stringify(unfold)}`)
   await page.waitForFunction(n => document.querySelectorAll('#results .result').length === n, all.length)
   assert.deepEqual(await page.locator('#more-matches').evaluate(b => [b.firstChild.textContent, b.getAttribute('aria-expanded')]), ['Fewer matches', 'true'])
   assert.deepEqual(await page.locator('#results .rank').evaluateAll(r => [r[0].textContent, r.at(-1).textContent]), ['01', String(all.length).padStart(2, '0')])
@@ -307,8 +324,13 @@ try {
   const short = await stuck(); assert.ok(short.bottom === -32 && short.top < 0 && short.windows, `Short window: ${JSON.stringify(short)}`)
   await page.setViewportSize({ width: 1440, height: 1000 }); await page.locator('#results .result').nth(30).scrollIntoViewIfNeeded()
   const tall = await stuck(); assert.ok(tall.top === 24 && tall.windows, `Tall window: ${JSON.stringify(tall)}`)
-  // Rows past the fifth preview through a subset face of their own, read-only; the refused one names its absence.
+  // A preview loads its face as it comes near the view: the last row, far below, has asked for nothing yet.
+  const far = `family=${encodeURIComponent(all.at(-1).face.family).replaceAll('%20', '+')}`
+  assert.ok(!asked.some(url => url.includes(far)) && await page.locator('#results .result').last().locator('.result-preview').evaluate(i => i.style.visibility === 'hidden'), 'A row far below the view waits to load its face')
+  // Scrolled through, rows past the fifth preview through a subset face of their own, read-only; the refused one names its absence.
+  for (let i = 5; i < all.length; i += 4) await page.locator('#results .result').nth(i).scrollIntoViewIfNeeded()
   await page.waitForFunction(() => [...document.querySelectorAll('#results .result')].slice(5).every(r => r.querySelector('.result-unavailable') || r.querySelector('.result-preview')?.style.visibility === ''))
+  page.off('request', ask)
   // Each preview sets its line by its own font's ascent and descent, in one height, so none scrolls inside its field.
   const previews = await page.locator('#results .result-preview').evaluateAll(inputs => inputs.map(i => [i.closest('.result').querySelector('.font-name a').textContent, i.scrollHeight > i.clientHeight, i.clientHeight]))
   assert.deepEqual(previews.filter(p => p[1]).map(p => p[0]), [], 'No preview scrolls')
@@ -318,8 +340,40 @@ try {
   const subsetNames = await page.locator('#results .result-preview').evaluateAll(inputs => inputs.filter(i => /^"subset-\d+"$/.test(i.style.getPropertyValue('--font-specimen'))).map(i => [i.value, i.dataset.family]))
   assert.ok(subsetNames.length && subsetNames.every(([value, family]) => value === family), `Rows past the fifth show their own names too: ${JSON.stringify(subsetNames.slice(0, 3))}`)
   assert.ok((await page.locator('#results .font-twins').allTextContents()).every(t => t.startsWith('≈ ')), 'Twins read as ≈')
+  // A typed text reaches subset rows as they come near: one in view takes it, the last waits until scrolled to.
+  const valueOf = n => page.locator('#results .result').nth(n).locator('.result-preview').inputValue()
+  await page.locator('#results .result').nth(8).scrollIntoViewIfNeeded(); await page.locator('#preview-text').fill('Hamburg')
+  await page.waitForFunction(() => document.querySelectorAll('#results .result-preview')[7].value === 'Hamburg')
+  assert.equal(await valueOf(all.length - 1), all.at(-1).face.family, 'A far subset row keeps its name until it comes near')
+  await page.locator('#results .result').last().scrollIntoViewIfNeeded()
+  await page.waitForFunction(() => [...document.querySelectorAll('#results .result-preview')].at(-1).value === 'Hamburg')
+  await page.locator('#preview-text').fill('')
   await page.unroute(refused)
-  await page.locator('#more-matches').click(); assert.equal(await page.locator('#results .result').count(), 5)
+  // Folding, More matches stays where it was pressed.
+  await page.locator('#more-matches').scrollIntoViewIfNeeded()
+  const pressed = await page.evaluate(() => { const button = document.querySelector('#more-matches'), at = button.getBoundingClientRect().top; button.click(); return [at, button.getBoundingClientRect().top] })
+  assert.ok(Math.abs(pressed[0] - pressed[1]) < 1, `Folding keeps More matches where it was pressed: ${pressed}`)
+  assert.equal(await page.locator('#results .result').count(), 5)
+  // Find keeps the rows of the whole ranking whose names hold every word typed, whatever its case and spaces, each at
+  // its own rank, in a rank column as wide as the widest rank, so every name and preview keeps one indent.
+  const rows = () => page.locator('#results .result').evaluateAll(rs => rs.map(r => [r.querySelector('.rank').textContent, r.querySelector('.font-name a').textContent.replace(' ↗', '')]))
+  // The lowest-ranked family whose name no other row holds, so no row ranked above crowds it out of the five.
+  const rankOf = family => String(whole.findIndex(m => m.face.family === family) + 1).padStart(2, '0')
+  const deep = whole.findLast(m => !whole.some(o => o !== m && o.face.family.toLowerCase().includes(m.face.family.toLowerCase()))).face.family
+  // Find is its icon until pressed, and then a field.
+  assert.equal(await page.locator('#find-input').evaluate(i => i.getBoundingClientRect().width), 0)
+  await page.locator('#find').click()
+  await page.locator('#find-input').fill(deep.toUpperCase().replaceAll(' ', ''))
+  await page.waitForFunction(family => [...document.querySelectorAll('#results .font-name a')].some(a => a.textContent.replace(' ↗', '') === family), deep)
+  const hits = await rows()
+  assert.ok(await page.evaluate(family => [...CSS.highlights.get('found')].some(range => range.toString() === family), deep), 'Find marks the name it found')
+  assert.ok(hits.some(([rank, family]) => rank === rankOf(deep) && family === deep && rank.length > 2), `A family ranked past 99 is found at its rank: ${JSON.stringify(hits)}`)
+  assert.deepEqual(hits.map(([rank]) => rank), hits.map(([, family]) => rankOf(family)), 'Found rows keep their ranks')
+  assert.equal(await page.locator('#results .result').evaluateAll(rs => new Set(rs.map(r => r.querySelector('.font-name').getBoundingClientRect().left - r.getBoundingClientRect().left)).size), 1, 'One indent for every name')
+  await page.locator('#find-input').fill('qqqqzz')
+  assert.deepEqual(await page.locator('#find-empty').evaluate(e => [e.hidden, e.textContent]), [false, 'No match named “qqqqzz”'])
+  await page.locator('#find-input').press('Escape')
+  assert.deepEqual([await page.locator('#find-input').inputValue(), await page.locator('#find-empty').isHidden(), (await rows()).map(([rank]) => rank)], ['', true, ['01', '02', '03', '04', '05']], 'Escape clears Find')
   // Every quoted figure names a shipped metric: fractions read as percentages, data-format="number" as whole counts.
   const figures = await page.locator('[data-metric]').evaluateAll(elements => elements.map(e => ({ key: e.dataset.metric, format: e.dataset.format, text: e.textContent })))
   assert.ok(figures.some(f => f.key === 'top1') && figures.every(f => Number.isFinite(data.metrics[f.key])), 'Every quoted figure is a shipped metric')
@@ -341,7 +395,12 @@ try {
   await page.waitForFunction(() => document.querySelectorAll('#results .result').length >= 5)
   // Under All the first row may be a clone from another catalog; the Google family among the rows links to its specimen.
   assert.ok((await page.locator('#results .font-name a').evaluateAll(links => links.map(a => a.href))).some(href => href.startsWith('https://fonts.google.com/specimen/')), 'A Google family links to its specimen under All')
+  // Mixing sources, All marks each match with its own after its link: the source's favicon, else the catalog icon, named.
+  const sourceNames = data.catalogs.flatMap(c => [c.name, ...(c.sources ?? []).map(s => s.name)])
+  assert.ok(await page.locator('#results .result').evaluateAll((rows, names) => rows.every(r => { const mark = r.querySelector('.font-name > a + .match-source'), icon = mark?.firstElementChild
+    return names.includes(mark?.title) && mark.getAttribute('aria-label') === mark.title && (icon.tagName !== 'IMG' || (icon.complete && icon.naturalWidth > 0)) }), sourceNames), 'Under All each match shows its source')
   await choose(page, 'google-fonts')
+  assert.equal(await page.locator('#results .match-source').count(), 0, 'One catalog marks no source')
   assert.equal(await page.locator('#catalog-button > :first-child').getAttribute('src'), data.catalogs[0].icon, 'The selector shows the searched catalog\'s favicon')
   // The comparison is a table: gpu-font counts fonts as other finders do, every shipped face, and names the scripts the model detects.
   const compared = data.catalogs.reduce((n, c) => n + c.faces, 0)
@@ -359,7 +418,7 @@ try {
     assert.deepEqual(await page.locator('#twins-tip li').allTextContents(), JSON.parse(await twin.getAttribute('data-twins')), 'The tooltip lists every twin')
     await page.mouse.move(1, 1); assert.equal(await page.locator('#twins-tip').evaluate(t => t.matches(':popover-open')), false)
   }
-  assert.equal(await page.locator('.results-column > .column-head > #matches-title + #catalog-control > #catalog-button').count(), 1, 'The catalog selector shares the Matches line')
+  assert.equal(await page.locator('.results-column > .column-head > #matches-title + #find + #catalog-control > #catalog-button').count(), 1, 'Find and the catalog selector share the Matches line')
   assert.deepEqual(await page.locator('#source-head').evaluate(h => [...h.children].filter(c => !c.matches('.sr-only')).map(c => c.id || c.className)), ['source-font', 'sample', 'source-spacer', 'draw', 'choose-image'], 'The current kind leads its name; the others follow')
   assert.equal(await page.locator('#tools').getAttribute('data-tool'), 'crop'); assert.ok(await page.locator('#undo').isDisabled())
   assert.ok(await page.locator('.pen-size').isHidden(), 'Brush size shows only with a drawing tool')
@@ -451,9 +510,12 @@ try {
   assert.equal(await page.locator('#results .result').evaluate(previewState), 'No preview available', 'An imported face has no stored picture, and says so')
   await choose(page, data.catalogs[0].id)
   // A slow response cannot replace a later catalog choice; one that fails says so, keeps the matches on show and loads
-  // when chosen again, since a failure is not kept. On a fresh page: this one has read every catalog, and reads none again.
+  // when chosen again, since a failure is not kept. On a fresh page: this one has read every catalog, and reads none again;
+  // one that saves data, so no catalog is kept behind its matches and each choice asks for its file.
   if (data.catalogs.length > 2) {
-    const fresh = await browser.newPage(); fresh.on('pageerror', e => issues.push(e.message)); await fresh.goto(base); const before = await result(fresh)
+    const fresh = await browser.newPage(); fresh.on('pageerror', e => issues.push(e.message))
+    await fresh.addInitScript(() => Object.defineProperty(Navigator.prototype, 'connection', { get: () => ({ effectiveType: '4g', saveData: true }), configurable: true }))
+    await fresh.goto(base); const before = await result(fresh)
     let release, entered
     const gate = new Promise(r => { release = r }), started = new Promise(r => { entered = r })
     const slow = data.catalogs[1]
@@ -664,9 +726,28 @@ try {
   assert.deepEqual(lone.matches, matchCatalog(decoded, subsetCatalog(readCatalog(await read(group.file), data), f => f.sourceId === 'collletttivo'), lone.verdict))
   assert.ok(lone.matches.length && lone.matches.every(m => m.face.sourceId === 'collletttivo'))
   assert.deepEqual([await alone.locator('#catalog-label').textContent(), lone.catalog.id], [group.sources.find(s => s.id === 'collletttivo').name, 'collletttivo'])
+  // Once the first matches show, the page keeps every shipped catalog under its checksum, beside the model; a later visit
+  // downloads none of them, even searching All. An embed, which searches one catalog, downloads no other.
+  await idle(alone)
+  const kept = [[data.model, data.modelSha256], ...data.catalogs.map(c => [c.file, c.sha256])].sort()
+  const keptFiles = async page => (await page.evaluate(async () => (await (await caches.open('gpu-font')).keys()).map(r => new URL(r.url)).map(u => [u.pathname.slice(1), u.search.slice(1)]))).sort()
+  for (let tries = 0; (await keptFiles(alone)).length < kept.length && tries < 100; tries++) await alone.waitForTimeout(100)
+  assert.deepEqual(await keptFiles(alone), kept, 'The model and every catalog are kept under their checksums')
+  const again = await shared.newPage(), againFiles = requested(again); await again.goto(`${base}/?catalog=all`); await result(again)
+  assert.deepEqual(kept.filter(([file]) => againFiles.has(file)), [], 'A later visit downloads neither the model nor any catalog'); await again.close()
   // Embedded, the matcher alone: no masthead, introduction or sections; the catalog a plain label; links open new tabs,
-  // and Link copies the whole page's address.
-  const embed = await shared.newPage(); await embed.goto(`${base}/?catalog=collletttivo&embed`); await result(embed)
+  // and Link copies the whole page's address. In a browser of its own, which keeps nothing yet.
+  const separate = await browser.newContext({ viewport: { width: 1440, height: 1000 } }); await separate.grantPermissions(['clipboard-read', 'clipboard-write'], { origin: base })
+  const embed = await separate.newPage(), embedFiles = requested(embed); embed.on('pageerror', e => issues.push(e.message)); await embed.goto(`${base}/?catalog=collletttivo&embed`); await result(embed)
+  await idle(embed); assert.deepEqual(data.catalogs.filter(c => embedFiles.has(c.file)).map(c => c.id), [data.catalogs[0].id, group.id], 'An embed downloads only what it searches')
+  // Where data is scarce nothing downloads behind the matches: the user saves data, or a phone's browser cannot tell.
+  for (const [label, options, connection] of [['Save-Data', {}, { effectiveType: '4g', saveData: true }], ['A phone without connection facts', { isMobile: true, hasTouch: true }, null]]) {
+    const context = await browser.newContext({ viewport: { width: 390, height: 900 }, ...options }), quiet = await context.newPage(), files = requested(quiet)
+    await quiet.addInitScript(c => Object.defineProperty(Navigator.prototype, 'connection', { get: () => c ?? undefined, configurable: true }), connection)
+    await quiet.goto(base); await result(quiet); await idle(quiet)
+    assert.deepEqual(data.catalogs.filter(c => files.has(c.file)).map(c => c.id), [data.catalogs[0].id], `${label}: no catalog downloads in the background`)
+    await context.close()
+  }
   assert.deepEqual(await embed.locator('.masthead, main > section').evaluateAll(es => es.filter(e => e.checkVisibility()).length), 0)
   assert.deepEqual([await embed.locator('#catalog-button').isDisabled(), await embed.locator('#catalog-button').innerText(), await embed.evaluate(() => document.querySelector('base')?.target)], [true, 'Collletttivo', '_blank'])
   assert.ok(await embed.evaluate(() => document.documentElement.scrollWidth <= innerWidth))
@@ -690,7 +771,7 @@ try {
   }
   const unknown = await shared.newPage(); await unknown.goto(`${base}/?catalog=nope`); await result(unknown)
   assert.equal(await unknown.locator('#catalog-error').textContent(), `No catalog “nope”; searching ${data.catalogs[0].name}.`)
-  await shared.close()
+  await shared.close(); await separate.close()
   const cpu = await browser.newPage()
   await cpu.addInitScript(() => Object.defineProperty(navigator, 'gpu', { value: undefined }))
   await cpu.goto(base); const fallback = await result(cpu)

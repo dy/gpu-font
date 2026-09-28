@@ -130,6 +130,56 @@ test('the twin index is kept per catalog and per script: A → A, A → B → A,
     assert.deepEqual(fold(a, undefined), [['x', []], ['y', []], ['z', []]])
   }
 })
+test('families that match with one row fold in any catalog, with no twins listed and no script known', () => {
+  // Khmer OS Freehand and Fasthand draw one Latin alphabet, so they match with rows of the same numbers. AlArabiya draws it too,
+  // under a name of its own, and Khmer OS Battambang's row is a hair apart (a cosine of 0.9997): both keep their rows.
+  const row = (x, y) => Array.from({ length: 64 }, (_, d) => d === 0 ? x : d === 1 ? y : 0)
+  const names = { alarabiya: 'AlArabiya', battambang: 'Khmer OS Battambang', fasthand: 'Khmer OS Fasthand', freehand: 'Khmer OS Freehand', muol: 'Khmer OS Muol' }
+  const rows = { alarabiya: row(127, 60), battambang: row(127, 64), fasthand: row(127, 60), freehand: row(127, 60), muol: row(0, 127) }, ids = Object.keys(names)
+  const decoded = readCatalog({ version: 3, kind: 'font-catalog', ...binding, dimensions: 64, faces: ids.map(id => ({ id, familyId: id, family: names[id] })),
+    vectors: { encoding: 'int8-base64', shape: [ids.length, 64], data: Buffer.from(Int8Array.from(ids.flatMap(id => rows[id])).buffer).toString('base64'), scales: ids.map(() => 1 / 127), owners: ids.map((_, i) => i) } }, binding)
+  const ranked = rankCatalog(row(127, 60), decoded)
+  for (const script of [undefined, 'Latn']) assert.deepEqual(foldTwins(ranked, decoded, { script }).map(m => [m.family, m.siblings]), [['alarabiya', []], ['fasthand', ['Khmer OS Freehand']], ['battambang', []], ['muol', []]])
+  assert.deepEqual(foldTwins(ranked, decoded, { limit: 2 }).map(m => [m.family, m.siblings]), [['alarabiya', []], ['fasthand', ['Khmer OS Freehand']]], 'one row joins a kept group past the limit')
+  // Matches without their rows, or a catalog without vectors, fold by twins alone.
+  assert.deepEqual(foldTwins(ranked.map(({ row, ...m }) => m), decoded).map(m => m.family), ranked.map(m => m.family))
+  assert.deepEqual(foldTwins(ranked, { faces: decoded.faces }).map(m => m.family), ranked.map(m => m.family))
+})
+test('folding in one pass keeps the pairwise definition: each family joins the first group it shares twins or one row with, under a shared name', () => {
+  // The definition, pair by pair, as it read before the fold was indexed: quadratic, so fit only for a small catalog.
+  const reference = (matches, catalog, { script, limit = Infinity } = {}) => {
+    const twins = new Map(catalog.faces.filter(f => Array.isArray(f.twins?.[script])).map(f => [f.familyId, new Set(f.twins[script])])), d = catalog.dimensions
+    const words = m => m.face.family.split(' '), named = (a, b) => words(b).includes(words(a)[0]) || words(a).includes(words(b)[0])
+    const same = (a, b) => { let dot = 0; for (let i = 0; i < d; i++) dot += catalog.vectors[a.row * d + i] * catalog.vectors[b.row * d + i]; return Math.abs(a.score - b.score) <= Math.sqrt(2e-4) && dot >= 1 - 1e-4 }
+    const groups = []
+    for (const m of matches) {
+      const group = groups.find(g => (twins.get(g[0].family)?.has(m.family) || twins.get(m.family)?.has(g[0].family) || same(g[0], m)) && named(g[0], m))
+      if (group) group.push(m); else if (groups.length < limit) groups.push([m])
+    }
+    return groups.map(g => g.map(m => m.face.family).sort())
+  }
+  // 600 families named from a few shared words, as DaFont's many "The …"; every tenth has another's row, every tenth another's
+  // row but for one number, a hair or a step apart; some list twins in Latin, some far down the ranking.
+  let seed = 7
+  const random = () => (seed = (seed * 16807) % 2147483647) / 2147483647, pool = ['The', 'Sans', 'Hello', 'Love', 'Script', 'Mono', 'Black']
+  const rows = [], faces = Array.from({ length: 600 }, (_, i) => {
+    const name = [pool[i % 7], ...(i % 3 ? [pool[(i * 5) % 7]] : []), `N${i}`], row = Array.from({ length: 64 }, () => Math.round(random() * 254 - 127))
+    if (i % 10 === 1) row.splice(0, 64, ...rows[i - 1])
+    if (i % 10 === 2) { row.splice(0, 64, ...rows[i - 2]); row[5] += i % 20 === 2 ? 1 : 40 }
+    rows.push(row)
+    return { id: `f${i}`, familyId: `f${i}`, family: (i % 4 ? name : name.reverse()).join(' '), ...(i % 50 === 3 ? { twins: { Latn: [`f${(i * 7) % 600}`, `f${i + 1}`] } } : {}) }
+  })
+  const catalog = readCatalog({ version: 3, kind: 'font-catalog', ...binding, dimensions: 64, faces,
+    vectors: { encoding: 'int8-base64', shape: [600, 64], data: Buffer.from(Int8Array.from(rows.flat().map(v => Math.max(-127, Math.min(127, v)))).buffer).toString('base64'), scales: rows.map(() => 1 / 127), owners: rows.map((_, i) => i) } }, binding)
+  for (const query of [0, 1, 250]) {
+    const ranked = rankCatalog(Array.from(catalog.vectors.subarray(query * 64, query * 64 + 64)), catalog)
+    for (const script of [undefined, 'Latn']) for (const limit of [0, 1, 5, 100, Infinity]) {
+      const folded = foldTwins(ranked, catalog, { script, limit })
+      assert.deepEqual(folded.map(m => [m.face.family, ...m.siblings].sort()), reference(ranked, catalog, { script, limit }), `query ${query}, ${script}, limit ${limit}`)
+      if (limit === Infinity) assert.ok(folded.some(m => m.siblings.length), 'Some families fold')
+    }
+  }
+})
 test('source embedding averages normalized windows, retaining direction rather than projection magnitude', () => {
   const a = vector(0, 100), b = vector(1, 1), embedding = embedWindows([a, b])
   assert.ok(Math.abs(embedding[0] - Math.SQRT1_2) < 1e-7)
@@ -263,4 +313,15 @@ test('a catalog holds up to 100,000 faces: a captured catalogue of one face a fa
   }
   assert.equal(readCatalog(many(10001), binding).families, 10001)
   assert.throws(() => readCatalog(many(100001), binding), /unique catalog faces/)
+})
+
+test('six-bit rows read like eight-bit ones, at three quarters of the bytes', async () => {
+  const dims = 128, rows = 3, values = Array.from({ length: rows * dims }, (_, i) => ((i * 7) % 63) - 31)  // -31..31, the 6-bit range
+  const faces = Array.from({ length: rows }, (_, i) => ({ id: `f${i}`, familyId: `f${i}`, family: `F${i}`, styleName: 'Regular', weight: 400, style: 'normal', scripts: ['Latn'] }))
+  const binding = { encoderSha256: 'e'.repeat(64), preparationSha256: 'p'.repeat(64), dimensions: dims }
+  const make = (encoding, packed) => ({ version: 3, kind: 'font-catalog', encoderSha256: binding.encoderSha256, preparationSha256: binding.preparationSha256, dimensions: dims, faces,
+    vectors: { encoding, shape: [rows, dims], data: Buffer.from(packed).toString('base64'), scales: [1 / 31, 1 / 31, 1 / 31], owners: [0, 1, 2] } })
+  const six = readCatalog(make('int6-base64', pack(values, 6)), binding), eight = readCatalog(make('int8-base64', pack(values, 8)), binding)
+  assert.equal(Buffer.from(pack(values, 6)).length, rows * dims * 6 / 8)
+  assert.deepEqual(Array.from(six.vectors), Array.from(eight.vectors))
 })

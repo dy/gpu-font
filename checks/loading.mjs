@@ -1,5 +1,6 @@
 // Startup: the model and first catalog download together behind a progress bar; every failure names its cause.
 import assert from 'node:assert/strict'
+import { createHash } from 'node:crypto'
 import { readFile } from 'node:fs/promises'
 import { chromium } from 'playwright'
 
@@ -44,5 +45,37 @@ try {
     assert.deepEqual([(await bar(failed.page)).loader, await failed.page.locator('#message').isVisible()], [null, true], 'The failure shows in place of the loader'); assert.equal(await failed.page.locator('body').getAttribute('data-ready'), null)
     assert.deepEqual(failed.errors, [], expected); await failed.page.close()
   }
-  console.log('Loading: parallel downloads, byte-exact progress, catalog and model failures, altered catalog')
+  // A later visit reads the model and catalog kept under their checksums. Once site.json names a new checksum, that file
+  // alone downloads again and its old copy is dropped; kept bytes that no longer match their checksum download again.
+  const context = await browser.newContext(), visit = async (routes = {}) => {
+    const page = await context.newPage(), files = new Set(), errors = []
+    page.on('request', request => files.add(new URL(request.url()).pathname.slice(1))); page.on('pageerror', error => errors.push(error.message))
+    for (const [file, body] of Object.entries(routes)) await page.route(`**/${file}`, route => route.fulfill({ contentType: 'application/json', body }))
+    await page.goto(base); await page.waitForSelector('body[data-ready="true"]'); assert.deepEqual(errors, [])
+    return { page, files }
+  }
+  const kept = async (page, ...wanted) => { for (let tries = 0; ; tries++) {
+    const keys = await page.evaluate(async () => (await (await caches.open('gpu-font')).keys()).map(r => { const u = new URL(r.url); return `${u.pathname.slice(1)}?${u.search.slice(1)}` }))
+    if (tries > 50 || wanted.every(key => keys.includes(key))) return keys
+    await page.waitForTimeout(100)
+  } }
+  const first = await visit(); assert.ok(first.files.has(data.model) && first.files.has(catalog.file)); await kept(first.page, `${data.model}?${data.modelSha256}`, `${catalog.file}?${catalog.sha256}`)
+  const later = await visit(); assert.deepEqual([later.files.has(data.model), later.files.has(catalog.file)], [false, false], 'A later visit downloads neither')
+  const changed = Buffer.concat([await readFile(catalog.file), Buffer.from('\n')]), checksum = createHash('sha256').update(changed).digest('hex')
+  const updated = await visit({ 'site.json': JSON.stringify({ ...data, catalogs: [{ ...catalog, sha256: checksum, bytes: changed.length }, ...data.catalogs.slice(1)] }), [catalog.file]: changed })
+  assert.deepEqual([updated.files.has(data.model), updated.files.has(catalog.file)], [false, true], 'A new checksum downloads that file alone')
+  const keys = await kept(updated.page, `${catalog.file}?${checksum}`); assert.deepEqual([keys.includes(`${catalog.file}?${checksum}`), keys.includes(`${catalog.file}?${catalog.sha256}`)], [true, false], 'The new copy replaces the old')
+  await updated.page.evaluate(async key => (await caches.open('gpu-font')).put(key, new Response('{}')), `${data.model}?${data.modelSha256}`)
+  assert.ok((await visit()).files.has(data.model), 'Kept bytes that fail their checksum download again')
+  await context.close()
+  // Where the browser has no store or refuses one, the page loads as before and the catalogs wait in its HTTP cache.
+  for (const [label, refuse] of [['No store', () => Object.defineProperty(window, 'caches', { value: undefined })],
+    ['A refused store', () => { CacheStorage.prototype.open = () => Promise.reject(new DOMException('', 'SecurityError')) }]]) {
+    const bare = await browser.newContext(), page = await bare.newPage(), files = new Set(), errors = []
+    page.on('request', request => files.add(new URL(request.url()).pathname.slice(1))); page.on('pageerror', error => errors.push(error.message))
+    await page.addInitScript(refuse); await page.goto(base); await page.waitForFunction(() => document.querySelectorAll('.result').length === 5)
+    await page.evaluate(() => new Promise(resolve => requestIdleCallback(() => setTimeout(resolve, 500))))
+    assert.deepEqual([errors, data.catalogs.filter(c => !files.has(c.file)).map(c => c.id)], [[], []], label); await bare.close()
+  }
+  console.log('Loading: parallel downloads, byte-exact progress, catalog and model failures, altered catalog, kept files by checksum, no store')
 } finally { await browser.close() }

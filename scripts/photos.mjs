@@ -7,10 +7,19 @@ import { chromium } from 'playwright'
 
 export const normalize = name => name.toLowerCase().replace(/[^a-z0-9]/g, '')
 
-// 1-based row whose family, or a family folded into it, has the true name; null when none of `rows` does.
-export function rankOf(rows, truth) {
-  const want = normalize(truth), i = rows.findIndex(r => [r.name, ...r.siblings].some(n => normalize(n) === want))
+// 1-based row whose family, or a family folded into it, has the true name, or whose family id is one of `twins`, the
+// families the teacher finds indistinguishable from the true one in any script, across catalogs; null when none of `rows` is.
+export function rankOf(rows, truth, twins = new Set()) {
+  const want = normalize(truth), i = rows.findIndex(r => [r.name, ...r.siblings].some(n => normalize(n) === want) || twins.has(r.family))
   return i < 0 ? null : i + 1
+}
+
+// The twins of each family the teacher spans, every script together: {familyId: Set of family ids}, from
+// .data/style/twins.json (train.style twins), the same file the catalogs carry per face. Read from the file, the credit
+// applies to any model's read alike, whether or not its catalogs were rebuilt; without the file no twin is credited.
+export async function twinSets() {
+  const families = await readFile('.data/style/twins.json', 'utf8').then(text => JSON.parse(text).families, () => { console.log('No .data/style/twins.json: no twin credit; run node scripts/python.mjs -m train.style twins'); return {} })
+  return new Map(Object.entries(families).map(([id, scripts]) => [id, new Set(Object.values(scripts).flat())]))
 }
 
 // Accuracy of scored items ({ truth: { family }, rank }) over the items, and over families with each counted once, so a

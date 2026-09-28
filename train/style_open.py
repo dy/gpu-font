@@ -8,7 +8,6 @@ All: every shipped catalog's rows at once, the Google catalog included, so the f
     python -m train.style_open evaluate --run student-30k # against models/encoder/*.json as shipped
 """
 import argparse
-import base64
 import hashlib
 import random
 
@@ -20,7 +19,7 @@ from train.robustness import read, sha
 from train.style_bench import OUT, PINS, query_text
 from train.style_data import FREQUENT
 from train.style_fonts import open_role
-from train.ten_model import unpack_bits
+from train.encoder_catalog import read_catalog
 
 SEED = 20260925
 SIZES = [16, 20, 24, 32, 40, 48, 64]
@@ -63,16 +62,15 @@ def shipped_rows():
     """Every shipped catalog's rows and the family and scripts each belongs to: the page's All."""
     encoder = read(ROOT/'models/encoder/encoder.json'); dims = encoder['dimensions']; bound = sha(ROOT/'models/encoder/encoder.json')
     index = read(ROOT/'models/encoder/catalogs/index.json'); files = [ROOT/'models/encoder/google-fonts.json'] + [ROOT/'models/encoder/catalogs'/f"{c['id']}.json" for c in index]
-    rows = []; owners = []; families = []; scripts = []; catalogs = []
+    rows = []; owners = []; families = []; scripts = []; catalogs = []; index = {}  # family id -> position, so 186,000 rows do not scan the list
     for path in files:
-        data = read(path); v = data['vectors']; bits = {'int8-base64': 8, 'int4-base64': 4}[v['encoding']]
+        data = read(path)
         if data['dimensions'] != dims or data['encoderSha256'] != bound: raise ValueError(f'{path.name} was built for another encoder')
-        values = unpack_bits(base64.b64decode(v['data']), bits, v['shape'][0] * dims).reshape(v['shape'][0], dims).astype(np.float32) * np.array(v['scales'], np.float32)[:, None]
-        values /= np.linalg.norm(values, axis=1, keepdims=True)
-        for r, owner in enumerate(v['owners']):
+        values, row_owners, _ = read_catalog(data, ROOT/'models/encoder/encoder.json')  # one decoder for every reader: bits, scales, unit rows
+        for r, owner in enumerate(row_owners.tolist()):
             face = data['faces'][owner]; key = face['familyId']
-            if key not in families: families.append(key); scripts.append(set(face.get('scripts') or ['Latn'])); catalogs.append(path.stem)
-            owners.append(families.index(key))
+            if key not in index: index[key] = len(families); families.append(key); scripts.append(set(face.get('scripts') or ['Latn'])); catalogs.append(path.stem)
+            owners.append(index[key])
         rows.append(values)
     return np.concatenate(rows), np.array(owners), families, scripts, catalogs
 

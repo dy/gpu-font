@@ -38,3 +38,12 @@ test('bench/finders.json has a place for exactly the finders the page compares, 
   for (const finder of Object.values(finders)) assert.ok(finder.how.length > 10)
   assert.deepEqual(Object.keys(finders['gpu-font'].answers), images.map(i => i.id))
 })
+
+test('a row of a twin family counts as right: a clone in another catalog is the same design', () => {
+  const rows = [{ family: 'github-liberation', name: 'Liberation Sans', siblings: [] }, { family: 'arimo', name: 'Arimo', siblings: [] }]
+  assert.equal(rankOf(rows, 'Arimo'), 2)
+  assert.equal(rankOf(rows, 'Arimo', new Set(['github-liberation'])), 1)
+  assert.equal(rankOf(rows, 'Arimo', new Set(['debian-other'])), 2)
+  assert.equal(rankOf(rows, 'Arimo', undefined), 2)  // a family with no twins passes none
+  assert.equal(rankOf([], 'Arimo', new Set(['github-liberation'])), null)
+})

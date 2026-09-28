@@ -61,7 +61,7 @@ for (const compiled of await compiledFolders('.data/catalogs')) {
   const data = await read(path)
   sources.push({ catalog: data, records })
 }
-// Captures stay local. The derived catalogs (names, links, vectors) are committed, with a 64-pixel black-and-white picture of
+// Captures stay local. The derived catalogs (names, links, vectors) are committed, with a 64-pixel picture in four greys of
 // each face in previews/ (scripts/previews.py); local captures refresh them, and a fresh clone builds from the committed copies.
 // A source ships only when bench/foundries.json records its terms as permitting collection or stating nothing
 // against it; banned, restricted, unverified and unlisted sources are derived into .data and stay there.
@@ -106,8 +106,9 @@ for (const source of compiled.filter(source => !shippable(source))) console.log(
 // A grouped catalog names each source in it, so a link can search one alone: ?catalog=collletttivo.
 const named = id => ({ id, name: ledger.get(id)?.name.replace(/\s*\(.*\)$/, '') ?? id })
 for (const source of shipped) await addCatalog(source.id, source.name, `${derived}/${source.id}.json`, source.sources?.map(named))
-// The menu marks each catalog with its source's favicon, once scripts/favicons.mjs has fetched it.
-for (const option of options) {
+// The menu marks each catalog with its source's favicon, and a match found in All or Other shows its own source's, once
+// scripts/favicons.mjs has fetched them.
+for (const option of options.flatMap(option => [option, ...option.sources ?? []])) {
   const icon = catalogIcon(ledger.get(option.id)?.url)
   if (icon && await access(icon).then(() => true, () => false)) option.icon = icon
 }

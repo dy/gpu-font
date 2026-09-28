@@ -4,7 +4,7 @@
 // (the style split's test role, and every catalog besides Google Fonts) are the final read; the rest is development.
 import { readFile, writeFile, access, readdir } from 'node:fs/promises'
 import { execFileSync } from 'node:child_process'
-import { matchPhotos, rankOf, catalogNames, normalize } from './photos.mjs'
+import { matchPhotos, rankOf, twinSets, catalogNames, normalize } from './photos.mjs'
 
 export const REPO = 'https://github.com/whatfontis/WhatFontIs-Bench', COMMIT = 'f01d865380c160b5d54b07d0d1aba54d6ae3fefe'
 const ROOT = '.data/whatfontis', SET = `${ROOT}/WhatFontIs-Bench/v1`
@@ -13,6 +13,26 @@ const run = (command, ...args) => execFileSync(command, args, { stdio: 'inherit'
 
 // A font's family without the weight or style its title adds: "Heebo regular", "Teko 300", "Futura PT Book".
 export const family = name => name.replace(/(\s+(regular|book|medium|roman|\d{3}))+$/i, '')
+
+// Adobe Fonts titles name a font as the store does: foundry tags (ITC, ATF, JAF), edition marks (Pro, Std, OT, LT), widths,
+// weights and styles around the family's own words, in any order ("Hero New" for New Hero, "Benguiat Pro ITC" for ITC
+// Benguiat). A title whose exact family no catalog holds falls back to the Adobe family whose own words the title
+// contains, with nothing left over but such store words; a tie names none. Scoped to Adobe's catalog: across every
+// catalog the rule invents matches ("Hustle Kindness" is not Hustle).
+const VENDOR = new Set(['ff', 'atf', 'jaf', 'itc', 'pmn', 'am', 'ltc', 'fot', 'p22', 'urw', 'lt', 'std', 'pro', 'ot', 'otce', 'fb', 'd', 'b', 'dv'])
+const STYLES = new Set(['regular', 'reg', 'book', 'medium', 'roman', 'normal', 'norm', 'light', 'bold', 'semi', 'extra', 'ex', 'x', 'thin', 'heavy', 'black', 'condensed', 'cond', 'excond', 'narrow', 'cmp', 'compressed', 'engschrift', 'mittelschrift', 'text', 'display', 'headline'])
+const SHORT = { ex: 'extra', excond: 'extra condensed', cond: 'condensed', exbold: 'extra bold', reg: 'regular', norm: 'normal' }
+export const tokens = name => (name.replace(/['’]/g, '').replace(/(?<=[a-z])(?=[A-Z0-9])|(?<=[0-9])(?=[A-Za-z])/g, ' ').toLowerCase().match(/[a-z0-9]+/g) || []).flatMap(t => (SHORT[t] || t).split(' '))
+const spare = t => VENDOR.has(t) || STYLES.has(t) || /^\d+$/.test(t)
+export function adobeFamily(title, families) {
+  const want = new Set(tokens(title)), fits = []
+  for (const family of families) {
+    const own = new Set(tokens(family)), rest = [...want].filter(t => !own.has(t))
+    if ([...own].every(t => want.has(t) || VENDOR.has(t)) && rest.every(spare)) fits.push({ family, shared: [...own].filter(t => want.has(t)).length })
+  }
+  const best = Math.max(0, ...fits.map(f => f.shared)), top = fits.filter(f => f.shared === best)
+  return top.length === 1 ? top[0].family : null
+}
 
 // The labels at the pinned commit, the four image archives of release v1.0 unpacked beside them, and every label whose
 // font a shipped catalog holds, with that family's role in the style split.
@@ -26,8 +46,9 @@ export async function whatfontisSet() {
   }
   const names = await catalogNames(), roles = JSON.parse(await readFile('bench/encoder-split.json')).families
   const labels = (await readFile(`${SET}/labels.jsonl`, 'utf8')).trim().split('\n').map(line => JSON.parse(line))
+  const adobe = [...names.values()].filter(n => n.catalogs.includes('adobe-fonts')).map(n => n.family)
   const indexed = labels.flatMap(label => {
-    const truth = names.get(normalize(family(label.family)))
+    const truth = names.get(normalize(family(label.family))) ?? (label.source === 'Adobe Fonts' ? names.get(normalize(adobeFamily(label.title, adobe) ?? '')) : undefined)
     if (!truth) return []
     const role = truth.catalog === 'google-fonts' ? roles[truth.familyId] : 'other catalogs'
     return [{ label, truth, role, final: role === 'test' || role === 'other catalogs', path: `${SET}/${label.image}`, box: label.crop_box }]
@@ -38,7 +59,7 @@ export async function whatfontisSet() {
 async function main() {
   const { labels, indexed: images, fonts } = await whatfontisSet()
   const { browser, adapter, encoderSha256, results } = await matchPhotos(images)
-  const scored = images.map((image, i) => ({ ...image, ...results[i], rank: rankOf(results[i].rows, image.truth.family) }))
+  const twins = await twinSets(), scored = images.map((image, i) => ({ ...image, ...results[i], rank: rankOf(results[i].rows, image.truth.family, twins.get(image.truth.familyId)) }))
   const share = (list, test) => Math.round(1e4 * list.filter(test).length / list.length) / 1e4
   const summary = list => ({ images: list.length, fonts: new Set(list.map(s => s.truth.family)).size,
     top1: share(list, s => s.rank === 1), top5: share(list, s => s.rank && s.rank <= 5), top20: share(list, s => s.rank !== null) })
@@ -54,7 +75,7 @@ async function main() {
     // Crops preparation turned away before the model: no answer at all.
     unread: Object.fromEntries([...new Set(scored.map(s => s.status))].filter(s => s !== 'ok').map(s => [s, scored.filter(x => x.status === s).length])),
     results: { all: summary(scored), final: summary(scored.filter(s => s.final)), development: summary(scored.filter(s => !s.final)),
-      role: slices(s => s.role), type: slices(s => s.label.type), difficulty: slices(s => s.label.difficulty), category: slices(s => s.label.category),
+      role: slices(s => s.role), catalog: slices(s => s.truth.catalog), type: slices(s => s.label.type), difficulty: slices(s => s.label.difficulty), category: slices(s => s.label.category),
       capitals: slices(s => s.label.caps_only ? 'capitals only' : 'mixed case'), effect: slices(s => s.label.hard_effects?.length ? s.label.hard_effects.join(' + ') : 'none') },
     // Published in the set's README, September 2026: all 11,995 images, searched among over 1.2 million fonts.
     whatfontis: { source: `${REPO}/blob/${COMMIT}/README.md`, searched: 'over 1.2 million fonts', images: 11995, top1: 0.837, top5: 0.933, top20: 0.965 }

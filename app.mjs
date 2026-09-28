@@ -25,8 +25,8 @@ let previewText = TEXT, chosenText = null, previewValid = true
 // Preview text the previews accept: up to 80 printable ASCII characters, but ~ and ^.
 const validText = text => text.length <= 80 && /^[\x20-\x7e]+$/.test(text) && !/[~^]/.test(text)
 let searchCatalog = null, catalogRevision = 0
-// More matches grows the list in place, with previews, from the top five to the top fifty.
-const SHORT = 5, LONG = 50
+// More matches grows the list in place, with previews, from the top five to the top hundred.
+const SHORT = 5, LONG = 100
 let expanded = false
 const fonts = new Map()
 const isEncoder = () => model?.kind === 'font-encoder'
@@ -52,7 +52,7 @@ function invalidate(retain = false) {
   analysis++; last = null; pending = false
   cancelAnimationFrame(scheduled); scheduled = 0
   if (!retain) {
-    $('results').replaceChildren(); hideTwins(); $('more-matches').inert = true
+    $('results').replaceChildren(); hideTwins(); $('more-matches').inert = true; $('find-empty').hidden = true
     previewValid = true; $('preview-error').hidden = true
   }
   shareable()
@@ -329,19 +329,59 @@ async function analyze() {
     if (pending) schedule()
   }
 }
+// Find: the rows of the whole folded ranking whose name, or a folded twin's, holds every word typed, whatever its case,
+// accents, spaces and punctuation ("plex kr" finds IBM Plex Sans KR, "opensans" Open Sans), each at its own rank. The
+// ranking folds whole once per result, when first searched.
+const plain = text => text.normalize('NFKD').toLowerCase().replace(/[^\p{L}\p{N}]/gu, '')
+const findTerms = () => $('find-input').value.trim().split(/\s+/).map(plain).filter(Boolean)
+const rankings = new WeakMap()
+function found(terms, limit) {
+  if (!rankings.has(last)) {
+    const rows = foldTwins(last.matches, searchCatalog, { script: last.verdict?.script?.[0]?.label })
+    rankings.set(last, { rows, names: rows.map(row => [row.face.family, ...row.siblings].map(plain)) })
+  }
+  const { rows, names } = rankings.get(last), hits = []
+  for (let rank = 0; rank < rows.length && hits.length < limit; rank++) if (names[rank].some(name => terms.every(term => name.includes(term)))) hits.push([rows[rank], rank])
+  return hits
+}
+// Find marks every word it found in the names shown: `selector` picks, under `root`, the elements whose text is a name.
+const marks = globalThis.Highlight && new Highlight()
+if (marks) CSS.highlights.set('found', marks)
+function mark(root, selector) {
+  const terms = findTerms()
+  if (!marks || !terms.length) return
+  for (const element of root.querySelectorAll(selector)) {
+    const node = element.firstChild, name = node?.nodeType === Node.TEXT_NODE ? node.data : ''
+    // The name in plain form, character by character, each plain character kept with the span of the one it came from.
+    let flat = ''; const from = [], to = []
+    for (let i = 0; i < name.length;) {
+      const c = String.fromCodePoint(name.codePointAt(i)), p = plain(c)
+      for (let k = 0; k < p.length; k++) { from.push(i); to.push(i + c.length) }
+      flat += p; i += c.length
+    }
+    for (const term of terms) for (let at = flat.indexOf(term); at >= 0; at = flat.indexOf(term, at + 1)) {
+      const range = new Range(); range.setStart(node, from[at]); range.setEnd(node, to[at + term.length - 1]); marks.add(range)
+    }
+  }
+}
 function renderResults() {
   hideTwins() // Its note is about to be replaced.
-  $('more-matches').inert = true
+  $('more-matches').inert = true; $('find-empty').hidden = true
+  marks?.clear()
   if (!last) return
-  $('more-matches').inert = !isEncoder() || foldTwins(last.matches, searchCatalog, { script: last.verdict?.script?.[0]?.label, limit: SHORT + 1 }).length <= SHORT
-  $('more-matches').setAttribute('aria-expanded', String(expanded)); $('more-matches').firstChild.textContent = expanded ? 'Fewer matches' : 'More matches'
-  subsetRows.clear()
+  subsetRows.clear(); nearby.disconnect()
   previewValid = true; $('preview-error').hidden = true
-  const fragment = document.createDocumentFragment()
-  // Kinds of one family identical in the crop's script (IBM Plex Sans and its KR, Arabic… families) fold into one row; the saved result keeps every family.
-  const shown = isEncoder() ? foldTwins(last.matches, searchCatalog, { script: last.verdict?.script?.[0]?.label, limit: expanded ? LONG : SHORT }) : last.matches.slice(0, SHORT)
-  for (const [i, match] of shown.entries()) {
-    if (isEncoder()) { fragment.append(encoderResult(match, i)); continue }
+  const fragment = document.createDocumentFragment(), query = $('find-input').value.trim(), terms = findTerms()
+  // Kinds of one family identical in the crop's script (IBM Plex Sans and its KR, Arabic… families) fold into one row; the
+  // saved result keeps every family. One row past the list tells whether More matches has more to show.
+  const length = expanded ? LONG : SHORT, ranked = (match, rank) => [match, rank]
+  const rows = !isEncoder() ? last.matches.slice(0, SHORT).map(ranked) : terms.length ? found(terms, length + 1)
+    : foldTwins(last.matches, searchCatalog, { script: last.verdict?.script?.[0]?.label, limit: length + 1 }).map(ranked)
+  $('more-matches').inert = !isEncoder() || rows.length <= SHORT
+  $('more-matches').setAttribute('aria-expanded', String(expanded)); $('more-matches').firstChild.textContent = expanded ? 'Fewer matches' : 'More matches'
+  $('find-empty').textContent = `No match named “${query}”`; $('find-empty').hidden = !terms.length || rows.length > 0
+  for (const [i, [match, rank]] of rows.slice(0, length).entries()) {
+    if (isEncoder()) { fragment.append(encoderResult(match, rank, i)); continue }
     const font = catalog.fonts.find(f => f.id === match.family)
     const item = document.createElement('li'); item.className = 'result'
     item.innerHTML = '<div class="result-top"><span class="rank"></span><span class="font-name"><a target="_blank" rel="noopener"></a><span class="font-style pill" title="Preview face; weight and style are not detected">Regular, 400</span></span><span class="result-score"></span></div><input class="result-preview" type="text" maxlength="80" spellcheck="false" autocomplete="off" aria-describedby="preview-error">'
@@ -361,6 +401,8 @@ function renderResults() {
     fragment.append(item)
   }
   $('results').replaceChildren(fragment)
+  mark($('results'), '.font-name a, .font-twins')
+  if (isEncoder()) (window.requestIdleCallback ?? setTimeout)(prefetchCatalogs)
 }
 
 const CATEGORY = { SANS_SERIF: 'Sans serif', SERIF: 'Serif', DISPLAY: 'Display', HANDWRITING: 'Handwriting', MONOSPACE: 'Monospace' }
@@ -381,14 +423,20 @@ const showVerdict = labels => $('result-summary').replaceChildren(...labels.flat
 }))
 
 // One match on one line: rank, linked name, face, ≈ twins, score.
-function matchLine(match, index) {
+function matchLine(match, rank) {
   const { face, score, siblings } = match, line = document.createElement('div'); line.className = 'result-top'
   line.innerHTML = '<span class="rank"></span><span class="font-name"><a target="_blank" rel="noopener"></a><span class="font-style pill"></span></span><span class="result-score"></span>'
-  line.querySelector('.rank').textContent = String(index + 1).padStart(2, '0')
+  line.querySelector('.rank').textContent = String(rank + 1).padStart(2, '0')
   const link = line.querySelector('a'); link.textContent = face.family
   // A Google Fonts family links to its specimen from any shipped catalog it's searched in, All included.
   const url = face.sourceUrl || (searchCatalog.builtin && catalog.previews?.[face.familyId] ? `https://fonts.google.com/specimen/${encodeURIComponent(face.family)}` : null)
   if (url && /^https?:\/\//i.test(url)) { link.href = url; link.textContent += ' ↗' }
+  // All and Other search several sources as one: each match shows its own source's icon after its link, named on hover.
+  const from = (searchCatalog.parts || searchCatalog.sources) && sourceOf(face)
+  if (from) {
+    const mark = document.createElement('span'); mark.className = 'match-source'; mark.title = from.name
+    mark.setAttribute('role', 'img'); mark.setAttribute('aria-label', from.name); mark.append(iconOf(from)); link.after(mark)
+  }
   const style = line.querySelector('.font-style')
   style.textContent = face.styleName || [face.style, face.weight].filter(v => v != null).join(', ')
   style.title = `Matched face${face.weight ? `, weight ${face.weight}` : ''}`
@@ -403,9 +451,10 @@ function matchLine(match, index) {
   value.textContent = score.toFixed(3); value.title = 'Cosine similarity, not certainty'; value.setAttribute('aria-label', `Cosine similarity: ${score.toFixed(3)}`)
   return line
 }
-function encoderResult(match, index) {
+// A row: its match at its rank, previewed as the list's `index`th row.
+function encoderResult(match, rank, index) {
   const { face } = match, item = document.createElement('li'); item.className = 'result'
-  item.append(matchLine(match, index), previewElement(face, previewSources(face), index))
+  item.append(matchLine(match, rank), previewElement(face, previewSources(face), index))
   return item
 }
 // Where a match can be seen, in order: its own font setting the preview text (Google Fonts, or installed), else its
@@ -434,25 +483,57 @@ function previewElement(face, [candidate, ...rest], index) {
   input.readOnly = !text.latin; input.dataset.family = face.family; input.value = text.latin ? chosenText ?? face.family : text.sampleText
   input.style.fontWeight = face.weight ?? 400; input.style.fontStyle = face.style ?? 'normal'
   if (!index && text.latin) input.id = 'preview-text'
-  const subset = index >= SHORT && !face.local && !face.file
-  if (subset) { input.readOnly = true; input.tabIndex = -1; if (text.latin) subsetRows.set(input, face) }
-  ;(subset ? subsetFont(face, input.value) : loadFont(face.id, face)).then(family => { input.style.setProperty('--font-specimen', `"${family}"`); input.style.visibility = '' })
-    .catch(next(input))
+  const subset = index >= SHORT && !face.local && !face.file, show = family => { input.style.setProperty('--font-specimen', `"${family}"`); input.style.visibility = '' }
+  if (subset) { input.readOnly = true; input.tabIndex = -1 }
+  if (subset && text.latin) {
+    // It shows the text chosen as its face loads, else its family's name. Failing before it ever shows, the face gives
+    // way to the next source; once shown, a row keeps its last text.
+    const follow = () => {
+      const typed = chosenText, shown = typed ?? face.family
+      return subsetFont(face, shown).then(family => { if (input.isConnected && chosenText === typed) { input.value = shown; show(family) } }, () => { if (input.style.visibility) next(input)() })
+    }
+    subsetRows.set(input, follow); whenNear(input, follow)
+  } else whenNear(input, () => (subset ? subsetFont(face, input.value) : loadFont(face.id, face)).then(show, next(input)))
   return input
 }
+// Previews load their face as they come within a screen of the view, each row holding its height meanwhile.
+const loads = new WeakMap()
+const nearby = new IntersectionObserver(entries => {
+  for (const { target, isIntersecting } of entries) if (isIntersecting) { nearby.unobserve(target); loads.get(target)() }
+}, { rootMargin: '100% 0px' })
+function whenNear(element, load) { loads.set(element, load); nearby.observe(element) }
 
 // Shipped catalogs, each fetched once, checked against the checksum site.json records for it and read: switching back
 // is instant, and All reuses the ones already read. `received` counts bytes as they arrive, or a read catalog's size.
 const shipped = new Map()
 function readShipped(option, received) {
   if (shipped.has(option.file)) return shipped.get(option.file).then(data => { received(option.bytes); return data })
-  const reading = download(option.file, received, 'Could not load this catalog.').then(async bytes => {
-    if (await sha256(bytes) !== option.sha256) throw new Error('Catalog checksum failed.')
-    return readCatalog(JSON.parse(new TextDecoder().decode(bytes)), catalog)
-  })
+  const reading = fetchVerified(option.file, option.sha256, received, 'Could not load this catalog.', 'Catalog checksum failed.')
+    .then(bytes => owned(readCatalog(JSON.parse(new TextDecoder().decode(bytes)), catalog), option))
   shipped.set(option.file, reading); reading.catch(() => shipped.delete(option.file))
   return reading
 }
+// Once the first matches show, the other shipped catalogs not yet kept download into the store, so choosing one only reads
+// it: reading is left to the choice, as all of them held read take about 100 MB. Only where data is plentiful: a fast
+// connection that saves no data and is no phone's cellular one, or, where the browser cannot tell, a computer's. An embed
+// searches one catalog and fetches no other. Without a store they wait in the browser's HTTP cache.
+let prefetched = false
+function prefetchCatalogs() {
+  const connection = navigator.connection
+  if (prefetched || embedded || (connection ? connection.saveData || connection.effectiveType !== '4g' || connection.type === 'cellular' : !matchMedia('(pointer: fine)').matches)) return
+  prefetched = true
+  for (const option of catalog.catalogs) if (!shipped.has(option.file)) (async () => {
+    const cache = await store, key = keyOf(option.file, option.sha256)
+    if (await cache?.match(key)) return
+    const response = await fetch(option.file, { priority: 'low' })
+    if (response.ok) await (cache ? cache.put(key, response) : response.body.pipeTo(new WritableStream()))
+  })().catch(() => {})
+}
+// The shipped catalog each read face came from, which All and Other keep as they join or cut catalogs: a face of Other
+// names its own source among the catalog's.
+const origins = new WeakMap()
+function owned(data, option) { for (const face of data.faces) origins.set(face, option); return data }
+const sourceOf = face => { const option = origins.get(face); return option?.sources?.find(source => source.id === face.sourceId) ?? option }
 // The catalog being loaded: the address names it before it lands, so a reload in between asks for it again.
 let loading = null
 async function selectCatalog(option, file = null, { focus = true } = {}) {
@@ -548,7 +629,7 @@ window.addEventListener('resize', () => { if ($('catalog-menu').matches(':popove
 function showTwins(note) {
   const tip = $('twins-tip'), list = document.createElement('ul')
   list.append(...JSON.parse(note.dataset.twins).map(name => Object.assign(document.createElement('li'), { textContent: name })))
-  tip.replaceChildren(list)
+  tip.replaceChildren(list); mark(tip, 'li')
   if (!tip.matches(':popover-open')) tip.showPopover()
   const rect = note.getBoundingClientRect(), below = rect.bottom + 6 + tip.offsetHeight <= innerHeight - 12
   place(tip, Math.max(12, Math.min(innerWidth - tip.offsetWidth - 12, rect.left)), below ? rect.bottom + 6 : Math.max(12, rect.top - 6 - tip.offsetHeight))
@@ -557,13 +638,26 @@ function hideTwins() { if ($('twins-tip').matches(':popover-open')) $('twins-tip
 for (const type of ['pointerover', 'focusin']) $('results').addEventListener(type, event => { const note = event.target.closest('.font-twins'); if (note) showTwins(note) })
 for (const type of ['pointerout', 'focusout']) $('results').addEventListener(type, event => { if (event.target.closest('.font-twins') && !event.relatedTarget?.closest?.('.font-twins')) hideTwins() })
 $('results').addEventListener('keydown', event => { if (event.key === 'Escape' && $('twins-tip').matches(':popover-open')) { event.stopPropagation(); hideTwins() } })
-$('more-matches').addEventListener('click', () => { expanded = !expanded; renderResults() })
-// Subset rows follow the edited text once its glyphs load, so they never show a fallback face in between.
+// Unfolding, the new rows show from the list's old end down to the bottom of the view: the list takes its full height at
+// once and only its painting unfolds, so the page's height and scroll never wait on the motion. Folding, More matches stays
+// where it was pressed.
+$('more-matches').addEventListener('click', () => {
+  const list = $('results'), button = $('more-matches'), height = list.offsetHeight, at = button.getBoundingClientRect().top
+  expanded = !expanded; renderResults()
+  if (!expanded) { scrollBy({ top: button.getBoundingClientRect().top - at, behavior: 'instant' }); return }
+  const full = list.offsetHeight, end = Math.min(full, innerHeight - list.getBoundingClientRect().top)
+  if (end > height && !matchMedia('(prefers-reduced-motion: reduce)').matches)
+    list.animate([{ clipPath: `inset(0 0 ${full - height}px)` }, { clipPath: `inset(0 0 ${full - end}px)` }], { duration: 300, easing: 'cubic-bezier(.2, 0, 0, 1)' })
+})
+$('find-input').addEventListener('input', renderResults)
+$('find-input').addEventListener('keydown', event => { if (event.key === 'Escape' && event.target.value) { event.preventDefault(); event.target.value = ''; renderResults() } })
+// Subset rows follow the edited text once its glyphs load, so they never show a fallback face in between, each as it
+// comes near.
 const subsetRows = new Map()
 let subsetTimer = 0
-function followText(text) {
+function followText() {
   clearTimeout(subsetTimer)
-  subsetTimer = setTimeout(() => { for (const [input, face] of subsetRows) { const shown = text ?? face.family; subsetFont(face, shown).then(family => { if (!input.isConnected || chosenText !== text) return; input.style.setProperty('--font-specimen', `"${family}"`); input.value = shown }).catch(() => {}) } }, 250)
+  subsetTimer = setTimeout(() => { for (const [input, follow] of subsetRows) whenNear(input, follow) }, 250)
 }
 function updatePreview(input) {
   const typed = input.value.trim(), text = typed || TEXT
@@ -577,7 +671,7 @@ function updatePreview(input) {
     other.setAttribute('aria-invalid', 'false')
     if (other !== input) other.value = chosenText ?? other.dataset.family
   }
-  followText(chosenText)
+  followText()
 }
 function point(event) {
   const r = source.getBoundingClientRect()
@@ -806,6 +900,26 @@ async function download(path, received, failure = `Could not load ${path}.`) {
   if (!response.ok) throw new Error(failure)
   return new Response(response.body.pipeThrough(new TransformStream({ transform(chunk, stream) { received(chunk.byteLength); stream.enqueue(chunk) } }))).arrayBuffer()
 }
+// The model and catalogs stay in Cache Storage under the checksum site.json records for each, so a visit downloads only
+// what changed: the HTTP cache alone sends all of them again after any deploy, as GitHub Pages dates every file by it.
+// Kept bytes are checked as downloaded ones are; where the browser refuses a store (an insecure address, some private
+// windows) every visit downloads.
+const store = globalThis.caches?.open('gpu-font').catch(() => null) ?? Promise.resolve(null)
+const keyOf = (path, checksum) => `${path}?${checksum}`
+async function fetchVerified(path, checksum, received, failure, mismatch) {
+  const cache = await store, key = keyOf(path, checksum)
+  const kept = await cache?.match(key).then(response => response?.arrayBuffer()).catch(() => null)
+  if (kept && await sha256(kept) === checksum) { received(kept.byteLength); return kept }
+  const bytes = await download(path, received, failure)
+  if (await sha256(bytes) !== checksum) throw new Error(mismatch)
+  cache?.put(key, new Response(bytes)).catch(() => {})
+  return bytes
+}
+// Kept files site.json no longer names are dropped.
+async function prune(checksums) {
+  const cache = await store
+  for (const request of await cache?.keys() ?? []) if (!checksums.has(new URL(request.url).search.slice(1))) cache.delete(request)
+}
 async function initialize() {
   try {
     // site.json names the model and catalogs in the repository; nothing is built or copied. The model and first catalog
@@ -813,18 +927,17 @@ async function initialize() {
     const data = JSON.parse(new TextDecoder().decode(await download('./site.json', () => {})))
     const option = data.catalogs?.[0], total = data.modelBytes + (option ? option.bytes : 0), bar = $('loading')
     const received = total ? n => { bar.max = total; bar.value += n; $('loading-percent').textContent = `${Math.floor(bar.value / total * 100)}%` } : () => {}
-    const catalogBytes = option && download(option.file, received, 'Could not load the initial catalog.')
+    prune(new Set([data.modelSha256, ...(data.catalogs ?? []).map(each => each.sha256)])).catch(() => {})
+    const catalogBytes = option && fetchVerified(option.file, option.sha256, received, 'Could not load the initial catalog.', 'Catalog checksum failed.')
     catalogBytes?.catch(() => {}) // Reported when awaited, after the model's own checks.
-    const modelBytes = await download(data.model, received), artifact = JSON.parse(new TextDecoder().decode(modelBytes))
-    if (await sha256(modelBytes) !== data.modelSha256) throw new Error('Model checksum failed.')
+    const modelBytes = await fetchVerified(data.model, data.modelSha256, received, `Could not load ${data.model}.`, 'Model checksum failed.')
+    const artifact = JSON.parse(new TextDecoder().decode(modelBytes))
     model = readNetwork(artifact); heads = readHeads(artifact); catalog = data
     if (isEncoder()) {
       if (await preparationHash(artifact.preparation) !== data.preparationSha256) throw new Error('Preparation checksum failed.')
-      const bytes = await catalogBytes, hash = await sha256(bytes)
-      if (hash !== option.sha256) throw new Error('Catalog checksum failed.')
-      const first = readCatalog(JSON.parse(new TextDecoder().decode(bytes)), data)
+      const first = owned(readCatalog(JSON.parse(new TextDecoder().decode(await catalogBytes)), data), option)
       shipped.set(option.file, Promise.resolve(first)); searchCatalog = { ...option, ...first, builtin: true }
-      $('catalog-control').hidden = false
+      $('catalog-control').hidden = false; $('find').hidden = false
       // My fonts, indexed on the Catalogs page, join the menu once they fit this model; until then the menu links there.
       const stored = (await readMyFonts())?.catalog, mine = stored?.encoderSha256 === data.modelSha256 && stored.preparationSha256 === data.preparationSha256
         ? { id: 'my-fonts', name: 'My fonts', data: stored, families: new Set(stored.faces.map(f => f.familyId)).size } : null

@@ -1,4 +1,4 @@
-"""The previews stored with the site: a 64-pixel black-and-white picture of every face of a shipped catalog but Google
+"""The previews stored with the site: a 64-pixel picture in four greys of every face of a shipped catalog but Google
 Fonts' (whose faces the page sets in their own font) and DaFont's (whose own stored previews the page loads from its site),
 filed under the SHA-1 of the face id as previews.mjs finds it, so no catalog carries an address. Each shows its family's
 name in the face, so no two rows repeat one phrase: Adobe Fonts' is the tester capture of it (a word line where the face
@@ -17,6 +17,7 @@ from fontTools.ttLib import TTFont
 ROOT = Path(__file__).resolve().parents[1]
 OUT, REPORT = ROOT / 'previews', ROOT / 'bench/previews.json'
 HEIGHT, WIDTH, MARGIN = 64, 1280, .12  # a row's line at 2x; wider than any row is never seen; white above and below the ink
+GREYS = 4  # 0, 85, 170 and 255: two bits a pixel
 # Adobe Fonts' captures: the snapshot its catalog was compiled from, and the live archive, which holds the name lines.
 ADOBE = [ROOT / '.data/previews/catalog-v1/adobe-fonts-snapshot', ROOT / '.data/previews/catalog-v1/adobe-fonts']
 RECIPES = ['name-v1', 'words-a-v1', 'words-b-v1', 'latin-lower-v1', 'latin-upper-v1', 'provided-v1', 'digits-v1']  # the line shown, first found
@@ -122,8 +123,11 @@ def picture(item):
         if faint:  # its strokes thickened by the reduction to come, so each keeps at least a pixel
             image = image.filter(ImageFilter.MinFilter(2 * round(image.height / HEIGHT / 2) + 1))
         image = image.resize((max(1, round(image.width * HEIGHT / image.height)), HEIGHT), Image.LANCZOS)
-        image = image.crop((0, 0, min(image.width, WIDTH), HEIGHT)); level = cut(image, faint)
-        image = image.point(lambda v: 255 if v >= level else 0)
+        image = image.crop((0, 0, min(image.width, WIDTH), HEIGHT)); darkest = image.getextrema()[0]
+        if darkest == 255: raise ValueError('draws nothing')
+        # Four greys from the darkest pixel, black, to white: the letters keep their smooth edges for under twice the bytes of
+        # black and white (sixteen greys take three times), and a faint face reads as dark as any.
+        image = image.point(lambda v: round(max(0, v - darkest) / (255 - darkest) * (GREYS - 1)) * 255 // (GREYS - 1))
         data = io.BytesIO(); image.save(data, 'WEBP', lossless=True, quality=100, method=6)
         target = path(face_id); target.parent.mkdir(parents=True, exist_ok=True)
         if not target.exists() or target.read_bytes() != data.getvalue(): target.write_bytes(data.getvalue())
