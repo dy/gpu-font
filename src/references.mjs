@@ -24,14 +24,15 @@ export function plan(ctx, family) {
   return out
 }
 
-// One reference line at `size`, black on white, as the reference renders store it: the red channel as gray.
-export function drawLine(ctx, family, text, size = SIZE) {
-  const canvas = ctx.canvas
-  ctx.font = `${size}px "${family}"`
+// One reference line at `size`, black on white, as the reference renders store it: the red channel as gray. A `face`
+// ({ weight, style }) draws that face of the family, as the same-text stage does; the references draw the family's default.
+export function drawLine(ctx, family, text, size = SIZE, face = {}) {
+  const canvas = ctx.canvas, font = `${face.style ?? 'normal'} ${face.weight ?? 400} ${size}px "${family}"`
+  ctx.font = font
   const b = ctx.measureText(text)
   canvas.width = Math.max(1, Math.ceil(b.actualBoundingBoxLeft + b.actualBoundingBoxRight) + PAD * 2)
   canvas.height = Math.max(1, Math.ceil(b.actualBoundingBoxAscent + b.actualBoundingBoxDescent) + PAD * 2)
-  ctx.fillStyle = 'white'; ctx.fillRect(0, 0, canvas.width, canvas.height); ctx.fillStyle = 'black'; ctx.font = `${size}px "${family}"`
+  ctx.fillStyle = 'white'; ctx.fillRect(0, 0, canvas.width, canvas.height); ctx.fillStyle = 'black'; ctx.font = font
   ctx.fillText(text, PAD + b.actualBoundingBoxLeft, PAD + b.actualBoundingBoxAscent)
   const image = ctx.getImageData(0, 0, canvas.width, canvas.height)
   for (let p = 0; p < image.data.length; p += 4) image.data[p + 1] = image.data[p + 2] = image.data[p]

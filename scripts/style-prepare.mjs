@@ -1,6 +1,10 @@
 // Persistent browser preparation for on-the-fly training: the exact prepareLine, binary frames over stdio.
 // In: u32 width, u32 height, width*height grayscale bytes. Out: u32 count, then per window u32 width, u32 height, bytes.
+// The sampler is the argument: `windows` (the default, the encoder's up to three windows) or `line` (one strip, a reader's).
 import { prepareLine } from '../src/line.mjs'
+
+const sampler = process.argv[2] ?? 'windows'
+if (!['windows', 'line'].includes(sampler)) throw new Error(`Unknown sampler ${sampler}`)
 
 const u32 = n => { const b = Buffer.alloc(4); b.writeUInt32LE(n); return b }
 let pending = Buffer.alloc(0)
@@ -16,7 +20,7 @@ process.stdin.on('data', chunk => {
     pending = pending.subarray(8 + size)
     // A frame the preparation rejects yields no windows; the stream stays alive for the next frame.
     let windows = []
-    try { windows = prepareLine({ width, height, data }, { deskew: true, sampler: 'windows' }).windows }
+    try { windows = prepareLine({ width, height, data }, { deskew: true, sampler }).windows }
     catch (error) { process.stderr.write(`style-prepare: ${width}x${height} rejected: ${error.message}\n`) }
     out.push(u32(windows.length))
     for (const w of windows) out.push(u32(w.width), u32(w.height), Buffer.from(Uint8Array.from(w.pixels, p => Math.round(p * 255))))

@@ -54,6 +54,7 @@ def pack(role):
     if role == 'absent':
         indexed = {image['id'] for image in read(ROOT/'bench/whatfontis.json')['images']}
         absent = [label for label in labels if label['id'] not in indexed]
+        if len(absent) < ABSENT: raise ValueError(f'Only {len(absent)} pictures are of fonts no shipped catalog holds: the absent slice was drawn before the catalogs indexed them and stays as frozen (.data/style/photos-absent.*)')
         chosen = [(label, None) for label in random.Random(20260924).sample(absent, ABSENT)]
     for label in labels if role != 'absent' else []:
         family = families.get(normalize(family_of(label['family'])))

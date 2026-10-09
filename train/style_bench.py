@@ -2,7 +2,8 @@
 
 Families: 300 seen during training, the 301 development families (checkpoint selection) and the 300 final
 families (held out: a swapped catalog). Faces: default, bold and italic where they exist. Frozen before any
-style training result; later commands refuse changed pins or pixels.
+style training result; later commands refuse changed pins or pixels. `repin` moves the pins to changed modules only
+when preparing the stored renders again gives the very same pixels.
 """
 import argparse
 import base64
@@ -12,6 +13,7 @@ import json
 import random
 import shutil
 import subprocess
+import time
 from collections import Counter
 from pathlib import Path
 from concurrent.futures import ProcessPoolExecutor
@@ -179,12 +181,13 @@ def pack(name='bench'):
     print('Packed benchmark', len(samples), 'queries', len(windows), 'windows', flush=True)
 
 
-def sketches():
+def sketches(refresh=False):
     """Frozen synthetic hand-drawn slice: clean Latin development and test renders (32 px and larger) redrawn by the
-    sketch transform with fixed seeds. The same transform generates training views, so this bounds real drawings from above."""
+    sketch transform with fixed seeds. The same transform generates training views, so this bounds real drawings from above.
+    `refresh` draws it again for `repin`, which keeps it only when its pixels come out as they were."""
     from train.style_data import sketch
     target = OUT/'bench-sketch.json'
-    if target.exists(): raise ValueError('Sketch slice already frozen')
+    if target.exists() and not refresh: raise ValueError('Sketch slice already frozen')
     data = read(OUT/'bench-plan.json'); rendered = read(OUT/'bench-browser.json'); raw = (OUT/'bench-browser.u8').read_bytes()
     if rendered['planSha256'] != sha(OUT/'bench-plan.json') or rendered['sha256'] != sha(OUT/'bench-browser.u8'): raise ValueError('Stale browser renders')
     chosen = [i for i, q in enumerate(data['queries']) if q['role'] in ('development', 'test') and q['script'] == 'Latn' and q['condition'] == 'clean' and q['size'] >= 32]
@@ -205,6 +208,37 @@ def sketches():
     validate_shard(manifest, len(pixels)); save(target, manifest); print('Sketch slice', len(samples), 'queries', flush=True)
 
 
+def repin(name, reason):
+    """A pinned module changed but prepares as before (a sampler added beside the one the benchmark uses): the plan's pins
+    move to the modules as they are now, the renders note the plan's new hash, the benchmark is prepared again from the
+    stored renders, for `bench` the sketch slice too, and each file records the move in its `repins` (file, from, to,
+    date, reason), the manifests' with the evidence: what was prepared and the pixel hash that came out as it was. Any
+    pixel different, or any step failing, and every file goes back; the error then says the preparation itself changed."""
+    plan_path = OUT/f'{name}-plan.json'; renders = stage(name)/'.data/style/bench-browser.json'
+    targets = [OUT/f'{name}.json'] + ([OUT/'bench-sketch.json'] if name == 'bench' and (OUT/'bench-sketch.json').exists() else [])
+    plan = read(plan_path); moved = [(p, h, sha(ROOT/p)) for p, h in plan['pins'].items() if sha(ROOT/p) != h]
+    if not moved: print('Pins unchanged', flush=True); return []
+    old = {path: read(path) for path in [plan_path, renders] + targets}; kept = {path: path.read_bytes() for path in old}
+    if len(old[renders]['images']) != len(plan['queries']):  # another benchmark's renders written here: nothing to prepare again from
+        raise ValueError(f"{renders} describes {len(old[renders]['images'])} renders for a plan of {len(plan['queries'])} queries: these are not this benchmark's renders, so its pins can move only by hand, with other evidence")
+    entries = lambda evidence: [{'file': p, 'from': was, 'to': now, 'date': time.strftime('%Y-%m-%d'), 'reason': f'{reason} {evidence}'} for p, was, now in moved]
+    try:
+        plan['pins'] = {p: sha(ROOT/p) for p in PINS}; plan['repins'] = plan.get('repins', []) + entries("The plan's text, faces and sizes are as they were."); save(plan_path, plan)
+        rendered = read(renders); rendered['planSha256'] = sha(plan_path); save(renders, rendered)
+        pack(name)
+        if len(targets) > 1: sketches(refresh=True)
+        for path in targets:
+            was, manifest = old[path], read(path)
+            if manifest['sha256'] != was['sha256']: raise ValueError(f'The preparation changed, not only its files: {path.name} must be rendered and frozen anew')
+            evidence = f"Prepared again from the stored renders: {len(manifest['samples'])} queries, {len(manifest['windows'])} windows, pixels sha256 {manifest['sha256']} unchanged."
+            manifest['repins'] = was.get('repins', []) + entries(evidence); save(path, manifest)
+    except BaseException:
+        for path, data in kept.items(): path.write_bytes(data)
+        raise
+    print('Repinned', name, 'to', ', '.join(p for p, _, _ in moved), flush=True)
+    return [p for p, _, _ in moved]
+
+
 def load(name='bench'):
     manifest = read(OUT/f'{name}.json'); path = OUT/f'{name}.u8'
     for file, expected in manifest['pins'].items():
@@ -215,11 +249,14 @@ def load(name='bench'):
 
 
 if __name__ == '__main__':
-    p = argparse.ArgumentParser(); p.add_argument('command', choices=['plan', 'instances', 'render', 'pack', 'sketches']); p.add_argument('--workers', type=int, default=8); p.add_argument('--references', action='store_true')
-    p.add_argument('--name', default='bench', help='bench, catalog, or a rendered stage such as catalog-webkit (scripts/style-bench-engines.mjs)'); a = p.parse_args()
+    p = argparse.ArgumentParser(); p.add_argument('command', choices=['plan', 'instances', 'render', 'pack', 'sketches', 'repin']); p.add_argument('--workers', type=int, default=8); p.add_argument('--references', action='store_true')
+    p.add_argument('--name', default='bench', help='bench, catalog, or a rendered stage such as catalog-webkit (scripts/style-bench-engines.mjs)')
+    p.add_argument('--reason', help='for repin: what changed in the pinned module and why its output is the same'); a = p.parse_args()
     if a.command in ('plan', 'instances') and a.name not in ('bench', 'catalog'): raise ValueError('Only bench and catalog are planned here')
+    if a.command == 'repin' and not a.reason: raise SystemExit('repin needs --reason: what changed and why the output is the same')
     if a.command == 'plan': plan(a.name)
     elif a.command == 'instances': instances(a.workers, a.references, a.name)
     elif a.command == 'render': render(a.name)
     elif a.command == 'sketches': sketches()
+    elif a.command == 'repin': repin(a.name, a.reason)
     else: pack(a.name)

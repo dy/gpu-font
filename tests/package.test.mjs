@@ -3,7 +3,7 @@ import assert from 'node:assert/strict'
 import { execFileSync } from 'node:child_process'
 import { readFile } from 'node:fs/promises'
 import { fileURLToPath } from 'node:url'
-import { catalogs } from '../src/match.mjs'
+import { catalogs, READER } from '../src/match.mjs'
 
 const root = new URL('../', import.meta.url), relative = url => url.href.slice(root.href.length)
 
@@ -18,7 +18,7 @@ async function reachable(path, seen = new Set()) {
 test('the npm package holds the entry, every module it imports, its types and every catalog it names, and no other code', async () => {
   const [{ files }] = JSON.parse(execFileSync('npm', ['pack', '--dry-run', '--json', '--ignore-scripts'], { cwd: fileURLToPath(root), encoding: 'utf8' }))
   const packed = new Set(files.map(f => f.path)), modules = await reachable('src/match.mjs')
-  const data = [new URL('models/encoder/encoder.json', root), ...Object.values(catalogs)].map(relative)
+  const data = [new URL('models/encoder/encoder.json', root), READER, ...Object.values(catalogs)].map(relative)
   for (const path of [...modules, 'src/match.d.ts', ...data, 'README.md', 'LICENSE', 'package.json']) assert.ok(packed.has(path), `${path} is not packed`)
   assert.deepEqual([...packed].filter(path => path.endsWith('.mjs')).sort(), [...modules].sort())
 })

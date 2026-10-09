@@ -8,14 +8,14 @@
    "bytes": 6020412
   },
   "github": {
-   "faces": 10873,
-   "pictures": 10873,
-   "bytes": 14491928
+   "faces": 10865,
+   "pictures": 10865,
+   "bytes": 14482118
   },
   "debian": {
-   "faces": 4282,
-   "pictures": 4282,
-   "bytes": 6173796
+   "faces": 4281,
+   "pictures": 4281,
+   "bytes": 6172424
   },
   "fontlibrary": {
    "faces": 3969,
@@ -27,10 +27,15 @@
    "pictures": 0,
    "bytes": 0
   },
+  "pangram-pangram": {
+   "faces": 351,
+   "pictures": 351,
+   "bytes": 575994
+  },
   "other": {
-   "faces": 2026,
-   "pictures": 2025,
-   "bytes": 2250304
+   "faces": 2036,
+   "pictures": 2035,
+   "bytes": 2258258
   }
  },
  "missing": [

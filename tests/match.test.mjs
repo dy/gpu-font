@@ -28,6 +28,8 @@ test('createMatcher ranks exactly as the modules it wraps, best first, and retur
   assert.ok(matches.length > 5 && matches.every((m, i) => !i || m.score <= matches[i - 1].score) && typeof matches[0].face.family === 'string')
   assert.deepEqual(await matcher.match(image(false)), [])
   assert.equal(matcher.threshold, model.threshold, 'The matcher exposes the model\'s rejection threshold, null when it ships none')
+  assert.deepEqual(await matcher.embed(image()), embedding, 'embed gives the crop\'s embedding, the one match ranked by')
+  assert.equal(await matcher.embed(image(false)), null); assert.equal(typeof matcher.encoder.project, 'function')
   matcher.destroy()
 })
 

@@ -1,12 +1,12 @@
 import { prepare, frame } from './prepare.mjs'
-import { prepareInput } from './input.mjs'
+import { prepareInput, prepareStrip } from './input.mjs'
 
 // Experimental line preparation. Keep the deployed sampler unchanged until evaluated.
 export function prepareLine(image, options = {}) {
   const { width = 128, height = 48, windows = 3, background = 255, deskew = false, sampler = 'groups' } = options
   if (!Number.isInteger(width) || width < 4 || width > 128 || !Number.isInteger(height) || height < 4 || height > 48 || !Number.isInteger(windows) || windows < 1 || windows > 3) throw new RangeError('Invalid line geometry')
   if (typeof deskew !== 'boolean' || (options.angle != null && (!Number.isFinite(options.angle) || Math.abs(options.angle) > 8))) throw new RangeError('Invalid line angle')
-  if (!['groups', 'windows'].includes(sampler)) throw new RangeError('Invalid line sampler')
+  if (!['groups', 'windows', 'line'].includes(sampler)) throw new RangeError('Invalid line sampler')  // line: the whole line as one strip, for a reader
   if (options.regions != null && (!Array.isArray(options.regions) || !options.regions.length || options.regions.length > windows || options.regions.some(points => !Array.isArray(points) || points.length !== 4 || points.some(p => !Array.isArray(p) || p.length !== 2 || !p.every(Number.isFinite))))) throw new RangeError('Invalid word regions')
   const found = prepare(image, { width: 4, height: 4, padding: 0, background })
   if (found.status !== 'ok') return { status: found.status, windows: [], angle: 0 }
@@ -54,6 +54,7 @@ function prepareFound(image, found, options) {
     angle = options.angle
   }
   if (!angle && sampler === 'windows') return { ...prepareInput(image, { width, height, windows, background }), angle }
+  if (!angle && sampler === 'line') return { ...prepareStrip(image, { height, background }), angle }
   const a = angle * Math.PI / 180, c = Math.cos(a), s = Math.sin(a)
   const w = angle ? Math.ceil(image.width * c + image.height * Math.abs(s)) : image.width
   const h = angle ? Math.ceil(image.height * c + image.width * Math.abs(s)) : image.height
@@ -80,8 +81,8 @@ function prepareFound(image, found, options) {
     if (ink(value)) { columns[x] = 1; top = Math.min(top, y); bottom = Math.max(bottom, y) }
   }
   if (bottom < top) return { status: 'blank', windows: [], angle }
-  if (sampler === 'windows') {
-    const input = prepareInput({ width: w, height: h, data }, { width, height, windows, background })
+  if (sampler !== 'groups') {
+    const input = sampler === 'line' ? prepareStrip({ width: w, height: h, data }, { height, background }) : prepareInput({ width: w, height: h, data }, { width, height, windows, background })
     return { ...input, angle, windows: input.windows.map(window => ({ ...window, ...originalRegion(window.rect) })) }
   }
   const runs = []

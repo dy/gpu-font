@@ -39,7 +39,7 @@ def queryable(alphabet):
 def plan(held_out=False):
     """`held_out`: only the open families the fixed rule keeps out of training (train.style_fonts.open_role), for a model that trained on the rest."""
     inventory = read(ROOT/'bench/open-fonts.json'); alphabets = read(ROOT/inventory['store']/'alphabets.json'); indexed = shipped_faces()
-    families = [f for f in inventory['families'] if not f.get('excluded') and queryable(alphabets.get(f['id'], {}).get('Latn', '')) and (not held_out or open_role(f['id']) == 'held-out')]
+    families = [f for f in inventory['families'] if not f.get('excluded') and queryable(alphabets.get(f['id'], {}).get('Latn', '')) and (not held_out or open_role(f['id'], f.get('design')) == 'held-out')]
     rng = random.Random(SEED); queries = []; instances = {}
     for family in sorted(families, key=lambda f: f['id']):
         face = next((x for x in family['faces'] if x['path'] == family['selected']), None)

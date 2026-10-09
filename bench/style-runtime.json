@@ -1,15 +1,15 @@
 {
-  "encoderSha256": "0ac8707ef54e1a1f0f6759e8a57d42ef6797c24f5009a7454b2c7d718de74d37",
+  "encoderSha256": "6e35d208a2549812be98f0a0dac6e6eaabca5528d4295086c62d4db5c8476076",
   "dimensions": 64,
   "hardware": "Apple M4 Max",
-  "cpuError": 2.0116567611694336e-7,
-  "gpuError": 2.682209014892578e-7,
-  "embeddingError": 4.140907034905217e-7,
+  "cpuError": 1.0058283805847168e-7,
+  "gpuError": 4.172325134277344e-7,
+  "embeddingError": 4.865969727707586e-7,
   "timing": {
     "adapter": "metal-3",
-    "initializationMs": 23.30000001192093,
-    "warmWindowP50Ms": 1.9000000059604645,
-    "warmWindowP95Ms": 2.199999988079071,
+    "initializationMs": 26.900000035762787,
+    "warmWindowP50Ms": 0.8999999761581421,
+    "warmWindowP95Ms": 1.800000011920929,
     "samples": 20,
     "width": 128,
     "height": 48
@@ -18,23 +18,23 @@
     "text": "Quiet rivers flow",
     "font": "56px serif",
     "median": "of 9 WebGPU and 3 CPU matches after one warm-up",
-    "webgpuMs": 15.199999988079071,
-    "cpuMs": 1102.3999999761581
+    "webgpuMs": 16.099999964237213,
+    "cpuMs": 1119
   },
   "payload": [
     {
       "path": "models/encoder/encoder.json",
-      "sha256": "0ac8707ef54e1a1f0f6759e8a57d42ef6797c24f5009a7454b2c7d718de74d37",
-      "bytes": 511867,
-      "gzipBytes": 335427,
-      "brotliBytes": 315372
+      "sha256": "6e35d208a2549812be98f0a0dac6e6eaabca5528d4295086c62d4db5c8476076",
+      "bytes": 511939,
+      "gzipBytes": 335687,
+      "brotliBytes": 315497
     },
     {
       "path": "models/encoder/google-fonts.json",
-      "sha256": "b52753fa4261d314460518f73568a44a5576348024db69d377ca61c988c03e43",
-      "bytes": 3592862,
-      "gzipBytes": 881477,
-      "brotliBytes": 719871
+      "sha256": "8cea7919d41675dce2ecc39891d95088dca8e0b66a691d44bfaecf08710d3ca1",
+      "bytes": 3592819,
+      "gzipBytes": 880084,
+      "brotliBytes": 717923
     },
     {
       "path": "src/network.mjs",
@@ -66,19 +66,19 @@
     },
     {
       "path": "src/input.mjs",
-      "sha256": "2cf5262269f9a5fda3504da2f7b83d16bbe4fe8aba88f78dfac42405b7476af4",
-      "bytes": 2492,
-      "gzipBytes": 1041,
-      "brotliBytes": 903
+      "sha256": "eef4bd7ba0b7f30194b2f5bce69c36ed6827fd3fad260ec1a38790e517cbac1b",
+      "bytes": 3909,
+      "gzipBytes": 1292,
+      "brotliBytes": 1115
     },
     {
       "path": "src/line.mjs",
-      "sha256": "8d5dd4c551eed118a2f341d33bd24b5790efce5b4dba3301111bc3b1eab62e14",
-      "bytes": 8598,
-      "gzipBytes": 2828,
-      "brotliBytes": 2516
+      "sha256": "92c88cad8f6fa39c386fc8399fc88635f6f0f2b73630e3d8894285fcd716c1e7",
+      "bytes": 8863,
+      "gzipBytes": 2909,
+      "brotliBytes": 2592
     }
   ],
-  "componentBytes": 4160576,
+  "componentBytes": 4162287,
   "scope": "Existing CPU/Metal convolution kernels with native encoder outputs. Single-window projection timing excludes image preparation and catalog search; match timing is one whole match in Chromium through createMatcher. Bytes include encoder, catalog and existing inference/preparation modules; include catalog parsing/ranking; exclude demo and optional font previews."
 }

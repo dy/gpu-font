@@ -124,7 +124,7 @@ SOURCES += [{'source': 'league-of-moveable-type', 'licence': 'OFL-1.1', 'include
 # Families from open catalogues (Velvetyne, Collletttivo, Uncut, Font Library), after every source above:
 # pinned to their designers' repositories by scripts/open_releases.py, or a release file on a site.
 SOURCES += [{'source': row['source'], 'licence': row['licence'], 'include': row['include'], 'listed': True,
-             **{key: row[key] for key in ('url', 'files', 'format', 'folder', 'page') if key in row},
+             **{key: row[key] for key in ('url', 'files', 'format', 'folder', 'page', 'design') if key in row},
              **({'commit': row['commit']} if row.get('format') == 'git' else {})}
             for row in json.loads((ROOT / 'bench/open-releases.json').read_text())['releases'] if row.get('include')]
 # Fontshare publishes its whole catalogue through a public API. Its font files carry
@@ -350,6 +350,12 @@ def split_collections(members):
             yield f"{PurePosixPath(name).with_suffix('')}-{index}{'.otf' if font.sfntVersion == 'OTTO' else '.ttf'}", out.getvalue()
 
 
+def listing_extra(spec):
+    """What a family listed on a page carries: the page it links to and, where the listing names it, its design, the unit
+    that stays whole when families are split for training (a foundry's widths and cuts of one design are twins by design)."""
+    return {**({'sourceUrl': spec['page']} if spec.get('page') else {}), **({'design': spec['design']} if spec.get('design') else {})}
+
+
 def decode_webfonts(members):
     """WOFF and WOFF2 files are fonts compressed for browsers; each is decoded to the font it holds."""
     from fontTools.ttLib import TTFont
@@ -517,7 +523,7 @@ def main(long_tail=True):
                     item = {'path': relative, 'size': len(content), 'sha': corpus.blob(content)}
                     if not (name := family_name(target)): print(f'{relative}: unreadable, left out'); continue
                     # A family from a listing links to the page that lists it (collletttivo.it/typefaces/ribes/), not to its source's home.
-                    if claim(spec['source'], name): add(spec['source'], name, {'spec': spec, 'items': [item], 'licences': licences, **({'extra': {'sourceUrl': spec['page']}} if spec.get('page') else {})})
+                    if claim(spec['source'], name): add(spec['source'], name, {'spec': spec, 'items': [item], 'licences': licences, **({'extra': extra} if (extra := listing_extra(spec)) else {})})
         # Fontsource last: a family any source above or Google Fonts carries is taken from there.
         for name, group in fontsource_groups(google_names | set(owners)):
             if claim('fontsource', name): add('fontsource', name, group)

@@ -8,7 +8,7 @@ The requirements: the original font in the top five from 5–10 characters; any 
 
 Renderer noise sets the resolution. Re-rendering one face with a third-pixel shift and its hinting removed moves it by a median 0.0088 (95th percentile 0.0148, 300 faces). Faces closer than the median are **twins**, pairwise and never chained: 483 of 1,973 Latin-capable families have one. Lora and Parastoo are 0.0012 apart; Roboto, Vazirmatn and Heebo 0.0035. Weights 100 apart in one file differ by a median 0.0157, so this resolution cannot separate adjacent weights; weight is scored with a ±100 tolerance.
 
-Since the student's release the teacher takes every collected font file as well as Google's: `train/style_fonts.py` lists Google's families from bench/corpus.json and the open ones from bench/open-fonts.json with their letters, an open face names its store so the renderers find its file, and open faces come after Google's in faces.json so every stored benchmark index keeps its face. An open family's role is a fixed rule, not a drawn split: one in ten by the hash of its id is `held-out` (`open_role`), a role no training run names, so a model trained on the rest still has an open read (`train.style_open plan --held-out`), whatever is collected later. Open families have no Google taxonomy, and the category and tag losses already skip a family without labels. They brought 26 scripts the Google set lacked (48 in all), so a warm start carries a checkpoint's script and tag rows over by label and lets new labels start fresh (`adapt_heads`).
+Since the student's release the teacher takes every collected font file as well as Google's: `train/style_fonts.py` lists Google's families from bench/corpus.json and the open ones from bench/open-fonts.json with their letters, an open face names its store so the renderers find its file, and open faces come after Google's in faces.json so every stored benchmark index keeps its face. An open family's role is a fixed rule, not a drawn split: one in ten by the hash of its id is `held-out` (`open_role`; a variable twin's id, `-variable` or `-vf`, hashes as its family's, so one design never splits), a role no training run names, so a model trained on the rest still has an open read (`train.style_open plan --held-out`), whatever is collected later. Open families have no Google taxonomy, and the category and tag losses already skip a family without labels. They brought 26 scripts the Google set lacked (48 in all), so a warm start carries a checkpoint's script and tag rows over by label and lets new labels start fresh (`adapt_heads`).
 
 The distance recovers near-duplicates and derivatives exactly. Beyond the nearest twenty designs it stops tracking perceived style (Bodoni Moda ranks 171st for Playfair Display), so broad style classes come from Google's own taxonomy: METADATA categories and the weighted `tags/all/families.csv` classes at the pinned commit.
 
@@ -32,7 +32,7 @@ Each batch holds 32 faces and, for each, one of its sixteen nearest designs, two
 
 `train/style_bench.py` froze the evaluation before any style result: 9,409 Chromium canvas renders of static instances (so optical sizing cannot change a face), each random 5–10 characters: 300 families seen in training, the 301 development families that select checkpoints, and the 300 final families held out as a swapped catalog. Default, bold and italic faces; lower, upper, title and mixed case; one other-script query per face where the family has one; 1,426 degraded (75% size, JPEG 70) and 1,405 dark-mode copies; and a Hanzi slice of 406 queries. A separate synthetic slice of 2,214 sketches applies the training sketch transform, with fixed seeds, to clean Latin development and test renders at 32 px and above: it bounds real drawings from above.
 
-Its dependency pins have moved only when preparation output was verified identical on every stored render: once for `scripts/corpus-prepare.mjs` (input validation), then for `src/prepare.mjs`, `src/input.mjs` and `src/line.mjs` (crop edges, below). Each move is a `repins` entry in the manifest, with its evidence.
+Its dependency pins have moved only when preparation output was verified identical on every stored render: once for `scripts/corpus-prepare.mjs` (input validation), then for `src/prepare.mjs`, `src/input.mjs` and `src/line.mjs` (crop edges, below), and once more for `src/line.mjs` and `src/input.mjs` when the line reader's `line` sampler was added beside `windows` ([reader.md](reader.md)): the catalog benchmark's 27,703 renders prepared again to the same pixels (`train.style_bench repin`), and the frozen benchmark, whose own render manifest was found overwritten by the catalog's, moved on that proof. Each move is a `repins` entry in the manifest, with its evidence.
 
 A model trained on every family cannot be read on held-out families, so the same planner builds a catalog benchmark (`--name catalog`, its own text seed) over all 2,004 families: a validation role of 6,852 queries (default face, Latin lower and title, a degraded copy, one native line) that selects checkpoints of whole-catalog runs, and a test role of 20,851 queries in the frozen recipe, read once per released model. `train.style final`, `breakdown` and `deploy` measure a run on the benchmark its training roles allow.
 
@@ -208,6 +208,24 @@ The harder views cost the trained-on photographs three points for half the run, 
 
 Two reads changed with it, for both models alike. A row of a family the teacher finds indistinguishable from the true one now counts as right in every read (`twins.json`, written by `train.style twins`; `rankOf` in scripts/photos.mjs): by the teacher's distance, 87 of GitHub's 413 wrong first answers on the development photographs were clones of the truth, Debian's 29 of 91, Font Library's 14 of 144, and the credit is worth eight points of top five on those photographs. And the file-built catalogs carry each default face's twins across every catalog, so the page folds a family's copies in GitHub or Debian under one row; Google's catalog keeps its own twins only, since the page folds a pair when either side names the other and the default download need carry no ids it cannot use.
 
+## Ninth step: the forum's pictures, Pangram Pangram, the manual fonts
+
+`pangram-30k` continues `photo-30k` with the same recipe and more of the world in it. The inventory grew to 8,718 families and 24,171 faces: Pangram Pangram's 201 families (258 files, the web's variable fonts and the trial zips' static cuts, by the foundry's written permission of 2026-10-07), Paper Mono and the rest of `.data/manual`, and 66 Debian families at the versions Debian now publishes; the teacher was rebuilt over 28,603 faces, variable fonts instanced by weight. Pangram's families split by product page (`design` in the inventory; `open_role` hashes it), so a design's cuts and its variable twin never straddle the held-out line: six designs of 58 are held out, Frama, Playground, Right Didone, Right Sans, Right Slab and Valve, 31 families. The stored views grew with the DaFont forum: 8,630 lines of 1,157 training families cut from the identified requests' own pictures (`train.style_forum`, [photos.md](photos.md)), beside the 2,980 WhatFontIs photographs and the web screens repacked to 95,798 lines from 185,903 records; the capture share of each step's stored views, a quarter, now splits evenly between the kinds, photographs and forum lines on one side, screens on the other, so the many screens never crowd out the few photographs. Same teacher, learning rate 5e-4, 30,000 steps, `--photo 0.5`, selection on catalog validation; 7.2 hours, the process tree peaking at 20 GB.
+
+| Step | Validation top-5 | First | Photographs top-5 | First |
+|---|---:|---:|---:|---:|
+| 0 | 93.0% | 75.0% | 74.4% | 50.7% |
+| 2,500 | 91.8% | 72.7% | 72.7% | 47.7% |
+| 5,000 | 91.6% | 72.9% | 73.3% | 47.9% |
+| 10,000 | 92.4% | 74.6% | 72.8% | 48.2% |
+| 15,000 | 92.6% | 75.0% | 72.4% | 47.2% |
+| 20,000 | 92.9% | 75.3% | 73.5% | 49.3% |
+| 25,000 | 93.2% | 75.7% | 75.0% | 51.5% |
+| 27,500 | 93.6% | 75.6% | 74.8% | 51.0% |
+| 30,000 | 93.5% | 75.8% | 74.5% | 51.5% |
+
+The selected checkpoint is step 27,500. The same dip and recovery as the eighth step, a point higher at the end on validation. The exported model reads 93.06% top five and 73.22% first on the catalog test against 92.17% and 72.06% for the eighth step: a point of each, on rendered text, from more fonts and more real pictures. On the pictures it never trained on: the 840 final WhatFontIs images of held-out Google families, read against the Google references (`train.style photos`, both exports against the rebuilt references and twins), 77.7% top five and 57.0% first against 76.5% and 55.1% for the eighth step; on the page's read across every catalog, the 8,955 final images with twin credit, 43.1% against 41.4% top five, 61.3% against 59.0% top twenty and 21.3% against 20.2% first; on the 5,546 held-out forum threads 17.5% against 17.2% top five and 9.9% against 9.2% first; on the 151 cropped forum requests 41.1% against 46.4% top five and 24.5% against 22.5% first; on the 2,253 held-out open queries 74.3% against 74.2% ([photos](photos.md)).
+
 ## Other rasterizers, and 12 px
 
 Queries and references both come from Chromium on macOS. `scripts/style-bench-engines.mjs` renders the catalog validation queries through Playwright's WebKit (Safari's engine) and Firefox, and through Chromium at 12 px, packed as benchmarks of their own; the 64-number model against the same Chromium references:
@@ -246,14 +264,16 @@ The seventh step (`open2-30k`):
 | Firefox 153 | 92.4% | 73.3% | 94.2% | 88.1% | 82.0% | 94.4% | 95.5% |
 | Chromium 151, every query at 12 px | 54.6% | 32.6% | 68.2% | 21.8% |  |  |  |
 
-The shipped model (`photo-30k`, [reads](style-reads.json)):
+The shipped model (`pangram-30k`, [reads](style-reads.json)):
 
 | Validation queries rendered by | Top-5 | First | Clean | Degraded | 16 px | 24 px | 48 px |
 |---|---:|---:|---:|---:|---:|---:|---:|
-| Chromium 151 | 92.1% | 73.9% | 93.9% | 87.7% | 82.8% | 94.2% | 95.1% |
-| WebKit 26.5 | 91.8% | 73.6% | 93.9% | 86.6% | 81.7% | 94.0% | 94.9% |
-| Firefox 153 | 91.9% | 74.0% | 93.9% | 87.2% | 81.8% | 94.2% | 94.8% |
-| Chromium 151, every query at 12 px | 55.4% | 33.0% | 68.6% | 23.5% |  |  |  |
+| Chromium 151 | 93.3% | 75.1% | 94.8% | 89.7% | 85.3% | 94.8% | 95.5% |
+| WebKit 26.5 | 92.3% | 75.1% | 94.2% | 87.8% | 82.8% | 93.8% | 95.5% |
+| Firefox 153 | 93.3% | 75.4% | 94.8% | 89.7% | 85.2% | 95.4% | 95.7% |
+| Chromium 151, every query at 12 px | 58.7% | 36.5% | 73.1% | 23.9% |  |  |  |
+
+The eighth step read 92.1% and 73.9% on Chromium, 91.8% and 73.6% on WebKit, 91.9% and 74.0% on Firefox, 55.4% and 33.0% at 12 px: the ninth gains a point or more everywhere, two and a half at 16 px, and three at 12 px.
 
 Another rasterizer costs under a point. Twelve-pixel text is the floor: six-pixel x-heights keep 73% of clean crops in the top five, and next to nothing once such a crop is also shrunk and JPEG-compressed. A pixel ratio of 2 changes nothing here: the canvas is drawn at device pixels, so 16 CSS px at ratio 2 is the 32 px row. Windows ClearType and phones remain unmeasured.
 
@@ -263,10 +283,12 @@ The catalogs besides Google Fonts hold families the model never trained on, so t
 
 | Latin queries | Queries | Top-5 | First |
 |---|---:|---:|---:|
-| Held-out open families, all | 2,160 | 74.2% | 49.8% |
-| Held-out open families, clean | 1,440 | 77.3% | 52.6% |
-| Held-out open families, degraded | 720 | 67.9% | 44.3% |
-| Google Fonts validation, same search | 5,919 | 70.8% | 48.1% |
+| Held-out open families, all | 2,253 | 74.3% | 49.8% |
+| Held-out open families, clean | 1,502 | 78.5% | 52.9% |
+| Held-out open families, degraded | 751 | 65.9% | 43.7% |
+| Google Fonts validation, same search | 5,919 | 71.3% | 48.3% |
+
+The eighth step read 74.2% and 49.8% on the 2,160 queries of its held-out families (77.3% and 52.6% clean, 67.9% and 44.3% degraded; 70.8% and 48.1% on Google's validation); the ninth holds them on 93 queries more, Pangram Pangram's six held-out designs among them, and the Google validation gains half a point.
 
 The shipped student, which trained on no open family, read 77.3% and 54.8% on all 3,563 open families against 77.4% and 55.1% for Google's across the four file-built catalogs (5,783 families), and 73.8% and 50.2% against 73.1% and 49.8% once DaFont and Adobe Fonts shipped (45,542 families): the sixth step 72.3% against 71.7% at 55,428 families, and the seventh 72.2% against 70.6% at 110,543: each widening of the search costs both seen and unseen families alike, and at 110,000 families a family the model never saw is found more often than one it trained on, by three points with the eighth step.
 
@@ -274,42 +296,45 @@ By source, the larger ones and the ones that stand out:
 
 | Source | Queries | Top-5 | First |
 |---|---:|---:|---:|
-| Debian | 591 | 74.3% | 49.9% |
-| Font Library | 327 | 73.7% | 52.3% |
-| GitHub | 1,098 | 73.8% | 47.7% |
-| Fontshare | 24 | 83.3% | 70.8% |
-| Velvetyne | 15 | 100.0% | 86.7% |
-| Uncut | 27 | 81.5% | 77.8% |
-| Use & Modify | 15 | 100.0% | 66.7% |
-| Luuse | 15 | 80.0% | 66.7% |
+| GitHub | 1,095 | 73.8% | 46.9% |
+| Debian | 594 | 74.2% | 50.7% |
+| Font Library | 327 | 71.3% | 52.3% |
+| Pangram Pangram, six designs held out | 93 | 90.3% | 61.3% |
+| Uncut | 27 | 81.5% | 70.4% |
+| Fontshare | 24 | 83.3% | 66.7% |
+| Velvetyne | 15 | 86.7% | 73.3% |
+| Use & Modify | 15 | 100.0% | 73.3% |
+| Luuse | 15 | 86.7% | 80.0% |
 | Fontsource | 12 | 66.7% | 33.3% |
 
 The exact-family rule gives no credit to a clone: TeX Gyre and URW base 35 are the Times, Helvetica, Palatino and Bookman designs that Liberation, Arimo, Tinos and their kin in the other catalogs also draw, so the right name is one of several right answers the rule counts as wrong. The teacher now spans every collected face, so twins across catalogs are computable; wiring them into this read is next.
 
 ## By requirement
 
-`train.style breakdown` splits the catalog benchmark's test queries, every family on text never trained on, by the requirements ([report](style-breakdown.json)), with the same script-aware search and twin credit; the figures are the shipped model's (`photo-30k`).
+`train.style breakdown` splits the catalog benchmark's test queries, every family on text never trained on, by the requirements ([report](style-breakdown.json)), with the same script-aware search and twin credit; the figures are the shipped model's (`pangram-30k`).
 
-Decorative styles are the easy ones: slab geometric 100.0% (153 queries), theme tuscan 100.0%, theme woodtype 99.3%, theme blobby 99.3%, slab humanist 98.5%, theme wacky 98.2%; display 96.8% and handwriting 95.7% as categories. Plain text faces are the hard ones, because many of them look alike: sans geometric 86.7%, sans humanist 88.7%, serif transitional 88.7%, sans neo-grotesque 90.5%, sans serif overall 89.3%. So a collected catalog of brush or script faces needs coverage, not training.
+Decorative styles are the easy ones: slab geometric 100.0% (153 queries), serif didone 100.0% (206), theme shaded 100.0%, slab clarendon 99.4%, slab humanist 99.1%, theme medieval 98.8%; display 97.2% and handwriting 96.3% as categories. Plain text faces are the hard ones, because many of them look alike: sans geometric 89.2%, sans humanist 89.4%, serif transitional 90.5%, sans neo-grotesque 91.4%, sans serif overall 90.4%. So a collected catalog of brush or script faces needs coverage, not training.
 
-Length matters as expected: 89.9% at 5–7 characters, 94.8% at 8–10. Other scripts trail Latin because of the script filter, not the encoder: Latin 93.0%, other scripts 84.6% on their own letters (the open fonts brought 158 scripts into the head; on rare ones the detection is still the weak link, see todo.md). Chinese is 63.6% (418 queries).
+Length matters as expected: 91.1% at 5–7 characters, 95.3% at 8–10. Other scripts trail Latin because of the script filter, not the encoder: Latin 93.9%, other scripts 85.5% on their own letters (the open fonts brought 158 scripts into the head; on rare ones the detection is still the weak link, see todo.md). Chinese is 67.7% (418 queries).
 
 The shipped catalog holds every case and script of a face, which hides how little style crosses between letterforms. With one kind of reference removed for every family:
 
 | Query | References kept | Top-5 | With every reference |
 |---|---|---:|---:|
-| Capitals | lowercase only | 55.9% | 92.6% |
-| Lowercase | capitals only | 66.4% | 92.1% |
-| Other scripts | Latin only | 62.7% | 84.6% |
-| Chinese | Latin only | 38.1% | 63.1% |
+| Capitals | lowercase only | 59.5% | 93.9% |
+| Lowercase | capitals only | 67.3% | 92.7% |
+| Other scripts | Latin only | 64.3% | 85.5% |
+| Chinese | Latin only | 41.5% | 67.0% |
 
-A catalog built from one case or from Latin alone, like most collected previews, finds capitals, other scripts and Chinese far less often. Every cross row rose one to three points with the sixth step's data, and other scripts another two with the seventh's. Style transfer across case and script is still the next thing to train.
+A catalog built from one case or from Latin alone, like most collected previews, finds capitals, other scripts and Chinese far less often. Every cross row rose one to three points with the sixth step's data, other scripts another two with the seventh's, and every row one to four with the ninth's. Style transfer across case and script is still the next thing to train.
 
 ## Catalog
 
 The Google Fonts catalog lists every face: 8,132 entries with 26,459 vectors (lowercase, uppercase and each script), each the average of its lines drawn at 16, 24 and 48 px by Chromium (249,162 lines in all), a style name (Thin to Black, Italic), script coverage, and, on default faces, per-script twins: families whose letters in that script are closer than the median distance between two renders of one face (0.0083 since the teacher was rebuilt over every collected face); Google's faces list Google twins only, the file-built catalogs' theirs across every catalog. Encoder (511,867 bytes, 6-bit weights with heads for 158 scripts), catalog (3,592,862, 4-bit vectors of 64 numbers) and required modules total 4,160,576 bytes, 1.24 MB with gzip and 1.05 MB with Brotli ([runtime check](style-runtime.json)); CPU and Metal agree with PyTorch within 4.1e-07, and a whole match takes 15 to 60 ms on Metal by the machine's load and 1.1 s on the CPU in Chromium, and 1 to 1.7 s in Node by the crop's size. DaFont's catalog adds 5.7 MB with gzip (96,212 faces, one a family, 30 MB raw: names, links and ids are most of it), Adobe Fonts 0.84 MB (21,816 rows for 4,788 faces), GitHub 0.95 MB (10,873 faces of 3,565 families, its twins across catalogs 1.4 MB of the raw file), Debian 0.35 MB, Font Library 0.32 MB, WhatFontIs 0.03 MB (226 faces, three rows each) and Other 0.17 MB (575 families); the page's All is about 9.6 MB, a third of a megabyte of it the twins the page folds by, and a photograph matched against its 187,078 rows takes 102 ms on Metal.
 
 The page shows one row per family. Kinds of one family that are twins in the crop's script, one name holding the other's first word, fold into one row, named by the member whose name sits inside the others (IBM Plex Sans KR and Arabic under IBM Plex Sans), scored by its best member and listing the rest; a different font that borrows the letters, like Parastoo with Lora's Latin or Anuphan with IBM Plex Sans's, keeps its own row; the saved result keeps every family. Twins are judged per script because shared Latin letters say nothing about the rest: Noto Sans Arabic and Noto Kufi Arabic are Latin twins but different Arabic designs. The display threshold is looser than the benchmark's median twins on purpose: a fold hides nothing, since folded names stay listed, while accuracy credits only the stricter pairs.
+
+DaFont's catalog is built from the site's own preview pictures, one line a face. The collector fetched three lines a face in the ninth step's cycle, and the catalog compiled from them was read beside the one-line catalog with the model fixed: on the forum threads it read 19.3% top five against 17.5%, on the final photographs 41.8% against 43.1% (DaFont's own answers 32.4% against 30.4%, Google's 49.8% against 51.0%), on Halford's requests 39.1% against 41.1%, for 4.2 MB more gzipped (9.9 MB against 5.8). The one-line catalog ships; the three-line compile stays under `.data/catalogs-aside` for the next model, and the preview preparation now skips a face's line that is blank (a font without digits) and says how many.
 
 ## Crop edges
 
@@ -334,7 +359,7 @@ Every stored benchmark render prepares byte-for-byte as before (bench, catalog a
 
 Weights hold at 6 bits and break at 5. Catalog vectors lose nothing measurable at 4 bits, and they are 3.3 MB of the Google catalog's 3.5 MB gzipped download.
 
-The shipped model's rows, read the same way on catalog validation ([reads](style-reads.json)): float rows 92.1 / 73.9, the shipped 4-bit rows 92.1 / 73.5. The seventh step lost two points of first place to 4 bits (92.0 / 73.4 against 91.5 / 71.1), so both readers now take 6-bit rows (`int6-base64`, `train.style catalog --bits 6`) for a model that needs them; the eighth loses four tenths and ships at 4. Product quantization, the rows cut into subvectors each replaced by the nearest of 256 k-means centroids, is not a way down from there: 16 subvectors of 4 numbers (16 bytes a row, half the 4-bit row) read 90.2 / 68.7, and 8 subvectors of 8 numbers (8 bytes) 81.7 / 52.6.
+The shipped model's rows, read the same way on catalog validation ([reads](style-reads.json)): float rows 93.3 / 75.1, the shipped 4-bit rows 92.9 / 74.5. The seventh step lost two points of first place to 4 bits (92.0 / 73.4 against 91.5 / 71.1), so both readers now take 6-bit rows (`int6-base64`, `train.style catalog --bits 6`) for a model that needs them; the eighth lost four tenths, the ninth six, and both ship at 4. Product quantization, the rows cut into subvectors each replaced by the nearest of 256 k-means centroids, is not a way down from there: 16 subvectors of 4 numbers (16 bytes a row, half the 4-bit row) read 91.6 / 70.4, and 8 subvectors of 8 numbers (8 bytes) 84.1 / 54.0.
 
 Below 6 bits, rounding per row breaks but clustering does not: with 16 shared values per layer and the codebooks retrained (`train.ten_model.cluster_values`, `Clustered`; the fifth step), the separable student keeps all but 1.1 points at 4 bits.
 

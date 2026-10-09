@@ -19,6 +19,27 @@ export function prepareRegion(image, region) {
     pixels: Buffer.from(Uint8Array.from(w.pixels, p => Math.round(p * 255))) }))
 }
 
+/** Every record's windows, in order: `samples` the records that gave any, `windows` owned by their index in it, `chunks` the
+ * pixels. A record whose region holds no usable line (a face without digits drawn as an empty line, a capture that failed)
+ * gives no reference and is listed in `skipped` with the reason, so the rest of the archive still compiles. */
+export async function prepareRecords(records, load) {
+  const chunks = [], windows = [], samples = [], skipped = []; let offset = 0
+  for (const record of records) {
+    const image = await load(record)
+    let prepared
+    try { prepared = prepareRegion(image, record.region) } catch (error) {
+      if (!/^Unusable reference region: /.test(error.message)) throw error
+      skipped.push({ id: record.id, status: error.message.slice('Unusable reference region: '.length) }); continue
+    }
+    const source = samples.push(record) - 1
+    for (const window of prepared) {
+      windows.push({ source, width: window.width, height: window.height, rect: window.rect, offset })
+      chunks.push(window.pixels); offset += window.pixels.length
+    }
+  }
+  return { samples, windows, chunks, skipped }
+}
+
 async function main(archive, encoderPath, output) {
   if (!archive || !encoderPath || !output) throw new Error('Expected archive, encoder JSON and output prefix')
   const relative = path.relative(path.resolve(archive), path.resolve(output))
@@ -30,20 +51,14 @@ async function main(archive, encoderPath, output) {
   }
   const audit = await validateArchive(archive)
   if (audit.errors.length) throw new Error(audit.errors.join('\n'))
-  const chunks = [], windows = []; let offset = 0
-  for (const [source, record] of audit.records.entries()) {
-    const image = decodePng(await readFile(path.join(archive, record.image.path)))
-    for (const window of prepareRegion(image, record.region)) {
-      windows.push({ source, width: window.width, height: window.height, rect: window.rect, offset })
-      chunks.push(window.pixels); offset += window.pixels.length
-    }
-  }
+  const { samples, windows, chunks, skipped } = await prepareRecords(audit.records, async record => decodePng(await readFile(path.join(archive, record.image.path))))
   const raw = Buffer.concat(chunks)
   await mkdir(path.dirname(output), { recursive: true })
   await writeFile(output + '.u8', raw)
   await writeFile(output + '.json', JSON.stringify({ manifestSha256: audit.manifestSha256, encoderSha256: sha256(encoderBytes),
-    preparation: encoder.preparation, pixelSha256: sha256(raw), samples: audit.records, windows }) + '\n')
-  console.log(`Prepared ${audit.records.length} references / ${windows.length} windows from archived pixels`)
+    preparation: encoder.preparation, pixelSha256: sha256(raw), samples, windows, skipped }) + '\n')
+  const counts = Object.entries(Object.groupBy(skipped, s => s.status)).map(([status, list]) => `${list.length} ${status}`).join(', ')
+  console.log(`Prepared ${samples.length} references / ${windows.length} windows from archived pixels${skipped.length ? `; skipped ${skipped.length} (${counts})` : ''}`)
 }
 
 if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) await main(...process.argv.slice(2))

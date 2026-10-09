@@ -24,6 +24,10 @@
     "name": "WhatFontIs"
   },
   {
+    "id": "pangram-pangram",
+    "name": "Pangram Pangram"
+  },
+  {
     "id": "other",
     "name": "Other",
     "sources": [
@@ -63,6 +67,7 @@
       "gnu-unifont",
       "junicode",
       "opendyslexic",
+      "paper-design",
       "railway-sans",
       "sil",
       "smufl",

@@ -7,7 +7,7 @@ from pathlib import Path
 from fontTools.fontBuilder import FontBuilder
 from fontTools.pens.ttGlyphPen import TTGlyphPen
 
-from scripts.open_fonts import MANIFEST, ROOT, colour_letters, debian_licences, decode_webfonts, family_name, is_font, members, name_key, one_format, split_collections, symbol_encoded
+from scripts.open_fonts import MANIFEST, ROOT, colour_letters, debian_licences, decode_webfonts, family_name, is_font, listing_extra, members, name_key, one_format, split_collections, symbol_encoded
 
 
 def build(folder, names, coloured=(), stroke=False, family='Test'):
@@ -274,6 +274,21 @@ class Listed(unittest.TestCase):
         pages = {spec.get('page') for spec in SOURCES if spec['source'] == 'collletttivo'}
         self.assertIn('https://www.collletttivo.it/typefaces/ribes/', pages)  # the link Collletttivo asked for
         self.assertEqual([spec['source'] for spec in SOURCES if not spec.get('listed') and spec.get('page')], [])  # curated sources keep their home
+
+
+class ListingExtra(unittest.TestCase):
+    def test_a_listed_family_carries_its_page_and_design_where_the_listing_names_them(self):
+        self.assertEqual(listing_extra({'page': 'https://x/products/altera-carve', 'design': 'altera'}), {'sourceUrl': 'https://x/products/altera-carve', 'design': 'altera'})
+        self.assertEqual(listing_extra({'page': 'https://x/typefaces/ribes/'}), {'sourceUrl': 'https://x/typefaces/ribes/'})
+        self.assertEqual(listing_extra({'design': 'altera'}), {'design': 'altera'})  # a design needs no page
+        self.assertEqual(listing_extra({}), {})
+
+    def test_every_pangram_row_names_the_design_its_page_belongs_to(self):
+        rows = [row for row in json.loads((ROOT / 'bench/open-releases.json').read_text())['releases'] if row['source'] == 'pangram-pangram']
+        self.assertGreater(len(rows), 100)
+        for row in rows:
+            slug = row['page'].rsplit('/', 1)[-1]
+            self.assertTrue(slug == row['design'] or slug.startswith(row['design'] + '-'), row['page'])  # the design is the page's own slug or its leading part
 
 
 class DebianPackage(unittest.TestCase):

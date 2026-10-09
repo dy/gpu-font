@@ -50,7 +50,10 @@ const TYPES = { '.jpg': 'image/jpeg', '.jpeg': 'image/jpeg', '.png': 'image/png'
 // items: [{ path, box: [x0, y0, x1, y1] }] in image pixels, end exclusive. Returns, per item, { status, ms, rows }: up to
 // `limit` rows best first, each { family, name, siblings, score, weight, style } (the matched face). `ms` runs from the
 // image bytes to the ranked rows; `encoderSha256` names the model that read them.
-export async function matchPhotos(items, { limit = 20, log = console.log } = {}) {
+// With `text`, each item may carry the text in its picture, the shipped line reader reads the crop, and two more rankings
+// come back: `byText`, the shortlist set in the item's text (src/sametext.mjs), and `byRead`, set in the text read; `read`
+// is the reader's text. Faces draw from Google Fonts, so only Google families take part; the rest keep their catalog score.
+export async function matchPhotos(items, { limit = 20, log = console.log, text = false } = {}) {
   const browser = await chromium.launch({ channel: 'chromium', args: ['--enable-unsafe-webgpu', ...(process.platform === 'darwin' ? ['--use-angle=metal'] : [])] })
   try {
     const page = await browser.newPage()
@@ -60,32 +63,60 @@ export async function matchPhotos(items, { limit = 20, log = console.log } = {})
       await route.fulfill({ contentType: TYPES[extname(item.path).toLowerCase()] || 'application/octet-stream', body: await readFile(item.path) })
     })
     await page.goto('http://localhost:4179/photos')
-    const { adapter, encoderSha256 } = await page.evaluate(async () => {
+    const ready = () => page.evaluate(async withText => {
       const adapter = await navigator.gpu?.requestAdapter()
       if (!adapter) return {}
-      const { createEncoder, catalogs } = await import('/src/match.mjs'), c = await import('/src/catalog.mjs'), { prepareLine } = await import('/src/line.mjs')
-      const encoder = await createEncoder()
+      const { createEncoder, createReader, rerank, SHORTLIST, catalogs } = await import('/src/match.mjs'), c = await import('/src/catalog.mjs'), { prepareLine } = await import('/src/line.mjs'), { drawLine } = await import('/src/references.mjs')
+      const encoder = await createEncoder(), reader = withText ? await createReader() : null
       const catalog = c.unionCatalogs(await Promise.all(Object.values(catalogs).map(async url => c.readCatalog(await (await fetch(url)).json(), encoder.binding))))
-      window.photo = async (url, [x0, y0, x1, y1], limit) => {
+      // A Google face at its weight and posture, loaded once; null when Google Fonts does not serve it.
+      const loaded = new Map(), drawing = document.createElement('canvas').getContext('2d', { willReadFrequently: true })
+      const googleFace = face => {
+        const key = `${face.family}|${face.weight}|${face.style}`
+        if (!loaded.has(key)) loaded.set(key, (async () => {
+          const axes = face.style === 'italic' ? `:ital,wght@1,${face.weight ?? 400}` : (face.weight ?? 400) === 400 ? '' : `:wght@${face.weight}`
+          const link = Object.assign(document.createElement('link'), { rel: 'stylesheet', href: `https://fonts.googleapis.com/css2?family=${encodeURIComponent(face.family).replaceAll('%20', '+')}${axes}&display=block` })
+          await new Promise((ok, no) => { link.onload = ok; link.onerror = () => no(new Error('no stylesheet')); document.head.append(link) })
+          if (!(await document.fonts.load(`${face.style ?? 'normal'} ${face.weight ?? 400} 48px "${face.family}"`)).length) throw new Error('not served')
+          return face.family
+        })().catch(() => null))
+        return loaded.get(key)
+      }
+      const draw = async (row, words, size) => { const family = await googleFace(row.face); return family ? drawLine(drawing, family, words, size, row.face) : null }  // any row Google Fonts serves by that name
+      const plain = rows => rows.map(r => ({ family: r.family, name: r.face.family, siblings: r.siblings, score: r.score, weight: r.face.weight, style: r.face.style, ...(r.textScore !== undefined && { textScore: r.textScore, combined: r.combined }) }))
+      window.photo = async (url, [x0, y0, x1, y1], limit, text) => {
         const start = performance.now(), bitmap = await createImageBitmap(await (await fetch(url)).blob())
         x0 = Math.max(0, x0); y0 = Math.max(0, y0); x1 = Math.min(bitmap.width, x1); y1 = Math.min(bitmap.height, y1)
         const canvas = new OffscreenCanvas(x1 - x0, y1 - y0), ctx = canvas.getContext('2d')
         ctx.drawImage(bitmap, x0, y0, x1 - x0, y1 - y0, 0, 0, x1 - x0, y1 - y0); bitmap.close()
-        const { status, windows } = prepareLine(ctx.getImageData(0, 0, x1 - x0, y1 - y0), { ...encoder.preparation, deskew: true, sampler: 'windows' })
+        const image = ctx.getImageData(0, 0, x1 - x0, y1 - y0), { status, windows } = prepareLine(image, { ...encoder.preparation, deskew: true, sampler: 'windows' })
         if (status !== 'ok') return { status, ms: performance.now() - start, rows: [] }
         const embedding = c.embedWindows(await encoder.project(windows)), judged = encoder.heads ? c.verdict(embedding, encoder.heads) : null
-        const rows = c.foldTwins(c.matchCatalog(embedding, catalog, judged), catalog, { script: judged?.script?.[0]?.label, limit })
-        return { status, ms: performance.now() - start, rows: rows.map(r => ({ family: r.family, name: r.face.family, siblings: r.siblings, score: r.score, weight: r.face.weight, style: r.face.style })) }
+        const rows = c.foldTwins(c.matchCatalog(embedding, catalog, judged), catalog, { script: judged?.script?.[0]?.label, limit: reader ? Math.max(limit, SHORTLIST) : limit })
+        const result = { status, ms: performance.now() - start, rows: plain(rows).slice(0, limit) }
+        if (reader) {
+          const started = performance.now(), read = reader.read(image)?.text ?? ''; result.read = read; result.readMs = performance.now() - started
+          const options = { embedding, encoder, draw }
+          result.byText = plain(await rerank(rows, text ?? '', options)).slice(0, limit); result.byRead = plain(await rerank(rows, read, options)).slice(0, limit)
+          result.textMs = performance.now() - started - result.readMs
+        }
+        return result
       }
       const info = adapter.info || {}
       return { adapter: [info.vendor, info.architecture, info.description].filter(Boolean).join(' ') || 'WebGPU', encoderSha256: encoder.binding.encoderSha256 }
-    })
+    }, text)
+    const { adapter, encoderSha256 } = await ready()
     // On the CPU a match takes about ten seconds: a whole set would take hours, so stop instead.
     if (!adapter) throw new Error('No WebGPU adapter in Chromium')
     await page.evaluate(() => window.photo('/photo/0', [0, 0, 1e9, 1e9], 1))  // warm-up: kernels compiled, catalogs decoded
-    const results = []
+    // One picture can hang the page (a bitmap that never decodes, a renderer gone): a match past the patience counts as unread,
+    // and the page is opened anew so the next picture starts clean.
+    const results = [], PATIENCE = 60000
+    const timed = promise => Promise.race([promise, new Promise(resolve => setTimeout(() => resolve({ status: 'timeout', ms: PATIENCE, rows: [] }), PATIENCE))])
     for (const [i, item] of items.entries()) {
-      results.push(await page.evaluate(([i, box, limit]) => window.photo(`/photo/${i}`, box, limit), [i, item.box, limit]))
+      const result = await timed(page.evaluate(([i, box, limit, text]) => window.photo(`/photo/${i}`, box, limit, text), [i, item.box, limit, item.text]))
+      if (result.status === 'timeout') { log(`${item.path}: no answer in ${PATIENCE / 1000} s; the page is reopened`); await page.reload({ waitUntil: 'load' }).catch(() => {}); await ready() }
+      results.push(result)
       if ((i + 1) % 250 === 0) log(`${i + 1} / ${items.length}`)
     }
     return { browser: browser.version(), adapter, encoderSha256, results }

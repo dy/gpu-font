@@ -3,10 +3,13 @@ import { readNetwork, inferCPU } from './network.mjs'
 import { createNetworkGPU } from './network-gpu.mjs'
 import { prepareLine } from './line.mjs'
 import { readCatalog, embedWindows, matchCatalog, foldTwins, sha256, preparationHash, readHeads, verdict } from './catalog.mjs'
+import { readReader, readLine } from './reader.mjs'
+export { rerank, SHORTLIST, MIN_TEXT } from './sametext.mjs'
 
-// The shipped model and catalogs, resolved next to this module wherever it is served from. Each URL is a literal, so
-// bundlers copy the file.
+// The shipped model, line reader and catalogs, resolved next to this module wherever it is served from. Each URL is a
+// literal, so bundlers copy the file.
 const MODEL = new URL('../models/encoder/encoder.json', import.meta.url)
+export const READER = new URL('../models/reader/reader.json', import.meta.url)
 export const catalogs = {
   'google-fonts': new URL('../models/encoder/google-fonts.json', import.meta.url),
   dafont: new URL('../models/encoder/catalogs/dafont.json', import.meta.url),
@@ -15,6 +18,7 @@ export const catalogs = {
   debian: new URL('../models/encoder/catalogs/debian.json', import.meta.url),
   fontlibrary: new URL('../models/encoder/catalogs/fontlibrary.json', import.meta.url),
   whatfontis: new URL('../models/encoder/catalogs/whatfontis.json', import.meta.url),
+  'pangram-pangram': new URL('../models/encoder/catalogs/pangram-pangram.json', import.meta.url),
   other: new URL('../models/encoder/catalogs/other.json', import.meta.url)
 }
 
@@ -44,6 +48,19 @@ export async function createEncoder(modelUrl = MODEL) {
   }
 }
 
+// The line reader: the characters of a crop's line, for a text to rank the shortlist by (src/sametext.mjs) and for the
+// person to correct. `read(imageData)` gives { text, columns, logits } or null when the crop holds no line.
+export async function createReader(readerUrl = READER) {
+  const model = readReader(JSON.parse(new TextDecoder().decode(await load(readerUrl))))
+  return {
+    model,
+    read(imageData, { deskew = true } = {}) {
+      const { status, windows } = prepareLine(imageData, { deskew, sampler: 'line' })
+      return status === 'ok' && windows[0].width <= model.maxWidth ? readLine(model, windows[0]) : null
+    }
+  }
+}
+
 // The catalog comes first: it is what callers choose, and the model it was built with rarely changes.
 export async function createMatcher(catalogUrl = catalogs['google-fonts'], modelUrl = MODEL) {
   // The catalog downloads while the model loads; it is read once the model's hashes are known.
@@ -52,14 +69,22 @@ export async function createMatcher(catalogUrl = catalogs['google-fonts'], model
   const encoder = await createEncoder(modelUrl)
   let catalog
   try { catalog = readCatalog(await data, encoder.binding) } catch (error) { encoder.destroy(); throw error }
+  // The crop's unit embedding, what the catalog and the same-text stage compare with; null when the crop holds no text.
+  const embed = async imageData => {
+    const { status, windows } = prepareLine(imageData, { ...encoder.preparation, deskew: true, sampler: 'windows' })
+    return status === 'ok' ? embedWindows(await encoder.project(windows)) : null
+  }
   return {
     // Scores below it mean the crop's font is probably in no catalog; null when the model ships none.
     threshold: encoder.model.threshold,
+    // The model, for `rerank`: it projects the text drawn in each face as it projected the crop.
+    encoder,
+    embed,
     // Fonts best first, identical designs folded into one entry with their `siblings`; [] when the crop holds no text.
     async match(imageData) {
-      const { status, windows } = prepareLine(imageData, { ...encoder.preparation, deskew: true, sampler: 'windows' })
-      if (status !== 'ok') return []
-      const embedding = embedWindows(await encoder.project(windows)), judged = encoder.heads ? verdict(embedding, encoder.heads) : null
+      const embedding = await embed(imageData)
+      if (!embedding) return []
+      const judged = encoder.heads ? verdict(embedding, encoder.heads) : null
       return foldTwins(matchCatalog(embedding, catalog, judged), catalog, { script: judged?.script?.[0]?.label })
     },
     destroy: encoder.destroy

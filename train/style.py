@@ -23,7 +23,7 @@ from train.encoder_data import save, SPLIT
 from train.robustness import read, sha
 from train.style_data import Stream, pools as make_pools, tensors
 from train.style_teacher import glyph_sets, teacher, bound, OUT as STYLE
-from train.style_fonts import training_families, open_role
+from train.style_fonts import training_families, open_role, designs
 from train.style_catalog import load as load_references, vectors as reference_vectors
 from train.style_bench import load as load_bench
 from train.ten import batch
@@ -164,7 +164,7 @@ PARTS = 2  # shares a step's batch is taken in
 class Setup:
     """Faces, labels, teacher geometry and twins for a chosen set of training families."""
     def __init__(self, roles, device='mps'):
-        families = training_families(); self.split = read(SPLIT); self.faces = read(STYLE/'faces.json')['faces']
+        families = training_families(); self.split = read(SPLIT); self.faces = read(STYLE/'faces.json')['faces']; self.designs = designs(families)
         self.sets = glyph_sets(families); self.pools = make_pools(families, self.sets)
         # Scripts are those the teacher was built for; an inventory that grew since then (more families of a script) waits for a rebuild.
         self.scripts = [s for s in sorted(self.sets) if (STYLE/f'teacher-{s}.npz').exists()]; unbuilt = sorted(set(self.sets) - set(self.scripts))
@@ -194,8 +194,8 @@ class Setup:
         print('Training faces', n, 'families', len(self.by_family), 'faces with a twin', twinned, flush=True)
 
     def role(self, family):
-        """A Google family's role from the drawn split; an open family's from the fixed rule (one in ten held out)."""
-        return self.split['families'].get(family) or open_role(family)
+        """A Google family's role from the drawn split; an open family's from the fixed rule (one design in ten held out)."""
+        return self.split['families'].get(family) or open_role(family, self.designs.get(family))
 
     def plan(self, seed, views=2, faces=64, pairs=False):
         """Batches of faces and their nearest designs. Paired views cross case (one lowercase, one capitals or title) and
@@ -221,18 +221,20 @@ class Setup:
 class StoredViews:
     """Stored views of the training families beside the on-the-fly Pillow renders: Chromium renders (development and
     case-diverse data), the browser rasterizer Pillow does not reproduce, labeled with each family's default face; and
-    captures: the WhatFontIs development photographs of Google families (train.style_photos) and the web screens of the
-    development sites (train.style_screens), labeled with the family's face of the drawn weight and style. The final
-    photographs and the held-out sites are never a source: they stay the reads."""
+    captures: the WhatFontIs development photographs of Google families (train.style_photos), the forum pictures of the
+    development threads (train.style_forum) and the web screens of the development sites (train.style_screens), labeled
+    with the family's face of the drawn weight and style. The final photographs, the held-out threads and the held-out
+    sites are never a source: they stay the reads."""
     SOURCES = [('.data/encoder/development.json', '.data/encoder/development.u8', 'chromium'),
                ('.data/encoder/case-training/manifest.json', '.data/encoder/case-training/pixels.u8', 'chromium'),
                ('.data/style/photos-development.json', '.data/style/photos-development.u8', 'photo'),
+               ('.data/style/forum-development.json', '.data/style/forum-development.u8', 'photo'),
                ('.data/style/screens-development.json', '.data/style/screens-development.u8', 'screen')]
 
     def __init__(self, setup, roles=('train',), sources=None):
         default = {f['family']: i for i, f in enumerate(setup.faces) if f['default']}
         styled = {(f['family'], f['weight'], f['italic']): i for i, f in enumerate(setup.faces)}
-        self.pixels = []; self.views = []; self.photos = []; counts = {}
+        self.pixels = []; self.views = []; self.captures = {}; counts = {}
         for manifest_path, pixels_path, renderer in sources or self.SOURCES:
             if not (ROOT/manifest_path).exists(): continue
             manifest = read(ROOT/manifest_path); self.pixels.append(np.memmap(ROOT/pixels_path, dtype=np.uint8, mode='r')); owner = len(self.pixels) - 1
@@ -243,16 +245,21 @@ class StoredViews:
                 photo = renderer in ('photo', 'screen')
                 face = styled.get((s['family'], s.get('weight'), s.get('italic')), default.get(s['family'])) if photo else default.get(s['family'])
                 if s.get('renderer', renderer) == renderer and (photo or s['role'] in roles) and face in setup.position and s['script'] in setup.scripts and i in windows:
-                    (self.photos if photo else self.views).append((owner, face, s['script'], windows[i])); counts[renderer] = counts.get(renderer, 0) + 1
+                    (self.captures.setdefault(renderer, []) if photo else self.views).append((owner, face, s['script'], windows[i])); counts[renderer] = counts.get(renderer, 0) + 1
         print('Stored training views', ', '.join(f'{n} {r}' for r, n in counts.items()) or 0, flush=True)
 
     PHOTO_SHARE = .25  # captures are few (tens of thousands against hundreds of thousands of renders): a fixed share of each step's stored views
 
     def sample(self, rng, count):
-        """`count` stored views: a fixed share captures (photographs and screens) when there are any, the rest renders."""
-        photos = min(len(self.photos), round(count*self.PHOTO_SHARE)); renders = min(len(self.views), count - photos)
-        photos = min(len(self.photos), count - renders); out = []  # a short list of either kind is filled from the other
-        for owner, face, script, windows in rng.sample(self.photos, photos) + rng.sample(self.views, renders):
+        """`count` stored views: a fixed share captures when there are any, split evenly between the kinds of capture there
+        are (photographs, screens) so the many screens never crowd out the few photographs, the rest renders."""
+        kinds = sorted((k for k in self.captures.values() if k), key=len); total = sum(map(len, kinds))
+        captures = min(total, round(count*self.PHOTO_SHARE)); renders = min(len(self.views), count - captures)
+        captures = min(total, count - renders); picked = []  # a short list of either kind is filled from the other
+        for i, kind in enumerate(kinds):  # the smallest kind first: what it cannot fill goes to the larger ones
+            picked += rng.sample(kind, min(len(kind), (captures - len(picked))//(len(kinds) - i)))
+        out = []
+        for owner, face, script, windows in picked + rng.sample(self.views, renders):
             p = self.pixels[owner]; out.append({'face':face,'script':script,'windows':[np.asarray(p[o:o + w*h]).reshape(h, w) for o, w, h in windows]})
         return out
 

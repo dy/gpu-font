@@ -84,6 +84,7 @@ def compile_catalogs(archive,encoder_path,output,device='cpu'):
                          'families':len({f['familyId'] for f in catalog['faces']}),'faces':len(catalog['faces']),'skippedFaces':skipped})
     if sha(encoder_path)!=before or sha(archive/'manifest.jsonl')!=manifest_hash:raise ValueError('Changed encoder or source manifest')
     report={'encoderSha256':before,'sourceManifestSha256':manifest_hash,'inputsSha256':sha(prefix.with_suffix('.json')),'records':len(records),'windows':len(manifest['windows']),
+            'skippedRecords':len(manifest.get('skipped',[])),
             'embeddingSha256':sha(output/'embeddings.npy'),'catalogs':products,'encoderUnchanged':True,
             'scope':'Catalog references only, generated from archived raster regions. No font files, training, accuracy evaluation, face-prediction calibration or redistribution claim.'}
     save(output/'report.json',report);print(json.dumps(report,indent=2),flush=True)

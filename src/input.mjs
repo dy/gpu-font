@@ -36,3 +36,21 @@ export function prepareInput(image, options = {}) {
   }
   return { status: result.length ? 'ok' : 'blank', windows: result }
 }
+
+/** The whole line as one strip `height` pixels tall, its width in proportion up to `maxWidth` (a longer line is squeezed
+ * to it): what a reader takes of a line, where prepareInput takes up to three windows of it. Quantized once, as windows are. */
+export function prepareStrip(image, options = {}) {
+  const { height = 48, maxWidth = 1024, background = 255 } = options
+  if (!Number.isInteger(height) || height < 4 || height > 128 || !Number.isInteger(maxWidth) || maxWidth < 4 || maxWidth > 1024) throw new RangeError('Invalid strip geometry')
+  const found = prepare(image, { width: 4, height: 4, padding: 0, background })
+  if (found.status !== 'ok') return { status: found.status, windows: [] }
+  const framed = frame(image, found.rect, background)
+  if (framed) {
+    const result = prepareStrip(framed.image, options)
+    return { ...result, windows: result.windows.map(window => ({ ...window, rect: framed.back(window.rect) })) }
+  }
+  const bounds = found.rect, width = Math.min(maxWidth, Math.max(4, Math.round(bounds.width * height / bounds.height)))
+  const prepared = prepare(image, { width, height, padding: 0, background, polarity: found.polarity, rect: bounds })
+  if (prepared.status !== 'ok') return { status: prepared.status, windows: [] }
+  return { status: 'ok', windows: [{ width, height, pixels: Float32Array.from(prepared.pixels, p => Math.round(p * 255) / 255), rect: prepared.rect }] }
+}

@@ -27,9 +27,10 @@ FREQUENT = 'eeeeeeeeeeeettttttttaaaaaaaooooooiiiiiinnnnnnsssssshhhhhhrrrrrdddlll
 
 
 class Preparer:
-    """The browser's prepareLine in a persistent Node child."""
-    def __init__(self):
-        self.child = subprocess.Popen(['node', str(ROOT/'scripts/style-prepare.mjs')], stdin=subprocess.PIPE, stdout=subprocess.PIPE)
+    """The browser's prepareLine in a persistent Node child: the encoder's windows, or with `sampler='line'` a reader's one strip."""
+    def __init__(self, sampler='windows'):
+        self.sampler = sampler
+        self.child = subprocess.Popen(['node', str(ROOT/'scripts/style-prepare.mjs'), sampler], stdin=subprocess.PIPE, stdout=subprocess.PIPE)
 
     def read(self, n):
         data = self.child.stdout.read(n)
@@ -47,7 +48,7 @@ class Preparer:
             return windows
         except (RuntimeError, BrokenPipeError, OSError):
             # A dead child loses this view only: restart it and let the caller retry another seed.
-            self.child.kill(); self.__init__(); raise ValueError('Preparation child restarted')
+            self.child.kill(); self.__init__(self.sampler); raise ValueError('Preparation child restarted')
 
     def close(self):
         self.child.stdin.close(); self.child.wait()
@@ -299,8 +300,8 @@ def pools(families, sets):
 STATE = {}
 
 
-def init(faces, pools, drawn=0.0, photo=0.0, teacher=False):
-    STATE.update(faces=faces, pools=pools, fonts=Fonts(), prepare=Preparer(), drawn=drawn, photo=photo, teacher=teacher)
+def init(faces, pools, drawn=0.0, photo=0.0, teacher=False, sampler='windows'):
+    STATE.update(faces=faces, pools=pools, fonts=Fonts(), prepare=Preparer(sampler), drawn=drawn, photo=photo, teacher=teacher)
 
 
 def sample(spec):
@@ -317,7 +318,7 @@ def sample(spec):
             gray = np.asarray(image, np.uint8) if clean else damage(image, rng, photo=photo)
             windows = STATE['prepare'](gray)
             if not windows: continue
-            view = {'face':index,'script':script,'text':value,'windows':windows,'drawn':drawn,'photo':photo}
+            view = {'face':index,'script':script,'text':value,'windows':windows,'drawn':drawn,'photo':photo,'damaged':not clean}
             # For distillation, the clean render's windows too: what the teacher sees of this view.
             if STATE.get('teacher') and not clean: view['clean'] = STATE['prepare'](np.asarray(image, np.uint8)) or windows
             return view
@@ -330,8 +331,8 @@ class Stream:
     """Prefetched batches of prepared views from a worker pool."""
     PATIENCE = 600  # seconds a batch may take before its workers count as lost
 
-    def __init__(self, faces, pools, plan, workers=10, prefetch=6, drawn=0.0, photo=0.0, teacher=False):
-        self.workers = lambda: multiprocessing.get_context('spawn').Pool(workers, initializer=init, initargs=(faces, pools, drawn, photo, teacher))
+    def __init__(self, faces, pools, plan, workers=10, prefetch=6, drawn=0.0, photo=0.0, teacher=False, sampler='windows'):
+        self.workers = lambda: multiprocessing.get_context('spawn').Pool(workers, initializer=init, initargs=(faces, pools, drawn, photo, teacher, sampler))
         self.pool = self.workers(); self.plan = plan; self.queue = queue.Queue(prefetch); self.stop = False; self.error = None
         self.thread = threading.Thread(target=self.fill, daemon=True); self.thread.start()
 

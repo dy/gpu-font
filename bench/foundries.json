@@ -1,6 +1,6 @@
 {
  "version": 1,
- "updated": "2026-09-27",
+ "updated": "2026-10-08",
  "purpose": "Every font source considered: what it offers, its licence, what its terms allow, and where work with it stands. Work never proceeds against a written ban without recorded permission.",
  "sources": [
   {
@@ -74,6 +74,30 @@
    "notes": "The licence allows free personal and commercial use but does not address machine learning.",
    "availableUnit": "families",
    "availableNote": "total reported by Fontshare's public API, https://api.fontshare.com/v2/fonts (count_total), 2026-09-23"
+  },
+  {
+   "id": "paper-design",
+   "name": "Paper Design",
+   "url": "https://github.com/paper-design/paper-mono",
+   "kind": "foundry",
+   "access": "files",
+   "licence": "OFL-1.1",
+   "terms": {
+    "status": "permitted",
+    "checked": "2026-10-08",
+    "note": "Paper Mono is published under the SIL Open Font License 1.1: OFL.txt ships in the release zip (paper-mono-v1.0.zip), which the maintainer downloaded to .data/manual on 2026-10-07."
+   },
+   "work": {
+    "status": "indexed",
+    "route": "the release zip in .data/manual, each file pinned by its hash in bench/open-fonts.json",
+    "familiesIndexed": 1
+   },
+   "log": [
+    {
+     "date": "2026-10-07",
+     "event": "Paper Mono v1.0 added by the maintainer: 8 weights in OTF, OFL-1.1; trains the model and ships in Other"
+    }
+   ]
   },
   {
    "id": "velvetyne",
@@ -2276,17 +2300,41 @@
     "checked": "2026-09-23"
    },
    "work": {
-    "status": "permission-to-request"
+    "status": "planned",
+    "permission": {
+     "grantedBy": "Mat, Pangram Pangram (François, lead developer, in copy)",
+     "date": "2026-10-07",
+     "via": "email reply to a request",
+     "scope": "training the model with its font library; an integration of gpu-font on its site is to be discussed with its lead developer",
+     "quote": "yes, you have my permission to train your model with our library."
+    }
    },
    "log": [
     {
      "date": "2026-09-23",
      "event": "Surveyed; ~62 families (Neue Montreal); permission request drafted"
+    },
+    {
+     "date": "2026-10-07",
+     "event": "Permission to train the model with the library, by email from Mat at Pangram Pangram, with their lead developer in copy: \"yes, you have my permission to train your model with our library.\" They are open to implementing gpu-font in some of their projects."
+    },
+    {
+     "date": "2026-10-07",
+     "event": "Collected: 209 product pages, 267 distinct font files (variable and static, 27 MB, 197 family names) that the pages load, from the site's own CDN, kept locally and never shipped"
+    },
+    {
+     "date": "2026-10-07",
+     "event": "Shipping the catalog decided by the maintainer: names, links and style vectors only, as the other file-built catalogs"
     }
    ],
    "familiesAvailable": 62,
    "availableUnit": "families",
-   "availableNote": "counted on the foundry's own catalogue in the 2026-09-23 survey (bench/font-sources.md)"
+   "availableNote": "counted on the foundry's own catalogue in the 2026-09-23 survey (bench/font-sources.md)",
+   "decision": {
+    "ship": true,
+    "date": "2026-10-07",
+    "note": "Shipped at the maintainer's decision, 2026-10-07, under the permission Mat at Pangram Pangram gave the same day to train the model with the library: names, product-page links and style vectors from the font files the site loads; no font files kept in the release; the catalog comes down at Pangram Pangram's request."
+   }
   },
   {
    "id": "sharp-type",
@@ -2411,6 +2459,10 @@
     {
      "date": "2026-09-28",
      "event": "Permission to include its typefaces, by email from Ethan Cohen: \"Happy to be included\""
+    },
+    {
+     "date": "2026-09-28",
+     "event": "Captured from its typeface pages by its permission: 2,310 styles of 185 families, 13,860 lines set in the fonts each page loads; the 963 font files those pages load kept locally, never shipped. Two pages (P3RMAN3NT, Sorcière) are empty on the site."
     }
    ],
    "familiesAvailable": 50,

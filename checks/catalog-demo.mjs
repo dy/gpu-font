@@ -5,6 +5,7 @@ import { execFileSync } from 'node:child_process'
 import { chromium } from 'playwright'
 import { readCatalog, subsetCatalog, matchCatalog, foldTwins, embedWindows, unit, rowBytes, unpack, readHeads, verdict, writeStyle, readStyle } from '../src/catalog.mjs'
 import { packVectors } from '../src/references.mjs'
+import { SHORTLIST } from '../src/sametext.mjs'
 import { previewAddress } from '../previews.mjs'
 import { readNetwork, inferCPU } from '../src/network.mjs'
 
@@ -32,7 +33,7 @@ const issues = [], dir = '.data/catalog-demo-checks'
 await mkdir(dir, { recursive: true })
 async function result(page) {
   // A catalog still loading ranks nothing yet: the matches to read are those after it lands.
-  await page.waitForFunction(() => !document.querySelector('#save').disabled && !document.querySelector('#catalog-button').hasAttribute('aria-busy'))
+  await page.waitForFunction(() => !document.querySelector('#save').disabled && !document.querySelector('#catalog-button').hasAttribute('aria-busy') && !document.querySelector('#results').hasAttribute('aria-busy'))
   return page.evaluate(() => {
     const original = HTMLAnchorElement.prototype.click; let value
     try { HTMLAnchorElement.prototype.click = function () { value = fetch(this.href).then(r => r.json()) }; document.querySelector('#save').click() }
@@ -59,10 +60,25 @@ async function verify(page, value, option) {
   assert.equal(value.matches.length, drawable || catalog.families)
   if (artifact.heads) assert.ok(value.verdict && script, 'Encoders with heads report a typed verdict')
   // The page shows one row per family (its kinds with identical letters in the crop's script folded); the saved result keeps every family.
-  const shown = foldTwins(value.matches, catalog, { script, limit: 5 })
+  // With the crop's words read, the first rows are set in them (src/sametext.mjs): the saved result says the order and the scores, catalog
+  // and text added, and the page shows their mean; each row's combined score is its catalog score plus its text score, or twice the catalog's
+  // where its face could not be drawn.
+  let shown = foldTwins(value.matches, catalog, { script, limit: 5 }), scores = shown.map(m => m.score.toFixed(3))
+  if (value.sametext) {
+    const first = foldTwins(value.matches, catalog, { script, limit: SHORTLIST }), byFamily = new Map(first.map(m => [m.family, m]))
+    assert.ok(value.sametext.text.trim().length >= 2, 'A text ranked by has at least two characters')
+    assert.deepEqual(new Set(value.sametext.rows.map(r => r.family)), new Set(first.map(m => m.family)), 'The text ranks exactly the shortlist')
+    for (const row of value.sametext.rows) {
+      const { score } = byFamily.get(row.family)
+      assert.ok(row.textScore === null || (row.textScore >= -1 && row.textScore <= 1)); assert.ok(Math.abs(row.combined - (score + (row.textScore ?? score))) < 1e-9, `${row.family}: combined is catalog plus text`)
+    }
+    assert.ok(value.sametext.rows.every((r, i) => !i || r.combined <= value.sametext.rows[i - 1].combined), 'Sorted by the combined score')
+    shown = value.sametext.rows.slice(0, 5).map(r => byFamily.get(r.family)); scores = value.sametext.rows.slice(0, 5).map(r => (r.combined / 2).toFixed(3))
+  }
   assert.equal(await page.locator('.result').count(), Math.min(5, shown.length))
-  assert.deepEqual(await page.locator('.result-score').allTextContents(), shown.map(m => m.score.toFixed(3)))
+  assert.deepEqual(await page.locator('.result-score').allTextContents(), scores)
   assert.deepEqual(await page.locator('.font-twins').evaluateAll(notes => notes.map(n => JSON.parse(n.dataset.twins))), shown.filter(m => m.siblings.length).map(m => m.siblings), 'Each note carries its full twin list')
+  assert.equal(await page.locator('#text-note').isHidden(), !value.sametext, 'The note under the matches says when the shortlist is set in a text')
   const canvases = await page.locator('#normalized canvas').evaluateAll(cs => cs.map(c => ({ width: c.width, height: c.height, pixels: Array.from(c.getContext('2d').getImageData(0, 0, c.width, c.height).data).filter((_, i) => i % 4 === 0) })))
   assert.deepEqual(canvases, value.inputs.map(i => ({ width: i.width, height: i.height, pixels: i.pixels.map(p => Math.round(p * 255)) })))
   assert.equal(await page.locator('#input-count').textContent(), `${value.inputs.length} window${value.inputs.length === 1 ? '' : 's'}`)
@@ -94,14 +110,16 @@ try {
   assert.equal(Object.keys(data.previews).length, new Set(googleFaces.map(f => f.familyId)).size, 'Every Google family has a preview entry')
   const firstFace = foldTwins(original.matches, readCatalog(await read(data.catalogs[0].file), data), { script: original.verdict?.script?.[0]?.label, limit: 1 })[0].face
   assert.deepEqual(await page.locator('.result-preview').first().evaluate(i => [i.style.fontWeight, i.style.fontStyle]), [String(firstFace.weight ?? 400), firstFace.style ?? 'normal'])
-  // Each preview shows its own family's name until a text is typed; then every preview shows that text, and clearing it
-  // brings the names back.
+  // Each preview shows the words the reader read from the crop, else its own family's name, until a text is typed; then every
+  // preview shows that text, and clearing it brings the read words or the names back.
   const shownTexts = () => page.locator('#results .result-preview:not([readonly])').evaluateAll(inputs => inputs.map(i => [i.value, i.closest('.result').querySelector('.font-name a').textContent.replace(' ↗', '')]))
-  assert.ok((await shownTexts()).every(([value, name]) => value === name), JSON.stringify(await shownTexts()))
+  const resting = name => original.read ?? name
+  assert.ok((await shownTexts()).every(([value, name]) => value === resting(name)), JSON.stringify([original.read, await shownTexts()]))
   await page.locator('#preview-text').fill('Hamburg')
   assert.ok((await shownTexts()).every(([value]) => value === 'Hamburg'), 'A typed text shows in every preview')
   await page.locator('#preview-text').fill('')
-  assert.ok((await shownTexts()).slice(1).every(([value, name]) => value === name), 'Clearing it brings the names back')
+  assert.ok((await shownTexts()).slice(1).every(([value, name]) => value === resting(name)), 'Clearing it brings the read words or the names back')
+  await page.waitForFunction(() => !document.querySelector('#results').hasAttribute('aria-busy'))  // the list settles after the text changed it
   assert.equal(await page.locator('header .header-icon[aria-label="GitHub repository"]').count(), 1)
   assert.equal(await page.locator('header #backend').getAttribute('class'), 'sr-only')
   assert.equal(await page.locator('footer [aria-label="GitHub repository"]').count(), 0)
@@ -297,9 +315,14 @@ try {
   assert.equal(await gap(), opened, 'An open dropdown scrolls with its trigger')
   await page.keyboard.press('Escape'); await page.evaluate(() => scrollTo(0, 0))
   // More matches grows the list in place to the top 100, previews and all; Fewer matches folds it back to five.
-  const whole = foldTwins(original.matches, readCatalog(await read(data.catalogs[0].file), data), { script: original.verdict?.script?.[0]?.label }), all = whole.slice(0, 100)
+  const googleCatalog = readCatalog(await read(data.catalogs[0].file), data), googleScript = original.verdict?.script?.[0]?.label
+  const whole = foldTwins(original.matches, googleCatalog, { script: googleScript }), all = whole.slice(0, 100)
+  // With the crop's words read, the first rows come in the text's order with averaged scores, the rest as the catalog ranks them (app.mjs ranking).
+  const firstFaces = new Map(foldTwins(original.matches, googleCatalog, { script: googleScript, limit: SHORTLIST }).map(m => [m.family, m])), past = foldTwins(original.matches, googleCatalog, { script: googleScript, limit: 101 }).slice(SHORTLIST)
+  const listed = original.sametext ? [...original.sametext.rows.map(r => firstFaces.get(r.family)), ...past].slice(0, 100) : all
+  const listedScores = original.sametext ? [...original.sametext.rows.map(r => (r.combined / 2).toFixed(3)), ...past.map(m => m.score.toFixed(3))].slice(0, 100) : all.map(m => m.score.toFixed(3))
   // A face Google Fonts refuses says so instead of leaving a gap (the sixth row's subset request is made to fail).
-  const refused = url => url.href.includes('&text=') && url.href.includes(`family=${encodeURIComponent(all[5].face.family).replaceAll('%20', '+')}`)
+  const refused = url => url.href.includes('&text=') && url.href.includes(`family=${encodeURIComponent(listed[5].face.family).replaceAll('%20', '+')}`)
   await page.route(refused, route => route.fulfill({ status: 400, body: '' }))
   const asked = [], ask = request => asked.push(request.url()); page.on('request', ask)
   // Unfolding, the list takes its full height at once and shows its new rows down to the bottom of the view.
@@ -313,7 +336,7 @@ try {
   await page.waitForFunction(n => document.querySelectorAll('#results .result').length === n, all.length)
   assert.deepEqual(await page.locator('#more-matches').evaluate(b => [b.firstChild.textContent, b.getAttribute('aria-expanded')]), ['Fewer matches', 'true'])
   assert.deepEqual(await page.locator('#results .rank').evaluateAll(r => [r[0].textContent, r.at(-1).textContent]), ['01', String(all.length).padStart(2, '0')])
-  assert.deepEqual(await page.locator('#results .result-score').allTextContents(), all.map(m => m.score.toFixed(3)))
+  assert.deepEqual(await page.locator('#results .result-score').allTextContents(), listedScores)
   // The crop stays in view while the long list scrolls beside it.
   await page.locator('#results .result').nth(30).scrollIntoViewIfNeeded()
   assert.deepEqual(await page.locator('.source-panel').evaluate(panel => [Math.round(panel.querySelector('.source-body').getBoundingClientRect().top), panel.querySelector('.column-head').getBoundingClientRect().bottom < 0]), [24, true], 'The preview and model input stick a padding from the top; the Source title scrolls away')
@@ -325,10 +348,12 @@ try {
   await page.setViewportSize({ width: 1440, height: 1000 }); await page.locator('#results .result').nth(30).scrollIntoViewIfNeeded()
   const tall = await stuck(); assert.ok(tall.top === 24 && tall.windows, `Tall window: ${JSON.stringify(tall)}`)
   // A preview loads its face as it comes near the view: the last row, far below, has asked for nothing yet.
-  const far = `family=${encodeURIComponent(all.at(-1).face.family).replaceAll('%20', '+')}`
+  const far = `family=${encodeURIComponent(listed.at(-1).face.family).replaceAll('%20', '+')}`
   assert.ok(!asked.some(url => url.includes(far)) && await page.locator('#results .result').last().locator('.result-preview').evaluate(i => i.style.visibility === 'hidden'), 'A row far below the view waits to load its face')
   // Scrolled through, rows past the fifth preview through a subset face of their own, read-only; the refused one names its absence.
-  for (let i = 5; i < all.length; i += 4) await page.locator('#results .result').nth(i).scrollIntoViewIfNeeded()
+  // Each row scrolled to resolves (its face shown, or its note) before the next scroll: the observer that loads a row as it comes near reports at frame boundaries, not on every scroll.
+  const resolved = i => page.waitForFunction(i => { const r = document.querySelectorAll('#results .result')[i]; return !!(r.querySelector('.result-unavailable') || r.querySelector('.result-preview')?.style.visibility === '') }, i)
+  for (let i = 5; i < all.length; i += 4) { await page.locator('#results .result').nth(i).scrollIntoViewIfNeeded(); await resolved(i) }
   await page.waitForFunction(() => [...document.querySelectorAll('#results .result')].slice(5).every(r => r.querySelector('.result-unavailable') || r.querySelector('.result-preview')?.style.visibility === ''))
   page.off('request', ask)
   // Each preview sets its line by its own font's ascent and descent, in one height, so none scrolls inside its field.
@@ -338,16 +363,17 @@ try {
   assert.equal(await page.locator('#results .result').nth(5).locator('.result-unavailable').textContent(), 'No preview available')
   assert.ok(await page.locator('#results .result').evaluateAll(rows => rows.slice(6).every(r => r.querySelector('.result-unavailable') || (r.querySelector('.result-preview').readOnly && /^"subset-\d+"$/.test(r.querySelector('.result-preview').style.getPropertyValue('--font-specimen'))))), 'Rows past the fifth use subset faces')
   const subsetNames = await page.locator('#results .result-preview').evaluateAll(inputs => inputs.filter(i => /^"subset-\d+"$/.test(i.style.getPropertyValue('--font-specimen'))).map(i => [i.value, i.dataset.family]))
-  assert.ok(subsetNames.length && subsetNames.every(([value, family]) => value === family), `Rows past the fifth show their own names too: ${JSON.stringify(subsetNames.slice(0, 3))}`)
+  assert.ok(subsetNames.length && subsetNames.every(([value, family]) => value === (original.read ?? family)), `Rows past the fifth show the read words or their own names too: ${JSON.stringify([original.read, subsetNames.slice(0, 3)])}`)
   assert.ok((await page.locator('#results .font-twins').allTextContents()).every(t => t.startsWith('≈ ')), 'Twins read as ≈')
   // A typed text reaches subset rows as they come near: one in view takes it, the last waits until scrolled to.
   const valueOf = n => page.locator('#results .result').nth(n).locator('.result-preview').inputValue()
   await page.locator('#results .result').nth(8).scrollIntoViewIfNeeded(); await page.locator('#preview-text').fill('Hamburg')
   await page.waitForFunction(() => document.querySelectorAll('#results .result-preview')[7].value === 'Hamburg')
-  assert.equal(await valueOf(all.length - 1), all.at(-1).face.family, 'A far subset row keeps its name until it comes near')
+  assert.equal(await valueOf(listed.length - 1), original.read ?? listed.at(-1).face.family, 'A far subset row keeps its name, or the read words, until it comes near')
   await page.locator('#results .result').last().scrollIntoViewIfNeeded()
   await page.waitForFunction(() => [...document.querySelectorAll('#results .result-preview')].at(-1).value === 'Hamburg')
   await page.locator('#preview-text').fill('')
+  await page.waitForFunction(() => !document.querySelector('#results').hasAttribute('aria-busy'))  // the list settles after the text changed it
   await page.unroute(refused)
   // Folding, More matches stays where it was pressed.
   await page.locator('#more-matches').scrollIntoViewIfNeeded()
@@ -696,9 +722,9 @@ try {
   for (const [text, drawnText] of [['Hamburg', 'Hamburg'], ['a~b', 'Quiet rivers flow']]) {
     const texted = await shared.newPage(); await texted.goto(`${base}/?sample=${named.id}&text=${encodeURIComponent(text)}`); const value = await result(texted)
     assert.deepEqual([value.source.known, value.source.text], [named.id, drawnText], text)
-    // A link's text is a chosen text: the previews show it; one they refuse leaves each preview its own name.
+    // A link's text is a chosen text: the previews show it; one they refuse leaves each preview the words read from the crop, else its own name.
     const shown = await texted.locator('#results .result-preview:not([readonly])').evaluateAll(inputs => inputs.map(i => [i.value, i.dataset.family]))
-    assert.ok(shown.length && shown.every(([value, family]) => value === (drawnText === text ? text : family)), `${text}: ${JSON.stringify(shown)}`); await texted.close()
+    assert.ok(shown.length && shown.every(([shownText, family]) => shownText === (drawnText === text ? text : value.read ?? family)), `${text}: ${JSON.stringify([value.read, shown])}`); await texted.close()
   }
   // A cropped sample, like any image, is named by its style; the whole sample again, by its font.
   await sender.locator('#image-frame').focus(); await sender.keyboard.press('Shift+ArrowLeft'); const sent = await result(sender)
@@ -729,7 +755,7 @@ try {
   // Once the first matches show, the page keeps every shipped catalog under its checksum, beside the model; a later visit
   // downloads none of them, even searching All. An embed, which searches one catalog, downloads no other.
   await idle(alone)
-  const kept = [[data.model, data.modelSha256], ...data.catalogs.map(c => [c.file, c.sha256])].sort()
+  const kept = [[data.model, data.modelSha256], ...(data.reader ? [[data.reader, data.readerSha256]] : []), ...data.catalogs.map(c => [c.file, c.sha256])].sort()  // the line reader is kept beside the model
   const keptFiles = async page => (await page.evaluate(async () => (await (await caches.open('gpu-font')).keys()).map(r => new URL(r.url)).map(u => [u.pathname.slice(1), u.search.slice(1)]))).sort()
   for (let tries = 0; (await keptFiles(alone)).length < kept.length && tries < 100; tries++) await alone.waitForTimeout(100)
   assert.deepEqual(await keptFiles(alone), kept, 'The model and every catalog are kept under their checksums')

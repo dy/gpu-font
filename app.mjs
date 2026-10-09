@@ -4,6 +4,9 @@ import { prepareLine } from './src/line.mjs'
 import { readNetwork, inferCPU, rankWindows } from './src/network.mjs'
 import { createNetworkGPU } from './src/network-gpu.mjs'
 import { readCatalog, unionCatalogs, subsetCatalog, matchCatalog, foldTwins, embedWindows, sha256, preparationHash, readHeads, verdict, writeStyle, readStyle } from './src/catalog.mjs'
+import { readReader, readLine } from './src/reader.mjs'
+import { rerank, MIN_TEXT, SHORTLIST } from './src/sametext.mjs'
+import { drawLine } from './src/references.mjs'
 import { readMyFonts } from './my-fonts.mjs'
 import { previewAddress } from './previews.mjs'
 
@@ -15,6 +18,7 @@ const params = new URLSearchParams(location.search), embedded = params.has('embe
 const place = (popover, left, top) => Object.assign(popover.style, { left: `${left + scrollX}px`, top: `${top + scrollY}px` })
 const source = $('source'), ctx = source.getContext('2d', { willReadFrequently: true })
 let model, heads = null, catalog, gpu, gpuReason = '', current = null, crop = null, last = null
+let reader = null, reranked = null, rerankTimer = 0  // the line reader (a promise once the manifest names one) and the shortlist set in the crop's words
 let revision = 0, analysis = 0, dragging = null, armed = null
 let scheduled = 0, running = false, pending = false
 // The sample the page opens with, and the text every sample draws until edited. A match's preview shows its own family's
@@ -52,7 +56,7 @@ function invalidate(retain = false) {
   analysis++; last = null; pending = false
   cancelAnimationFrame(scheduled); scheduled = 0
   if (!retain) {
-    $('results').replaceChildren(); hideTwins(); $('more-matches').inert = true; $('find-empty').hidden = true
+    $('results').replaceChildren(); hideTwins(); $('more-matches').inert = true; $('find-empty').hidden = true; $('text-note').hidden = true
     previewValid = true; $('preview-error').hidden = true
   }
   shareable()
@@ -316,6 +320,11 @@ async function analyze() {
     last = { accepted: embedding ? null : matches[0].score >= (catalog.calibration?.threshold ?? 1.01), calibration: embedding ? null : catalog.calibration, mode: embedding ? 'encoder' : 'neural', backend: used, milliseconds: elapsed, model: catalog.modelSha256, source: specimen, crop: region, resolution: sampled, background: matte,
       ...(embedding ? { embedding: Array.from(embedding), verdict: judged, catalog: { id: searchCatalog.id, sha256: searchCatalog.sha256 }, scoreType: 'cosine', inferenceMilliseconds: elapsed } : {}),
       inputs: prepared.windows.map(input => ({ ...input, pixels: Array.from(input.pixels) })), matches }
+    // The crop's own words, read by the line reader: shown in every preview and, with the person's edits, ranking the shortlist.
+    last.read = isEncoder() && await reader ? readCrop(await reader, image, matte) : null
+    if (run !== analysis) return
+    reranked = null; await rerankResults()
+    if (run !== analysis) return
     showInput(prepared.windows, region, sampled)
     renderResults()
     showVerdict(embedding ? labelsFor(judged, matches) : [last.accepted ? 'Above threshold' : 'Below threshold'])
@@ -366,7 +375,7 @@ function mark(root, selector) {
 }
 function renderResults() {
   hideTwins() // Its note is about to be replaced.
-  $('more-matches').inert = true; $('find-empty').hidden = true
+  $('more-matches').inert = true; $('find-empty').hidden = true; $('text-note').hidden = true
   marks?.clear()
   if (!last) return
   subsetRows.clear(); nearby.disconnect()
@@ -375,8 +384,10 @@ function renderResults() {
   // Kinds of one family identical in the crop's script (IBM Plex Sans and its KR, Arabic… families) fold into one row; the
   // saved result keeps every family. One row past the list tells whether More matches has more to show.
   const length = expanded ? LONG : SHORT, ranked = (match, rank) => [match, rank]
-  const rows = !isEncoder() ? last.matches.slice(0, SHORT).map(ranked) : terms.length ? found(terms, length + 1)
-    : foldTwins(last.matches, searchCatalog, { script: last.verdict?.script?.[0]?.label, limit: length + 1 }).map(ranked)
+  const rows = !isEncoder() ? last.matches.slice(0, SHORT).map(ranked) : terms.length ? found(terms, length + 1) : ranking(length + 1).map(ranked)
+  const text = rankText(), byText = isEncoder() && !terms.length && reranked?.last === last && reranked.text === text
+  $('text-note').hidden = !byText
+  if (byText) $('text-note').textContent = `Shortlist set in “${text}”${chosenText ? '' : ', read from the crop'}: each face draws it, and the match counts with the catalog's. Edit a preview to change the text.`
   $('more-matches').inert = !isEncoder() || rows.length <= SHORT
   $('more-matches').setAttribute('aria-expanded', String(expanded)); $('more-matches').firstChild.textContent = expanded ? 'Fewer matches' : 'More matches'
   $('find-empty').textContent = `No match named “${query}”`; $('find-empty').hidden = !terms.length || rows.length > 0
@@ -447,9 +458,56 @@ function matchLine(match, rank) {
     note.tabIndex = 0; note.dataset.twins = JSON.stringify(siblings); note.setAttribute('aria-label', `Same letters as ${siblings.join(', ')}`)
     style.after(note)
   }
-  const value = line.querySelector('.result-score')
-  value.textContent = score.toFixed(3); value.title = 'Cosine similarity, not certainty'; value.setAttribute('aria-label', `Cosine similarity: ${score.toFixed(3)}`)
+  const value = line.querySelector('.result-score'), shown = match.combined !== undefined ? match.combined / 2 : score
+  value.textContent = shown.toFixed(3); value.title = match.combined !== undefined ? 'Catalog and same-text similarity, averaged; not certainty' : 'Cosine similarity, not certainty'
+  value.setAttribute('aria-label', `${match.combined !== undefined ? 'Catalog and same-text similarity' : 'Cosine similarity'}: ${shown.toFixed(3)}`)
   return line
+}
+// The text the shortlist is ranked with: typed in a preview, else read from the crop; null when neither is long enough.
+const rankText = () => { const text = (chosenText ?? last?.read ?? '').trim(); return text.length >= MIN_TEXT ? text : null }
+// The folded ranking as the page shows it: the first rows set in the text when it is known, the rest as the catalog ranks them.
+function ranking(limit) {
+  const script = last.verdict?.script?.[0]?.label, folded = foldTwins(last.matches, searchCatalog, { script, limit })
+  return reranked?.last === last && reranked.text === rankText() ? reranked.rows.concat(folded.slice(SHORTLIST)).slice(0, limit) : folded
+}
+// The crop's line read by the reader, prepared as the crop is; null when there is no line, or the text is not one the previews take.
+function readCrop(model, image, matte) {
+  const { status, windows } = prepareLine(image, { background: matte, deskew: true, sampler: 'line' })
+  if (status !== 'ok' || windows[0].width > model.maxWidth) return null
+  const text = readLine(model, windows[0]).text.trim()
+  return text && validText(text) ? text : null
+}
+const drawing = document.createElement('canvas').getContext('2d', { willReadFrequently: true })
+// A row's face drawing `words` at `size`, through the previews' own font loading; null when the face has no font the page can draw.
+async function drawRow(row, words, size) {
+  const { face } = row, source = previewSources(face)[0]
+  if (!source?.text?.latin) return null
+  const family = await loadFont(face.id, face).catch(() => null)
+  return family ? drawLine(drawing, family, words, size, face) : null
+}
+// The shortlist set in the crop's own words (src/sametext.mjs): the first rows re-sorted by catalog score plus the cosine with
+// the text drawn in each face the page can load, once a text is known; the result holds for this analysis and this text.
+async function rerankResults() {
+  const text = rankText(), key = last
+  // Without WebGPU the thirty faces at three sizes would take the CPU half a minute: the catalog's order stands, the previews still show the words.
+  if (!isEncoder() || !last?.embedding || !text || !gpu) { reranked = null; if (last) delete last.sametext; return }
+  const rows = foldTwins(last.matches, searchCatalog, { script: last.verdict?.script?.[0]?.label, limit: SHORTLIST })
+  const project = async windows => { if (gpu) try { return await Promise.all(windows.map(w => gpu.infer(w))) } catch {} return windows.map(w => inferCPU(model, w)) }
+  const sorted = await rerank(rows, text, { embedding: last.embedding, encoder: { preparation: model.preparation, project }, draw: drawRow })
+  if (last !== key || rankText() !== text) return
+  reranked = { last, text, rows: sorted }
+  last.sametext = { text, rows: sorted.map(r => ({ family: r.family, textScore: r.textScore, combined: r.combined })) }  // the saved result says how the shortlist was ordered
+}
+// A typed text re-ranks the shortlist once typing pauses; the preview being typed in keeps its focus and caret.
+function scheduleRerank() {
+  clearTimeout(rerankTimer); $('results').setAttribute('aria-busy', 'true')  // the list is about to change: readers and checks can wait for it
+  rerankTimer = setTimeout(async () => {
+    const active = document.activeElement, family = active?.classList?.contains('result-preview') ? active.dataset.family : null, caret = active?.selectionStart
+    try { await rerankResults(); renderResults() } finally { $('results').removeAttribute('aria-busy') }
+    if (!family) return
+    const again = [...$('results').querySelectorAll('.result-preview')].find(input => input.dataset.family === family)
+    if (again) { again.focus({ preventScroll: true }); if (caret != null) again.setSelectionRange(caret, caret) }
+  }, 400)
 }
 // A row: its match at its rank, previewed as the list's `index`th row.
 function encoderResult(match, rank, index) {
@@ -480,7 +538,7 @@ function previewElement(face, [candidate, ...rest], index) {
   const input = document.createElement('input'); input.className = 'result-preview'; input.type = 'text'; input.maxLength = 80
   input.spellcheck = false; input.autocomplete = 'off'; input.style.visibility = 'hidden' // Keeps its row while the font loads.
   input.setAttribute('aria-label', `Preview ${face.family}`); input.setAttribute('aria-describedby', 'preview-error')
-  input.readOnly = !text.latin; input.dataset.family = face.family; input.value = text.latin ? chosenText ?? face.family : text.sampleText
+  input.readOnly = !text.latin; input.dataset.family = face.family; input.value = text.latin ? chosenText ?? last?.read ?? face.family : text.sampleText
   input.style.fontWeight = face.weight ?? 400; input.style.fontStyle = face.style ?? 'normal'
   if (!index && text.latin) input.id = 'preview-text'
   const subset = index >= SHORT && !face.local && !face.file, show = family => { input.style.setProperty('--font-specimen', `"${family}"`); input.style.visibility = '' }
@@ -489,7 +547,7 @@ function previewElement(face, [candidate, ...rest], index) {
     // It shows the text chosen as its face loads, else its family's name. Failing before it ever shows, the face gives
     // way to the next source; once shown, a row keeps its last text.
     const follow = () => {
-      const typed = chosenText, shown = typed ?? face.family
+      const typed = chosenText, shown = typed ?? last?.read ?? face.family
       return subsetFont(face, shown).then(family => { if (input.isConnected && chosenText === typed) { input.value = shown; show(family) } }, () => { if (input.style.visibility) next(input)() })
     }
     subsetRows.set(input, follow); whenNear(input, follow)
@@ -571,6 +629,8 @@ async function selectCatalog(option, file = null, { focus = true } = {}) {
       const start = performance.now(), matches = matchCatalog(cached.embedding, searchCatalog, cached.verdict)
       const elapsed = performance.now() - start
       last = { ...cached, matches, catalog: { id: option.id, sha256: hash }, milliseconds: elapsed, cachedEmbedding: true }
+      delete last.sametext; reranked = null; await rerankResults()
+      if (version !== catalogRevision) return
       if (last.inputs) showInput(last.inputs, last.crop, last.resolution)
       renderResults()
       $('detection-time').textContent = `Ranked in ${elapsed.toFixed(1)}ms`
@@ -669,9 +729,9 @@ function updatePreview(input) {
   for (const other of $('results').querySelectorAll('.result-preview')) {
     if (other.readOnly) continue
     other.setAttribute('aria-invalid', 'false')
-    if (other !== input) other.value = chosenText ?? other.dataset.family
+    if (other !== input) other.value = chosenText ?? last?.read ?? other.dataset.family
   }
-  followText()
+  followText(); scheduleRerank()
 }
 function point(event) {
   const r = source.getBoundingClientRect()
@@ -927,12 +987,14 @@ async function initialize() {
     const data = JSON.parse(new TextDecoder().decode(await download('./site.json', () => {})))
     const option = data.catalogs?.[0], total = data.modelBytes + (option ? option.bytes : 0), bar = $('loading')
     const received = total ? n => { bar.max = total; bar.value += n; $('loading-percent').textContent = `${Math.floor(bar.value / total * 100)}%` } : () => {}
-    prune(new Set([data.modelSha256, ...(data.catalogs ?? []).map(each => each.sha256)])).catch(() => {})
+    prune(new Set([data.modelSha256, ...(data.readerSha256 ? [data.readerSha256] : []), ...(data.catalogs ?? []).map(each => each.sha256)])).catch(() => {})
     const catalogBytes = option && fetchVerified(option.file, option.sha256, received, 'Could not load the initial catalog.', 'Catalog checksum failed.')
     catalogBytes?.catch(() => {}) // Reported when awaited, after the model's own checks.
     const modelBytes = await fetchVerified(data.model, data.modelSha256, received, `Could not load ${data.model}.`, 'Model checksum failed.')
     const artifact = JSON.parse(new TextDecoder().decode(modelBytes))
     model = readNetwork(artifact); heads = readHeads(artifact); catalog = data
+    // The line reader loads beside the model when the manifest names one; without it the shortlist ranks by the catalog alone.
+    reader = data.reader ? fetchVerified(data.reader, data.readerSha256, () => {}, `Could not load ${data.reader}.`, 'Reader checksum failed.').then(bytes => readReader(JSON.parse(new TextDecoder().decode(bytes)))).catch(() => null) : null
     if (isEncoder()) {
       if (await preparationHash(artifact.preparation) !== data.preparationSha256) throw new Error('Preparation checksum failed.')
       const first = owned(readCatalog(JSON.parse(new TextDecoder().decode(await catalogBytes)), data), option)

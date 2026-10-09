@@ -10,8 +10,11 @@ import { catalogIcon } from './favicons.mjs'
 
 const hash = bytes => createHash('sha256').update(bytes).digest('hex')
 const read = async path => JSON.parse(await readFile(path, 'utf8'))
-const modelPath = 'models/encoder/encoder.json'
+const modelPath = 'models/encoder/encoder.json', readerPath = 'models/reader/reader.json'
 const bytes = await readFile(modelPath), artifact = JSON.parse(bytes), model = readNetwork(artifact)
+// The line reader ships beside the encoder when it exists (train/read.py); the page then shows and ranks by the crop's own words.
+const readerBytes = await readFile(readerPath).catch(() => null)
+const reader = readerBytes ? { reader: readerPath, readerSha256: hash(readerBytes), readerBytes: readerBytes.length } : {}
 const binding = { encoderSha256: hash(bytes), preparationSha256: await preparationHash(artifact.preparation) }
 for (const [name, key] of [['input', 'sha256'], ['prepare', 'normalizerSha256'], ['line', 'lineSha256']]) {
   if (hash(await readFile(`src/${name}.mjs`)) !== artifact.preparation[key]) throw new Error(`Encoder preparation changed: ${name}`)
@@ -143,6 +146,6 @@ const runtime = await read('bench/style-runtime.json'), measuredFiles = new Map(
 if (runtime.encoderSha256 !== binding.encoderSha256 || measuredFiles.get(modelPath)?.sha256 !== binding.encoderSha256 || measuredFiles.get(options[0].file)?.sha256 !== options[0].sha256 || !runtime.match?.cpuMs) throw new Error('Changed encoder/catalog runtime; run checks/encoder.mjs')
 metrics = { ...metrics, matchWebgpuSeconds: runtime.match.webgpuMs / 1000, matchCpuSeconds: runtime.match.cpuMs / 1000,
   downloadMegabytes: (measuredFiles.get(modelPath).gzipBytes + measuredFiles.get(options[0].file).gzipBytes) / 1e6 }
-await writeFile('site.json', JSON.stringify({ ...binding, modelSha256: binding.encoderSha256, model: modelPath, modelBytes: bytes.length, fonts, catalogs: options, families: families.size, previews,
+await writeFile('site.json', JSON.stringify({ ...binding, modelSha256: binding.encoderSha256, model: modelPath, modelBytes: bytes.length, ...reader, fonts, catalogs: options, families: families.size, previews,
   parameters: model.layers.reduce((sum, l) => sum + l.weights.length + l.bias.length, 0), weightBits: [...new Set(artifact.layers.map(l => l.bits ?? 8))].sort((a, b) => a - b), metrics }) + '\n')
 console.log(`Wrote site.json: ${options.map(o => `${o.name} (${o.families})`).join(', ')}. Fonts load from Google Fonts.`)

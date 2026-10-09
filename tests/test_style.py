@@ -5,6 +5,7 @@ import subprocess
 import tempfile
 from pathlib import Path
 from types import SimpleNamespace
+import hashlib
 import unittest
 
 import numpy as np
@@ -21,7 +22,7 @@ from train.style_data import damage, init as init_stream, sample as sample_view,
 from train.encoder_data import save
 from train.ten_model import Classifier, CORPUS_ARCH, LARGE_ARCH, WIDER_ARCH
 from train.style_open import queryable
-from train.style_fonts import open_role, open_families, HELD_OUT
+from train.style_fonts import open_role, open_families, designs, HELD_OUT
 from train.style_teacher import enumerate_faces, render_job, SIZE
 from scripts.corpus import font_path, CACHE, ROOT as REPO
 
@@ -327,6 +328,15 @@ class StyleFontsTests(unittest.TestCase):
         self.assertTrue(0.08 < len(held)/len(ids) < 0.12, len(held))
         self.assertEqual([open_role(i) for i in ids[:50]], [open_role(i) for i in ids[:50]])  # the rule, not a draw
         self.assertEqual(open_role('debian-dejavu'), open_role('debian-dejavu'))
+        for base in ['debian-inter', 'github-source-sans', 'pangram-pangram-pp-neue-corp']:  # a variable twin splits with its family, whichever way the family goes
+            self.assertEqual((open_role(f'{base}-variable'), open_role(f'{base}-vf')), (open_role(base), open_role(base)), base)
+        # Rows that name a design (a product page) split by it: every cut of PP Agrandir goes where its page goes, whatever its id hashes to.
+        rows = [{'id': f'pangram-pangram-pp-agrandir-{cut}', 'design': 'pp-agrandir'} for cut in ['', 'wide', 'narrow', 'variable', 'text-variable']] + [{'id': 'debian-sahel'}]
+        self.assertEqual(designs(rows), {r['id']: 'pp-agrandir' for r in rows[:5]})
+        self.assertEqual(len({open_role(r['id'], designs(rows).get(r['id'])) for r in rows[:5]}), 1)
+        self.assertEqual(open_role('pangram-pangram-pp-agrandir', 'pp-agrandir'), open_role('anything', 'pp-agrandir'))
+        plain = lambda i: 'held-out' if int(hashlib.sha1(i.encode()).hexdigest()[:8], 16) % HELD_OUT == 0 else 'train'
+        self.assertEqual([open_role(i) for i in ids[:50] + ['debian-inter-variable-x']], [plain(i) for i in ids[:50] + ['debian-inter-variable-x']])  # only a trailing twin word folds
 
     def test_open_families_need_letters_to_draw_and_keep_their_alphabets(self):
         inventory = {'store': '.data/fonts-open', 'families': [
@@ -358,13 +368,13 @@ class StoredViewTests(unittest.TestCase):
             setup = SimpleNamespace(faces=faces, position={0: 0, 1: 1}, scripts=['Latn'])
             stored = StoredViews(setup, ('train',), sources=[(str(manifest), str(pixels), 'photo')])
             # The 700 photograph takes the 700 face; the 100 italic one, which the family lacks, its default face; family b is not trained.
-            self.assertEqual([(face, script) for _, face, script, _ in stored.photos], [(1, 'Latn'), (0, 'Latn')])
+            self.assertEqual([(face, script) for _, face, script, _ in stored.captures['photo']], [(1, 'Latn'), (0, 'Latn')])
             view = stored.sample(random.Random(0), 1)[0]; self.assertEqual(view['windows'][0].shape, (3, 4))
-            self.assertEqual((len(stored.photos), len(stored.views)), (2, 0))  # photographs keep their own list, for their share of a step
+            self.assertEqual((len(stored.captures['photo']), len(stored.views)), (2, 0))  # photographs keep their own list, for their share of a step
             chromium = StoredViews(setup, ('train',), sources=[(str(manifest), str(pixels), 'chromium')])
             self.assertEqual(chromium.views, [])  # a Chromium source keeps to the roles asked for; these are development
             screens = StoredViews(setup, ('train',), sources=[(str(manifest), str(pixels), 'photo'), (str(manifest), str(pixels), 'screen')])
-            self.assertEqual((len(screens.photos), len(screens.views)), (4, 0))  # screens are captures too: they join the photographs' list and share
+            self.assertEqual(({k: len(v) for k, v in screens.captures.items()}, len(screens.views)), ({'photo': 2, 'screen': 2}, 0))  # screens are captures too, a kind of their own in the share
 
     def test_a_damaged_font_file_draws_nothing_instead_of_stopping_the_teacher_build(self):
         with tempfile.TemporaryDirectory() as tmp:
@@ -393,13 +403,17 @@ class WarmStartTests(unittest.TestCase):
         torch.testing.assert_close(loaded['fine.weight'][0], old.fine.weight[1]); torch.testing.assert_close(loaded['fine.weight'][1], fresh['fine.weight'][1])
         for key in ('weight.weight', 'italic.bias', 'category.weight'): torch.testing.assert_close(loaded[key], old.state_dict()[key])
 
-    def test_photographs_take_a_fixed_share_of_each_step_s_stored_views(self):
+    def test_captures_take_a_fixed_share_of_each_step_s_stored_views_split_evenly_between_their_kinds(self):
         stored = StoredViews.__new__(StoredViews); stored.pixels = [np.arange(12, dtype=np.uint8)]
-        stored.views = [(0, 0, 'Latn', [(0, 4, 3)])]*100; stored.photos = [(0, 1, 'Latn', [(0, 4, 3)])]*10
+        stored.views = [(0, 0, 'Latn', [(0, 4, 3)])]*100; stored.captures = {'photo': [(0, 1, 'Latn', [(0, 4, 3)])]*10}
         faces = [v['face'] for v in stored.sample(random.Random(0), 32)]
         self.assertEqual((faces.count(1), faces.count(0)), (8, 24))  # a quarter of the stored views are captures
-        stored.photos = []; self.assertEqual([v['face'] for v in stored.sample(random.Random(0), 8)], [0]*8)  # no photographs: renders only
-        stored.photos = [(0, 1, 'Latn', [(0, 4, 3)])]*3; stored.views = []; self.assertEqual([v['face'] for v in stored.sample(random.Random(0), 8)], [1]*3)  # no renders: the photographs there are
+        stored.captures['screen'] = [(0, 2, 'Latn', [(0, 4, 3)])]*1000; faces = [v['face'] for v in stored.sample(random.Random(0), 32)]
+        self.assertEqual((faces.count(1), faces.count(2), faces.count(0)), (4, 4, 24))  # a thousand screens take no more of the share than ten photographs
+        stored.captures['photo'] = stored.captures['photo'][:1]; faces = [v['face'] for v in stored.sample(random.Random(0), 32)]
+        self.assertEqual((faces.count(1), faces.count(2), faces.count(0)), (1, 7, 24))  # what one photograph cannot fill, the screens do
+        stored.captures = {}; self.assertEqual([v['face'] for v in stored.sample(random.Random(0), 8)], [0]*8)  # no captures: renders only
+        stored.captures = {'photo': [(0, 1, 'Latn', [(0, 4, 3)])]*3}; stored.views = []; self.assertEqual([v['face'] for v in stored.sample(random.Random(0), 8)], [1]*3)  # no renders: the photographs there are
 
     def test_heads_keep_the_labels_behind_their_outputs(self):
         heads = Heads(['Latn', 'Cyrl'], ['a'], 8); self.assertEqual((heads.script_labels, heads.fine_labels), (['Latn', 'Cyrl'], ['a']))

@@ -115,3 +115,27 @@ test('dark letters on a wall darker than mid-grey prepare as the same letters on
     }
   }
 })
+
+test('the line sampler gives the whole line as one strip, 48 tall and as wide as the line is, deskewed like the windows', () => {
+  const image = fixture(), { status, windows, angle } = prepareLine(image, { sampler: 'line' })
+  assert.equal(status, 'ok'); assert.equal(angle, 0); assert.equal(windows.length, 1)
+  const [strip] = windows
+  assert.equal(strip.height, 48); assert.equal(strip.width, Math.round(105 * 48 / 22))  // the found line, ink plus a pixel around, is 105 by 22; the strip keeps the proportion
+  assert.deepEqual(strip.rect, { x: 4, y: 4, width: 105, height: 22 })
+  assert.equal(strip.pixels.length, strip.width * strip.height)
+  for (const p of strip.pixels) assert.equal(p, Math.fround(Math.round(p * 255) / 255))
+  assert.ok(strip.pixels.some(p => p === 0) && strip.pixels.some(p => p === 1))  // ink and paper both present
+  // A tight crop and the same line with a margin give the same strip, rect mapped back to the crop.
+  const boxes = [[0, 0, 7, 20], [13, 0, 7, 20], [45, 0, 8, 20], [60, 0, 8, 20], [95, 0, 8, 20]]
+  const tight = prepareLine(fixture(103, 20, boxes), { sampler: 'line' }), margin = prepareLine(fixture(123, 40, boxes.map(([x, y, w, h]) => [x + 10, y + 10, w, h])), { sampler: 'line' })
+  assert.deepEqual(tight.windows[0].pixels, margin.windows[0].pixels)
+  assert.deepEqual(tight.windows[0].rect, { x: 0, y: 0, width: 103, height: 20 }); assert.deepEqual(margin.windows[0].rect, { x: 9, y: 9, width: 105, height: 22 })
+  // A very long line is squeezed to the widest strip rather than cut.
+  const long = prepareLine(fixture(2400, 30, Array.from({ length: 60 }, (_, i) => [5 + i * 40, 5, 8, 20])), { sampler: 'line' })
+  assert.equal(long.windows[0].width, 1024)
+  // Blank and skewed inputs behave as the windows sampler does: no strip, and the same angle.
+  assert.deepEqual(prepareLine(fixture(40, 20, []), { sampler: 'line' }), { status: 'blank', windows: [], angle: 0 })
+  const skewed = fixture(160, 60, Array.from({ length: 8 }, (_, i) => [10 + i * 18, 25 - Math.round(i * 1.5), 8, 20]))
+  const a = prepareLine(skewed, { sampler: 'windows', deskew: true }), b = prepareLine(skewed, { sampler: 'line', deskew: true })
+  assert.equal(b.angle, a.angle); assert.equal(b.windows[0].height, 48); assert.ok(b.windows[0].polygon, 'the strip maps back to the crop as a polygon when deskewed')
+})

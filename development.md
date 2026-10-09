@@ -6,7 +6,7 @@
 - `npm run stamp` after changing a page, stylesheet, module or the version, so the pages pin the new content and link the new release.
 - `node checks/catalog-demo.mjs` with `npm run demo` running, after changing the page or the matcher: the browser suite.
 - A model or catalog change goes through `node checks/encoder.mjs` and `npm run demo:build`, which rebind `site.json`; the figures in README and bench come from those files, never by hand.
-- Benchmarks are frozen: a change to a pinned preparation file needs the byte-for-byte check and a `repins` entry (bench/style.md).
+- Benchmarks are frozen: a change to a pinned preparation file needs the byte-for-byte check and a `repins` entry (bench/style.md); `node scripts/python.mjs -m train.style_bench repin --name bench --reason "…"` (and `--name catalog`) does both, keeping the move only when every stored render prepares to the same pixels.
 
 ## Run the demo
 
@@ -45,13 +45,15 @@ On the page:
 
 `createMatcher` (`src/match.mjs`) is the package entry. The steps are separate modules if you need them: `prepareLine` (`src/line.mjs`) cuts the crop into up to three 128×48 windows, `src/network.mjs` and `src/network-gpu.mjs` run the network, and `src/catalog.mjs` ranks and folds. `src/references.mjs` and `src/font-file.mjs` build My fonts catalogs on the Catalogs page.
 
+`createReader` (`src/reader.mjs`) runs the line reader on the strip `prepareLine`'s `line` sampler gives, and `rerank` (`src/sametext.mjs`) sets the shortlist in a text through `drawLine` (`src/references.mjs`); the reader is trained by `train/read.py` on the style stream's views ([bench/reader.md](bench/reader.md)) and exported to `models/reader/reader.json`, which `scripts/demo-catalog-build.mjs` records in `site.json` when present.
+
 ## Catalogs
 
 A catalog is a JSON file of reference vectors, bound to the exact model that made them. Retraining the model means reindexing every catalog, and publishing a new minor version: users pin `^0.x`, so their own catalogs keep loading until they upgrade. Share links (`?style=`) carry the model's first 8 hex digits and stop showing matches under a new model.
 
 - **Google Fonts**: every family except color, emoji and letterless ones, from Chromium renders of each face.
 - **Other free sources** (Fontsource, Fontshare, Uncut, Velvetyne and more; each under its own licence): `node scripts/catalog-files.mjs` indexes the font files pinned in `bench/open-fonts.json`, in Chromium, with the same builder My fonts uses. Only names, links and vectors are committed; the fonts stay in `.data/`.
-- Sources without verified permission ship only by a decision recorded in `bench/foundries.json` (DaFont, Adobe Fonts); MyFonts stays local. WhatFontIs, whose terms say nothing on collection, ships from its own renders (`.data/previews/whatfontis-archives`). `catalogs.html` shows each source's terms.
+- Sources without verified permission ship only by a decision recorded in `bench/foundries.json` (DaFont, Adobe Fonts, and Pangram Pangram, which gave its permission to train on its library); MyFonts stays local. WhatFontIs, whose terms say nothing on collection, ships from its own renders (`.data/previews/whatfontis-archives`). `catalogs.html` shows each source's terms.
 
 A new shipped catalog also needs its entry in `catalogs` (`src/match.mjs`) and its id in `src/match.d.ts`; the tests fail until both list it.
 
@@ -62,11 +64,12 @@ Everything collected lives under `.data/` and is used for training, for a read, 
 | Set | Where | Used for |
 |---|---|---|
 | Google Fonts, 2,004 families | `.data/fonts`, `bench/corpus.json` | training; the catalog benchmark; the Google Fonts catalog |
-| Open font files, 8,517 families from GitHub, Debian, Font Library and 30 more sources, hand-downloaded ones in `.data/manual` | `.data/fonts-open`, `bench/open-fonts.json`, `bench/open-releases.json` | training (nine families in ten); the held-out read (`train.style_open`, one in ten); the file-built catalogs |
+| Open font files, 8,718 families from GitHub, Debian, Font Library, Pangram Pangram and 30 more sources, hand-downloaded ones in `.data/manual` | `.data/fonts-open`, `bench/open-fonts.json`, `bench/open-releases.json` | training (nine families in ten); the held-out read (`train.style_open`, one in ten); the file-built catalogs |
 | Adobe Fonts and DaFont captures, the pilot sets | `.data/previews` | the capture-built catalogs (`scripts.preview_catalog`); MyFonts stays local, its terms a ban |
 | WhatFontIs-Bench photographs | `.data/whatfontis` | development part: training views and checkpoint selection; final part: the photo read (`scripts/whatfontis.mjs`) |
 | Photographs of fonts in no catalog | `.data/style/photos-absent.*` | rejection calibration at export |
 | DaFont forum requests, the finder set, the photo controls | `.data/dafont`, `.data/finders`, `.data/photo-controls` | reads (`scripts/dafont.mjs`, `scripts/finders.mjs`, `scripts/photo-controls.mjs`) |
+| DaFont forum threads: every identification request the forum settled, with the asker's picture, its text lines boxed by macOS Vision | `.data/forum/dafont` (`scripts/dafont_forum.py`, `scripts/forum_boxes.py`) | threads split by hash: nine in ten pack as training views (`train.style_forum`), one in ten is the forum read (`scripts/forum.mjs`); the posters' pictures, never shipped |
 | Web screenshots: lines from the top sites' homepages, labelled by the font Chromium drew | `.data/screens` (`scripts/web_screens.mjs`) | sites split by hash: nine in ten pack as training views (`train.style_screens`), one in ten is the screens read (`scripts/screens.mjs`); other people's designs, never shipped |
 | Surface textures, 383 CC0 diffuse maps from Poly Haven, none the benchmark used | `.data/textures` (`scripts/textures.mjs`) | photographed training views (`train.style_data.surface`) |
 | Twins across every catalog, per default face and script, from the teacher | `.data/style/twins.json` (`train.style twins`, also written by the catalog export) | the file-built catalogs' faces (`scripts/catalog-files.mjs`), and twin credit in every read (`scripts/photos.mjs`) |
@@ -83,7 +86,7 @@ npm run test:demo     # with the demo running; needs a Chromium with WebGPU
 
 ## Publish
 
-The npm package holds the entry, the modules it imports, its types, the model and the shipped catalogs; `tests/package.test.mjs` checks the tarball against the imports. `npm publish` runs `node --test` first.
+The npm package holds the entry, the modules it imports, its types, the model, the line reader and the shipped catalogs; `tests/package.test.mjs` checks the tarball against the imports. `npm publish` runs `node --test` first.
 
 ```sh
 npm pack --dry-run    # list what ships
