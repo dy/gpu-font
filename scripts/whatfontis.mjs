@@ -4,7 +4,7 @@
 // (the style split's test role, and every catalog besides Google Fonts) are the final read; the rest is development.
 import { readFile, writeFile, access, readdir } from 'node:fs/promises'
 import { execFileSync } from 'node:child_process'
-import { matchPhotos, rankOf, twinSets, catalogNames, normalize } from './photos.mjs'
+import { cleanFlag, matchPhotos, rankOf, twinSets, catalogNames, normalize } from './photos.mjs'
 
 export const REPO = 'https://github.com/whatfontis/WhatFontIs-Bench', COMMIT = 'f01d865380c160b5d54b07d0d1aba54d6ae3fefe'
 const ROOT = '.data/whatfontis', SET = `${ROOT}/WhatFontIs-Bench/v1`
@@ -58,7 +58,7 @@ export async function whatfontisSet() {
 
 async function main() {
   const { labels, indexed: images, fonts } = await whatfontisSet()
-  const { browser, adapter, encoderSha256, results } = await matchPhotos(images)
+  const { clean, report: target } = cleanFlag('whatfontis'), { browser, adapter, encoderSha256, results } = await matchPhotos(images, { clean })
   const twins = await twinSets(), scored = images.map((image, i) => ({ ...image, ...results[i], rank: rankOf(results[i].rows, image.truth.family, twins.get(image.truth.familyId)) }))
   const share = (list, test) => Math.round(1e4 * list.filter(test).length / list.length) / 1e4
   const summary = list => ({ images: list.length, fonts: new Set(list.map(s => s.truth.family)).size,
@@ -69,7 +69,7 @@ async function main() {
     set: { name: 'WhatFontIs-Bench v1.0', repository: REPO, commit: COMMIT, license: 'CC BY 4.0', paper: 'https://doi.org/10.5281/zenodo.22876579',
       images: labels.length, fonts: fonts.length, indexed: { images: images.length, fonts: new Set(images.map(i => i.truth.family)).size } },
     rule: 'Right when the true family, or a family the page folds into that row, is among the first rows the page shows (5); any weight counts, as in the set\'s own results.',
-    crop: 'The set\'s crop_box, the same for every finder.',
+    crop: 'The set\'s crop_box, the same for every finder.', ...(clean && { cleaner: clean }),
     catalogs: 'All: every shipped catalog searched as one.', browser, adapter, encoderSha256, date: new Date().toISOString().slice(0, 10),
     timeMs: { median: at(0.5), p95: at(0.95), from: 'image bytes to ranked rows, warm' },
     // Crops preparation turned away before the model: no answer at all.
@@ -83,7 +83,7 @@ async function main() {
   // One image a line, so the report stays readable and diffs stay small.
   const rows = scored.map(s => JSON.stringify({ id: s.label.id, family: s.truth.family, final: s.final, ...(s.status !== 'ok' && { status: s.status }), rank: s.rank, first: s.rows[0]?.name ?? null,
     score: s.rows[0] ? Math.round(s.rows[0].score * 1e3) / 1e3 : null, ms: Math.round(s.ms) }))
-  await writeFile('bench/whatfontis.json', JSON.stringify(report, null, 1).slice(0, -2) + `,\n "images": [\n  ${rows.join(',\n  ')}\n ]\n}\n`)
+  await writeFile(target, JSON.stringify(report, null, 1).slice(0, -2) + `,\n "images": [\n  ${rows.join(',\n  ')}\n ]\n}\n`)
   const pct = v => `${(100 * v).toFixed(1)}%`
   for (const [name, r] of Object.entries({ all: report.results.all, final: report.results.final, development: report.results.development }))
     console.log(`${name}: ${r.images} images, ${r.fonts} fonts: top-1 ${pct(r.top1)}, top-5 ${pct(r.top5)}, top-20 ${pct(r.top20)}`)

@@ -1,9 +1,10 @@
 import { editCrop, newCrop } from './crop.mjs'
 import { prepareInput } from './src/input.mjs'
 import { prepareLine } from './src/line.mjs'
+import { readings, principal } from './src/clean.mjs'
 import { readNetwork, inferCPU, rankWindows } from './src/network.mjs'
 import { createNetworkGPU } from './src/network-gpu.mjs'
-import { readCatalog, unionCatalogs, subsetCatalog, matchCatalog, foldTwins, embedWindows, sha256, preparationHash, readHeads, verdict, writeStyle, readStyle } from './src/catalog.mjs'
+import { readCatalog, unionCatalogs, subsetCatalog, matchCatalog, bestOf, foldTwins, embedWindows, sha256, preparationHash, readHeads, verdict, writeStyle, readStyle } from './src/catalog.mjs'
 import { readReader, readLine } from './src/reader.mjs'
 import { rerank, MIN_TEXT, SHORTLIST } from './src/sametext.mjs'
 import { drawLine } from './src/references.mjs'
@@ -295,37 +296,47 @@ async function analyze() {
     }
     const matte = background(image.data)
     source.style.backgroundColor = matte === 0 ? '#000000' : '#ffffff'
-    const prepared = isEncoder() ? prepareLine(image, { ...model.preparation, background: matte, deskew: true, sampler: 'windows' }) : prepareInput(image, { ...model.preparation, background: matte })
-    if (prepared.status !== 'ok') {
+    // A crop is read by its readings (src/clean.mjs): each line as it stands, cleaned as well unless already two-tone, and
+    // turned level as well where it stands steep. Each reading's windows keep their place in the crop.
+    const shift = (windows, { x, y }) => windows.map(w => ({ ...w, rect: { ...w.rect, x: w.rect.x + x, y: w.rect.y + y } }))
+    const lined = (isEncoder() ? readings(image, matte) : [{ rect: { x: 0, y: 0 }, crop: image, image }]).map(r => ({ ...r, prepared: isEncoder() ? prepareLine(r.image, { ...model.preparation, background: matte, deskew: true, sampler: 'windows' }) : prepareInput(r.image, { ...model.preparation, background: matte }) }))
+    const usable = lined.filter(c => c.prepared.status === 'ok')
+    if (!usable.length) {
       invalidate()
       if (specimen.drawing) return
-      message(prepared.status === 'blank' ? 'No visible text in this crop.' : 'Not enough contrast in this crop.', true)
+      message(lined[0].prepared.status === 'blank' ? 'No visible text in this crop.' : 'Not enough contrast in this crop.', true)
       return
     }
+    const windows = usable.flatMap(c => c.prepared.windows)
     let logits, used = 'CPU'
     if (gpu) {
       const executor = gpu
-      try { logits = await Promise.all(prepared.windows.map(input => executor.infer(input))); used = 'WebGPU' }
+      try { logits = await Promise.all(windows.map(input => executor.infer(input))); used = 'WebGPU' }
       catch (error) {
         executor.destroy()
         if (gpu === executor) { gpu = null; gpuReason = `CPU fallback: ${error.message}`; backend() }
       }
     }
     if (run !== analysis) return
-    if (!logits) logits = prepared.windows.map(input => inferCPU(model, input))
-    const embedding = isEncoder() ? embedWindows(logits) : null, judged = embedding && heads ? verdict(embedding, heads) : null
-    const matches = embedding ? matchCatalog(embedding, searchCatalog, judged) : rankWindows(logits, model.fonts, catalog.calibration?.temperature ?? 1), elapsed = performance.now() - start
+    if (!logits) logits = windows.map(input => inferCPU(model, input))
+    // Each reading's logits, in order; the principal reading's embedding (its first line cleaned, when it was) is the crop's,
+    // for the heads, the verdict and the same-text stage.
+    let at = 0; const split = usable.map(c => logits.slice(at, at += c.prepared.windows.length))
+    const embeddings = isEncoder() ? split.map(embedWindows) : null, embedding = embeddings?.[principal(usable)] ?? null, judged = embedding && heads ? verdict(embedding, heads) : null
+    const matches = embedding ? bestOf(embeddings.map(e => matchCatalog(e, searchCatalog, judged))) : rankWindows(logits, model.fonts, catalog.calibration?.temperature ?? 1), elapsed = performance.now() - start
     if (!embedding) await Promise.all(matches.slice(0, 5).map(m => loadFont(m.family, sampleFont(m.family))))
     if (run !== analysis) return
+    // Shown over the crop: each line as the model saw it, cleaned where it was; a turned reading's windows are not in the crop's frame.
+    const shown = usable.filter(c => c.kind === 'cleaned' || (c.kind !== 'turned' && !usable.some(o => o.kind === 'cleaned' && o.rect === c.rect))).flatMap(c => shift(c.prepared.windows, c.rect))
     last = { accepted: embedding ? null : matches[0].score >= (catalog.calibration?.threshold ?? 1.01), calibration: embedding ? null : catalog.calibration, mode: embedding ? 'encoder' : 'neural', backend: used, milliseconds: elapsed, model: catalog.modelSha256, source: specimen, crop: region, resolution: sampled, background: matte,
-      ...(embedding ? { embedding: Array.from(embedding), verdict: judged, catalog: { id: searchCatalog.id, sha256: searchCatalog.sha256 }, scoreType: 'cosine', inferenceMilliseconds: elapsed } : {}),
-      inputs: prepared.windows.map(input => ({ ...input, pixels: Array.from(input.pixels) })), matches }
+      ...(embedding ? { embedding: Array.from(embedding), verdict: judged, catalog: { id: searchCatalog.id, sha256: searchCatalog.sha256 }, scoreType: 'cosine', inferenceMilliseconds: elapsed, ...(usable.length > 1 && { readings: usable.map(c => ({ ...c.rect, kind: c.kind, ...(c.angle && { angle: c.angle }) })), embeddings: embeddings.map(e => Array.from(e)) }) } : {}),
+      inputs: shown.map(input => ({ ...input, pixels: Array.from(input.pixels) })), matches }
     // The crop's own words, read by the line reader: shown in every preview and, with the person's edits, ranking the shortlist.
-    last.read = isEncoder() && await reader ? readCrop(await reader, image, matte) : null
+    last.read = isEncoder() && await reader ? readCrop(await reader, usable[0].crop, matte) : null
     if (run !== analysis) return
     reranked = null; await rerankResults()
     if (run !== analysis) return
-    showInput(prepared.windows, region, sampled)
+    showInput(shown, region, sampled)
     renderResults()
     showVerdict(embedding ? labelsFor(judged, matches) : [last.accepted ? 'Above threshold' : 'Below threshold'])
     $('detection-time').textContent = `${elapsed.toFixed(1)}ms`
@@ -626,7 +637,8 @@ async function selectCatalog(option, file = null, { focus = true } = {}) {
     searchCatalog = { ...option, ...data, sha256: hash, builtin: !file && !option.data }
     invalidate(); updateCatalogLabel()
     if (cached?.embedding && (current || cached.shared)) {
-      const start = performance.now(), matches = matchCatalog(cached.embedding, searchCatalog, cached.verdict)
+      // A crop read in several readings is ranked again by all of them, each family at its best, as it was first ranked.
+      const start = performance.now(), matches = cached.embeddings ? bestOf(cached.embeddings.map(e => matchCatalog(e, searchCatalog, cached.verdict))) : matchCatalog(cached.embedding, searchCatalog, cached.verdict)
       const elapsed = performance.now() - start
       last = { ...cached, matches, catalog: { id: option.id, sha256: hash }, milliseconds: elapsed, cachedEmbedding: true }
       delete last.sametext; reranked = null; await rerankResults()
@@ -890,6 +902,7 @@ function address({ embed = embedded } = {}) {
   const id = loading?.id ?? searchCatalog.id, named = whole() && (current.known !== SAMPLE || current.text !== TEXT)
   set('catalog', id !== catalog.catalogs[0].id && id !== 'custom' && id)
   set('sample', named && current.known); set('text', named && current.text !== TEXT && current.text)
+  // A link carries one embedding, the first reading's: a crop of several lines opened from a link ranks by its tallest line.
   set('style', !whole() && last?.embedding && writeStyle(last.embedding, catalog.modelSha256))
   if (!embed) query.delete('embed')
   return url.href

@@ -194,11 +194,11 @@
  "browser": "151.0.7922.34",
  "adapter": "apple metal-3",
  "encoderSha256": "6e35d208a2549812be98f0a0dac6e6eaabca5528d4295086c62d4db5c8476076",
- "date": "2026-10-09",
+ "date": "2026-10-10",
  "gpuFont": {
   "requests": 151,
-  "top1": 0.245,
-  "top5": 0.4106
+  "top1": 0.2649,
+  "top5": 0.4834
  },
  "chatbots": {
   "gemini-2.5-flash-preview-05-20": {
@@ -213,8 +213,8 @@
     "top5": 0.0615,
     "gpuFont": {
      "requests": 65,
-     "top1": 0.1846,
-     "top5": 0.3846
+     "top1": 0.2154,
+     "top5": 0.4615
     }
    }
   },
@@ -230,8 +230,8 @@
     "top5": 0.1892,
     "gpuFont": {
      "requests": 37,
-     "top1": 0.1622,
-     "top5": 0.4324
+     "top1": 0.1892,
+     "top5": 0.4865
     }
    }
   }
@@ -240,9 +240,9 @@
   {
    "task": "577036",
    "font": "Essays 1743",
-   "rank": null,
-   "first": "Hundar",
-   "score": 0.826
+   "rank": 3,
+   "first": "Broadsheet",
+   "score": 0.842
   },
   {
    "task": "577014",
@@ -261,9 +261,9 @@
   {
    "task": "576991",
    "font": "Quando",
-   "rank": 1,
-   "first": "Quando",
-   "score": 0.869
+   "rank": 2,
+   "first": "Amstelvar Roman",
+   "score": 0.882
   },
   {
    "task": "576942",
@@ -303,16 +303,16 @@
   {
    "task": "562393",
    "font": "Arial Black",
-   "rank": 5,
-   "first": "Rust never sleeps",
-   "score": 0.762
+   "rank": 6,
+   "first": "PP Fragment",
+   "score": 0.768
   },
   {
    "task": "577067",
    "font": "Modak",
    "rank": null,
-   "first": "Gas Huffer Phat",
-   "score": 0.766
+   "first": "Chupilca",
+   "score": 0.904
   },
   {
    "task": "577077",
@@ -324,9 +324,9 @@
   {
    "task": "577089",
    "font": "Impact",
-   "rank": 1,
-   "first": "Impact",
-   "score": 0.835
+   "rank": 4,
+   "first": "Arnel",
+   "score": 0.859
   },
   {
    "task": "577125",
@@ -360,22 +360,22 @@
    "task": "577256",
    "font": "Alegreya Sans",
    "rank": null,
-   "first": "IM FELL FLOWERS 2",
-   "score": 0.736
+   "first": "Crafter Delight Dingbats",
+   "score": 0.747
   },
   {
    "task": "577290",
    "font": "Grandstander",
    "rank": null,
-   "first": "Gaban",
-   "score": 0.729
+   "first": "DiscoRush",
+   "score": 0.734
   },
   {
    "task": "577316",
    "font": "Imbue",
    "rank": null,
-   "first": "Wireframe Davenport",
-   "score": 0.747
+   "first": "01.typeKINI",
+   "score": 0.772
   },
   {
    "task": "577348",
@@ -388,8 +388,8 @@
    "task": "577347",
    "font": "Paytone One",
    "rank": null,
-   "first": "Sandoll Press",
-   "score": 0.672
+   "first": "Qahiri",
+   "score": 0.685
   },
   {
    "task": "577355",
@@ -423,8 +423,8 @@
    "task": "577480",
    "font": "Josefin Sans",
    "rank": null,
-   "first": "Morgante",
-   "score": 0.674
+   "first": "LEMON MILK Pro FTR",
+   "score": 0.85
   },
   {
    "task": "577508",
@@ -458,8 +458,8 @@
    "task": "577575",
    "font": "Mister Firley",
    "rank": null,
-   "first": "Facade",
-   "score": 0.632
+   "first": "Alumni Sans",
+   "score": 0.72
   },
   {
    "task": "577600",
@@ -471,9 +471,9 @@
   {
    "task": "577640",
    "font": "Pirata One",
-   "rank": 2,
-   "first": "BudNull",
-   "score": 0.769
+   "rank": 1,
+   "first": "Pirata One",
+   "score": 0.902
   },
   {
    "task": "577620",
@@ -485,7 +485,7 @@
   {
    "task": "577678",
    "font": "Verdana",
-   "rank": 10,
+   "rank": 15,
    "first": "Nevermind",
    "score": 0.898
   },
@@ -520,9 +520,9 @@
   {
    "task": "577886",
    "font": "Mail Ray Stuff",
-   "rank": null,
-   "first": "Jezda",
-   "score": 0.803
+   "rank": 1,
+   "first": "Mail Ray Stuff",
+   "score": 0.842
   },
   {
    "task": "577874",
@@ -555,16 +555,16 @@
   {
    "task": "578004",
    "font": "Cinzel",
-   "rank": 19,
+   "rank": null,
    "first": "Cinzel Decorative",
-   "score": 0.843
+   "score": 0.859
   },
   {
    "task": "577995",
    "font": "Alfa Slab One",
    "rank": null,
    "first": "Lovely Valentine Monogram",
-   "score": 0.708
+   "score": 0.712
   },
   {
    "task": "577991",
@@ -576,35 +576,35 @@
   {
    "task": "577983",
    "font": "Instrument Serif",
-   "rank": 5,
+   "rank": 3,
    "first": "Plaimanas07",
-   "score": 0.846
+   "score": 0.871
   },
   {
    "task": "578063",
    "font": "Impact",
    "rank": null,
-   "first": "Mexcellent",
-   "score": 0.768
+   "first": "Genesize Grotesk",
+   "score": 0.822
   },
   {
    "task": "578128",
    "font": "Fredoka",
    "rank": null,
-   "first": "Rubik Vinyl",
-   "score": 0.643
+   "first": "Billo",
+   "score": 0.76
   },
   {
    "task": "578135",
    "font": "Modak",
    "rank": null,
-   "first": "Mask to School",
-   "score": 0.672
+   "first": "Gaban",
+   "score": 0.683
   },
   {
    "task": "578178",
    "font": "Anton",
-   "rank": 3,
+   "rank": 4,
    "first": "Thanks",
    "score": 0.945
   },
@@ -619,8 +619,8 @@
    "task": "578225",
    "font": "League Spartan",
    "rank": null,
-   "first": "Gorden",
-   "score": 0.784
+   "first": "Slurp",
+   "score": 0.873
   },
   {
    "task": "578259",
@@ -632,7 +632,7 @@
   {
    "task": "578263",
    "font": "Bangers",
-   "rank": 12,
+   "rank": 7,
    "first": "Grandstander",
    "score": 0.851
   },
@@ -648,14 +648,14 @@
    "font": "Condiment",
    "rank": 2,
    "first": "Aguafina Script",
-   "score": 0.865
+   "score": 0.876
   },
   {
    "task": "579268",
    "font": "Vademecum",
-   "rank": null,
-   "first": "Thirties Gold",
-   "score": 0.826
+   "rank": 2,
+   "first": "The Serial Lover",
+   "score": 0.857
   },
   {
    "task": "579272",
@@ -674,9 +674,9 @@
   {
    "task": "579252",
    "font": "Beth Ellen",
-   "rank": 2,
-   "first": "Dawning of a New Day",
-   "score": 0.846
+   "rank": 1,
+   "first": "Beth Ellen",
+   "score": 0.85
   },
   {
    "task": "489348",
@@ -688,14 +688,14 @@
   {
    "task": "579241",
    "font": "Arial",
-   "rank": 17,
+   "rank": null,
    "first": "Schibsted Grotesk",
    "score": 0.899
   },
   {
    "task": "579161",
    "font": "Pinyon Script",
-   "rank": 10,
+   "rank": 6,
    "first": "Filmotype Yale",
    "score": 0.857
   },
@@ -724,8 +724,8 @@
    "task": "579116",
    "font": "Exo 2",
    "rank": null,
-   "first": "Ansichkaart",
-   "score": 0.786
+   "first": "Hei dots follow me!",
+   "score": 0.902
   },
   {
    "task": "579046",
@@ -751,9 +751,9 @@
   {
    "task": "578886",
    "font": "Berkshire Swash",
-   "rank": 7,
+   "rank": 2,
    "first": "Berkshire Pro",
-   "score": 0.824
+   "score": 0.893
   },
   {
    "task": "578851",
@@ -779,9 +779,9 @@
   {
    "task": "578736",
    "font": "Playfair Display",
-   "rank": null,
-   "first": "Pffft",
-   "score": 0.703
+   "rank": 1,
+   "first": "Playfair Display",
+   "score": 0.846
   },
   {
    "task": "578625",
@@ -793,7 +793,7 @@
   {
    "task": "578617",
    "font": "Times New Roman",
-   "rank": 14,
+   "rank": null,
    "first": "Romande ADF Std",
    "score": 0.786
   },
@@ -823,14 +823,14 @@
    "font": "Eurofurence",
    "rank": 1,
    "first": "eurofurence",
-   "score": 0.868
+   "score": 0.877
   },
   {
    "task": "579322",
    "font": "Euphorigenic",
    "rank": null,
-   "first": "Fornire",
-   "score": 0.867
+   "first": "Black Friday",
+   "score": 0.881
   },
   {
    "task": "579404",
@@ -844,7 +844,7 @@
    "font": "Bricolage Grotesque",
    "rank": 1,
    "first": "Bricolage Grotesque",
-   "score": 0.861
+   "score": 0.908
   },
   {
    "task": "579484",
@@ -870,9 +870,9 @@
   {
    "task": "579754",
    "font": "Road Rage",
-   "rank": null,
-   "first": "Simo Cosmo Type",
-   "score": 0.765
+   "rank": 5,
+   "first": "Slowdex",
+   "score": 0.854
   },
   {
    "task": "579793",
@@ -898,23 +898,23 @@
   {
    "task": "580055",
    "font": "Caudex",
-   "rank": null,
+   "rank": 4,
    "first": "Nyght Serif",
    "score": 0.889
   },
   {
    "task": "580099",
    "font": "Impact",
-   "rank": 2,
+   "rank": 3,
    "first": "Robusta II Sans",
-   "score": 0.87
+   "score": 0.884
   },
   {
    "task": "580126",
    "font": "Capriola",
    "rank": null,
    "first": "MTF Sweet Cheeks",
-   "score": 0.725
+   "score": 0.752
   },
   {
    "task": "580123",
@@ -934,8 +934,8 @@
    "task": "580254",
    "font": "Poppins",
    "rank": 12,
-   "first": "Latin Modern Sans",
-   "score": 0.779
+   "first": "PP Neue York",
+   "score": 0.796
   },
   {
    "task": "580345",
@@ -949,14 +949,14 @@
    "font": "Cinzel",
    "rank": 2,
    "first": "Cinzel Decorative",
-   "score": 0.848
+   "score": 0.9
   },
   {
    "task": "580442",
    "font": "Playfair Display",
-   "rank": 6,
+   "rank": 3,
    "first": "Maumere",
-   "score": 0.844
+   "score": 0.845
   },
   {
    "task": "580497",
@@ -990,22 +990,22 @@
    "task": "580541",
    "font": "Arial Black",
    "rank": null,
-   "first": "Volumes",
-   "score": 0.885
+   "first": "Right Swipe",
+   "score": 0.899
   },
   {
    "task": "580537",
    "font": "Allison",
    "rank": null,
-   "first": "Brotherdam Signature",
-   "score": 0.768
+   "first": "Lovelyou",
+   "score": 0.855
   },
   {
    "task": "580637",
    "font": "Die Nasty",
    "rank": null,
-   "first": "Haifa",
-   "score": 0.724
+   "first": "Monaspace Krypton",
+   "score": 0.821
   },
   {
    "task": "580631",
@@ -1024,9 +1024,9 @@
   {
    "task": "580681",
    "font": "Playfair Display",
-   "rank": 8,
+   "rank": null,
    "first": "Presti Display",
-   "score": 0.892
+   "score": 0.913
   },
   {
    "task": "580687",
@@ -1080,9 +1080,9 @@
   {
    "task": "580823",
    "font": "Times New Roman",
-   "rank": null,
-   "first": "Nyght Serif",
-   "score": 0.806
+   "rank": 3,
+   "first": "TSCu_Times",
+   "score": 0.885
   },
   {
    "task": "580864",
@@ -1108,23 +1108,23 @@
   {
    "task": "581059",
    "font": "Krona One",
-   "rank": 8,
+   "rank": 5,
    "first": "Inconsolata ExtraExpanded",
-   "score": 0.845
+   "score": 0.87
   },
   {
    "task": "581164",
    "font": "Instrument Serif",
    "rank": 1,
    "first": "Instrument Serif",
-   "score": 0.835
+   "score": 0.857
   },
   {
    "task": "581165",
    "font": "Unbounded",
    "rank": null,
-   "first": "Logic Twenty-five",
-   "score": 0.734
+   "first": "Explore",
+   "score": 0.8
   },
   {
    "task": "581190",
@@ -1136,16 +1136,16 @@
   {
    "task": "581212",
    "font": "Arapey",
-   "rank": 11,
+   "rank": 2,
    "first": "Mastro",
    "score": 0.888
   },
   {
    "task": "581257",
    "font": "Audiowide",
-   "rank": null,
-   "first": "Second Wind",
-   "score": 0.844
+   "rank": 1,
+   "first": "Myanmar Phetsot",
+   "score": 0.874
   },
   {
    "task": "581250",
@@ -1180,7 +1180,7 @@
    "font": "Baveuse",
    "rank": 1,
    "first": "Baveuse",
-   "score": 0.733
+   "score": 0.787
   },
   {
    "task": "581498",
@@ -1220,23 +1220,23 @@
   {
    "task": "581767",
    "font": "Dancing Script",
-   "rank": 19,
+   "rank": 20,
    "first": "Thuckies",
-   "score": 0.797
+   "score": 0.809
   },
   {
    "task": "464694",
    "font": "Impact",
    "rank": null,
-   "first": "Campus A",
-   "score": 0.775
+   "first": "Oliba",
+   "score": 0.803
   },
   {
    "task": "581988",
    "font": "Batang",
-   "rank": 11,
-   "first": "Zodiak",
-   "score": 0.83
+   "rank": 17,
+   "first": "PP Eiko",
+   "score": 0.858
   },
   {
    "task": "582035",
@@ -1262,7 +1262,7 @@
   {
    "task": "582167",
    "font": "Cinzel",
-   "rank": 6,
+   "rank": 9,
    "first": "Happynicth",
    "score": 0.899
   },
@@ -1285,7 +1285,7 @@
    "font": "Rock Salt",
    "rank": null,
    "first": "IBM Plex Sans JP",
-   "score": 0.49
+   "score": 0.581
   },
   {
    "task": "582459",

@@ -47,12 +47,14 @@ On the page:
 
 `createReader` (`src/reader.mjs`) runs the line reader on the strip `prepareLine`'s `line` sampler gives, and `rerank` (`src/sametext.mjs`) sets the shortlist in a text through `drawLine` (`src/references.mjs`); the reader is trained by `train/read.py` on the style stream's views ([bench/reader.md](bench/reader.md)) and exported to `models/reader/reader.json`, which `scripts/demo-catalog-build.mjs` records in `site.json` when present.
 
+A crop reaches the frozen preparation by its readings (`src/clean.mjs`): each of its lines as it stands, cleaned as well unless already two-tone, and turned level as well when steep; the page, `createMatcher` and every photo read (`scripts/photos.mjs`) read a crop the same way and keep each family's best reading. The preparation modules themselves, `src/input.mjs`, `src/prepare.mjs` and `src/line.mjs`, are the bytes the encoder records; `tests/match.test.mjs` fails when one changes, and a change means a new model. Candidate cleaners are measured with `--clean <name>` on any read (`scripts/clean-candidates.mjs`).
+
 ## Catalogs
 
 A catalog is a JSON file of reference vectors, bound to the exact model that made them. Retraining the model means reindexing every catalog, and publishing a new minor version: users pin `^0.x`, so their own catalogs keep loading until they upgrade. Share links (`?style=`) carry the model's first 8 hex digits and stop showing matches under a new model.
 
 - **Google Fonts**: every family except color, emoji and letterless ones, from Chromium renders of each face.
-- **Other free sources** (Fontsource, Fontshare, Uncut, Velvetyne and more; each under its own licence): `node scripts/catalog-files.mjs` indexes the font files pinned in `bench/open-fonts.json`, in Chromium, with the same builder My fonts uses. Only names, links and vectors are committed; the fonts stay in `.data/`.
+- **Other free sources** (Fontsource, Fontshare, Uncut, Velvetyne and more; each under its own licence): `node scripts/catalog-files.mjs` indexes the font files pinned in `bench/open-fonts.json`, in Chromium, with the same builder My fonts uses. A variable file is indexed as its named instances, static files `node scripts/python.mjs scripts/instances.py` writes to `.data/fonts-open/instances/` with the manifest `instances.json` (run it first, after the inventory changes); the previews draw the same files. Only names, links and vectors are committed; the fonts stay in `.data/`.
 - Sources without verified permission ship only by a decision recorded in `bench/foundries.json` (DaFont, Adobe Fonts, and Pangram Pangram, which gave its permission to train on its library); MyFonts stays local. WhatFontIs, whose terms say nothing on collection, ships from its own renders (`.data/previews/whatfontis-archives`). `catalogs.html` shows each source's terms.
 
 A new shipped catalog also needs its entry in `catalogs` (`src/match.mjs`) and its id in `src/match.d.ts`; the tests fail until both list it.

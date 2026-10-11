@@ -12,6 +12,7 @@ import io
 import json
 import random
 import shutil
+import signal
 import subprocess
 import time
 from collections import Counter
@@ -218,7 +219,10 @@ def repin(name, reason):
     targets = [OUT/f'{name}.json'] + ([OUT/'bench-sketch.json'] if name == 'bench' and (OUT/'bench-sketch.json').exists() else [])
     plan = read(plan_path); moved = [(p, h, sha(ROOT/p)) for p, h in plan['pins'].items() if sha(ROOT/p) != h]
     if not moved: print('Pins unchanged', flush=True); return []
-    old = {path: read(path) for path in [plan_path, renders] + targets}; kept = {path: path.read_bytes() for path in old}
+    old = {path: read(path) for path in [plan_path, renders] + targets}
+    # Every file the move writes goes back on failure: the plan, the renders' note, each manifest and the pixels packed beside it.
+    kept = {path: path.read_bytes() for path in [*old, *(target.with_suffix('.u8') for target in targets)] if path.exists()}
+    previous = signal.signal(signal.SIGTERM, lambda *_: (_ for _ in ()).throw(KeyboardInterrupt('stopped')))  # a stop restores too
     if len(old[renders]['images']) != len(plan['queries']):  # another benchmark's renders written here: nothing to prepare again from
         raise ValueError(f"{renders} describes {len(old[renders]['images'])} renders for a plan of {len(plan['queries'])} queries: these are not this benchmark's renders, so its pins can move only by hand, with other evidence")
     entries = lambda evidence: [{'file': p, 'from': was, 'to': now, 'date': time.strftime('%Y-%m-%d'), 'reason': f'{reason} {evidence}'} for p, was, now in moved]
@@ -235,6 +239,7 @@ def repin(name, reason):
     except BaseException:
         for path, data in kept.items(): path.write_bytes(data)
         raise
+    finally: signal.signal(signal.SIGTERM, previous)
     print('Repinned', name, 'to', ', '.join(p for p, _, _ in moved), flush=True)
     return [p for p, _, _ in moved]
 

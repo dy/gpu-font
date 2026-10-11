@@ -1,6 +1,6 @@
 {
   "name": "gpu-font",
-  "version": "0.4.0",
+  "version": "0.4.1",
   "description": "Find the font in an image of text: ranks 2,000+ free font families by look, on the user's device with WebGPU",
   "type": "module",
   "exports": {
@@ -16,6 +16,7 @@
     "src/match.mjs",
     "src/match.d.ts",
     "src/catalog.mjs",
+    "src/clean.mjs",
     "src/input.mjs",
     "src/line.mjs",
     "src/network.mjs",

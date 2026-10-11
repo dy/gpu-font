@@ -3,36 +3,95 @@
   "sample": "WhatFontIs-Bench development photos of Google families, every fifteenth",
   "cases": 199,
   "photo": {
-   "top1": 0.2412,
-   "top5": 0.4874
+   "top1": 0.2915,
+   "top5": 0.5729
   },
   "binarized": {
-   "top1": 0.2613,
+   "top1": 0.2663,
    "top5": 0.5327
   },
+  "flattened": {
+   "top1": 0.2362,
+   "top5": 0.5176
+  },
+  "colour": {
+   "top1": 0.2563,
+   "top5": 0.5528
+  },
+  "cleaned": {
+   "top1": 0.2513,
+   "top5": 0.5327
+  },
+  "colour flattened": {
+   "top1": 0.2462,
+   "top5": 0.5226
+  },
+  "colour soft": {
+   "top1": 0.2814,
+   "top5": 0.5779
+  },
+  "colour flattened soft": {
+   "top1": 0.2613,
+   "top5": 0.5578
+  },
   "clean": {
-   "top1": 0.5427,
+   "top1": 0.5477,
    "top5": 0.7889
   },
   "clean binarized": {
-   "top1": 0.3769,
-   "top5": 0.7035
+   "top1": 0.3668,
+   "top5": 0.6985
+  },
+  "clean colour soft": {
+   "top1": 0.4573,
+   "top5": 0.7487
   }
  },
  "forum": {
   "sample": "the cropped DaFont requests",
   "cases": 151,
   "photo": {
-   "top1": 0.2119,
-   "top5": 0.3974
+   "top1": 0.2252,
+   "top5": 0.4636
   },
   "binarized": {
-   "top1": 0.1523,
-   "top5": 0.404
+   "top1": 0.1589,
+   "top5": 0.4106
+  },
+  "flattened": {
+   "top1": 0.1589,
+   "top5": 0.4172
+  },
+  "colour": {
+   "top1": 0.1722,
+   "top5": 0.4172
+  },
+  "cleaned": {
+   "top1": 0.1457,
+   "top5": 0.3377
+  },
+  "colour flattened": {
+   "top1": 0.1722,
+   "top5": 0.4238
+  },
+  "colour soft": {
+   "top1": 0.2185,
+   "top5": 0.4901
+  },
+  "colour flattened soft": {
+   "top1": 0.1987,
+   "top5": 0.4901
   }
  },
  "variants": {
+  "photo": "the crop as the page reads it: its lines, cleaned unless two-tone (src/clean.mjs); every variant below is read the same way",
   "clean": "the word at 64 px in the pinned instance of the photo's face, black on white",
-  "binarized": "Otsu's threshold on luminance, the minority side drawn black on white"
+  "binarized": "Otsu's threshold on luminance as ink",
+  "flattened": "the background under the letters taken away first (an opening of the ink), then Otsu",
+  "colour": "ink as the position between the background's and the ink's colours (two means in RGB), then Otsu",
+  "cleaned": "the colour axis, flattened, Otsu and a 3×3 majority despeckle",
+  "colour flattened": "the colour axis, flattened, Otsu",
+  "colour soft": "the colour axis, the ink within 0.15 of Otsu's threshold keeping its grey",
+  "colour flattened soft": "the colour axis flattened, with the same soft edge"
  }
 }

@@ -226,6 +226,21 @@ Two reads changed with it, for both models alike. A row of a family the teacher 
 
 The selected checkpoint is step 27,500. The same dip and recovery as the eighth step, a point higher at the end on validation. The exported model reads 93.06% top five and 73.22% first on the catalog test against 92.17% and 72.06% for the eighth step: a point of each, on rendered text, from more fonts and more real pictures. On the pictures it never trained on: the 840 final WhatFontIs images of held-out Google families, read against the Google references (`train.style photos`, both exports against the rebuilt references and twins), 77.7% top five and 57.0% first against 76.5% and 55.1% for the eighth step; on the page's read across every catalog, the 8,955 final images with twin credit, 43.1% against 41.4% top five, 61.3% against 59.0% top twenty and 21.3% against 20.2% first; on the 5,546 held-out forum threads 17.5% against 17.2% top five and 9.9% against 9.2% first; on the 151 cropped forum requests 41.1% against 46.4% top five and 24.5% against 22.5% first; on the 2,253 held-out open queries 74.3% against 74.2% ([photos](photos.md)).
 
+## Tenth step, rejected: cleaned views, circles, the model's own confusions
+
+`clean-30k` continued `pangram-30k` with three changes aimed at the pictures people bring: half the streamed views went through the page's cleaner (`train.style_data.page_clean`, pixel for pixel `src/clean.mjs`, so the model learns what the page now sends), 6% of damaged views were set along a circle (`arc`), and each face's batch partners were its sixteen teacher neighbours and, as many again, the faces the model's own proxies put nearest it, refreshed at every check (`--confused`). Same teacher, learning rate 5e-4, 30,000 steps, `--photo 0.5`, selection on catalog validation; 15 hours, the GPU shared with the reads.
+
+| Step | Validation top-5 | First | Photographs top-5 | First |
+|---|---:|---:|---:|---:|
+| 0 (the ninth step) | 93.6% | 75.7% | 74.8% | 51.0% |
+| 2,500 | 92.2% | 73.5% | 73.9% | 50.2% |
+| 10,000 | 92.1% | 73.8% | 74.1% | 50.1% |
+| 20,000 | 93.2% | 74.9% | 74.2% | 51.5% |
+| 25,000 | 93.1% | 75.8% | 73.9% | 50.7% |
+| 30,000 | 93.1% | 75.5% | 73.7% | 50.6% |
+
+No check passed the start, so the selection kept the ninth step's weights and nothing ships from it. The dip and recovery match the eighth and ninth steps, but this run recovered half a point short on rendered text and a point short on the packed photographs, which are read raw and so cannot show what cleaned views buy. Two of its first attempts are kept beside it: one cleaned every view through a gate that took small text for texture (stopped), and one whose circle placement let a very wide line fill a worker's memory (killed by the 32 GB guard; the bow is now capped at a line and a half). What it leaves is the evidence that hard negatives from the model's own confusions do not move the rendered read in 30,000 steps from a converged model; the photographs need a read that cleans them to judge the cleaned views, and the next run should select on one.
+
 ## Other rasterizers, and 12 px
 
 Queries and references both come from Chromium on macOS. `scripts/style-bench-engines.mjs` renders the catalog validation queries through Playwright's WebKit (Safari's engine) and Firefox, and through Chromium at 12 px, packed as benchmarks of their own; the 64-number model against the same Chromium references:
@@ -283,12 +298,12 @@ The catalogs besides Google Fonts hold families the model never trained on, so t
 
 | Latin queries | Queries | Top-5 | First |
 |---|---:|---:|---:|
-| Held-out open families, all | 2,253 | 74.3% | 49.8% |
-| Held-out open families, clean | 1,502 | 78.5% | 52.9% |
-| Held-out open families, degraded | 751 | 65.9% | 43.7% |
-| Google Fonts validation, same search | 5,919 | 71.3% | 48.3% |
+| Held-out open families, all | 2,253 | 74.0% | 49.2% |
+| Held-out open families, clean | 1,502 | 78.2% | 52.4% |
+| Held-out open families, degraded | 751 | 65.8% | 42.7% |
+| Google Fonts validation, same search | 5,919 | 71.1% | 47.9% |
 
-The eighth step read 74.2% and 49.8% on the 2,160 queries of its held-out families (77.3% and 52.6% clean, 67.9% and 44.3% degraded; 70.8% and 48.1% on Google's validation); the ninth holds them on 93 queries more, Pangram Pangram's six held-out designs among them, and the Google validation gains half a point.
+The catalogs now index every named instance of a variable font (198,581 rows, 11,000 more than 0.4.0 searched), and a variable family's query is its instance nearest Regular rather than its file's default: 0.4.0 read 74.3% and 49.8% here (78.5% and 52.9% clean, 65.9% and 43.7% degraded; 71.3% and 48.3% on Google's validation). The weights the catalogs gained crowd these one-face queries by under a point, the price of finding the bold and italic cuts photographs show ([photos](photos.md#pangram-pangrams-own-pictures)). The eighth step read 74.2% and 49.8% on the 2,160 queries of its held-out families.
 
 The shipped student, which trained on no open family, read 77.3% and 54.8% on all 3,563 open families against 77.4% and 55.1% for Google's across the four file-built catalogs (5,783 families), and 73.8% and 50.2% against 73.1% and 49.8% once DaFont and Adobe Fonts shipped (45,542 families): the sixth step 72.3% against 71.7% at 55,428 families, and the seventh 72.2% against 70.6% at 110,543: each widening of the search costs both seen and unseen families alike, and at 110,000 families a family the model never saw is found more often than one it trained on, by three points with the eighth step.
 
@@ -296,10 +311,10 @@ By source, the larger ones and the ones that stand out:
 
 | Source | Queries | Top-5 | First |
 |---|---:|---:|---:|
-| GitHub | 1,095 | 73.8% | 46.9% |
-| Debian | 594 | 74.2% | 50.7% |
-| Font Library | 327 | 71.3% | 52.3% |
-| Pangram Pangram, six designs held out | 93 | 90.3% | 61.3% |
+| GitHub | 1,095 | 73.6% | 46.4% |
+| Debian | 594 | 74.2% | 50.5% |
+| Font Library | 327 | 71.3% | 52.0% |
+| Pangram Pangram, six designs held out | 93 | 86.0% | 54.8% |
 | Uncut | 27 | 81.5% | 70.4% |
 | Fontshare | 24 | 83.3% | 66.7% |
 | Velvetyne | 15 | 86.7% | 73.3% |

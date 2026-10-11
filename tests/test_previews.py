@@ -3,6 +3,7 @@ from pathlib import Path
 import sys
 import tempfile
 import unittest
+import unittest.mock
 
 from fontTools.fontBuilder import FontBuilder
 from fontTools.pens.ttGlyphPen import TTGlyphPen
@@ -55,6 +56,21 @@ class PreviewTests(unittest.TestCase):
             self.assertEqual(found['b'][1], str(snapshot / 'images/b-words-b-v1.png'))
             self.assertEqual(found['c'][1], str(snapshot / 'images/c-digits-v1.png'))
             self.assertEqual(P.captured([]), {})
+
+    def test_a_variable_file_with_static_instances_is_sourced_as_its_instances_and_a_file_without_them_as_itself(self):
+        with tempfile.TemporaryDirectory() as folder:
+            root = Path(folder); (root / 'bench').mkdir(); (root / 'store').mkdir()
+            inventory = {'store': 'store', 'families': [{'id': 'pp-kyoto', 'family': 'PP Kyoto', 'faces': [{'path': 'pp/Kyoto-VF.ttf', 'weight': 100, 'italic': False}, {'path': 'pp/Kyoto-Extra.ttf', 'weight': 700, 'italic': True}]}]}
+            manifest = {'faces': {'pp/Kyoto-VF.ttf': [{'id': 'pp-kyoto/Kyoto-VF@regular', 'path': 'instances/pp-kyoto/Kyoto-VF@regular.ttf', 'weight': 400, 'italic': False},
+                                                      {'id': 'pp-kyoto/Kyoto-VF@bold-italic', 'path': 'instances/pp-kyoto/Kyoto-VF@bold-italic.ttf', 'weight': 700, 'italic': True}]}}
+            (root / 'bench/open-fonts.json').write_text(json.dumps(inventory)); (root / 'store/instances.json').write_text(json.dumps(manifest))
+            with unittest.mock.patch.object(P, 'ROOT', root), unittest.mock.patch.object(P, 'ADOBE', []):
+                found = P.sources()
+                self.assertEqual(found, {'pp-kyoto/Kyoto-VF@regular': ('font', str(root / 'store/instances/pp-kyoto/Kyoto-VF@regular.ttf'), 400, False, 'PP Kyoto'),
+                                         'pp-kyoto/Kyoto-VF@bold-italic': ('font', str(root / 'store/instances/pp-kyoto/Kyoto-VF@bold-italic.ttf'), 700, True, 'PP Kyoto'),
+                                         'pp-kyoto/Kyoto-Extra': ('font', str(root / 'store/pp/Kyoto-Extra.ttf'), 700, True, 'PP Kyoto')})
+                (root / 'store/instances.json').unlink()
+                self.assertEqual(sorted(P.sources()), ['pp-kyoto/Kyoto-Extra', 'pp-kyoto/Kyoto-VF'])  # without the manifest, every file is a face at its default
 
     def test_a_face_freetype_fails_on_is_drawn_by_chromium_and_one_chromium_draws_blank_keeps_both_reasons(self):
         with tempfile.TemporaryDirectory() as folder:

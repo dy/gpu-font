@@ -32,10 +32,13 @@ def sources():
     """Each face id's picture: ('image', file, crop box or None) for a captured one, ('font', file, weight, italic, family name)
     for a file."""
     found = captured(ADOBE)
-    inventory = json.loads((ROOT / 'bench/open-fonts.json').read_text())
+    inventory = json.loads((ROOT / 'bench/open-fonts.json').read_text()); store = ROOT / inventory['store']
+    manifest = store / 'instances.json'  # a variable file's static instances (scripts/instances.py), each a face of its own
+    instances = json.loads(manifest.read_text())['faces'] if manifest.exists() else {}
     for family in inventory['families']:
-        for face in family['faces']:  # the id scripts/catalog-files.mjs gives it
-            found[f"{family['id']}/{face['path'].split('/')[-1].rsplit('.', 1)[0]}"] = ('font', str(ROOT / inventory['store'] / face['path']), face['weight'], face['italic'], family['family'])
+        for face in family['faces']:  # the ids scripts/catalog-faces.mjs gives them
+            for instance in instances.get(face['path'], []): found[instance['id']] = ('font', str(store / instance['path']), instance['weight'], instance['italic'], family['family'])
+            if not instances.get(face['path']): found[f"{family['id']}/{face['path'].split('/')[-1].rsplit('.', 1)[0]}"] = ('font', str(store / face['path']), face['weight'], face['italic'], family['family'])
     return found
 
 

@@ -25,7 +25,7 @@ import { createMatcher } from 'gpu-font'
 
 const matcher = await createMatcher()   // Google Fonts
 
-// imageData: one line of text, such as canvas.getContext('2d').getImageData(x, y, width, height)
+// imageData: a crop of text, such as canvas.getContext('2d').getImageData(x, y, width, height)
 const [best] = await matcher.match(imageData)
 
 best.face.family      // 'Playfair Display'
@@ -33,7 +33,7 @@ best.face.styleName   // 'Regular'
 best.score            // 0.87
 ```
 
-`match` returns families best first, or `[]` when the image holds no text. Each match has:
+`match` returns families best first, or `[]` when the image holds no text. A crop of several lines is read line by line; a line that is not already two-tone is read as it stands and cleaned (its ink found by colour and drawn black on white), and a line set steeply on a slant is read turned level as well; each family keeps its best reading. Each match has:
 
 - `face`: the closest face: `family`, `styleName`, `weight` (100–900), `style` (`normal` or `italic`), and `sourceUrl` outside Google Fonts.
 - `score`: similarity from -1 to 1, higher is closer.
@@ -129,18 +129,20 @@ On rendered crops of 5–10 characters from every Google Fonts family, on text t
 
 Families the model never trained on are found more often than Google's own: 751 held-out open families, searched with all nine catalogs at once (110,953 families) and scored on the exact family, 74% top five, against 71% for Google Fonts families under the same search ([other catalogs](https://github.com/dy/gpu-font/blob/main/bench/style.md#other-catalogs)).
 
-On photographs of one word printed or painted on real surfaces ([WhatFontIs-Bench](https://github.com/dy/gpu-font/blob/main/bench/photos.md)), searched across all nine catalogs (111,000 families), 597 of the set's 600 fonts indexed: 43% top five and 61% top twenty on the 8,955 images of 448 fonts the model never trained on, 21% first; WhatFontIs itself reads 93% on the set, which was built from its catalogue. On DaFont forum requests, cropped by hand, 41% top five, with two thirds of the forum's confirmed answers indexed. On lines cut from the top websites' homepages, labelled by the font the browser drew them with and never trained on, 29% top five, 40% for web fonts.
+On photographs of one word printed or painted on real surfaces ([WhatFontIs-Bench](https://github.com/dy/gpu-font/blob/main/bench/photos.md)), searched across all nine catalogs (111,000 families), 597 of the set's 600 fonts indexed: 49% top five and 68% top twenty on the 8,955 images of 448 fonts the model never trained on, 26% first, each crop read as the page reads it: line by line, each line as it stands and cleaned, a steep line turned level as well; WhatFontIs itself reads 93% on the set, which was built from its catalogue. On DaFont forum requests, cropped by hand, 48% top five, with two thirds of the forum's confirmed answers indexed. On lines cut from the top websites' homepages, labelled by the font the browser drew them with and never trained on, 29% top five, 40% for web fonts.
 
-On 5,546 real "what font is this?" requests from the DaFont forum, held out from training ([forum threads](https://github.com/dy/gpu-font/blob/main/bench/photos.md#forum-threads)): 17.5% top five and 10% first, with seven answers in ten DaFont fonts the catalog knows by one preview line.
+On 5,546 real "what font is this?" requests from the DaFont forum, held out from training ([forum threads](https://github.com/dy/gpu-font/blob/main/bench/photos.md#forum-threads)): 18.7% top five and 10.5% first, with seven answers in ten DaFont fonts the catalog knows by one preview line.
 
-With the crop's own words ([reader.md](https://github.com/dy/gpu-font/blob/main/bench/reader.md)): on 400 of those photographs, held-out Google families, the page's second stage lifts first place from 26% to 44% and the top five from 50% to 66%, the words read by a 156 KB line reader (character error 11%) or typed.
+On Pangram Pangram's own 667 product pictures ([photos.md](https://github.com/dy/gpu-font/blob/main/bench/photos.md#pangram-pangrams-own-pictures)), the design is in the first ten for 33% of whole pictures and 47% of their largest lines, from 11% and 17%: the catalogs now hold every named weight and style of a variable font.
+
+With the crop's own words ([reader.md](https://github.com/dy/gpu-font/blob/main/bench/reader.md)): on 400 of those photographs, held-out Google families, the page's second stage lifts first place from 31% to 46% and the top five from 56% to 72%, the words read by a 156 KB line reader (character error 11%) or typed.
 
 Not yet: hand-drawn letters, icons, symbols and emoji, and matching capitals when a catalog holds only lowercase (57% top five).
 
 ## Speed and size
 
-- `createMatcher()` downloads about 1.2 MB, compressed: the model (6-bit weights, 0.34 MB) and the Google Fonts catalog (4-bit vectors, 0.88 MB). DaFont's catalog adds 5.8 MB, Adobe Fonts 0.84 MB, GitHub 0.96 MB, Debian 0.36 MB, Font Library 0.32 MB, WhatFontIs 0.03 MB, Pangram Pangram 0.03 MB, and Other 0.17 MB; the page's All downloads them all, about 9.7 MB.
-- With WebGPU, a match takes 0.02 to 0.06 s by the machine's load. Without it, it runs on the CPU: about 1.1 s in Chromium and 1.1–1.7 s in Node. All measured on an Apple M4 Max.
+- `createMatcher()` downloads about 1.2 MB, compressed: the model (6-bit weights, 0.34 MB) and the Google Fonts catalog (4-bit vectors, 0.88 MB). DaFont's catalog adds 5.8 MB, GitHub 1.0 MB, Adobe Fonts 0.84 MB, Debian 0.37 MB, Font Library 0.32 MB, Pangram Pangram 0.31 MB, Other 0.18 MB and WhatFontIs 0.03 MB; the page's All downloads them all, about 9.7 MB.
+- With WebGPU, a match takes 0.02 to 0.06 s by the machine's load. Reading a photograph's lines as they stand and cleaned adds about 0.2 s; a screenshot, two-tone, about 0.05. Without it, it runs on the CPU: about 1.1 s in Chromium and 1.1–1.7 s in Node. All measured on an Apple M4 Max.
 - The line reader is 0.16 MB compressed and reads a line in about 0.07 s on the CPU; setting the first 30 matches in its text takes about 0.24 s on WebGPU once their fonts are loaded. Without WebGPU the page shows the words read but keeps the catalog's order: on the CPU the thirty faces at three sizes would take half a minute.
 
 ## Development

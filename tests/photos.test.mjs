@@ -1,7 +1,7 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
 import { readFile } from 'node:fs/promises'
-import { rankOf, normalize, catalogNames } from '../scripts/photos.mjs'
+import { rankOf, normalize, catalogNames, cleanFlag } from '../scripts/photos.mjs'
 
 const row = (name, siblings = []) => ({ family: normalize(name), name, siblings, score: 0.5 })
 test('a photo counts at the first row that names the true family, or folds it in, without case or punctuation', () => {
@@ -46,4 +46,16 @@ test('a row of a twin family counts as right: a clone in another catalog is the 
   assert.equal(rankOf(rows, 'Arimo', new Set(['debian-other'])), 2)
   assert.equal(rankOf(rows, 'Arimo', undefined), 2)  // a family with no twins passes none
   assert.equal(rankOf([], 'Arimo', new Set(['github-liberation'])), null)
+})
+
+test('--clean names the cleaner and sends its report aside, a name of any characters made a file name; without it the read writes its bench report', () => {
+  const argv = process.argv
+  try {
+    process.argv = ['node', 'forum.mjs']
+    assert.deepEqual(cleanFlag('forum'), { clean: null, report: 'bench/forum.json' })
+    process.argv = ['node', 'forum.mjs', '--limit', '5', '--clean', 'both:colour soft']
+    assert.deepEqual(cleanFlag('forum'), { clean: 'both:colour soft', report: '.data/style/forum-both-colour-soft.json' })
+    process.argv = ['node', 'whatfontis.mjs', '--clean', 'binarized']
+    assert.deepEqual(cleanFlag('whatfontis'), { clean: 'binarized', report: '.data/style/whatfontis-binarized.json' })
+  } finally { process.argv = argv }
 })

@@ -299939,8 +299939,8 @@
    "design": "kyoto",
    "licence": "Commercial; free to try for personal use. Collected and used to train gpu-font by Pangram Pangram's permission (Mat, 2026-10-07)",
    "licenceEvidence": "email reply from Mat at Pangram Pangram: \"yes, you have my permission to train your model with our library.\" (bench/foundries.json, pangram-pangram)",
-   "url": "manual/pangram/313a0fb228-PPKyoto-VariableUprightVF.woff2",
-   "sha256": "313a0fb2282c4907191b1b4e57c9b6e1003a9c444a057ed9d0fa7ba51838d4fa",
+   "url": "manual/pangram/e914575ab9-PPKyoto-VariableUprightVF_c6675e81-4f7c-4e11-b18c-c03764d08071.woff2",
+   "sha256": "e914575ab9ae42becc4d7d8f743a7c3705dbac99f5191f7dfb68a62442d59051",
    "include": "\\.(woff2?|ttf|otf)$",
    "format": "file"
   },
@@ -299951,8 +299951,8 @@
    "design": "kyoto",
    "licence": "Commercial; free to try for personal use. Collected and used to train gpu-font by Pangram Pangram's permission (Mat, 2026-10-07)",
    "licenceEvidence": "email reply from Mat at Pangram Pangram: \"yes, you have my permission to train your model with our library.\" (bench/foundries.json, pangram-pangram)",
-   "url": "manual/pangram/c2eca3238c-PPKyoto-VariableItalicVF.woff2",
-   "sha256": "c2eca3238cc95c4dad3e3e14ac4b9202bf7e071a9f2488146d45fdd52d50c780",
+   "url": "manual/pangram/385bdd3359-PPKyoto-VariableItalicVF_c58ae691-3050-4923-b662-f83421eb849c.woff2",
+   "sha256": "385bdd33591dfb20dbab26d006b748f221c8073c2c837d7614127c943f4687a8",
    "include": "\\.(woff2?|ttf|otf)$",
    "format": "file"
   },
@@ -300143,8 +300143,8 @@
    "design": "mori",
    "licence": "Commercial; free to try for personal use. Collected and used to train gpu-font by Pangram Pangram's permission (Mat, 2026-10-07)",
    "licenceEvidence": "email reply from Mat at Pangram Pangram: \"yes, you have my permission to train your model with our library.\" (bench/foundries.json, pangram-pangram)",
-   "url": "manual/pangram/438ef422ad-PPMori-Variable_1b739cad-396d-457b-a4e6-addb15e8e13b.woff2",
-   "sha256": "438ef422ad03fa362724ac01436b97e840003af07918632836bd32dccb3f2071",
+   "url": "manual/pangram/3a4b69e61b-PPMori-Variable_e21afea1-f274-40f1-9f50-a4754e741ee9.woff2",
+   "sha256": "3a4b69e61b7776e07894b97caca6ad693714896772e8a35e587fd20a03fd21ab",
    "include": "\\.(woff2?|ttf|otf)$",
    "format": "file"
   },

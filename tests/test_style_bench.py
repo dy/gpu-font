@@ -23,6 +23,7 @@ class RepinTests(unittest.TestCase):
         save(out/'bench-browser.json', {'planSha256': sha(out/'bench-plan.json'), 'sha256': 'renders', 'images': [1]})  # one render for the plan's one query
         save(out/'bench.json', {'pins': pins, 'repins': earlier, 'planSha256': sha(out/'bench-plan.json'), 'sha256': 'pixels', 'samples': [1, 2], 'windows': [1, 2, 3]})
         save(out/'bench-sketch.json', {'pins': pins, 'planSha256': sha(out/'bench-plan.json'), 'sha256': 'sketch', 'samples': [1], 'windows': [1]})
+        (out/'bench.u8').write_bytes(b'old pixels'); (out/'bench-sketch.u8').write_bytes(b'old sketch')
         (root/'module.mjs').write_text('new')  # the module changed after the benchmark was frozen
         self.root, self.out, self.earlier = root, out, earlier
         self.patches = [mock.patch.object(style_bench, 'ROOT', root), mock.patch.object(style_bench, 'OUT', out), mock.patch.object(style_bench, 'PINS', ['module.mjs', 'other.mjs']),
@@ -36,13 +37,14 @@ class RepinTests(unittest.TestCase):
     def faking(self, pixels, sketch='sketch'):
         """pack and sketches as the real ones behave from the renders: a fresh manifest with the plan's pins, the plan's hash and the given pixel hash, no repins."""
         def pack(name):
+            (self.out/f'{name}.u8').write_bytes(pixels.encode())  # pack writes the pixels beside the manifest
             plan = read(self.out/f'{name}-plan.json'); save(self.out/f'{name}.json', {'pins': plan['pins'], 'planSha256': sha(self.out/f'{name}-plan.json'), 'sha256': pixels, 'samples': [1, 2], 'windows': [1, 2, 3]})
         def sketches(refresh=False):
             plan = read(self.out/'bench-plan.json'); save(self.out/'bench-sketch.json', {'pins': plan['pins'], 'planSha256': sha(self.out/'bench-plan.json'), 'sha256': sketch, 'samples': [1], 'windows': [1]})
         return [mock.patch.object(style_bench, 'pack', pack), mock.patch.object(style_bench, 'sketches', sketches)]
 
     def files(self):
-        return {name: (self.out/f'{name}.json').read_bytes() for name in ['bench-plan', 'bench-browser', 'bench', 'bench-sketch']}
+        return {name: (self.out/name).read_bytes() for name in ['bench-plan.json', 'bench-browser.json', 'bench.json', 'bench-sketch.json', 'bench.u8', 'bench-sketch.u8']}
 
     def test_unchanged_pixels_move_the_pins_and_record_the_move_with_its_evidence_everywhere(self):
         with self.faking('pixels')[0], self.faking('pixels')[1]: self.assertEqual(style_bench.repin('bench', REASON), ['module.mjs'])
@@ -83,6 +85,16 @@ class RepinTests(unittest.TestCase):
         with self.faking('pixels')[0], self.faking('pixels')[1]:
             with self.assertRaisesRegex(ValueError, r'3 renders for a plan of 1 queries.*by hand'): style_bench.repin('bench', REASON)
         self.assertEqual(self.files(), before)
+
+    def test_a_stop_while_packing_restores_every_file_the_pixels_included(self):
+        import os, signal
+        before = self.files()
+        def pack(name):
+            (self.out/'bench.u8').write_bytes(b'half written'); os.kill(os.getpid(), signal.SIGTERM)  # stopped mid-pack
+        with mock.patch.object(style_bench, 'pack', pack):
+            with self.assertRaises(KeyboardInterrupt): style_bench.repin('bench', REASON)
+        self.assertEqual(self.files(), before)
+        self.assertIs(signal.getsignal(signal.SIGTERM), signal.SIG_DFL)  # the handler is put back
 
     def test_a_pack_that_fails_restores_too(self):
         before = self.files()

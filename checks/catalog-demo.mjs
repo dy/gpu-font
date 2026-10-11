@@ -3,7 +3,7 @@ import { readFile, writeFile, mkdir } from 'node:fs/promises'
 import { openSync, readSync, closeSync } from 'node:fs'
 import { execFileSync } from 'node:child_process'
 import { chromium } from 'playwright'
-import { readCatalog, subsetCatalog, matchCatalog, foldTwins, embedWindows, unit, rowBytes, unpack, readHeads, verdict, writeStyle, readStyle } from '../src/catalog.mjs'
+import { readCatalog, subsetCatalog, matchCatalog, bestOf, foldTwins, embedWindows, unit, rowBytes, unpack, readHeads, verdict, writeStyle, readStyle } from '../src/catalog.mjs'
 import { packVectors } from '../src/references.mjs'
 import { SHORTLIST } from '../src/sametext.mjs'
 import { previewAddress } from '../previews.mjs'
@@ -52,7 +52,7 @@ async function choose(page, id) {
 async function verify(page, value, option) {
   assert.deepEqual(await intro(page), expectedIntro, 'Shipped figures and measured accuracy stay fixed through catalog switches')
   assert.doesNotMatch(await page.locator('body').textContent(), /never leaves|nothing is uploaded|images stay/i)
-  const catalog = readCatalog(await read(option.file), data), expected = matchCatalog(value.embedding, catalog, value.verdict)
+  const catalog = readCatalog(await read(option.file), data), expected = value.embeddings ? bestOf(value.embeddings.map(e => matchCatalog(e, catalog, value.verdict))) : matchCatalog(value.embedding, catalog, value.verdict)
   assert.deepEqual(value.matches, expected)
   assert.equal(value.catalog.sha256, option.sha256); assert.equal(value.accepted, null); assert.equal(value.scoreType, 'cosine')
   // Only families that can draw the detected script are ranked; a catalog with none of them ranks every family by style.
@@ -673,6 +673,15 @@ try {
   await page.waitForFunction(() => document.querySelector('#message').textContent.includes('Could not read'))
   assert.equal(await page.locator('.result').count(), 0)
   await page.locator('#source-font').click(); assert.equal((await result(page)).source.known, 'lora', 'Aa recovers the last sample from a drawing')
+  // A crop of two lines is read line by line: two readings, each family at its best; switching catalogs ranks it the same way.
+  const twoLines = Buffer.from((await page.evaluate(() => { const c = document.createElement('canvas'); c.width = 900; c.height = 260; const g = c.getContext('2d'); g.fillStyle = '#fff'; g.fillRect(0, 0, 900, 260); g.fillStyle = '#000'; g.font = '64px serif'; g.fillText('Harbour lights', 30, 100); g.font = 'bold 64px sans-serif'; g.fillText('Quiet rivers', 30, 220); return c.toDataURL() })).split(',')[1], 'base64')
+  await page.locator('#file').setInputFiles({ name: 'two-lines.png', mimeType: 'image/png', buffer: twoLines })
+  for (const option of [data.catalogs[0], data.catalogs[1], data.catalogs[0]]) {
+    await choose(page, option.id); const value = await result(page)
+    assert.equal(value.readings?.length, 2, 'Two lines, two readings'); assert.equal(value.embeddings.length, 2)
+    await verify(page, value, option)
+  }
+  await page.locator('#source-font').click(); assert.equal((await result(page)).readings, undefined, 'A sample of one line is one reading')
   await choose(page, data.catalogs[0].id)
   for (const width of [320, 375, 414, 768, 1440]) {
     await page.setViewportSize({ width, height: 900 })

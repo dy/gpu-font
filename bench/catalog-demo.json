@@ -21,21 +21,21 @@
     },
     {
       "id": "github",
-      "sha256": "0e4c2eeecb45953029c9cb3c4249a5d254915e595c846c5e3e5288ddc7377dfe",
+      "sha256": "b560f6dd6926e219f9361f5035cef1e684902afc234403c17b55dd2d197b111b",
       "families": 3564,
-      "faces": 10865
+      "faces": 11731
     },
     {
       "id": "debian",
-      "sha256": "b7895a3a421080a29d9036fdd97946b200016dc7fbff3fd0f5951ad8281c8c3b",
+      "sha256": "b56f8c83314d11e28b16d066197f1869f43943ec95d099b91b8652d51309eccf",
       "families": 2165,
-      "faces": 4281
+      "faces": 4451
     },
     {
       "id": "fontlibrary",
-      "sha256": "e3bdab7e67754987305d03bf7711e51974f30354ac1113c2a3f4fcc8d607b512",
+      "sha256": "ce6f66c470095b4e97629c1a5af51bc6456ffb83eaaa43133e12d780142c61a3",
       "families": 1221,
-      "faces": 3969
+      "faces": 3996
     },
     {
       "id": "whatfontis",
@@ -45,20 +45,20 @@
     },
     {
       "id": "pangram-pangram",
-      "sha256": "edb3a58081b770e1aa6bce91eb99f5952d6b3da36a42ef75ef9148c9f906a527",
+      "sha256": "b3f5c11ac7b058c0f32b8ff25a6c5a5c0b97014674851c784ed03be6b54667d1",
       "families": 201,
-      "faces": 351
+      "faces": 4580
     },
     {
       "id": "other",
-      "sha256": "402233b35f939a96ed017cf47f5b71970dc0ff5e722d9ba4165fa7320349df7f",
+      "sha256": "36ffaa5247a24e70de1902a9a859717b1539aabe6551f3beaca33adff038063b",
       "families": 576,
-      "faces": 2036
+      "faces": 2148
     }
   ],
   "cpuError": 1.0058283805847168e-7,
   "gpuError": 4.172325134277344e-7,
-  "detectionMilliseconds": 50.10000002384186,
+  "detectionMilliseconds": 90.5,
   "checks": [
     "native CPU/PyTorch/WebGPU projections",
     "exact displayed tensors and input stats",

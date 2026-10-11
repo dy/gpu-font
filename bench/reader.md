@@ -34,13 +34,13 @@ The error fell steadily to 15,000 steps and flattened after. A larger reader wou
 
 | Ranking by | First | Top five | Top twenty | By family, first | By family, top five |
 |---|---:|---:|---:|---:|---:|
-| The catalog's rows | 26.0% | 49.5% | 73.2% | 25.8% | 48.6% |
-| Rows, plus the first 30 set in the label's text | 44.8% | 66.2% | 76.5% | 44.5% | 65.0% |
-| Rows, plus the first 30 set in the text the reader read | 43.8% | 65.8% | 76.5% | 43.6% | 64.5% |
+| The catalog's rows | 31.0% | 56.0% | 79.2% | 30.9% | 56.0% |
+| Rows, plus the first 30 set in the label's text | 48.8% | 73.0% | 82.2% | 48.4% | 73.0% |
+| Rows, plus the first 30 set in the text the reader read | 45.8% | 71.8% | 81.8% | 45.1% | 71.7% |
 
-The reader read these crops with a character error of 11.0%, the whole word right 68.8% of the time. What its text buys is within a point of what the true text buys: a misread letter or two still sets the faces in nearly the right word, and the catalog score is still counted. Eighteen points of first place and sixteen of the top five, on the shipped encoder, from 156 KB more. The eighth step's encoder read these 400 at 53.0% top five by its rows and 69.8% with the reader's text: the ninth gave up three and a half points on Google families' photographs for its gains everywhere else ([photos.md](photos.md)), and the stage's lift is the same on both.
+The reader read these crops with a character error of 11.0%, the whole word right 68.8% of the time. What its text buys is within a point and a half of what the true text buys in the top five, three points of first place: a misread letter or two still sets the faces in nearly the right word, and the catalog score is still counted. Fifteen points of first place and sixteen of the top five, on the shipped encoder, from 156 KB more. The crop is read as the page reads it, as it stands and cleaned ([photos.md](photos.md#reading-a-crop)), and the cleaned reading is the one set beside the faces: 0.4.0, reading the crop as it was, put these 400 at 49.5% top five by its rows and 65.8% with the reader's text. The eighth step's encoder read them at 53.0% and 69.8%.
 
-The same-text stage (`src/sametext.mjs`) draws the first 30 rows' faces in the text at the three reference sizes where the page can load the font, prepares and embeds each as it does a crop, averages the sizes, and adds the cosine with the crop's embedding to the catalog score; a face it cannot draw counts its catalog score twice, so it neither gains nor loses against a face whose text reads exactly as its references do. Here only Google Fonts drew (the measurement loads faces from Google Fonts by name); on the page every face with a loadable file draws. Both same-text rankings together took 239 ms a photograph at the median, the catalog match 112 ms and the read 73 ms, in Chromium on Apple Metal.
+The same-text stage (`src/sametext.mjs`) draws the first 30 rows' faces in the text at the three reference sizes where the page can load the font, prepares and embeds each as it does a crop, averages the sizes, and adds the cosine with the crop's embedding to the catalog score; a face it cannot draw counts its catalog score twice, so it neither gains nor loses against a face whose text reads exactly as its references do. Here only Google Fonts drew (the measurement loads faces from Google Fonts by name); on the page every face with a loadable file draws. In Chromium on Apple Metal, both same-text rankings together took about 0.35 s a photograph at the median and the read about 0.08 s, the catalog match with its two readings about 0.29 s.
 
 ## On the page
 

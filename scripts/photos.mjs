@@ -45,6 +45,13 @@ export async function catalogNames() {
   return names
 }
 
+// `--clean <name>` on a read's command line: the cleaner to pass through, and where its report goes instead of bench/, so a
+// candidate is measured without replacing the shipped read.
+export function cleanFlag(name) {
+  const at = process.argv.indexOf('--clean'), clean = at < 0 ? null : process.argv[at + 1]
+  return { clean, report: clean ? `.data/style/${name}-${clean.replace(/\W+/g, '-')}.json` : `bench/${name}.json` }
+}
+
 const TYPES = { '.jpg': 'image/jpeg', '.jpeg': 'image/jpeg', '.png': 'image/png', '.webp': 'image/webp' }
 
 // items: [{ path, box: [x0, y0, x1, y1] }] in image pixels, end exclusive. Returns, per item, { status, ms, rows }: up to
@@ -53,7 +60,10 @@ const TYPES = { '.jpg': 'image/jpeg', '.jpeg': 'image/jpeg', '.png': 'image/png'
 // With `text`, each item may carry the text in its picture, the shipped line reader reads the crop, and two more rankings
 // come back: `byText`, the shortlist set in the item's text (src/sametext.mjs), and `byRead`, set in the text read; `read`
 // is the reader's text. Faces draw from Google Fonts, so only Google families take part; the rest keep their catalog score.
-export async function matchPhotos(items, { limit = 20, log = console.log, text = false } = {}) {
+// Each crop is read as the page reads it (src/clean.mjs readings: each line as it stands and cleaned, each family at its
+// better); `clean` names a candidate of scripts/clean-candidates.mjs to read each line through instead, or 'none' for each
+// line as it stands alone.
+export async function matchPhotos(items, { limit = 20, log = console.log, text = false, clean = null } = {}) {
   const browser = await chromium.launch({ channel: 'chromium', args: ['--enable-unsafe-webgpu', ...(process.platform === 'darwin' ? ['--use-angle=metal'] : [])] })
   try {
     const page = await browser.newPage()
@@ -63,11 +73,11 @@ export async function matchPhotos(items, { limit = 20, log = console.log, text =
       await route.fulfill({ contentType: TYPES[extname(item.path).toLowerCase()] || 'application/octet-stream', body: await readFile(item.path) })
     })
     await page.goto('http://localhost:4179/photos')
-    const ready = () => page.evaluate(async withText => {
+    const ready = () => page.evaluate(async ([withText, cleanName]) => {
       const adapter = await navigator.gpu?.requestAdapter()
       if (!adapter) return {}
       const { createEncoder, createReader, rerank, SHORTLIST, catalogs } = await import('/src/match.mjs'), c = await import('/src/catalog.mjs'), { prepareLine } = await import('/src/line.mjs'), { drawLine } = await import('/src/references.mjs')
-      const encoder = await createEncoder(), reader = withText ? await createReader() : null
+      const { readings, clean, turn, principal } = await import('/src/clean.mjs'), encoder = await createEncoder(), reader = withText ? await createReader() : null, cleaner = cleanName === 'none' ? image => image : cleanName ? (await import('/scripts/clean-candidates.mjs')).CLEANERS[cleanName] : clean
       const catalog = c.unionCatalogs(await Promise.all(Object.values(catalogs).map(async url => c.readCatalog(await (await fetch(url)).json(), encoder.binding))))
       // A Google face at its weight and posture, loaded once; null when Google Fonts does not serve it.
       const loaded = new Map(), drawing = document.createElement('canvas').getContext('2d', { willReadFrequently: true })
@@ -87,15 +97,25 @@ export async function matchPhotos(items, { limit = 20, log = console.log, text =
       window.photo = async (url, [x0, y0, x1, y1], limit, text) => {
         const start = performance.now(), bitmap = await createImageBitmap(await (await fetch(url)).blob())
         x0 = Math.max(0, x0); y0 = Math.max(0, y0); x1 = Math.min(bitmap.width, x1); y1 = Math.min(bitmap.height, y1)
-        const canvas = new OffscreenCanvas(x1 - x0, y1 - y0), ctx = canvas.getContext('2d')
-        ctx.drawImage(bitmap, x0, y0, x1 - x0, y1 - y0, 0, 0, x1 - x0, y1 - y0); bitmap.close()
-        const image = ctx.getImageData(0, 0, x1 - x0, y1 - y0), { status, windows } = prepareLine(image, { ...encoder.preparation, deskew: true, sampler: 'windows' })
-        if (status !== 'ok') return { status, ms: performance.now() - start, rows: [] }
-        const embedding = c.embedWindows(await encoder.project(windows)), judged = encoder.heads ? c.verdict(embedding, encoder.heads) : null
-        const rows = c.foldTwins(c.matchCatalog(embedding, catalog, judged), catalog, { script: judged?.script?.[0]?.label, limit: reader ? Math.max(limit, SHORTLIST) : limit })
+        // A crop past the preparation's 16 M pixels is drawn smaller, as the page's resolution control would.
+        const scale = Math.min(1, Math.sqrt(16e6 / ((x1 - x0) * (y1 - y0)))), w = Math.max(1, Math.round((x1 - x0) * scale)), h = Math.max(1, Math.round((y1 - y0) * scale))
+        const canvas = new OffscreenCanvas(w, h), ctx = canvas.getContext('2d')
+        ctx.drawImage(bitmap, x0, y0, x1 - x0, y1 - y0, 0, 0, w, h); bitmap.close()
+        // As the page reads it: by the crop's readings (src/clean.mjs), each family at its best; a candidate cleaner, or
+        // 'none', stands in for the page's two readings of a line with one.
+        const raw = ctx.getImageData(0, 0, w, h), embeddings = [], kept = [], taken = cleaner === clean ? readings(raw) : readings(raw).filter(r => r.kind !== 'cleaned').map(r => ({ ...r, image: r.angle ? turn(cleaner(r.crop), r.angle) : cleaner(r.crop) }))
+        let status = 'blank'
+        for (const r of taken) {
+          const prepared = prepareLine(r.image, { ...encoder.preparation, deskew: true, sampler: 'windows' })
+          if (prepared.status === 'ok') { embeddings.push(c.embedWindows(await encoder.project(prepared.windows))); kept.push(r) }
+          if (status !== 'ok') status = prepared.status
+        }
+        if (!embeddings.length) return { status, ms: performance.now() - start, rows: [] }
+        const embedding = embeddings[principal(kept)], judged = encoder.heads ? c.verdict(embedding, encoder.heads) : null
+        const rows = c.foldTwins(c.bestOf(embeddings.map(e => c.matchCatalog(e, catalog, judged))), catalog, { script: judged?.script?.[0]?.label, limit: reader ? Math.max(limit, SHORTLIST) : limit })
         const result = { status, ms: performance.now() - start, rows: plain(rows).slice(0, limit) }
         if (reader) {
-          const started = performance.now(), read = reader.read(image)?.text ?? ''; result.read = read; result.readMs = performance.now() - started
+          const started = performance.now(), read = reader.read(taken[0].crop)?.text ?? ''  /* the reader reads the first line as it is, as on the page */; result.read = read; result.readMs = performance.now() - started
           const options = { embedding, encoder, draw }
           result.byText = plain(await rerank(rows, text ?? '', options)).slice(0, limit); result.byRead = plain(await rerank(rows, read, options)).slice(0, limit)
           result.textMs = performance.now() - started - result.readMs
@@ -104,7 +124,7 @@ export async function matchPhotos(items, { limit = 20, log = console.log, text =
       }
       const info = adapter.info || {}
       return { adapter: [info.vendor, info.architecture, info.description].filter(Boolean).join(' ') || 'WebGPU', encoderSha256: encoder.binding.encoderSha256 }
-    }, text)
+    }, [text, clean])
     const { adapter, encoderSha256 } = await ready()
     // On the CPU a match takes about ten seconds: a whole set would take hours, so stop instead.
     if (!adapter) throw new Error('No WebGPU adapter in Chromium')
@@ -114,7 +134,9 @@ export async function matchPhotos(items, { limit = 20, log = console.log, text =
     const results = [], PATIENCE = 60000
     const timed = promise => Promise.race([promise, new Promise(resolve => setTimeout(() => resolve({ status: 'timeout', ms: PATIENCE, rows: [] }), PATIENCE))])
     for (const [i, item] of items.entries()) {
-      const result = await timed(page.evaluate(([i, box, limit, text]) => window.photo(`/photo/${i}`, box, limit, text), [i, item.box, limit, item.text]))
+      // A picture the page cannot take (one that does not decode, a crop with no pixels) is unread, with its reason, and the read goes on.
+      const result = await timed(page.evaluate(([i, box, limit, text]) => window.photo(`/photo/${i}`, box, limit, text), [i, item.box, limit, item.text]).catch(error => ({ status: 'error', error: String(error.message ?? error).split('\n')[0], ms: 0, rows: [] })))
+      if (result.status === 'error') log(`${item.path}: ${result.error}`)
       if (result.status === 'timeout') { log(`${item.path}: no answer in ${PATIENCE / 1000} s; the page is reopened`); await page.reload({ waitUntil: 'load' }).catch(() => {}); await ready() }
       results.push(result)
       if ((i + 1) % 250 === 0) log(`${i + 1} / ${items.length}`)

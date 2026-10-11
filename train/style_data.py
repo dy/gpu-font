@@ -242,10 +242,68 @@ def surface(image, rng):
     return image
 
 
+def arc(image, rng, span=None):
+    """The line set along a circle, as on a badge, a seal or a round sign: each letter turned to the radius it stands on,
+    the line bowed up or down over `span` radians of the circle (0.3 to 1.2 when drawn, never so far that the bow, about
+    w*span/8, passes one and a half line heights: a long line bent further would only shrink its letters in the window and
+    cost the worker a canvas many times its size). Dark ink on white in and out."""
+    a = 255 - np.asarray(image, np.float32); h, w = a.shape; span = min(span or rng.uniform(.3, 1.2), 12*h/w); radius = w/span
+    down = rng.random() < .5  # a smile: the text hangs below the centre
+    if down: a = a[::-1]
+    corners = [(x, y) for x in (0, w) for y in (0, h)]
+    place = lambda x, y: ((radius + h/2 - y)*np.sin((x - w/2)/radius), -(radius + h/2 - y)*np.cos((x - w/2)/radius))
+    edge = [place(x, y) for x, y in corners] + [place(w/2, 0)]
+    left, right = min(p[0] for p in edge) - 2, max(p[0] for p in edge) + 2; top, bottom = min(p[1] for p in edge) - 2, max(p[1] for p in edge) + 2
+    ys, xs = np.mgrid[0:int(np.ceil(bottom - top)), 0:int(np.ceil(right - left))].astype(np.float32); X, Y = xs + left, ys + top
+    rho, phi = np.hypot(X, Y), np.arctan2(X, -Y)
+    sx, sy = phi*radius + w/2 - .5, h/2 - (rho - radius) - .5
+    ix, iy = np.floor(sx).astype(int), np.floor(sy).astype(int); fx, fy = sx - ix, sy - iy
+    pick = lambda yy, xx: np.where((xx >= 0) & (xx < w) & (yy >= 0) & (yy < h), a[np.clip(yy, 0, h - 1), np.clip(xx, 0, w - 1)], 0)
+    out = pick(iy, ix)*(1 - fx)*(1 - fy) + pick(iy, ix + 1)*fx*(1 - fy) + pick(iy + 1, ix)*(1 - fx)*fy + pick(iy + 1, ix + 1)*fx*fy
+    if down: out = out[::-1]
+    return Image.fromarray(np.uint8(255 - np.clip(out, 0, 255)))
+
+
+def page_clean(a):
+    """src/clean.mjs's clean on a grey picture, pixel for pixel: the two means of the grey levels seeded from the border's
+    median and the level farthest from it (on at most a quarter of a million pixels spread over it), each pixel placed
+    between them, Otsu's threshold at the middle of its widest best gap, the ink within 0.15 of it keeping its grey; black
+    on white. A picture whose pixels between ink and background are, but for 1% of it, edges (an ink and a background pixel
+    among the eight neighbours) is two-tone and comes back as it is.
+    The page cleans every crop so; a view trains on what the page will send."""
+    h, w = a.shape; n = h*w; v = a.astype(np.float64).ravel()
+    border = np.concatenate([a[0], a[-1], a[1:-1, 0], a[1:-1, -1]] if h > 1 and w > 1 else [a.ravel()]).astype(np.float64)
+    back = float(np.sort(border)[len(border) >> 1]); step = max(1, n // 250000); sample = v[::step]
+    ink = float(sample[int(np.argmax(np.abs(sample - back)))])
+    for _ in range(6):
+        near = np.abs(sample - ink) < np.abs(sample - back)
+        if near.all() or not near.any(): break
+        back, ink = float(sample[~near].mean()), float(sample[near].mean())
+    # As the page sums its three equal channels: the same rounding, so the same map to the last bit.
+    axis = ink - back; term = (v - back)*axis; square = axis*axis; length = (square + square) + square
+    m = np.clip(((term + term) + term)/(length or 1), 0, 1).astype(np.float32)
+    between = (m > .15) & (m < .85); mm = m.reshape(h, w); pad = lambda b: np.pad(b, 1)
+    low, high = pad(mm <= .15), pad(mm >= .85)
+    near = lambda b: np.any([b[1 + dy:1 + dy + h, 1 + dx:1 + dx + w] for dy in (-1, 0, 1) for dx in (-1, 0, 1)], axis=0)
+    if np.count_nonzero(between.reshape(h, w) & ~(near(low) & near(high))) <= n*.01: return a  # two-tone: what stands between is edge
+    counts = np.bincount(np.floor(m.astype(np.float64)*255 + .5).astype(np.int64), minlength=256)[:256]
+    below = np.cumsum(counts).astype(np.float64); sums = np.cumsum(counts*np.arange(256)).astype(np.float64); total = sums[-1]
+    best, first, last = -1.0, 128, 128
+    for k in range(256):
+        if not below[k] or below[k] == n: continue
+        between = below[k]*(n - below[k])*(sums[k]/below[k] - (total - sums[k])/(n - below[k]))**2
+        if between > best*(1 + 1e-9): best, first, last = between, k, k
+        elif between >= best*(1 - 1e-9): last = k
+    threshold = (first + last)/2/255
+    level = np.clip((m.astype(np.float64) - threshold + .15)/.3, 0, 1)
+    return np.floor(255*(1 - level) + .5).astype(np.uint8).reshape(h, w)
+
+
 def damage(image, rng, photo=False):
     """Screenshot conditions: colour/contrast/polarity, rotation, rescaling, blur, JPEG, noise, clipped edges, and now and then
     a display effect on the flat letters. With `photo`, a photographed surface first (surface): texture from the bank, uneven
     light, shadow and glare, worn or effected ink, blur, noise, perspective."""
+    if rng.random() < ARC: image = arc(image, rng)
     if photo: image = surface(image, rng)
     else:
         a = np.asarray(image, np.float32)/255
@@ -297,6 +355,7 @@ def pools(families, sets):
     return result
 
 
+ARC = .06  # damaged views set along a circle
 STATE = {}
 
 
@@ -316,6 +375,7 @@ def sample(spec):
             if drawn: image = sketch(image, rng)  # hand-drawn view: style, not identity
             photo = not clean and not drawn and rng.random() < STATE.get('photo', 0)  # photographed surface: identity as usual
             gray = np.asarray(image, np.uint8) if clean else damage(image, rng, photo=photo)
+            if rng.random() < .5: gray = page_clean(gray)  # the page reads a line as it stands and cleaned: half the views each way
             windows = STATE['prepare'](gray)
             if not windows: continue
             view = {'face':index,'script':script,'text':value,'windows':windows,'drawn':drawn,'photo':photo,'damaged':not clean}

@@ -8,7 +8,7 @@
 //   node scripts/forum.mjs [--limit 1000]     needs `npm run demo`; the newest threads first
 import { readFile, writeFile } from 'node:fs/promises'
 import { createHash } from 'node:crypto'
-import { matchPhotos, rankOf, twinSets, catalogNames, accuracy } from './photos.mjs'
+import { cleanFlag, matchPhotos, rankOf, twinSets, catalogNames, accuracy } from './photos.mjs'
 import { familyOf } from './screens.mjs'
 
 const ROOT = '.data/forum/dafont'
@@ -61,7 +61,7 @@ async function main() {
   const jsonl = async file => (await readFile(`${ROOT}/${file}`, 'utf8')).trim().split('\n').filter(Boolean).map(line => JSON.parse(line))
   const requests = await jsonl('requests.jsonl'), boxes = new Map((await jsonl('boxes.jsonl')).map(b => [b.file, b]))
   const all = indexed(requests, boxes, await catalogNames()), kept = all.kept.slice(0, limit)
-  const { browser, adapter, encoderSha256, results } = await matchPhotos(kept.map(({ request, line }) => ({ path: `${ROOT}/images/${request.files[0].file}`, box: padded(line.box) })))
+  const { clean, report: target } = cleanFlag('forum'), { browser, adapter, encoderSha256, results } = await matchPhotos(kept.map(({ request, line }) => ({ path: `${ROOT}/images/${request.files[0].file}`, box: padded(line.box) })), { clean })
   const twins = await twinSets(), scored = kept.map((item, i) => ({ ...item, ...results[i], rank: rankOf(results[i].rows, item.truth.family, twins.get(item.truth.familyId)) }))
   const slices = key => Object.fromEntries([...new Set(scored.map(key))].sort().map(value => [value, summary(scored.filter(s => key(s) === value))]))
   const size = px => px < 24 ? 'under 24 px' : px < 48 ? '24–47 px' : px < 96 ? '48–95 px' : '96 px and over'
@@ -74,7 +74,7 @@ async function main() {
       indexed: { threads: all.kept.length, families: new Set(all.kept.map(k => k.truth.family)).size }, read: kept.length, left: all.left },
     rule: 'Right when the answer\'s family, or a family the page folds into that row, or a twin the teacher cannot tell from it, is among the first rows the page shows (5); any weight counts.',
     crop: 'The Vision line box the answer names (the line sharing most words with the text the answerer previewed, else the tallest confident horizontal one), a quarter of its height around it.',
-    catalogs: 'All: every shipped catalog searched as one.', browser, adapter, encoderSha256, date: new Date().toISOString().slice(0, 10),
+    catalogs: 'All: every shipped catalog searched as one.', ...(clean && { cleaner: clean }), browser, adapter, encoderSha256, date: new Date().toISOString().slice(0, 10),
     timeMs: { median: time(0.5), p95: time(0.95), from: 'image bytes to ranked rows, warm' },
     unread: Object.fromEntries([...new Set(scored.map(s => s.status))].filter(s => s !== 'ok').map(s => [s, scored.filter(x => x.status === s).length])),
     results: { all: summary(scored), catalog: slices(s => s.truth.catalog), host: slices(s => host(s.answer.url)), hint: slices(s => previewText(s.answer.url) ? 'preview text' : 'tallest line'),
@@ -83,7 +83,7 @@ async function main() {
   // One thread a line; the picture and its text stay out: they are the poster's.
   const rows = scored.map(s => JSON.stringify({ thread: s.request.id, family: s.truth.family, catalog: s.truth.catalog, px: height(s.line), ...(s.status !== 'ok' && { status: s.status }), rank: s.rank,
     first: s.rows[0]?.name ?? null, score: s.rows[0] ? Math.round(s.rows[0].score * 1e3) / 1e3 : null }))
-  await writeFile('bench/forum.json', JSON.stringify(report, null, 1).slice(0, -2) + `,\n "threads": [\n  ${rows.join(',\n  ')}\n ]\n}\n`)
+  await writeFile(target, JSON.stringify(report, null, 1).slice(0, -2) + `,\n "threads": [\n  ${rows.join(',\n  ')}\n ]\n}\n`)
   const pct = v => v === null ? '–' : `${(100 * v).toFixed(1)}%`
   for (const [name, r] of [['all', report.results.all], ...Object.entries(report.results.catalog), ...Object.entries(report.results.hint), ...Object.entries(report.results.size)])
     console.log(`${name}: ${r.threads} threads, ${r.families} families: top-1 ${pct(r.top1)}, top-5 ${pct(r.top5)}; by family top-1 ${pct(r.byFamily.top1)}, top-5 ${pct(r.byFamily.top5)}`)

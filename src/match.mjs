@@ -2,7 +2,8 @@
 import { readNetwork, inferCPU } from './network.mjs'
 import { createNetworkGPU } from './network-gpu.mjs'
 import { prepareLine } from './line.mjs'
-import { readCatalog, embedWindows, matchCatalog, foldTwins, sha256, preparationHash, readHeads, verdict } from './catalog.mjs'
+import { readings, principal } from './clean.mjs'
+import { readCatalog, embedWindows, matchCatalog, bestOf, foldTwins, sha256, preparationHash, readHeads, verdict } from './catalog.mjs'
 import { readReader, readLine } from './reader.mjs'
 export { rerank, SHORTLIST, MIN_TEXT } from './sametext.mjs'
 
@@ -69,11 +70,15 @@ export async function createMatcher(catalogUrl = catalogs['google-fonts'], model
   const encoder = await createEncoder(modelUrl)
   let catalog
   try { catalog = readCatalog(await data, encoder.binding) } catch (error) { encoder.destroy(); throw error }
-  // The crop's unit embedding, what the catalog and the same-text stage compare with; null when the crop holds no text.
-  const embed = async imageData => {
-    const { status, windows } = prepareLine(imageData, { ...encoder.preparation, deskew: true, sampler: 'windows' })
+  // A crop's readings (src/clean.mjs): each line, cleaned, and turned level as well where it stands steep. Each one's unit
+  // embedding; null when it holds no text.
+  const embedOne = async ({ image }) => {
+    const { status, windows } = prepareLine(image, { ...encoder.preparation, deskew: true, sampler: 'windows' })
     return status === 'ok' ? embedWindows(await encoder.project(windows)) : null
   }
+  // The crop's embedding, what the heads and the same-text stage compare with: its principal reading's (its first line
+  // cleaned, when it was).
+  const embed = async imageData => { const read = []; for (const reading of readings(imageData)) { const e = await embedOne(reading); if (e) read.push({ ...reading, e }) } return read.length ? read[principal(read)].e : null }
   return {
     // Scores below it mean the crop's font is probably in no catalog; null when the model ships none.
     threshold: encoder.model.threshold,
@@ -81,11 +86,13 @@ export async function createMatcher(catalogUrl = catalogs['google-fonts'], model
     encoder,
     embed,
     // Fonts best first, identical designs folded into one entry with their `siblings`; [] when the crop holds no text.
+    // A crop is matched reading by reading, each family at its best.
     async match(imageData) {
-      const embedding = await embed(imageData)
-      if (!embedding) return []
-      const judged = encoder.heads ? verdict(embedding, encoder.heads) : null
-      return foldTwins(matchCatalog(embedding, catalog, judged), catalog, { script: judged?.script?.[0]?.label })
+      const read = []
+      for (const reading of readings(imageData)) { const e = await embedOne(reading); if (e) read.push({ ...reading, e }) }  // one projection at a time, as the encoder runs them
+      if (!read.length) return []
+      const embeddings = read.map(r => r.e), judged = encoder.heads ? verdict(embeddings[principal(read)], encoder.heads) : null
+      return foldTwins(bestOf(embeddings.map(e => matchCatalog(e, catalog, judged))), catalog, { script: judged?.script?.[0]?.label })
     },
     destroy: encoder.destroy
   }

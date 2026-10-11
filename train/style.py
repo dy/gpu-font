@@ -149,6 +149,17 @@ def nearest(distance, floor, count=16, block=1024):
     return out, twinned
 
 
+def confusions(proxies, setup, count=16, block=1024):
+    """Each training face's nearest other faces by the model's own proxies, twins and itself left out: the designs the
+    model confuses it with now, beside the teacher's nearest by letter distance."""
+    P = F.normalize(proxies.detach(), dim=1); n = len(P); out = np.zeros((n, min(count, n - 1)), np.int64)
+    for a in range(0, n, block):
+        rows = P[a:a + block] @ P.T
+        rows[setup.distance[a:a + block].float() < setup.floor] = -float('inf'); own = torch.arange(len(rows), device=rows.device); rows[own, own + a] = -float('inf')
+        out[a:a + block] = rows.topk(out.shape[1]).indices.cpu().numpy()
+    return out
+
+
 def twin_rows(setup, faces):
     """A batch's rows of pair distances, and its twins among all faces: closer than the renderer's noise, a face its own."""
     rows = setup.distance[faces].float(); near = rows < setup.floor; near[torch.arange(len(faces), device=rows.device), faces] = True
@@ -374,7 +385,7 @@ def run_seed(run, seed=None):
     return zlib.crc32(run.encode()) if seed is None else seed
 
 
-def train(run, roles, steps, warm, workers, check=2500, architecture=CORPUS_ARCH, lr=2e-4, drawn=0.0, pairs=0.0, seed=None, select='bench:development', photo=0.0, teacher=None, dimensions=DIMENSIONS, cluster=0):
+def train(run, roles, steps, warm, workers, check=2500, architecture=CORPUS_ARCH, lr=2e-4, drawn=0.0, pairs=0.0, seed=None, select='bench:development', photo=0.0, teacher=None, dimensions=DIMENSIONS, cluster=0, confused=False):
     """With `teacher` (a run), a student of `architecture` learns that run's embedding of each view's clean render while
     seeing the damaged or photographed one, starting from the teacher's heads and proxies. Without `warm` or a teacher the
     run starts from scratch at `dimensions`: the control that says whether the teacher was needed. With `cluster` (bits),
@@ -412,6 +423,12 @@ def train(run, roles, steps, warm, workers, check=2500, architecture=CORPUS_ARCH
     optimizer = torch.optim.AdamW([{'params':model.parameters(),'lr':lr,'weight_decay':1e-4},
                                    {'params':[proxies],'lr':2e-3,'weight_decay':0},{'params':heads.parameters(),'lr':2e-3,'weight_decay':1e-4}])
     schedule = torch.optim.lr_scheduler.LambdaLR(optimizer, lambda s: min(1, (s + 1)/500)*(.05 + .95*.5*(1 + np.cos(np.pi*min(s, steps)/steps))))
+    # With `confused`, each face's partners are its teacher neighbours and, as many again, the faces the model's own proxies
+    # put nearest it, refreshed at every check: hard negatives from the model's current confusions.
+    teacher_neighbours = setup.neighbours
+    def refresh():
+        if confused: setup.neighbours = np.concatenate([teacher_neighbours, confusions(proxies, setup, teacher_neighbours.shape[1])], 1)
+    refresh()
     stream = Stream(setup.faces, setup.pools, setup.plan(seed, pairs=pairs > 0), workers=workers, drawn=drawn, photo=photo, teacher=teacher is not None)
     stored = StoredViews(setup, ('train',) if roles == ['train'] else ('train', 'validation', 'reference', 'test')); mix = random.Random(seed + 1)
     pins = {p: sha(ROOT/p) for p in ['train/style.py', 'train/style_data.py', 'train/style_teacher.py', 'train/style_catalog.py', 'train/ten_model.py', 'bench/corpus.json', 'bench/encoder-split.json']}
@@ -432,7 +449,7 @@ def train(run, roles, steps, warm, workers, check=2500, architecture=CORPUS_ARCH
             best = value
             torch.save({'state':plain_state(model) if cluster else {k: v.detach().cpu().clone() for k, v in model.state_dict().items()},'heads':{k: v.detach().cpu().clone() for k, v in heads.state_dict().items()},
                         'proxies':proxies.detach().cpu().clone(),'step':step,'pins':pins,'scripts':setup.scripts,'fine':setup.fine,'architecture':architecture, **({'clusters': clusters_of(model)} if cluster else {})}, out/'best.pt')
-        save(out/'progress.json', {'run':run,'roles':roles,'steps':steps,'warm':str(warm),'teacher':teacher,'cluster':cluster,'lr':lr,'pairs':pairs,'photo':photo,'seed':seed,'architecture':architecture,'select':select,'pins':pins,'history':history,'best':best})
+        save(out/'progress.json', {'run':run,'roles':roles,'steps':steps,'warm':str(warm),'teacher':teacher,'cluster':cluster,'lr':lr,'pairs':pairs,'photo':photo,'confused':confused,'seed':seed,'architecture':architecture,'select':select,'pins':pins,'history':history,'best':best})
         print(f'check {step}: {select_role} twin-top5 {dev["twin5"]:.4f} top1 {dev["twin1"]:.4f} style20 {dev.get("style20", 0):.3f} far {dev.get("far", 0):.3f} '
               f'weightErr {dev.get("headWeightError", 0):.0f} italic {dev.get("headItalic", 0):.3f} script {dev.get("headScript", 0):.3f}' + (f' sketch twin-top5 {drawn_result["twin5"]:.4f} category {drawn_result["category"]:.4f} selection {value:.4f}' if drawn_result else '') + (f' photos twin-top5 {photos["twin5"]:.4f} top1 {photos["twin1"]:.4f}' if photos else '') + f' ({time.perf_counter() - start:.0f}s, {torch.mps.driver_allocated_memory()/1e9:.1f} GB on the device)', flush=True)
     try:
@@ -459,7 +476,9 @@ def train(run, roles, steps, warm, workers, check=2500, architecture=CORPUS_ARCH
             if step % 25 == 0: torch.mps.empty_cache()
             if step % 500 == 0:  # one device sync per report, not per step
                 print(f'step {step}: ' + ' '.join(f'{k} {float(v)/500:.3f}' for k, v in running.items()) + f' ({time.perf_counter() - start:.0f}s, {torch.mps.driver_allocated_memory()/2**30:.1f} GB on the device)', flush=True); running = {}
-            if step % check == 0 and select_role: checkpoint(step)
+            if step % check == 0:
+                if select_role: checkpoint(step)
+                refresh()
         if not select_role:
             torch.save({'state':{k: v.detach().cpu().clone() for k, v in model.state_dict().items()},'heads':{k: v.detach().cpu().clone() for k, v in heads.state_dict().items()},
                         'proxies':proxies.detach().cpu().clone(),'step':steps,'pins':pins,'scripts':setup.scripts,'fine':setup.fine,'architecture':architecture}, out/'best.pt')
@@ -809,12 +828,12 @@ def deploy(run):
 
 if __name__ == '__main__':
     p = argparse.ArgumentParser(); p.add_argument('command', choices=['train', 'export', 'catalog', 'twins', 'final', 'photos', 'deploy', 'compare', 'breakdown', 'project']); p.add_argument('--run', default='evaluation')
-    p.add_argument('--roles', default='train'); p.add_argument('--steps', type=int, default=30000); p.add_argument('--workers', type=int, default=12); p.add_argument('--check', type=int, default=2500); p.add_argument('--architecture', choices=list(ARCHITECTURES), default=CORPUS_ARCH); p.add_argument('--lr', type=float, default=2e-4); p.add_argument('--drawn', type=float, default=0.0); p.add_argument('--photo', type=float, default=0.0); p.add_argument('--cluster', type=int, default=0, help='bits: fold and cluster the warm model, retrain its codebooks'); p.add_argument('--pairs', type=float, default=0.0); p.add_argument('--seed', type=int); p.add_argument('--dimensions', type=int, default=64); p.add_argument('--select', default='bench:development'); p.add_argument('--source', choices=['pillow', 'browser', 'mixed'], default='pillow'); p.add_argument('--bits', type=int, choices=[4, 6, 8], default=4, help='bits a catalog number')
+    p.add_argument('--roles', default='train'); p.add_argument('--steps', type=int, default=30000); p.add_argument('--workers', type=int, default=12); p.add_argument('--check', type=int, default=2500); p.add_argument('--architecture', choices=list(ARCHITECTURES), default=CORPUS_ARCH); p.add_argument('--lr', type=float, default=2e-4); p.add_argument('--drawn', type=float, default=0.0); p.add_argument('--photo', type=float, default=0.0); p.add_argument('--cluster', type=int, default=0, help='bits: fold and cluster the warm model, retrain its codebooks'); p.add_argument('--confused', action='store_true', help='partners also from the model\'s own nearest proxies, refreshed each check'); p.add_argument('--pairs', type=float, default=0.0); p.add_argument('--seed', type=int); p.add_argument('--dimensions', type=int, default=64); p.add_argument('--select', default='bench:development'); p.add_argument('--source', choices=['pillow', 'browser', 'mixed'], default='pillow'); p.add_argument('--bits', type=int, choices=[4, 6, 8], default=4, help='bits a catalog number')
     p.add_argument('--warm', default=str(ROOT/'.data/encoder/case-refine/best.pt')); p.add_argument('--teacher'); a = p.parse_args()
     if a.warm == 'none': a.warm = None
     torch.set_num_threads(4)
     if not torch.backends.mps.is_available(): raise ValueError('MPS unavailable')
-    if a.command == 'train': train(a.run, a.roles.split(','), a.steps, a.warm, a.workers, a.check, a.architecture, a.lr, a.drawn, a.pairs, a.seed, a.select, a.photo, a.teacher, a.dimensions, a.cluster)
+    if a.command == 'train': train(a.run, a.roles.split(','), a.steps, a.warm, a.workers, a.check, a.architecture, a.lr, a.drawn, a.pairs, a.seed, a.select, a.photo, a.teacher, a.dimensions, a.cluster, a.confused)
     elif a.command == 'export': export_run(a.run)
     elif a.command == 'project': project(a.run, a.dimensions)
     elif a.command == 'catalog': export_catalog(a.run, source=a.source, bits=a.bits)

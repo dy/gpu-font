@@ -40,11 +40,16 @@ def plan(held_out=False):
     """`held_out`: only the open families the fixed rule keeps out of training (train.style_fonts.open_role), for a model that trained on the rest."""
     inventory = read(ROOT/'bench/open-fonts.json'); alphabets = read(ROOT/inventory['store']/'alphabets.json'); indexed = shipped_faces()
     families = [f for f in inventory['families'] if not f.get('excluded') and queryable(alphabets.get(f['id'], {}).get('Latn', '')) and (not held_out or open_role(f['id'], f.get('design')) == 'held-out')]
+    # A variable family's default face is the instance of its selected file nearest Regular (scripts/instances.py), as the catalogs index it.
+    made = ROOT/inventory['store']/'instances.json'; made = read(made) if made.exists() else {'faces': {}, 'families': {}}
+    by_id = {r['id']: r for records in made['faces'].values() for r in records}
     rng = random.Random(SEED); queries = []; instances = {}
     for family in sorted(families, key=lambda f: f['id']):
         face = next((x for x in family['faces'] if x['path'] == family['selected']), None)
         if face is None: continue
-        path = ROOT/inventory['store']/face['path']; face_id = f"{family['id']}/{path.stem}"
+        default = by_id.get(made['families'].get(family['id'], {}).get('default'))
+        if default: face = {**face, 'weight': default['weight'], 'italic': default['italic']}; path = ROOT/inventory['store']/default['path']; face_id = default['id']
+        else: path = ROOT/inventory['store']/face['path']; face_id = f"{family['id']}/{path.stem}"
         if face_id not in indexed or not path.exists(): continue
         instances[face_id] = {'path': str(path), 'sha256': hashlib.sha256(path.read_bytes()).hexdigest()}
         for n, case in enumerate(['lower', 'title']):

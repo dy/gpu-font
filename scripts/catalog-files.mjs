@@ -1,25 +1,27 @@
 // Catalogs of the free families pinned in bench/open-fonts.json, one per source, indexed in Chromium by the page's
 // own builder (src/references.mjs) from the pinned files in .data/fonts-open: the Latin reference lines, rasterizer,
-// preparation and int8 encoder that My fonts uses. A file is served to the page only when its bytes match its pinned git
+// preparation and int8 encoder that My fonts uses. A variable file with named instances is indexed as its static
+// instances (scripts/instances.py), one face each. A file is served to the page only when its bytes match its pinned git
 // blob. Writes .data/catalogs/files/<source>.json; `npm run demo:build` ships those whose terms allow it.
 //
-//   node scripts/catalog-files.mjs [source ...]     with the demo server running (npm run demo)
+//   node scripts/catalog-files.mjs [source ...]     with the demo server running (npm run demo), after scripts/instances.py
 import { readFile, writeFile, mkdir, rm } from 'node:fs/promises'
 import { createHash } from 'node:crypto'
 import { spawnSync } from 'node:child_process'
 import { chromium } from 'playwright'
 import { joinCatalogs } from '../src/references.mjs'
+import { catalogFaces } from './catalog-faces.mjs'
 
 const read = async path => JSON.parse(await readFile(path, 'utf8'))
 const [inventory, registry, site] = await Promise.all(['bench/open-fonts.json', 'bench/foundries.json', 'site.json'].map(read))
 const names = new Map(registry.sources.map(s => [s.id, s.name.replace(/\s*\(.*\)$/, '')])), homes = new Map(registry.sources.map(s => [s.id, s.url]))
-const WEIGHTS = { 100: 'Thin', 200: 'ExtraLight', 300: 'Light', 400: 'Regular', 500: 'Medium', 600: 'SemiBold', 700: 'Bold', 800: 'ExtraBold', 900: 'Black' }
-const styleName = (weight, italic) => { const name = WEIGHTS[Math.min(900, Math.max(100, Math.round(weight / 100) * 100))]; return italic ? (name === 'Regular' ? 'Italic' : `${name} Italic`) : name }
+// The static instances of the variable files, when scripts/instances.py has made them; without the manifest each file is one face at its default.
+const instances = await read(`${inventory.store}/instances.json`).catch(() => { console.log('No instances.json: variable files index at their default; run node scripts/python.mjs scripts/instances.py'); return { faces: {}, families: {} } })
 // Text catalogs index families with Latin letters; colour, letterless, icon and symbol-encoded families wait for a glyph mode.
 const eligible = family => !family.excluded && !family.symbolEncoded && family.letters?.Latn
 const wanted = process.argv.slice(2), sources = Map.groupBy(inventory.families.filter(f => eligible(f) && (!wanted.length || wanted.includes(f.source))), f => f.source)
 const blob = bytes => createHash('sha1').update(`blob ${bytes.length}\0`).update(bytes).digest('hex')
-const pins = new Map(inventory.families.flatMap(f => f.faces.map(face => [face.path, face.blob])))
+const pins = new Map([...inventory.families.flatMap(f => f.faces.map(face => [face.path, face.blob])), ...Object.values(instances.faces).flat().map(i => [i.path, i.blob])])
 const base = `http://127.0.0.1:${process.env.PORT || 4179}`
 
 // A font can crash the renderer or the browser: faces go in batches, a crashed batch is retried one face at a time on a fresh page,
@@ -72,11 +74,7 @@ try {
   // A source left with no family to index (Font Awesome's, whose letters only spell icons) loses its earlier catalog.
   for (const source of new Set(inventory.families.map(f => f.source))) if (!sources.has(source) && (!wanted.length || wanted.includes(source))) await rm(`.data/catalogs/files/${source}.json`, { force: true })
   for (const [source, families] of sources) {
-    const faces = families.flatMap(family => family.faces.map(face => ({
-      id: `${family.id}/${face.path.split('/').at(-1).replace(/\.[^.]+$/, '')}`, familyId: family.id, family: family.family,
-      styleName: styleName(face.weight, face.italic), weight: face.weight, style: face.italic ? 'italic' : 'normal', scripts: Object.keys(family.letters).sort(),
-      sourceUrl: family.sourceUrl ?? homes.get(source), ...(face.path === family.selected ? { default: true, ...(twins[family.id] ? { twins: twins[family.id] } : {}) } : {}), // A family without its own page links to its source's.
-      source: `url("/fonts-open/${face.path.split('/').map(encodeURIComponent).join('/')}")` })))
+    const faces = families.flatMap(family => catalogFaces(family, { instances, twins, home: homes.get(source) }).map(({ path, ...face }) => ({ ...face, source: `url("/fonts-open/${path.split('/').map(encodeURIComponent).join('/')}")` })))
     let catalog = null, skipped = []
     for (let i = 0; i < faces.length; i += BATCH) {
       process.stdout.write(`\r${source} ${i}/${faces.length}   `)

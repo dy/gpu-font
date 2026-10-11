@@ -81,6 +81,60 @@ class StyleDataTests(unittest.TestCase):
         self.assertEqual(sizes.tolist()[:3], [[10, 20], [48, 128], [5, 7]]); self.assertEqual(float(pixels[0, 0, 10:, :].min()), 1.0)
 
 
+class ConfusionTests(unittest.TestCase):
+    def test_a_face_s_confusions_are_its_nearest_proxies_without_itself_or_its_twins(self):
+        import types
+        from train.style import confusions
+        proxies = torch.tensor([[1., 0.], [.99, .14], [.9, .44], [0., 1.], [.98, .2]])  # 0 is closest to 1, then 4, then 2
+        distance = torch.full((5, 5), 1.); distance.fill_diagonal_(0); distance[0, 1] = distance[1, 0] = .001  # 0 and 1 are twins
+        setup = types.SimpleNamespace(distance=distance, floor=.01)
+        near = confusions(proxies, setup, count=2, block=2)
+        self.assertEqual(list(near[0]), [4, 2])  # the twin 1 and itself are left out, nearest first
+        self.assertEqual(list(near[3]), [2, 4]); self.assertEqual(near.shape, (5, 2))
+
+
+class PageCleanTests(unittest.TestCase):
+    def test_a_view_is_cleaned_to_the_very_pixels_the_page_cleaner_gives_and_a_two_tone_one_is_left(self):
+        import base64, json, subprocess
+        from train.style_data import page_clean
+        g = np.random.default_rng(3); views = []
+        render = np.full((40, 120), 255, np.uint8); render[10:30, 10:110:9] = 0; views.append(render)  # two-tone
+        wall = (g.normal(150, 40, (40, 120))).clip(0, 255).astype(np.uint8); wall[10:30, 10:110:9] = 20; views.append(wall)  # grain behind dark letters
+        light = (g.normal(60, 25, (30, 90))).clip(0, 255).astype(np.uint8); light[8:22, 5:85:7] = 230; views.append(light)  # light letters on a dark wall
+        views.append(np.full((8, 8), 90, np.uint8))  # one grey, no ink
+        script = ("const fs = await import('node:fs'); const { clean } = await import('./src/clean.mjs'); const cases = JSON.parse(fs.readFileSync(0, 'utf8'));"
+                  "process.stdout.write(JSON.stringify(cases.map(({ w, h, p }) => { const g = Buffer.from(p, 'base64'), d = new Uint8ClampedArray(w * h * 4);"
+                  "for (let i = 0; i < w * h; i++) { d[4 * i] = d[4 * i + 1] = d[4 * i + 2] = g[i]; d[4 * i + 3] = 255 }"
+                  "const o = clean({ width: w, height: h, data: d }); return Buffer.from(Uint8Array.from({ length: w * h }, (_, i) => o.data[4 * i])).toString('base64') })))")
+        cases = [{'w': v.shape[1], 'h': v.shape[0], 'p': base64.b64encode(v.tobytes()).decode()} for v in views]
+        out = json.loads(subprocess.run(['node', '--input-type=module', '-e', script], input=json.dumps(cases), text=True, capture_output=True, check=True, cwd=REPO).stdout)
+        for v, b64 in zip(views, out): self.assertTrue(np.array_equal(page_clean(v), np.frombuffer(base64.b64decode(b64), np.uint8).reshape(v.shape)))
+        self.assertIs(page_clean(render), render)  # a render passes as it is
+        self.assertEqual(int(page_clean(wall)[20, 10]), 0); self.assertEqual(int(page_clean(light)[15, 5]), 0)  # letters black, dark or light
+        self.assertTrue((page_clean(views[3]) == 255).all() or page_clean(views[3]) is views[3])
+
+
+class ArcTests(unittest.TestCase):
+    def test_a_line_set_along_a_circle_bows_by_its_sagitta_both_ways_keeps_its_ink_and_a_short_span_barely_moves(self):
+        import random
+        from PIL import Image
+        from train.style_data import arc
+        line = np.full((40, 400), 255, np.uint8); line[15:25, 20:380] = 0; image = Image.fromarray(line)  # a bar 360 px long, 10 tall
+        sagitta = 400 * (1 - np.cos(180 / 400))  # radius w/span = 400 px; the bar's half length, 180 px, is .45 rad of it: 40 px of bow
+        directions = set()
+        for seed in range(12):
+            bowed = np.asarray(arc(image, random.Random(seed), span=1.0)) < 128; rows, cols = np.nonzero(bowed)
+            self.assertAlmostEqual(rows.max() - rows.min(), sagitta + 10, delta=8)
+            self.assertAlmostEqual(bowed.sum() / (line < 128).sum(), 1, delta=.08)  # the ink is kept, not lost or doubled
+            middle = np.nonzero(bowed[:, (cols.min() + cols.max()) // 2])[0].mean(); end = np.nonzero(bowed[:, cols.min() + 2])[0].mean()
+            directions.add(middle < end)  # a frown: the middle stands above the ends
+        self.assertEqual(directions, {True, False})
+        long = Image.fromarray(np.full((40, 3000), 255, np.uint8)); bent = arc(long, random.Random(0), span=1.2)
+        self.assertLessEqual(bent.height, 40 + 1.5*40 + 8)  # a long line bows at most a line and a half: no canvas many times its size
+        rows = np.nonzero(np.asarray(arc(image, random.Random(0), span=.02)) < 128)[0]
+        self.assertLessEqual(rows.max() - rows.min(), 12)  # almost straight
+
+
 class SketchTests(unittest.TestCase):
     def test_thinning_keeps_every_stroke_as_a_one_pixel_line(self):
         mask = np.zeros((40, 60), bool); mask[5:12, 5:55] = True; mask[20:35, 10:17] = True  # a bar and a stem
@@ -313,6 +367,27 @@ class StyleOpenTests(unittest.TestCase):
         self.assertFalse(queryable('ABCDEFGHIJKLMNOPQRSTUVWXYZ'))
         self.assertFalse(queryable('eta'))
         self.assertFalse(queryable(''))
+
+
+    def test_open_plan_queries_a_variable_family_by_its_instanced_default_and_a_static_one_by_its_file(self):
+        import json, tempfile
+        from unittest import mock
+        import train.style_open as so
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp); store = root/'store'; (store/'v').mkdir(parents=True); (store/'s').mkdir(); (store/'instances/vf').mkdir(parents=True); out = root/'out'; out.mkdir()
+            for f in ['v/V.ttf', 's/S.ttf', 'instances/vf/V@regular.ttf']: (store/f).write_bytes(b'font ' + f.encode())
+            (root/'bench').mkdir(); latin = {'Latn': 'abcdefghijklmnopqrstuvwxyz'}
+            inventory = {'store': 'store', 'families': [{'id': 'vf', 'source': 'x', 'selected': 'v/V.ttf', 'faces': [{'path': 'v/V.ttf', 'weight': 100, 'italic': False}]},
+                                                        {'id': 'st', 'source': 'x', 'selected': 's/S.ttf', 'faces': [{'path': 's/S.ttf', 'weight': 700, 'italic': True}]}]}
+            (root/'bench/open-fonts.json').write_text(json.dumps(inventory)); (store/'alphabets.json').write_text(json.dumps({'vf': latin, 'st': latin}))
+            (store/'instances.json').write_text(json.dumps({'faces': {'v/V.ttf': [{'id': 'vf/V@regular', 'path': 'instances/vf/V@regular.ttf', 'weight': 400, 'italic': False}]}, 'families': {'vf': {'default': 'vf/V@regular'}}}))
+            with mock.patch.object(so, 'ROOT', root), mock.patch.object(so, 'OUT', out), mock.patch.object(so, 'PINS', []), mock.patch.object(so, 'shipped_faces', lambda: {'vf/V@regular', 'st/S'}), \
+                 mock.patch.object(so, 'sha', lambda path: 'h'), mock.patch.object(so, 'open_role', lambda *_: 'held-out'):
+                so.plan(held_out=True)
+            plan = json.loads((out/'open-plan.json').read_text()); instances = json.loads((out/'open-instances.json').read_text())
+            self.assertEqual({q['family']: (q['faceId'], q['weight'], q['italic']) for q in plan['queries']}, {'vf': ('vf/V@regular', 400, False), 'st': ('st/S', 700, True)})
+            self.assertEqual(instances['vf/V@regular']['path'], str(store/'instances/vf/V@regular.ttf')); self.assertEqual(instances['st/S']['path'], str(store/'s/S.ttf'))
+            self.assertEqual(len(plan['queries']), 6)  # lower, its degraded copy, and title for each
 
 
 class StyleFontsTests(unittest.TestCase):

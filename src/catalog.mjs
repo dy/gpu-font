@@ -223,6 +223,14 @@ export function matchCatalog(embedding, catalog, judged = null) {
   return matches.length ? matches : rankCatalog(embedding, catalog)
 }
 
+// Several crops' matches as one: each family at its best score over them, ranked as rankCatalog ranks. A crop of several
+// lines is matched line by line, and the family of any line is found.
+export function bestOf(lists) {
+  const best = new Map()
+  for (const list of lists) for (const m of list) { const previous = best.get(m.family); if (!previous || m.score > previous.score) best.set(m.family, m) }
+  return [...best.values()].sort((a, b) => b.score - a.score || (a.family < b.family ? -1 : a.family > b.family ? 1 : 0))
+}
+
 // `script` skips faces that cannot draw it; faces without declared coverage stay eligible. Each family's match names the
 // row, the reference, that scored it.
 export function rankCatalog(embedding, catalog, { script } = {}) {
