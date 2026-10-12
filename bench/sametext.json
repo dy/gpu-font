@@ -14,11 +14,11 @@
  "browser": "151.0.7922.34",
  "adapter": "apple metal-3",
  "encoderSha256": "6e35d208a2549812be98f0a0dac6e6eaabca5528d4295086c62d4db5c8476076",
- "date": "2026-10-10",
+ "date": "2026-10-11",
  "timeMs": {
-  "match": 777,
-  "read": 139,
-  "text": 560,
+  "match": 471,
+  "read": 112,
+  "text": 324,
   "from": "per photograph, warm; `text` covers both same-text rankings"
  },
  "reader": {

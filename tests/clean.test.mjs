@@ -62,6 +62,18 @@ test('lines: a crop of three lines gives each, tallest first, padded and inside 
   assert.deepEqual([piece.width, piece.height, piece.data.length, piece.data[0]], [7, 2, 56, 0])
 })
 
+test('bands: a descender joins its line, but tight leading never chains lines into one, however many fragments hang between them', async () => {
+  const { bands } = await import('../src/clean.mjs')
+  const w = 200, h = 140, ink = rows => ({ width: w, height: h, map: Float32Array.from({ length: w * h }, (_, i) => { const x = i % w, y = (i - x) / w; return rows.some(([top, bottom]) => y >= top && y < bottom) && x >= 10 && x < 190 && x % 12 < 7 ? 1 : 0 }) })
+  // Three 30 px lines, a 6 px descender hanging 4 px under the first two, the next line 6 px under each descender: a fifth of
+  // the growing band would swallow all of it, line by line.
+  const found = bands(ink([[10, 40], [44, 50], [56, 86], [90, 96], [102, 132]]))
+  assert.deepEqual(found.map(b => [b.top, b.bottom]), [[10, 49], [56, 95], [102, 131]])
+  assert.deepEqual(bands(ink([[10, 40], [44, 50]])).map(b => [b.top, b.bottom]), [[10, 49]], 'the descender alone joins its line')
+  assert.deepEqual(bands(ink([[4, 10], [14, 44]])).map(b => [b.top, b.bottom]), [[4, 43]], 'the dots above a line join it too')
+  assert.deepEqual(bands(ink([[10, 40], [48, 54]])).map(b => [b.top, b.bottom]), [[10, 39], [48, 53]], 'a fragment past a fifth of the line stands apart')
+})
+
 test('readings: a level two-tone line is one reading, the crop as it is; three lines are three; a steep word is read as it stands and turned level; a textured line as it stands and cleaned', async () => {
   const { readings } = await import('../src/clean.mjs')
   const bars = (w, h, rows) => picture(w, h, (x, y) => rows.some(([t, b]) => y >= t && y < b) && x >= 10 && x < w - 10 && x % 12 < 7 ? [0, 0, 0] : [255, 255, 255])

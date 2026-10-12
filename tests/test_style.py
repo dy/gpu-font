@@ -33,6 +33,21 @@ def line(width=90, height=30, seed=0):
     return gray
 
 
+class FoldReadingsTests(unittest.TestCase):
+    def test_a_pictures_readings_fold_into_its_principal_row_each_family_at_its_best(self):
+        from train.style import fold_readings
+        samples = [{'picture': 'a', 'reading': 'as it is', 'line': 0}, {'picture': 'a', 'reading': 'cleaned', 'line': 0}, {'picture': 'a', 'reading': 'turned', 'line': 0},
+                   {'family': 'alone'}, {'picture': 'b', 'reading': 'as it is', 'line': 0}, {'picture': 'b', 'reading': 'cleaned', 'line': 1}]
+        scores = np.array([[.1, .9, .3], [.5, .2, .4], [.6, .1, .0], [.7, .7, .7], [.2, .3, .4], [.9, .0, .1]], np.float32)
+        best = np.arange(18).reshape(6, 3)
+        folded, rows, keep = fold_readings(samples, scores, best)
+        self.assertEqual(keep, [1, 3, 4])  # a's cleaned first line, the lone sample, b's first reading (its cleaned reading is of another line)
+        np.testing.assert_array_equal(folded, np.array([[.6, .9, .4], [.7, .7, .7], [.9, .3, .4]], np.float32))
+        np.testing.assert_array_equal(rows, [[6, 1, 5], [9, 10, 11], [15, 13, 14]])
+        single = [{'family': 'x'}, {'family': 'y'}]
+        f, r, k = fold_readings(single, scores[:2], best[:2]); self.assertEqual(k, [0, 1]); np.testing.assert_array_equal(f, scores[:2]); np.testing.assert_array_equal(r, best[:2])
+
+
 class StyleDataTests(unittest.TestCase):
     def test_persistent_preparation_matches_batch_preparation_byte_for_byte(self):
         images = [line(), line(140, 44, 1), line(20, 12, 2), np.full((9, 9), 255, np.uint8)]

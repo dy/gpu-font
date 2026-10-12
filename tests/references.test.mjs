@@ -142,6 +142,8 @@ test('reference plan: fixed lines for a full case, own letters when some are mis
   assert.deepEqual(plan(ctx(''), 'F'), { 'Latn-lower': LATIN.lower, 'Latn-upper': LATIN.upper })
   assert.deepEqual(plan(ctx('qxz'), 'F'), { 'Latn-lower': ['abcdefghijkl', 'mnoprstuvwy'], 'Latn-upper': LATIN.upper })
   assert.deepEqual(plan(ctx('ABCDEFGHIJKLMNOPQRSTU'), 'F'), { 'Latn-lower': LATIN.lower }, 'Five capitals are too few')
+  assert.deepEqual(plan(ctx(''), 'F', { short: true }), { 'Latn-lower': LATIN.lower, 'Latn-upper': LATIN.upper, 'Latn-mixed': ['Aa'] }, 'the cover line, with both cases')
+  assert.deepEqual(plan(ctx('ABCDEFGHIJKLMNOPQRSTU'), 'F', { short: true }), { 'Latn-lower': LATIN.lower }, 'no cover line without capitals')
   assert.deepEqual(plan(ctx('abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ'), 'F'), {}, 'No Latin letters, no references')
 })
 

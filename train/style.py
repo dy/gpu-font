@@ -323,13 +323,14 @@ def evaluate(model, heads, setup, roles, device='mps', name='bench', source='pil
     owner = np.array([fpos[faces[f]['family']] for f, _ in keys])
     selected = [i for i, q in enumerate(bench['samples']) if q['role'] in roles and q['family'] in fpos]; queries = [bench['samples'][i] for i in selected]
     q = embed_manifest(model, bench, bench_pixels, selected, device); verdict = None
-    if heads is not None:
-        with torch.no_grad(): verdict = {k: v.cpu().numpy() for k, v in heads(torch.from_numpy(q).to(device)).items()}
     sims = q @ vectors.T
     scores = np.full((len(q), len(family_ids)), -2, np.float32); best = np.zeros((len(q), len(family_ids)), np.int64)
     order = np.argsort(owner, kind='stable'); starts = np.r_[0, np.flatnonzero(np.diff(owner[order])) + 1]
     for a, b in zip(starts, np.r_[starts[1:], len(order)]):
         cols = order[a:b]; block = sims[:, cols]; best[:, owner[cols[0]]] = cols[block.argmax(1)]; scores[:, owner[cols[0]]] = block.max(1)
+    scores, best, keep = fold_readings(queries, scores, best); queries = [queries[i] for i in keep]; q = q[keep]
+    if heads is not None:
+        with torch.no_grad(): verdict = {k: v.cpu().numpy() for k, v in heads(torch.from_numpy(q).to(device)).items()}
     # Twins and style neighbours between default faces, Latin letter-by-letter distance.
     members, matrix = teacher('Latn'); row = {int(m): i for i, m in enumerate(members)}
     default = {f['family']: i for i, f in enumerate(faces) if f['default']}
@@ -378,6 +379,22 @@ def evaluate(model, heads, setup, roles, device='mps', name='bench', source='pil
             groups[f'{role}/latin-clean-5to10'] = [r for r in base if r['role'] == role and r['script'] == 'Latn' and r['condition'] == 'clean']
         report[name] = {k: summarize(v) for k, v in groups.items() if v}
     return report
+
+
+def fold_readings(samples, scores, best):
+    """A picture packed as several readings (train.style_photos: as it stands, cleaned, turned) is one query, each family
+    at its best score over the readings, as the page reads a crop. Its principal reading, the first line cleaned when it
+    was, else as it stands, keeps the row and speaks for it to the heads. Returns the folded scores and best rows and the
+    kept sample indices in order; a sample with no picture stands alone."""
+    groups = {}
+    for i, s in enumerate(samples): groups.setdefault(s.get('picture', ('alone', i)), []).append(i)
+    keep = []; folded = scores.copy(); rows = best.copy()
+    for members in groups.values():
+        lead = next((i for i in members if samples[i].get('reading') == 'cleaned' and samples[i].get('line', 0) == 0), members[0]); keep.append(lead)
+        if len(members) == 1: continue
+        block = scores[members]; at = block.argmax(0)
+        folded[lead] = block.max(0); rows[lead] = best[members][at, np.arange(block.shape[1])]
+    return folded[keep], rows[keep], keep
 
 
 def run_seed(run, seed=None):

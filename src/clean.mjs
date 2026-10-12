@@ -122,20 +122,29 @@ export function flatten({ map, width: w, height: h }, radius = Math.max(6, Math.
   return { map: out, width: w, height: h }
 }
 
-// Text lines of an ink map: runs of rows whose ink reaches a tenth of the busiest row's, runs closer than a fifth of the
-// taller one's height joined (the gap under a hanging descender), each then split where a gap of columns wider than its
-// height parts it (two columns of words side by side). Each as { top, bottom, left, right } in pixels, rows trimmed to
-// the part's own ink, tallest first. The crop's own line finder, before any model.
+// Text lines of an ink map: runs of rows whose ink reaches a tenth of the busiest row's; a run under two fifths of its
+// neighbour's height (a hanging descender, the dots and accents above a line) joins it when the gap between them is under
+// a fifth of the taller's height, two runs each tall enough to be a line never join, however tight the leading; each is
+// then split where a gap of columns wider than its height parts it (two columns of words side by side). Each as
+// { top, bottom, left, right } in pixels, rows trimmed to the part's own ink, tallest first. The crop's own line finder,
+// before any model.
 export function bands({ map, width: w, height: h }, threshold = .1) {
   const rows = new Float32Array(h)
   for (let y = 0; y < h; y++) { let s = 0; for (let x = 0; x < w; x++) s += map[y * w + x]; rows[y] = s }
   let peak = 0; for (const v of rows) peak = Math.max(peak, v)
   if (!peak) return []
-  const runs = []
+  const unbroken = []
   for (let y = 0; y < h; y++) {
     if (rows[y] < peak * threshold) continue
-    const last = runs.at(-1)
-    if (last && y - last.bottom - 1 <= Math.max(last.bottom - last.top + 1, 1) * .2) last.bottom = y; else runs.push({ top: y, bottom: y })
+    const last = unbroken.at(-1)
+    if (last && y === last.bottom + 1) last.bottom = y; else unbroken.push({ top: y, bottom: y })
+  }
+  // A run's measure is its tallest unbroken stretch, so a descender that joins a line never makes the line taller and lets it
+  // swallow the next one.
+  const runs = []
+  for (const { top, bottom } of unbroken) {
+    const last = runs.at(-1), tall = bottom - top + 1, taller = last ? Math.max(last.tall, tall) : 0
+    if (last && top - last.bottom - 1 <= taller * .2 && Math.min(last.tall, tall) < taller * .4) { last.bottom = bottom; last.tall = taller } else runs.push({ top, bottom, tall })
   }
   const parts = []
   for (const run of runs) {

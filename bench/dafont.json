@@ -194,10 +194,10 @@
  "browser": "151.0.7922.34",
  "adapter": "apple metal-3",
  "encoderSha256": "6e35d208a2549812be98f0a0dac6e6eaabca5528d4295086c62d4db5c8476076",
- "date": "2026-10-10",
+ "date": "2026-10-11",
  "gpuFont": {
   "requests": 151,
-  "top1": 0.2649,
+  "top1": 0.2715,
   "top5": 0.4834
  },
  "chatbots": {
@@ -214,7 +214,7 @@
     "gpuFont": {
      "requests": 65,
      "top1": 0.2154,
-     "top5": 0.4615
+     "top5": 0.4462
     }
    }
   },
@@ -231,7 +231,7 @@
     "gpuFont": {
      "requests": 37,
      "top1": 0.1892,
-     "top5": 0.4865
+     "top5": 0.4595
     }
    }
   }
@@ -255,8 +255,8 @@
    "task": "576992",
    "font": "Sonsie One",
    "rank": null,
-   "first": "Mylola",
-   "score": 0.76
+   "first": "BM EULJIRO",
+   "score": 0.493
   },
   {
    "task": "576991",
@@ -311,8 +311,8 @@
    "task": "577067",
    "font": "Modak",
    "rank": null,
-   "first": "Chupilca",
-   "score": 0.904
+   "first": "DD Hearts",
+   "score": 0.773
   },
   {
    "task": "577077",
@@ -345,9 +345,9 @@
   {
    "task": "577177",
    "font": "Cookie",
-   "rank": 5,
+   "rank": 4,
    "first": "Anthurium",
-   "score": 0.857
+   "score": 0.826
   },
   {
    "task": "577251",
@@ -374,8 +374,8 @@
    "task": "577316",
    "font": "Imbue",
    "rank": null,
-   "first": "01.typeKINI",
-   "score": 0.772
+   "first": "Hotliner",
+   "score": 0.756
   },
   {
    "task": "577348",
@@ -457,9 +457,9 @@
   {
    "task": "577575",
    "font": "Mister Firley",
-   "rank": null,
-   "first": "Alumni Sans",
-   "score": 0.72
+   "rank": 1,
+   "first": "Mister Firley",
+   "score": 0.852
   },
   {
    "task": "577600",
@@ -646,9 +646,9 @@
   {
    "task": "578459",
    "font": "Condiment",
-   "rank": 2,
-   "first": "Aguafina Script",
-   "score": 0.876
+   "rank": 18,
+   "first": "Wonderful Night",
+   "score": 0.814
   },
   {
    "task": "579268",
