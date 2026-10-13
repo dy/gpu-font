@@ -276,7 +276,20 @@ No check passed the start on validation, so the selection kept the ninth step's 
 | 2,000 | 93.1% | 75.5% | 80.8% | 54.4% |
 | 3,000 | 93.2% | 75.8% | 82.4% | 56.4% |
 
-The first attempt stopped past step 3,000: the view pairs couple the batch's views, so the batch was embedded whole instead of in the usual shares, and a wide batch ran the device out of memory (13.6 GB of 16) on a machine shared with other work. The loop now embeds the whole batch once without gradients as a bank, and each share's views are compared with it, at a share's memory; the run continues as `views-shares-10k`. VIEWS_TO_COME
+The first attempt stopped past step 3,000: the view pairs couple the batch's views, so the batch was embedded whole instead of in the usual shares, and a wide batch ran the device out of memory (13.6 GB of 16) on a machine shared with other work. The loop now embeds the whole batch once without gradients as a bank, and each share's views are compared with it, at a share's memory; the run continues as `views-shares-10k`, which held the device at 4.6 to 4.8 GB through its 10,000 steps.
+
+| Step | Validation top-5 | First | Photographs top-5 | First |
+|---|---:|---:|---:|---:|
+| 0 (the ninth step) | 93.4% | 75.7% | 82.0% | 55.5% |
+| 1,000 | 93.1% | 76.0% | 81.4% | 54.9% |
+| 2,000 | 93.2% | 75.7% | 80.6% | 53.6% |
+| 3,000 | 93.1% | 75.9% | 82.0% | 55.6% |
+| 5,000 | 93.3% | 75.7% | 81.7% | 55.8% |
+| 7,000 | 93.2% | 75.5% | 82.0% | 55.8% |
+| 9,000 | 93.3% | 76.1% | 81.9% | 56.4% |
+| 10,000 | 93.2% | 75.9% | 81.4% | 55.0% |
+
+No check passed the start on validation, so nothing ships. The view pairs at this weight are the cheapest change tried on the converged model, a tenth to a third of a point of validation against a point for the cleaned views, and from 5,000 on the photographs' first place sat above the start, nine tenths above at 9,000; their top five did not. What the run could not show is the read it was for, the forum threads and their one-line DaFont rows, because only a checkpoint that passes the selection is saved: a run aimed at a read the training cannot evaluate should keep every checkpoint, so the target read can judge them after. Three of the tenth step's changes and this one are now measured alone on the ninth step's model, and none passes it on rendered text; what moved the reads this cycle were the references and the line finder, not the weights.
 
 ## Other rasterizers, and 12 px
 
