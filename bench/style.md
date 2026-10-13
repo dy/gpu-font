@@ -265,6 +265,19 @@ The packed photographs now carry that read. `train.style_photos` packs each pict
 
 No check passed the start on validation, so the selection kept the ninth step's weights and nothing ships. The lower learning rate shallowed the dip (a point, against a point and a half at 5e-4) and shortened it (the bottom at 2,000), but 10,000 steps did not climb back: validation ended seven tenths under the start, and the photographs, read as the page reads them, never left half a point of theirs, first place four tenths above at 8,000 and a tenth above at the end. Cleaned views alone, then, cost rendered text a little and buy the photographs nothing a cleaned read can see: the model already reads a cleaned crop as well as it reads the raw one, which is what the eighth and ninth steps' photographed views taught it. The run took 8.7 hours on a machine shared with other work. What remains of the tenth step's recipe to try alone is the circle-set text, whose target, lettering on a curve, no read measures yet.
 
+## Twelfth step: the view pairs, at a fifth of their weight
+
+`views-10k` continues `pangram-30k` with the view loss on (`--pairs 0.2`; `plan` then draws a face's two views across cases and often scripts): a view's positives are the batch's other views of its face or a twin, every other view a negative, the comparison retrieval makes between a crop and a reference line. The loss was tried once at full weight on the early convolutional model and taught case at the cost of everything else ([second step](#second-step-longer-then-wider)); the current model's text dependence is measured, first place 43.8% against fixed reference lines and 61.7% against references set in the crop's own words ([photos.md](photos.md)), and DaFont's rows, seven forum answers in ten, are one line each. Learning rate 5e-5, 10,000 steps, check every 1,000, `--photo 0.5`, selection on catalog validation.
+
+| Step | Validation top-5 | First | Photographs top-5 | First |
+|---|---:|---:|---:|---:|
+| 0 (the ninth step) | 93.4% | 75.7% | 82.0% | 55.6% |
+| 1,000 | 93.1% | 75.4% | 81.5% | 54.5% |
+| 2,000 | 93.1% | 75.5% | 80.8% | 54.4% |
+| 3,000 | 93.2% | 75.8% | 82.4% | 56.4% |
+
+The first attempt stopped past step 3,000: the view pairs couple the batch's views, so the batch was embedded whole instead of in the usual shares, and a wide batch ran the device out of memory (13.6 GB of 16) on a machine shared with other work. The loop now embeds the whole batch once without gradients as a bank, and each share's views are compared with it, at a share's memory; the run continues as `views-shares-10k`. VIEWS_TO_COME
+
 ## Other rasterizers, and 12 px
 
 Queries and references both come from Chromium on macOS. `scripts/style-bench-engines.mjs` renders the catalog validation queries through Playwright's WebKit (Safari's engine) and Firefox, and through Chromium at 12 px, packed as benchmarks of their own; the 64-number model against the same Chromium references:

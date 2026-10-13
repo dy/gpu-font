@@ -275,8 +275,10 @@ class StoredViews:
         return out
 
 
-def losses(e, heads, proxies, setup, views, device, pairs=0.0, follow=None):
-    """`follow`: a teacher's unit embedding of each view's clean render, which the view's own embedding then follows."""
+def losses(e, heads, proxies, setup, views, device, pairs=0.0, follow=None, bank=None):
+    """`follow`: a teacher's unit embedding of each view's clean render, which the view's own embedding then follows.
+    `bank`: for the view pairs, the whole batch's unit embeddings taken without gradients ({e, faces, drawn}, and `self`,
+    each of these views' own column), so a share's views are compared with every view of the batch at a share's memory."""
     faces = torch.tensor([setup.position[v['face']] for v in views], device=device)
     P = F.normalize(proxies, dim=1); cos = e @ P.T
     rows, near = twin_rows(setup, faces); target = near/near.sum(1, keepdim=True); drawn = torch.tensor([bool(v.get('drawn')) for v in views], device=device)
@@ -302,9 +304,11 @@ def losses(e, heads, proxies, setup, views, device, pairs=0.0, follow=None):
     # its face or a twin, every other view (its look-alike partner included) a negative.
     view = cos.sum()*0
     if pairs:
-        valid = ~drawn[:, None] & ~drawn[None, :] & ~torch.eye(len(views), dtype=torch.bool, device=device)
-        positive = near[:, faces] & valid; has = positive.any(1)
-        logp = F.log_softmax((e @ e.T/VIEW_T).masked_fill(~valid, -1e4), dim=1)
+        others, other_faces, other_drawn = (bank['e'], bank['faces'], bank['drawn']) if bank else (e, faces, drawn)
+        valid = ~drawn[:, None] & ~other_drawn[None, :]
+        valid[torch.arange(len(views), device=device), bank['self'] if bank else torch.arange(len(views), device=device)] = False
+        positive = near[:, other_faces] & valid; has = positive.any(1)
+        logp = F.log_softmax((e @ others.T/VIEW_T).masked_fill(~valid, -1e4), dim=1)
         if has.any(): view = (-(logp*positive).sum(1)[has]/positive.sum(1)[has]).mean()
     distill = (1 - (e*follow).sum(1)).mean() if follow is not None else cos.sum()*0
     parts = {'identity':identity,'geometry':geometry,'views':view,'distill':distill,'weight':weight,'italic':italic,'script':script,'category':category,'fine':fine}
@@ -476,17 +480,24 @@ def train(run, roles, steps, warm, workers, check=2500, architecture=CORPUS_ARCH
             optimizer.zero_grad(set_to_none=True)
             # A step's activations with gradients are most of the device's memory. Every loss but the view pairs is a mean over
             # views, so the shuffled batch is taken in PARTS interleaved shares whose gradients add up to the whole batch's.
-            # Batch statistics are then each share's own (hundreds of windows, shuffled so the shares are alike); view pairs,
-            # which couple the batch's views, keep it whole.
-            for part in [views] if pairs else [views[k::PARTS] for k in range(PARTS)]:
+            # Batch statistics are then each share's own (hundreds of windows, shuffled so the shares are alike). The view
+            # pairs couple the batch's views: the whole batch is first embedded without gradients as the bank each share's
+            # views are compared with, so the working set stays a share's (taken whole, a wide batch ran the device out of memory).
+            shares = [views[k::PARTS] for k in range(PARTS)]; bank = None
+            if pairs:
+                with torch.no_grad(): bank = {'e': torch.cat([embed_views(model, *tensors(s, device), len(s)) for s in shares])}
+                bank.update(faces=torch.tensor([setup.position[v['face']] for s in shares for v in s], device=device), drawn=torch.tensor([bool(v.get('drawn')) for s in shares for v in s], device=device))
+                starts = np.cumsum([0] + [len(s) for s in shares])
+            for k, part in enumerate(shares):
                 pixels, sizes, owners = tensors(part, device)
                 e = embed_views(model, pixels, sizes, owners, len(part)); follow = None
                 if teacher_model:  # the teacher reads each view's clean render; stored Chromium views have only themselves
                     with torch.no_grad(): follow = embed_views(teacher_model, *tensors([{**v, 'windows': v.get('clean', v['windows'])} for v in part], device), len(part))
-                total, parts, accuracy = losses(e, heads, proxies, setup, part, device, pairs, follow)
+                total, parts, accuracy = losses(e, heads, proxies, setup, part, device, pairs, follow, {**bank, 'self': torch.arange(int(starts[k]), int(starts[k + 1]), device=device)} if bank else None)
                 share = len(part)/len(views); (total*share).backward()
                 for k, v in [*parts.items(), ('accuracy', accuracy)]: running[k] = running.get(k, 0) + v.detach()*share
                 del pixels, e, follow, total, parts
+            del bank
             torch.nn.utils.clip_grad_norm_([*model.parameters(), proxies, *heads.parameters()], 5); optimizer.step(); schedule.step()
             # Batches differ in their number of windows, and the allocator keeps a block of every size it has met: released
             # every few steps, the device holds a step's working set instead of growing to the cap.

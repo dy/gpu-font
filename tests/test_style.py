@@ -226,6 +226,25 @@ class CatalogAndLossTests(unittest.TestCase):
         self.assertGreater(float(far['geometry']), float(losses(torch.eye(128)[[0, 2]], heads, proxies, setup, views, 'cpu')[1]['geometry']))
         self.assertEqual(len(CATEGORIES), heads.category.out_features)
 
+    def test_view_pairs_compared_with_a_bank_of_the_whole_batch_give_the_whole_batch_s_loss(self):
+        distance = torch.tensor([[0, .001, .3], [.001, 0, .3], [.3, .3, 0]])
+        setup = SimpleNamespace(position={10: 0, 11: 1, 12: 2}, floor=.005, distance=distance.half(),
+            faces={10: {'weight': 400, 'italic': False, 'family': 'a'}, 11: {'weight': 400, 'italic': False, 'family': 'b'}, 12: {'weight': 700, 'italic': True, 'family': 'c'}},
+            scripts=['Latn'], category={}, fine_labels={})
+        heads = Heads(['Latn'], ['/Sans/Geometric']); proxies = torch.eye(3, 128)
+        views = [{'face': 10, 'script': 'Latn'}, {'face': 11, 'script': 'Latn'}, {'face': 12, 'script': 'Latn'}, {'face': 10, 'script': 'Latn'}]
+        e = torch.nn.functional.normalize(torch.randn(4, 128, generator=torch.Generator().manual_seed(3)), dim=1)
+        whole = float(losses(e, heads, proxies, setup, views, 'cpu', pairs=1.0)[1]['views'])
+        self.assertGreater(whole, 0)
+        faces = torch.tensor([0, 1, 2, 0]); drawn = torch.zeros(4, dtype=torch.bool)
+        same = losses(e, heads, proxies, setup, views, 'cpu', pairs=1.0, bank={'e': e, 'faces': faces, 'drawn': drawn, 'self': torch.arange(4)})[1]['views']
+        self.assertAlmostEqual(float(same), whole, places=6)  # the batch as its own bank
+        # Two interleaved shares against the bank: the first's anchor with positives is view 0 (its twin, view 1, and view 3), the second's are views 1 and 3;
+        # weighted by their sizes, the shares give the whole batch's mean over its three anchors.
+        shares = [[0, 2], [1, 3]]; bank = {'e': e[[0, 2, 1, 3]], 'faces': faces[[0, 2, 1, 3]], 'drawn': drawn[[0, 2, 1, 3]]}
+        parts = [float(losses(e[idx], heads, proxies, setup, [views[i] for i in idx], 'cpu', pairs=1.0, bank={**bank, 'self': torch.arange(2*k, 2*k + 2)})[1]['views']) for k, idx in enumerate(shares)]
+        self.assertAlmostEqual((parts[0]*1 + parts[1]*2)/3, whole, places=6)
+
     def test_each_run_draws_its_own_batches_unless_a_seed_is_pinned(self):
         self.assertEqual(run_seed('wider'), run_seed('wider')); self.assertNotEqual(run_seed('wider'), run_seed('plain'))
         self.assertEqual(run_seed('any', 20260923), 20260923)
