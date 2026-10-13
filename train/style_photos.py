@@ -17,7 +17,10 @@ from PIL import Image
 from scripts.corpus import ROOT
 from train.encoder_data import save, validate_shard
 from train.robustness import read, sha
-from train.style_bench import OUT, PINS
+from train.style_bench import OUT, PINS as BENCH_PINS
+
+# What the pack depends on: the frozen benchmark's pins, with the readings preparer and the cleaner in the grayscale preparer's place.
+PINS = [p for p in BENCH_PINS if p != 'scripts/corpus-prepare.mjs'] + ['scripts/photo-prepare.mjs', 'src/clean.mjs']
 
 SET = ROOT/'.data/whatfontis/WhatFontIs-Bench/v1'
 WEIGHTS = {'Thin': 100, 'ExtraLight': 200, 'Light': 300, 'Regular': 400, 'Medium': 500, 'SemiBold': 600, 'Bold': 700, 'ExtraBold': 800, 'Black': 900}
@@ -73,10 +76,10 @@ def pack(role):
     for label, _ in chosen:
         x0, y0, x1, y1 = label['crop_box']
         image = Image.open(SET/label['image']).convert('RGB').crop((x0, y0, x1, y1))  # in colour: the cleaner finds ink by hue
-        images.append({'width': image.width, 'height': image.height, 'channels': 3, 'readings': True, 'pixels': base64.b64encode(image.tobytes()).decode()})
+        images.append({'width': image.width, 'height': image.height, 'pixels': base64.b64encode(image.tobytes()).decode()})
     samples = []; windows = []; chunks = []; offset = 0
     for start in range(0, len(images), 512):
-        out = subprocess.run(['node', str(ROOT/'scripts/corpus-prepare.mjs')], input=json.dumps(images[start:start + 512]), text=True, capture_output=True, check=True)
+        out = subprocess.run(['node', str(ROOT/'scripts/photo-prepare.mjs')], input=json.dumps(images[start:start + 512]), text=True, capture_output=True, check=True)
         for k, readings in enumerate(json.loads(out.stdout)):
             label, family = chosen[start + k]; weight, italic = weight_of(label['title'])
             for reading in readings:  # one sample per reading; the evaluation folds a picture's readings into one query

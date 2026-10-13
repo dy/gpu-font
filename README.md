@@ -133,7 +133,7 @@ On photographs of one word printed or painted on real surfaces ([WhatFontIs-Benc
 
 On 5,546 real "what font is this?" requests from the DaFont forum, held out from training ([forum threads](https://github.com/dy/gpu-font/blob/main/bench/photos.md#forum-threads)): 18.7% top five and 10.5% first, with seven answers in ten DaFont fonts the catalog knows by one preview line.
 
-On Pangram Pangram's own 667 product pictures ([photos.md](https://github.com/dy/gpu-font/blob/main/bench/photos.md#pangram-pangrams-own-pictures)), the design is in the first ten for 48% of whole pictures and 47% of their largest lines, from 11% and 17%: the catalogs hold every named weight and style of a variable font, and a picture's lines are read one by one.
+On Pangram Pangram's own 667 product pictures ([photos.md](https://github.com/dy/gpu-font/blob/main/bench/photos.md#pangram-pangrams-own-pictures)), the design is in the first ten for 63% of whole pictures and 62% of their largest lines, from 11% and 17%: the catalogs hold every named weight and style of a variable font and a cover line "Aa" for every face, and a picture's lines are read one by one.
 
 With the crop's own words ([reader.md](https://github.com/dy/gpu-font/blob/main/bench/reader.md)): on 400 of those photographs, held-out Google families, the page's second stage lifts first place from 31% to 46% and the top five from 56% to 72%, the words read by a 156 KB line reader (character error 11%) or typed.
 

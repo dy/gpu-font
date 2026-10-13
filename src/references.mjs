@@ -11,14 +11,14 @@ const ALPHABET = { lower: 'abcdefghijklmnopqrstuvwxyz', upper: 'ABCDEFGHIJKLMNOP
 // in four (bench/style.md, Reference sizes). The repository's renderer (scripts/style-references-browser.mjs) uses the same list.
 export const SIZES = [16, 24, 48]
 
-// A specimen's cover, two letters of both cases: a row of its own with `short`, since a two-glyph crop matches neither
-// a lowercase nor an uppercase line of a dozen letters (bench/photos.md, Pangram Pangram's own pictures).
+// A specimen's cover, two letters of both cases, as a row of its own: a two-glyph crop matches neither a lowercase nor an
+// uppercase line of a dozen letters (bench/photos.md, Pangram Pangram's own pictures). train/style_catalog.py draws the same.
 export const SHORT = ['Aa']
 
 // Reference lines per case. A letter the face lacks falls back to another font, so its width changes with the fallback;
 // a face missing letters uses its own letters of that case, as the shipped catalogs do, and a case with fewer than 8 is skipped.
-// With `short`, a face that has both cases also gets the cover line.
-export function plan(ctx, family, { short = false } = {}) {
+// A face that has both cases also gets the cover line.
+export function plan(ctx, family) {
   const width = (letter, fallback) => { ctx.font = `${SIZE}px "${family}", ${fallback}`; return ctx.measureText(letter).width }
   const out = {}
   for (const [kase, letters] of Object.entries(ALPHABET)) {
@@ -26,7 +26,7 @@ export function plan(ctx, family, { short = false } = {}) {
     if (own.length === letters.length) out[`Latn-${kase}`] = LATIN[kase]
     else if (own.length >= 8) out[`Latn-${kase}`] = own.match(/.{1,12}/g).slice(0, 3)
   }
-  if (short && out['Latn-lower'] && out['Latn-upper']) out['Latn-mixed'] = SHORT
+  if (out['Latn-lower'] && out['Latn-upper']) out['Latn-mixed'] = SHORT
   return out
 }
 
@@ -82,7 +82,7 @@ export function joinCatalogs(first, second) {
 // loads (font bytes, `url(...)`, or `local("PostScript name")` for an installed face). Other fields become the catalog
 // face; `familyId` defaults to `local:<family>` and `scripts` to Latin. `project` returns one projection per window;
 // `preparation` and `binding` come from the encoder; `source` names the catalog. Faces with no Latin letters, or that fail to load, are returned as skipped.
-export async function buildCatalog(faces, { project, preparation, binding, source = 'my-fonts', progress = () => {}, signal, short = false }) {
+export async function buildCatalog(faces, { project, preparation, binding, source = 'my-fonts', progress = () => {}, signal }) {
   const ctx = document.createElement('canvas').getContext('2d'), entries = [], rows = [], owners = [], skipped = [], seen = new Set()
   // One vector per case: each line at each size, its windows embedded as a crop's are, all averaged.
   const embedCase = lines => Promise.all(lines.map(windows => project(windows).then(embedWindows))).then(embedded => unit(embedded.reduce((sum, e) => sum.map((v, d) => v + e[d]), new Float32Array(embedded[0].length))))
@@ -105,7 +105,7 @@ export async function buildCatalog(faces, { project, preparation, binding, sourc
     document.fonts.add(font)
     let cases
     try {
-      cases = Object.values(plan(ctx, font.family, { short }))
+      cases = Object.values(plan(ctx, font.family))
         .map(lines => SIZES.flatMap(size => lines.map(text => prepareLine(drawLine(ctx, font.family, text, size), { ...preparation, deskew: true, sampler: 'windows' }))).filter(p => p.status === 'ok').map(p => p.windows))
         .filter(lines => lines.length).map(embedCase)
     } finally { document.fonts.delete(font) }
@@ -114,7 +114,7 @@ export async function buildCatalog(faces, { project, preparation, binding, sourc
   }
   await previous
   progress(faces.length, faces.length)
-  const catalog = entries.length ? { version: 3, kind: 'font-catalog', ...binding, dimensions: rows[0].length, source, referenceMethod: `faces-cases-browser-${SIZES.join('-')}${short ? '-short' : ''}`,
+  const catalog = entries.length ? { version: 3, kind: 'font-catalog', ...binding, dimensions: rows[0].length, source, referenceMethod: `faces-cases-cover-browser-${SIZES.join('-')}`,
     faces: entries, vectors: { ...packVectors(rows.map(r => Array.from(r))), owners } } : null
   return { catalog, skipped }
 }

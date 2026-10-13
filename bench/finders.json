@@ -761,7 +761,7 @@
    "how": "By hand: Fontspring terms forbid scripted queries."
   },
   "gpu-font": {
-   "date": "2026-10-11",
+   "date": "2026-10-12",
    "how": "From scripts/finders.mjs. Catalog All, Chromium on apple metal-3.",
    "answers": {
     "control-1": {
@@ -774,7 +774,7 @@
      ],
      "rank": 1,
      "face": "400 normal",
-     "ms": 1029
+     "ms": 1614
     },
     "control-2": {
      "top5": [
@@ -786,7 +786,7 @@
      ],
      "rank": 1,
      "face": "400 normal",
-     "ms": 512
+     "ms": 1264
     },
     "control-3": {
      "top5": [
@@ -798,7 +798,7 @@
      ],
      "rank": null,
      "face": "null null",
-     "ms": 487
+     "ms": 2355
     },
     "control-4": {
      "top5": [
@@ -810,7 +810,7 @@
      ],
      "rank": 2,
      "face": "null normal",
-     "ms": 455
+     "ms": 2447
     },
     "control-5": {
      "top5": [
@@ -822,7 +822,7 @@
      ],
      "rank": 1,
      "face": "400 normal",
-     "ms": 457
+     "ms": 2272
     },
     "control-6": {
      "top5": [
@@ -834,7 +834,7 @@
      ],
      "rank": 3,
      "face": "400 normal",
-     "ms": 491
+     "ms": 2603
     },
     "control-7": {
      "top5": [
@@ -846,7 +846,7 @@
      ],
      "rank": 1,
      "face": "400 normal",
-     "ms": 543
+     "ms": 2613
     },
     "control-8": {
      "top5": [
@@ -858,19 +858,19 @@
      ],
      "rank": 1,
      "face": "400 normal",
-     "ms": 419
+     "ms": 2431
     },
     "control-9": {
      "top5": [
       "UM Typewriter",
       "CMU Typewriter Text",
       "NewComputerModern Mono",
-      "ALM Fixed",
-      "Latin Modern Mono"
+      "Latin Modern Mono",
+      "ALM Fixed"
      ],
      "rank": null,
      "face": "400 normal",
-     "ms": 354
+     "ms": 1845
     },
     "control-10": {
      "top5": [
@@ -882,7 +882,7 @@
      ],
      "rank": 1,
      "face": "400 normal",
-     "ms": 442
+     "ms": 1374
     },
     "classic-1": {
      "top5": [
@@ -894,7 +894,7 @@
      ],
      "rank": null,
      "face": "400 normal",
-     "ms": 617
+     "ms": 1759
     },
     "classic-2": {
      "top5": [
@@ -906,7 +906,7 @@
      ],
      "rank": null,
      "face": "400 normal",
-     "ms": 468
+     "ms": 1862
     },
     "classic-3": {
      "top5": [
@@ -918,7 +918,7 @@
      ],
      "rank": null,
      "face": "400 normal",
-     "ms": 427
+     "ms": 1467
     },
     "classic-4": {
      "top5": [
@@ -930,7 +930,7 @@
      ],
      "rank": null,
      "face": "400 normal",
-     "ms": 491
+     "ms": 2008
     },
     "classic-5": {
      "top5": [
@@ -942,7 +942,7 @@
      ],
      "rank": null,
      "face": "300 normal",
-     "ms": 431
+     "ms": 2083
     },
     "classic-6": {
      "top5": [
@@ -954,7 +954,7 @@
      ],
      "rank": null,
      "face": "400 normal",
-     "ms": 603
+     "ms": 3834
     },
     "classic-7": {
      "top5": [
@@ -966,7 +966,7 @@
      ],
      "rank": null,
      "face": "null null",
-     "ms": 497
+     "ms": 2625
     },
     "classic-8": {
      "top5": [
@@ -978,19 +978,19 @@
      ],
      "rank": null,
      "face": "null null",
-     "ms": 427
+     "ms": 2475
     },
     "classic-9": {
      "top5": [
       "Vanio",
       "Day Roman",
+      "PP Writer",
       "Adobe Caslon Pro",
-      "Carita",
-      "Garamond"
+      "Carita"
      ],
-     "rank": 3,
+     "rank": 4,
      "face": "null null",
-     "ms": 331
+     "ms": 1838
     },
     "classic-10": {
      "top5": [
@@ -1002,7 +1002,7 @@
      ],
      "rank": 1,
      "face": "null normal",
-     "ms": 438
+     "ms": 1667
     },
     "hard-shadow": {
      "top5": [
@@ -1014,7 +1014,7 @@
      ],
      "rank": null,
      "face": "null normal",
-     "ms": 500
+     "ms": 2645
     },
     "hard-glare": {
      "top5": [
@@ -1026,7 +1026,7 @@
      ],
      "rank": 4,
      "face": "800 normal",
-     "ms": 451
+     "ms": 3088
     },
     "hard-wear": {
      "top5": [
@@ -1038,7 +1038,7 @@
      ],
      "rank": 1,
      "face": "300 normal",
-     "ms": 388
+     "ms": 2171
     },
     "hard-contrast": {
      "top5": [
@@ -1050,7 +1050,7 @@
      ],
      "rank": null,
      "face": "null null",
-     "ms": 511
+     "ms": 2607
     },
     "hard-caps": {
      "top5": [
@@ -1062,7 +1062,7 @@
      ],
      "rank": null,
      "face": "null null",
-     "ms": 409
+     "ms": 2035
     },
     "short-1": {
      "top5": [
@@ -1074,7 +1074,7 @@
      ],
      "rank": null,
      "face": "700 normal",
-     "ms": 353
+     "ms": 1606
     },
     "short-2": {
      "top5": [
@@ -1086,7 +1086,7 @@
      ],
      "rank": null,
      "face": "null null",
-     "ms": 333
+     "ms": 2399
     },
     "short-3": {
      "top5": [
@@ -1098,7 +1098,7 @@
      ],
      "rank": 1,
      "face": "400 normal",
-     "ms": 437
+     "ms": 2908
     },
     "short-4": {
      "top5": [
@@ -1110,7 +1110,7 @@
      ],
      "rank": null,
      "face": "null null",
-     "ms": 408
+     "ms": 3101
     },
     "hard-perspective": {
      "top5": [
@@ -1122,7 +1122,7 @@
      ],
      "rank": null,
      "face": "null null",
-     "ms": 165
+     "ms": 1422
     },
     "hard-outline": {
      "top5": [
@@ -1134,7 +1134,7 @@
      ],
      "rank": null,
      "face": "400 normal",
-     "ms": 183
+     "ms": 929
     },
     "hard-small": {
      "top5": [
@@ -1146,7 +1146,7 @@
      ],
      "rank": null,
      "face": "400 normal",
-     "ms": 165
+     "ms": 2058
     },
     "hard-condensed": {
      "top5": [
@@ -1158,7 +1158,7 @@
      ],
      "rank": null,
      "face": "700 normal",
-     "ms": 199
+     "ms": 1302
     },
     "hard-script": {
      "top5": [
@@ -1170,7 +1170,7 @@
      ],
      "rank": 1,
      "face": "400 normal",
-     "ms": 164
+     "ms": 1680
     },
     "script-cyrillic": {
      "top5": [
@@ -1182,7 +1182,7 @@
      ],
      "rank": 1,
      "face": "400 normal",
-     "ms": 64
+     "ms": 695
     },
     "script-greek": {
      "top5": [
@@ -1194,7 +1194,7 @@
      ],
      "rank": 1,
      "face": "400 normal",
-     "ms": 44
+     "ms": 669
     },
     "script-arabic": {
      "top5": [
@@ -1206,7 +1206,7 @@
      ],
      "rank": 1,
      "face": "400 normal",
-     "ms": 37
+     "ms": 496
     },
     "script-hebrew": {
      "top5": [
@@ -1218,7 +1218,7 @@
      ],
      "rank": 1,
      "face": "500 normal",
-     "ms": 30
+     "ms": 886
     },
     "script-devanagari": {
      "top5": [
@@ -1230,7 +1230,7 @@
      ],
      "rank": null,
      "face": "400 normal",
-     "ms": 32
+     "ms": 381
     },
     "script-chinese": {
      "top5": [
@@ -1242,7 +1242,7 @@
      ],
      "rank": 4,
      "face": "400 normal",
-     "ms": 50
+     "ms": 392
     },
     "probe-weight-300": {
      "top5": [
@@ -1254,7 +1254,7 @@
      ],
      "rank": 2,
      "face": "400 normal",
-     "ms": 174
+     "ms": 1269
     },
     "probe-weight-700": {
      "top5": [
@@ -1266,7 +1266,7 @@
      ],
      "rank": null,
      "face": "700 normal",
-     "ms": 187
+     "ms": 1926
     },
     "probe-upright": {
      "top5": [
@@ -1278,7 +1278,7 @@
      ],
      "rank": 1,
      "face": "400 normal",
-     "ms": 179
+     "ms": 2341
     },
     "probe-italic": {
      "top5": [
@@ -1290,7 +1290,7 @@
      ],
      "rank": 2,
      "face": "71 italic",
-     "ms": 185
+     "ms": 1235
     }
    }
   }

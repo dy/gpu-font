@@ -18,6 +18,8 @@ The distance recovers near-duplicates and derivatives exactly. Beyond the neares
 
 Since the student's release, one flat render in seven wears a display effect (outline, drop shadow, extrusion), the forum pictures' failure mode, and the 2,980 WhatFontIs development photographs of Google families join the stored Chromium views as training views, each in the face of its photographed weight and holding a fixed eighth of each step's 32 stored views (pooled with 210,000 renders they would be seen four times in a run); the 3,795 final photographs stay the held-out read.
 
+The tenth step's two view changes are options since, off unless asked: `--clean` is the share of views read through the page's cleaner (`page_clean`, pixel for pixel src/clean.mjs), `--arc` the share of damaged views set along a circle.
+
 Sketch views (the fine-tune) thin each rendering to one-pixel centre lines (Zhang–Suen, every stroke kept), redraw them with a round pen proportional to the text size, then add a smooth wobble and a slight tilt.
 
 ## Objective
@@ -243,6 +245,26 @@ No check passed the start, so the selection kept the ninth step's weights and no
 
 The packed photographs now carry that read. `train.style_photos` packs each picture in colour as the page reads a crop (src/clean.mjs readings: as it stands, cleaned when it is not two-tone, a steep line turned), one sample a reading, and `evaluate` folds a picture's readings into one query, each family at its best score over them, the first line's cleaned reading speaking for it to the heads (`fold_readings`). The 2,980 development pictures pack as 5,770 readings, the 840 final as 1,623; the frozen absent slice keeps its pictures. On that read the exported models stand closer than the raw read had them: the ninth step 85.0% top five and 64.6% first on the final pictures, the eighth 84.8% and 63.7% (raw: 77.7% and 57.0% against 76.5% and 55.1%); on the development pictures 84.3% and 61.0% against 83.2% and 59.0%. Every check of a run tracks this read from here on, and a run aimed at photographs should select on it.
 
+## Eleventh step: cleaned views alone
+
+`clean-10k` continues `pangram-30k` with one of the tenth step's three changes, half the views through the page's cleaner (`--clean 0.5`), at a tenth of its learning rate, 5e-5, for 10,000 steps with a check every 1,000: the recipe that recovered the 64-number fold with interest. No circles, no confusion partners; same teacher, `--photo 0.5`, selection on catalog validation. The first run judged on the photographs as the page reads them, and on the references with the cover line.
+
+| Step | Validation top-5 | First | Photographs top-5 | First |
+|---|---:|---:|---:|---:|
+| 0 (the ninth step) | 93.4% | 75.7% | 82.0% | 55.5% |
+| 1,000 | 92.7% | 74.9% | 81.1% | 54.9% |
+| 2,000 | 92.4% | 74.9% | 81.1% | 54.5% |
+| 3,000 | 92.8% | 75.1% | 81.5% | 55.3% |
+| 4,000 | 92.6% | 74.6% | 81.1% | 55.2% |
+| 5,000 | 92.6% | 74.8% | 81.2% | 53.7% |
+| 6,000 | 92.5% | 74.9% | 81.6% | 54.9% |
+| 7,000 | 92.4% | 74.9% | 82.0% | 55.4% |
+| 8,000 | 92.5% | 75.2% | 81.7% | 55.9% |
+| 9,000 | 92.5% | 75.1% | 81.5% | 55.4% |
+| 10,000 | 92.7% | 75.4% | 81.9% | 55.6% |
+
+No check passed the start on validation, so the selection kept the ninth step's weights and nothing ships. The lower learning rate shallowed the dip (a point, against a point and a half at 5e-4) and shortened it (the bottom at 2,000), but 10,000 steps did not climb back: validation ended seven tenths under the start, and the photographs, read as the page reads them, never left half a point of theirs, first place four tenths above at 8,000 and a tenth above at the end. Cleaned views alone, then, cost rendered text a little and buy the photographs nothing a cleaned read can see: the model already reads a cleaned crop as well as it reads the raw one, which is what the eighth and ninth steps' photographed views taught it. The run took 8.7 hours on a machine shared with other work. What remains of the tenth step's recipe to try alone is the circle-set text, whose target, lettering on a curve, no read measures yet.
+
 ## Other rasterizers, and 12 px
 
 Queries and references both come from Chromium on macOS. `scripts/style-bench-engines.mjs` renders the catalog validation queries through Playwright's WebKit (Safari's engine) and Firefox, and through Chromium at 12 px, packed as benchmarks of their own; the 64-number model against the same Chromium references:
@@ -352,6 +374,8 @@ The Google Fonts catalog lists every face: 8,132 entries with 26,459 vectors (lo
 The page shows one row per family. Kinds of one family that are twins in the crop's script, one name holding the other's first word, fold into one row, named by the member whose name sits inside the others (IBM Plex Sans KR and Arabic under IBM Plex Sans), scored by its best member and listing the rest; a different font that borrows the letters, like Parastoo with Lora's Latin or Anuphan with IBM Plex Sans's, keeps its own row; the saved result keeps every family. Twins are judged per script because shared Latin letters say nothing about the rest: Noto Sans Arabic and Noto Kufi Arabic are Latin twins but different Arabic designs. The display threshold is looser than the benchmark's median twins on purpose: a fold hides nothing, since folded names stay listed, while accuracy credits only the stricter pairs.
 
 DaFont's catalog is built from the site's own preview pictures, one line a face. The collector fetched three lines a face in the ninth step's cycle, and the catalog compiled from them was read beside the one-line catalog with the model fixed: on the forum threads it read 19.3% top five against 17.5%, on the final photographs 41.8% against 43.1% (DaFont's own answers 32.4% against 30.4%, Google's 49.8% against 51.0%), on Halford's requests 39.1% against 41.1%, for 4.2 MB more gzipped (9.9 MB against 5.8). The one-line catalog ships; the three-line compile stays under `.data/catalogs-aside` for the next model, and the preview preparation now skips a face's line that is blank (a font without digits) and says how many.
+
+**The cover line.** A specimen's cover is two letters of both cases, "Aa", and a two-glyph crop matches neither case line of a dozen letters: on Pangram Pangram's 206 covers the design was in the first ten 46.1% of the time among every catalog. Since 0.4.2 every face with both cases carries a third Latin row, the cover line "Aa" drawn at the three sizes as the case lines are (`SHORT` in train/style_catalog.py and src/references.mjs, `Latn-mixed`), in the Google catalog, the file-built catalogs and the browser's own My fonts alike. Measured first with the row in Pangram's catalog alone, the covers read 98.1% in the first ten and 75.7% first, the tallest lines of all its pictures 62.4% from 47.1%, lines that are not covers 48.3% from 46.5% ([photos.md](photos.md), Next). With the row in every catalog, Google's included, the reads of single lines hold or gain: the 151 forum crops 48.3% to 50.3% top five and 27.2% to 28.5% first, the 5,546 forum threads 18.7% to 18.8%, the final photographs 49.2% as before, the same-text read and the finder set unchanged; on the catalog test the row costs 0.07 points of top five (92.99% against 93.06%). On Pangram Pangram's pictures the gain stands with every catalog's rows in the race: whole pictures 47.5% to 63.4% in the first ten, the tallest lines 47.1% to 62.1%, the covers 97.1% and 61.2% first, 56 of 58 designs found from some picture. The held-out web screens read 29.1% as before and the Commons photographs 4.5%.
 
 ## Crop edges
 

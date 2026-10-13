@@ -4,9 +4,7 @@
 // instances (scripts/instances.py), one face each. A file is served to the page only when its bytes match its pinned git
 // blob. Writes .data/catalogs/files/<source>.json; `npm run demo:build` ships those whose terms allow it.
 //
-//   node scripts/catalog-files.mjs [--short] [source ...]     with the demo server running (npm run demo), after scripts/instances.py
-//
-// --short adds the cover line (src/references.mjs SHORT) as a row of each face and writes <source>-short.json beside the catalog: a candidate to measure, never shipped by this flag.
+//   node scripts/catalog-files.mjs [source ...]     with the demo server running (npm run demo), after scripts/instances.py
 import { readFile, writeFile, mkdir, rm } from 'node:fs/promises'
 import { createHash } from 'node:crypto'
 import { spawnSync } from 'node:child_process'
@@ -21,7 +19,7 @@ const names = new Map(registry.sources.map(s => [s.id, s.name.replace(/\s*\(.*\)
 const instances = await read(`${inventory.store}/instances.json`).catch(() => { console.log('No instances.json: variable files index at their default; run node scripts/python.mjs scripts/instances.py'); return { faces: {}, families: {} } })
 // Text catalogs index families with Latin letters; colour, letterless, icon and symbol-encoded families wait for a glyph mode.
 const eligible = family => !family.excluded && !family.symbolEncoded && family.letters?.Latn
-const short = process.argv.includes('--short'), wanted = process.argv.slice(2).filter(a => a !== '--short'), sources = Map.groupBy(inventory.families.filter(f => eligible(f) && (!wanted.length || wanted.includes(f.source))), f => f.source)
+const wanted = process.argv.slice(2), sources = Map.groupBy(inventory.families.filter(f => eligible(f) && (!wanted.length || wanted.includes(f.source))), f => f.source)
 const blob = bytes => createHash('sha1').update(`blob ${bytes.length}\0`).update(bytes).digest('hex')
 const pins = new Map([...inventory.families.flatMap(f => f.faces.map(face => [face.path, face.blob])), ...Object.values(instances.faces).flat().map(i => [i.path, i.blob])])
 const base = `http://127.0.0.1:${process.env.PORT || 4179}`
@@ -53,15 +51,19 @@ async function fresh() {
   return page
 }
 let page = await session()
+// A face can also hang the renderer without crashing it: a batch past its patience, a minute and two seconds a face, counts as crashed.
+const patience = faces => 60000 + 2000 * faces.length
+const timed = (promise, ms) => Promise.race([promise, new Promise((_, no) => setTimeout(() => no(new Error(`no answer in ${ms / 1000} s`)), ms).unref?.())])
 async function build(faces, source) {
   try {
-    return await page.evaluate(async ({ faces, source, short }) => {
+    return await timed(page.evaluate(async ({ faces, source }) => {
       const { buildCatalog } = await import('/src/references.mjs'), e = window.encoder
-      return buildCatalog(faces, { project: e.project, preparation: e.preparation, binding: e.binding, source, short })
-    }, { faces, source, short })
+      return buildCatalog(faces, { project: e.project, preparation: e.preparation, binding: e.binding, source })
+    }, { faces, source }), patience(faces))
   } catch (error) {
-    await page.close().catch(() => {}); page = await session()
-    if (faces.length === 1) return { catalog: null, skipped: faces, crashed: true }
+    // A hung page may not close: the browser is closed in its place and launched anew.
+    await timed(page.close(), 5000).catch(async () => { await timed(browser.close(), 5000).catch(() => {}); browser = await launch() }); page = await session()
+    if (faces.length === 1) { console.log(`\n${faces[0].id}: ${error.message.split('\n')[0]}; skipped`); return { catalog: null, skipped: faces, crashed: true } }
     const parts = []
     for (const face of faces) parts.push(await build([face], source))
     const built = parts.map(p => p.catalog).filter(Boolean)
@@ -85,7 +87,7 @@ try {
       skipped.push(...part.skipped)
     }
     if (!catalog) { console.log(`\n${source}: nothing indexed`); continue }
-    await writeFile(`.data/catalogs/files/${source}${short ? '-short' : ''}.json`, JSON.stringify({ ...catalog, name: names.get(source) ?? source }) + '\n')
+    await writeFile(`.data/catalogs/files/${source}.json`, JSON.stringify({ ...catalog, name: names.get(source) ?? source }) + '\n')
     const indexed = new Set(catalog.faces.map(f => f.familyId)).size
     console.log(`\n${source}: ${indexed} families, ${catalog.faces.length} faces${skipped.length ? `; skipped ${skipped.length}: ${skipped.map(f => f.id).join(', ')}` : ''}`)
   }

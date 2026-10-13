@@ -14,11 +14,11 @@
  "browser": "151.0.7922.34",
  "adapter": "apple metal-3",
  "encoderSha256": "6e35d208a2549812be98f0a0dac6e6eaabca5528d4295086c62d4db5c8476076",
- "date": "2026-10-11",
+ "date": "2026-10-12",
  "timeMs": {
-  "match": 471,
-  "read": 112,
-  "text": 324,
+  "match": 389,
+  "read": 89,
+  "text": 293,
   "from": "per photograph, warm; `text` covers both same-text rankings"
  },
  "reader": {
@@ -30,12 +30,12 @@
   "catalog": {
    "photographs": 400,
    "families": 42,
-   "top1": 0.31,
+   "top1": 0.3125,
    "top5": 0.56,
-   "top20": 0.7925,
+   "top20": 0.795,
    "byFamily": {
-    "top1": 0.3085,
-    "top5": 0.5599
+    "top1": 0.3107,
+    "top5": 0.5594
    }
   },
   "byText": {
@@ -45,8 +45,8 @@
    "top5": 0.73,
    "top20": 0.8225,
    "byFamily": {
-    "top1": 0.4839,
-    "top5": 0.7302
+    "top1": 0.4834,
+    "top5": 0.7297
    }
   },
   "byRead": {
@@ -56,8 +56,8 @@
    "top5": 0.7175,
    "top20": 0.8175,
    "byFamily": {
-    "top1": 0.4515,
-    "top5": 0.7171
+    "top1": 0.4511,
+    "top5": 0.7166
    }
   }
  },
@@ -225,7 +225,7 @@
   {"id":164,"family":"Alice","text":"Passport","read":"Passport","catalog":null,"byText":null,"byRead":null},
   {"id":9421,"family":"Xanh Mono","text":"wszystkie","read":"wszZystkie","catalog":1,"byText":1,"byRead":1},
   {"id":5654,"family":"Faustina","text":"ZOOYORK","read":"ZOOYORK","catalog":1,"byText":1,"byRead":1},
-  {"id":3952,"family":"Khand","text":"CLIMATE","read":"CLIMATE","catalog":9,"byText":4,"byRead":4},
+  {"id":3952,"family":"Khand","text":"CLIMATE","read":"CLIMATE","catalog":10,"byText":4,"byRead":4},
   {"id":2219,"family":"Dosis","text":"mirates","read":"mirates","catalog":null,"byText":null,"byRead":null},
   {"id":10694,"family":"Alice","text":"CANDIED","read":"CANDIED","catalog":1,"byText":1,"byRead":1},
   {"id":5759,"family":"Vidaloka","text":"ENELOOP","read":"ENELOOP","catalog":18,"byText":3,"byRead":3},
@@ -310,7 +310,7 @@
   {"id":1912,"family":"Antonio","text":"Fliegen","read":"fliegen","catalog":1,"byText":1,"byRead":1},
   {"id":159,"family":"Alice","text":"VILLAINS","read":"VILLAINS","catalog":1,"byText":1,"byRead":1},
   {"id":3334,"family":"Michroma","text":"Slazenger","read":"zenoe","catalog":2,"byText":1,"byRead":2},
-  {"id":1990,"family":"Kantumruy Pro","text":"ColaCol","read":"ColaCol","catalog":null,"byText":null,"byRead":null},
+  {"id":1990,"family":"Kantumruy Pro","text":"ColaCol","read":"ColaCol","catalog":1,"byText":1,"byRead":1},
   {"id":2675,"family":"Manjari","text":"ORILLED","read":"ORLLED","catalog":null,"byText":null,"byRead":null},
   {"id":1425,"family":"Figtree","text":"Replacement","read":"Replacement","catalog":8,"byText":1,"byRead":1},
   {"id":9612,"family":"Zen Maru Gothic","text":"Milliki","read":"yMiIiki","catalog":null,"byText":null,"byRead":null},
@@ -320,7 +320,7 @@
   {"id":7145,"family":"Hepta Slab","text":"DEFENCE","read":"DEFENCE","catalog":1,"byText":1,"byRead":1},
   {"id":5379,"family":"Radley","text":"fotoshot","read":"fotoshot","catalog":null,"byText":null,"byRead":null},
   {"id":263,"family":"JetBrains Mono","text":"Breakfast","read":"Breakfast","catalog":1,"byText":1,"byRead":1},
-  {"id":10182,"family":"Montagu Slab","text":"AEROSPACE","read":"AEROSPAGE","catalog":14,"byText":1,"byRead":1},
+  {"id":10182,"family":"Montagu Slab","text":"AEROSPACE","read":"AEROSPAGE","catalog":11,"byText":null,"byRead":null},
   {"id":5329,"family":"Ramaraja","text":"MIDLAND","read":"MDE","catalog":9,"byText":8,"byRead":19},
   {"id":161,"family":"Alice","text":"PERKALIAN","read":"PERKALIAN","catalog":7,"byText":1,"byRead":1},
   {"id":152,"family":"Alice","text":"Resistance","read":"Resistance","catalog":null,"byText":null,"byRead":null},
@@ -330,7 +330,7 @@
   {"id":2224,"family":"Dosis","text":"FUNICOLARE","read":"FUNICOLARE","catalog":10,"byText":7,"byRead":7},
   {"id":10993,"family":"Koh Santepheap","text":"Pictoral","read":"Pictoral","catalog":1,"byText":1,"byRead":1},
   {"id":6353,"family":"Caudex","text":"nickbedford","read":"nickbedford","catalog":1,"byText":1,"byRead":1},
-  {"id":2834,"family":"Goldman","text":"Station","read":"Station","catalog":4,"byText":1,"byRead":1},
+  {"id":2834,"family":"Goldman","text":"Station","read":"Station","catalog":5,"byText":1,"byRead":1},
   {"id":9847,"family":"Khand","text":"JANESON","read":"ANESON","catalog":1,"byText":1,"byRead":1},
   {"id":10903,"family":"Jua","text":"FURTHER","read":"FURTHER","catalog":5,"byText":1,"byRead":1},
   {"id":1995,"family":"Kantumruy Pro","text":"BULLHEAD","read":"BULLHEAD","catalog":16,"byText":3,"byRead":3},
@@ -350,7 +350,7 @@
   {"id":1421,"family":"Figtree","text":"MEMORIES","read":"MEMORIES","catalog":null,"byText":null,"byRead":null},
   {"id":4473,"family":"Koh Santepheap","text":"MASLINK","read":"MASLINK","catalog":1,"byText":2,"byRead":2},
   {"id":7410,"family":"Montagu Slab","text":"Tossing","read":"Tossing","catalog":10,"byText":1,"byRead":1},
-  {"id":9487,"family":"Kode Mono","text":"CHAMBLESS","read":"CHAMBLESs","catalog":2,"byText":2,"byRead":2},
+  {"id":9487,"family":"Kode Mono","text":"CHAMBLESS","read":"CHAMBLESs","catalog":3,"byText":2,"byRead":2},
   {"id":2270,"family":"Dosis","text":"Iceland","read":"Iceland","catalog":2,"byText":1,"byRead":1},
   {"id":4680,"family":"Imbue","text":"TRAINAT","read":"TRAINAT","catalog":3,"byText":2,"byRead":2},
   {"id":10098,"family":"Arapey","text":"juillet","read":"juillet","catalog":12,"byText":7,"byRead":7},
@@ -362,7 +362,7 @@
   {"id":9982,"family":"Ramaraja","text":"POLIZEI","read":"POLIZEI","catalog":null,"byText":3,"byRead":3},
   {"id":2227,"family":"Dosis","text":"CLAGOLSKI","read":"CLAGOLSKI","catalog":3,"byText":1,"byRead":1},
   {"id":3332,"family":"Michroma","text":"Gaurika","read":"Gaurika","catalog":2,"byText":2,"byRead":2},
-  {"id":11713,"family":"Goldman","text":"Village","read":"vilage","catalog":5,"byText":2,"byRead":2},
+  {"id":11713,"family":"Goldman","text":"Village","read":"vilage","catalog":7,"byText":2,"byRead":2},
   {"id":6058,"family":"Quando","text":"Danielle","read":"Danielle","catalog":1,"byText":1,"byRead":1},
   {"id":779,"family":"Sono","text":"Driscoll","read":"Dfiscol","catalog":4,"byText":4,"byRead":2},
   {"id":1656,"family":"Outfit","text":"catalina","read":"catalino","catalog":null,"byText":6,"byRead":2},
@@ -444,7 +444,7 @@
   {"id":2271,"family":"Dosis","text":"Gettelman","read":"Gettelman","catalog":1,"byText":1,"byRead":1},
   {"id":4871,"family":"Sahitya","text":"Charity","read":"Charity","catalog":6,"byText":1,"byRead":1},
   {"id":10885,"family":"Goldman","text":"Legault","read":"N","catalog":7,"byText":2,"byRead":7},
-  {"id":9481,"family":"Kode Mono","text":"HANGOVER","read":"HANGOVER","catalog":2,"byText":2,"byRead":2},
+  {"id":9481,"family":"Kode Mono","text":"HANGOVER","read":"HANGOVER","catalog":3,"byText":2,"byRead":2},
   {"id":3337,"family":"Michroma","text":"Bernard","read":"Bernard","catalog":3,"byText":3,"byRead":3},
   {"id":6453,"family":"Arapey","text":"OSTERSUND","read":"OSTERSUND","catalog":null,"byText":6,"byRead":6},
   {"id":4095,"family":"Tai Heritage Pro","text":"Rangers","read":"gor","catalog":4,"byText":1,"byRead":4},

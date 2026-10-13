@@ -19,6 +19,9 @@ from train.style_teacher import glyph_sets
 OUT = ROOT/'.data/style'
 # Three lines per case cover all 26 letters.
 LATIN = {'lower': ['hamburgefonts', 'quickjivexy', 'dwarflpzm'], 'upper': ['HAMBURGEFONTS', 'QUICKJIVEXY', 'DWARFLPZM']}
+# A specimen's cover, two letters of both cases, as a row of its own: a two-glyph crop matches neither case line of a dozen
+# letters (bench/photos.md, Pangram Pangram's own pictures). src/references.mjs SHORT draws the same for the browser's catalogs.
+SHORT = ['Aa']
 SIZE = 48
 STATE = {}
 
@@ -34,6 +37,7 @@ def kinds(pool):
             # Faces missing a letter of the fixed lines use their own letters of that case.
             own = ''.join(c for c in pool['Latn'] if c.isascii() and c.isalpha() and (c.islower() if case == 'lower' else c.isupper()))
             if len(own) >= 8: result['Latn-' + case] = [own[i:i + 12] for i in range(0, min(len(own), 36), 12)]
+        if 'Latn-lower' in result and 'Latn-upper' in result and all(c in pool['Latn'] for c in SHORT[0]): result['Latn-mixed'] = SHORT
     for script, chars in sorted(pool.items()):
         if script == 'Latn': continue
         if script in CASED:

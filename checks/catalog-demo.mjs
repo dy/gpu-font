@@ -366,12 +366,12 @@ try {
   assert.ok(subsetNames.length && subsetNames.every(([value, family]) => value === (original.read ?? family)), `Rows past the fifth show the read words or their own names too: ${JSON.stringify([original.read, subsetNames.slice(0, 3)])}`)
   assert.ok((await page.locator('#results .font-twins').allTextContents()).every(t => t.startsWith('≈ ')), 'Twins read as ≈')
   // A typed text reaches subset rows as they come near: one in view takes it, the last waits until scrolled to.
-  const valueOf = n => page.locator('#results .result').nth(n).locator('.result-preview').inputValue()
   await page.locator('#results .result').nth(8).scrollIntoViewIfNeeded(); await page.locator('#preview-text').fill('Hamburg')
   await page.waitForFunction(() => document.querySelectorAll('#results .result-preview')[7].value === 'Hamburg')
-  assert.equal(await valueOf(listed.length - 1), original.read ?? listed.at(-1).face.family, 'A far subset row keeps its name, or the read words, until it comes near')
+  // The typed text re-ranks the list and the rows are drawn anew, each hidden until its face loads: a far row never shows the typed text before it comes near.
+  assert.ok(await page.locator('#results .result').nth(listed.length - 1).locator('.result-preview').evaluate(i => i.style.visibility === 'hidden' || i.value !== 'Hamburg'), 'A far subset row shows its name, or the read words, until it comes near')
   await page.locator('#results .result').last().scrollIntoViewIfNeeded()
-  await page.waitForFunction(() => [...document.querySelectorAll('#results .result-preview')].at(-1).value === 'Hamburg')
+  await page.waitForFunction(() => { const input = [...document.querySelectorAll('#results .result-preview')].at(-1); return input.value === 'Hamburg' && input.style.visibility === '' })
   await page.locator('#preview-text').fill('')
   await page.waitForFunction(() => !document.querySelector('#results').hasAttribute('aria-busy'))  // the list settles after the text changed it
   await page.unroute(refused)
@@ -839,12 +839,12 @@ try {
     const refs = await read('.data/style/references-browser.json'), refFile = openSync('.data/style/references-browser.u8', 'r')
     const refPixels = w => { const bytes = Buffer.alloc(w.width * w.height); readSync(refFile, bytes, 0, bytes.length, w.offset); return bytes }
     const faceIndex = (await read('.data/style/faces.json')).faces.findIndex(f => f.id === 'lora/400')
-    const expected = ['Latn-lower', 'Latn-upper'].map(kind => unit(refs.samples.flatMap((sample, i) => sample.face === faceIndex && sample.kind === kind
+    const expected = ['Latn-lower', 'Latn-upper', 'Latn-mixed'].map(kind => unit(refs.samples.flatMap((sample, i) => sample.face === faceIndex && sample.kind === kind
       ? [embedWindows(refs.windows.filter(w => w.source === i).map(w => inferCPU(model, { width: w.width, height: w.height, pixels: Float32Array.from(refPixels(w), v => v / 255) })))] : [])
       .reduce((sum, e) => sum.map((v, d) => v + e[d]), new Float32Array(model.outputs))))
     closeSync(refFile)
     const cosine = (a, b) => a.reduce((sum, v, d) => sum + v * b[d], 0), near = ours.map(row => Math.max(...theirs.map(other => cosine(row, other))))
-    assert.equal(ours.length, 2, 'Lowercase and capitals')
+    assert.equal(ours.length, 3, 'Lowercase, capitals and the cover line')
     // The browser packs its rows at 4 bits, so its integers are compared with the encoder's vector packed the same way:
     // equal, except where a value sits on a rounding boundary and float noise tips it one step.
     const saved = (await stored()).catalog, raw = saved.vectors, dims = saved.dimensions, packed = unpack(Buffer.from(raw.data, 'base64'), 4, raw.shape[0] * dims)

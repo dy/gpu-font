@@ -199,7 +199,8 @@ class TeacherTests(unittest.TestCase):
 class CatalogAndLossTests(unittest.TestCase):
     def test_reference_kinds_cover_both_latin_cases_and_other_scripts(self):
         latin = ''.join(sorted(set(''.join(LATIN['lower'] + LATIN['upper']))))
-        self.assertEqual(sorted(kinds({'Latn': latin, 'Cyrl': 'абвгдежзийклмноп'})), ['Cyrl-lower', 'Latn-lower', 'Latn-upper'])
+        self.assertEqual(sorted(kinds({'Latn': latin, 'Cyrl': 'абвгдежзийклмноп'})), ['Cyrl-lower', 'Latn-lower', 'Latn-mixed', 'Latn-upper'])
+        self.assertEqual(kinds({'Latn': latin})['Latn-mixed'], ['Aa'])
         self.assertEqual(sorted(kinds({'Latn': latin.lower()})), ['Latn-lower'])
         self.assertEqual(kinds({'Grek': 'αβγ'}), {})
         # A cased script gets both cases, each alphabet whole across three lines; digits are not letters.

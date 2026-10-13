@@ -7,9 +7,9 @@
   "embeddingError": 4.865969727707586e-7,
   "timing": {
     "adapter": "metal-3",
-    "initializationMs": 26.900000035762787,
-    "warmWindowP50Ms": 0.8999999761581421,
-    "warmWindowP95Ms": 1.800000011920929,
+    "initializationMs": 23.700000047683716,
+    "warmWindowP50Ms": 1.899999976158142,
+    "warmWindowP95Ms": 2.200000047683716,
     "samples": 20,
     "width": 128,
     "height": 48
@@ -18,8 +18,8 @@
     "text": "Quiet rivers flow",
     "font": "56px serif",
     "median": "of 9 WebGPU and 3 CPU matches after one warm-up",
-    "webgpuMs": 16.099999964237213,
-    "cpuMs": 1119
+    "webgpuMs": 33.199999928474426,
+    "cpuMs": 1572.8000000715256
   },
   "payload": [
     {
@@ -31,10 +31,10 @@
     },
     {
       "path": "models/encoder/google-fonts.json",
-      "sha256": "8cea7919d41675dce2ecc39891d95088dca8e0b66a691d44bfaecf08710d3ca1",
-      "bytes": 3592819,
-      "gzipBytes": 880084,
-      "brotliBytes": 717923
+      "sha256": "88ef72da40d75073119dd1b803b609dab6bb7e359fbb5111e9ffe16e1932cdde",
+      "bytes": 4050051,
+      "gzipBytes": 1104815,
+      "brotliBytes": 907119
     },
     {
       "path": "src/network.mjs",
@@ -52,10 +52,10 @@
     },
     {
       "path": "src/catalog.mjs",
-      "sha256": "dd4c30967540a372765ed88f1e3e99e2b3fd0abf2ce016398469e3fdc370ce2b",
-      "bytes": 17582,
-      "gzipBytes": 6227,
-      "brotliBytes": 5513
+      "sha256": "ef4d3313a59d92c5f3269371eae5123d81269ad22560e0de941add2553489baa",
+      "bytes": 18113,
+      "gzipBytes": 6354,
+      "brotliBytes": 5634
     },
     {
       "path": "src/prepare.mjs",
@@ -79,6 +79,6 @@
       "brotliBytes": 2592
     }
   ],
-  "componentBytes": 4162287,
+  "componentBytes": 4620050,
   "scope": "Existing CPU/Metal convolution kernels with native encoder outputs. Single-window projection timing excludes image preparation and catalog search; match timing is one whole match in Chromium through createMatcher. Bytes include encoder, catalog and existing inference/preparation modules; include catalog parsing/ranking; exclude demo and optional font previews."
 }

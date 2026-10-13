@@ -303,7 +303,7 @@ def damage(image, rng, photo=False):
     """Screenshot conditions: colour/contrast/polarity, rotation, rescaling, blur, JPEG, noise, clipped edges, and now and then
     a display effect on the flat letters. With `photo`, a photographed surface first (surface): texture from the bank, uneven
     light, shadow and glare, worn or effected ink, blur, noise, perspective."""
-    if rng.random() < ARC: image = arc(image, rng)
+    if rng.random() < STATE.get('arc', 0): image = arc(image, rng)  # a share of damaged views set along a circle
     if photo: image = surface(image, rng)
     else:
         a = np.asarray(image, np.float32)/255
@@ -355,12 +355,13 @@ def pools(families, sets):
     return result
 
 
-ARC = .06  # damaged views set along a circle
 STATE = {}
 
 
-def init(faces, pools, drawn=0.0, photo=0.0, teacher=False, sampler='windows'):
-    STATE.update(faces=faces, pools=pools, fonts=Fonts(), prepare=Preparer(sampler), drawn=drawn, photo=photo, teacher=teacher)
+def init(faces, pools, drawn=0.0, photo=0.0, teacher=False, sampler='windows', clean=0.0, arc=0.0):
+    """`clean`: the share of views read through the page's cleaner (page_clean), as the page reads a line as it stands and cleaned;
+    `arc`: the share of damaged views set along a circle."""
+    STATE.update(faces=faces, pools=pools, fonts=Fonts(), prepare=Preparer(sampler), drawn=drawn, photo=photo, teacher=teacher, clean=clean, arc=arc)
 
 
 def sample(spec):
@@ -375,7 +376,7 @@ def sample(spec):
             if drawn: image = sketch(image, rng)  # hand-drawn view: style, not identity
             photo = not clean and not drawn and rng.random() < STATE.get('photo', 0)  # photographed surface: identity as usual
             gray = np.asarray(image, np.uint8) if clean else damage(image, rng, photo=photo)
-            if rng.random() < .5: gray = page_clean(gray)  # the page reads a line as it stands and cleaned: half the views each way
+            if rng.random() < STATE.get('clean', 0): gray = page_clean(gray)  # the page reads a line as it stands and cleaned
             windows = STATE['prepare'](gray)
             if not windows: continue
             view = {'face':index,'script':script,'text':value,'windows':windows,'drawn':drawn,'photo':photo,'damaged':not clean}
@@ -391,8 +392,8 @@ class Stream:
     """Prefetched batches of prepared views from a worker pool."""
     PATIENCE = 600  # seconds a batch may take before its workers count as lost
 
-    def __init__(self, faces, pools, plan, workers=10, prefetch=6, drawn=0.0, photo=0.0, teacher=False, sampler='windows'):
-        self.workers = lambda: multiprocessing.get_context('spawn').Pool(workers, initializer=init, initargs=(faces, pools, drawn, photo, teacher, sampler))
+    def __init__(self, faces, pools, plan, workers=10, prefetch=6, drawn=0.0, photo=0.0, teacher=False, sampler='windows', clean=0.0, arc=0.0):
+        self.workers = lambda: multiprocessing.get_context('spawn').Pool(workers, initializer=init, initargs=(faces, pools, drawn, photo, teacher, sampler, clean, arc))
         self.pool = self.workers(); self.plan = plan; self.queue = queue.Queue(prefetch); self.stop = False; self.error = None
         self.thread = threading.Thread(target=self.fill, daemon=True); self.thread.start()
 
