@@ -4,7 +4,11 @@
 // instances (scripts/instances.py), one face each. A file is served to the page only when its bytes match its pinned git
 // blob. Writes .data/catalogs/files/<source>.json; `npm run demo:build` ships those whose terms allow it.
 //
-//   node scripts/catalog-files.mjs [source ...]     with the demo server running (npm run demo), after scripts/instances.py
+//   node scripts/catalog-files.mjs [--hosted] [source ...]     with the demo server running (npm run demo), after scripts/instances.py
+//
+// A source whose web fonts the page may draw (bench/foundries.json, `decision.webFonts`) has its faces carry the address its
+// host serves each file from, and an instance its axes (scripts/catalog-faces.mjs), from .data/<source>/fonts.jsonl as the
+// collector wrote it. --hosted carries them for every source that has the list, into <source>-hosted.json beside the catalog: a candidate to measure, never shipped by this flag.
 import { readFile, writeFile, mkdir, rm } from 'node:fs/promises'
 import { createHash } from 'node:crypto'
 import { spawnSync } from 'node:child_process'
@@ -15,11 +19,18 @@ import { catalogFaces } from './catalog-faces.mjs'
 const read = async path => JSON.parse(await readFile(path, 'utf8'))
 const [inventory, registry, site] = await Promise.all(['bench/open-fonts.json', 'bench/foundries.json', 'site.json'].map(read))
 const names = new Map(registry.sources.map(s => [s.id, s.name.replace(/\s*\(.*\)$/, '')])), homes = new Map(registry.sources.map(s => [s.id, s.url]))
+const decisions = new Map(registry.sources.map(s => [s.id, s.decision ?? {}]))
+// The host's address of each file of a source, by the file's store path (its folder is the file as collected).
+async function hostedFiles(source) {
+  if (!hostedFlag && decisions.get(source)?.webFonts !== true) return new Map()
+  const list = (await readFile(`.data/${source.replace(/-pangram$/, '')}/fonts.jsonl`, 'utf8').catch(() => '')).split('\n').filter(Boolean).map(JSON.parse), byFile = new Map(list.map(f => [f.file, f.url]))
+  return new Map(inventory.families.filter(f => f.source === source).flatMap(f => f.faces.map(face => [face.path, byFile.get(face.path.split('/')[1])])).filter(([, url]) => url))
+}
 // The static instances of the variable files, when scripts/instances.py has made them; without the manifest each file is one face at its default.
 const instances = await read(`${inventory.store}/instances.json`).catch(() => { console.log('No instances.json: variable files index at their default; run node scripts/python.mjs scripts/instances.py'); return { faces: {}, families: {} } })
 // Text catalogs index families with Latin letters; colour, letterless, icon and symbol-encoded families wait for a glyph mode.
 const eligible = family => !family.excluded && !family.symbolEncoded && family.letters?.Latn
-const wanted = process.argv.slice(2), sources = Map.groupBy(inventory.families.filter(f => eligible(f) && (!wanted.length || wanted.includes(f.source))), f => f.source)
+const hostedFlag = process.argv.includes('--hosted'), wanted = process.argv.slice(2).filter(a => a !== '--hosted'), sources = Map.groupBy(inventory.families.filter(f => eligible(f) && (!wanted.length || wanted.includes(f.source))), f => f.source)
 const blob = bytes => createHash('sha1').update(`blob ${bytes.length}\0`).update(bytes).digest('hex')
 const pins = new Map([...inventory.families.flatMap(f => f.faces.map(face => [face.path, face.blob])), ...Object.values(instances.faces).flat().map(i => [i.path, i.blob])])
 const base = `http://127.0.0.1:${process.env.PORT || 4179}`
@@ -78,7 +89,8 @@ try {
   // A source left with no family to index (Font Awesome's, whose letters only spell icons) loses its earlier catalog.
   for (const source of new Set(inventory.families.map(f => f.source))) if (!sources.has(source) && (!wanted.length || wanted.includes(source))) await rm(`.data/catalogs/files/${source}.json`, { force: true })
   for (const [source, families] of sources) {
-    const faces = families.flatMap(family => catalogFaces(family, { instances, twins, home: homes.get(source) }).map(({ path, ...face }) => ({ ...face, source: `url("/fonts-open/${path.split('/').map(encodeURIComponent).join('/')}")` })))
+    const hosted = await hostedFiles(source)
+    const faces = families.flatMap(family => catalogFaces(family, { instances, twins, home: homes.get(source), hosted }).map(({ path, ...face }) => ({ ...face, source: `url("/fonts-open/${path.split('/').map(encodeURIComponent).join('/')}")` })))
     let catalog = null, skipped = []
     for (let i = 0; i < faces.length; i += BATCH) {
       process.stdout.write(`\r${source} ${i}/${faces.length}   `)
@@ -87,7 +99,7 @@ try {
       skipped.push(...part.skipped)
     }
     if (!catalog) { console.log(`\n${source}: nothing indexed`); continue }
-    await writeFile(`.data/catalogs/files/${source}.json`, JSON.stringify({ ...catalog, name: names.get(source) ?? source }) + '\n')
+    await writeFile(`.data/catalogs/files/${source}${hostedFlag ? '-hosted' : ''}.json`, JSON.stringify({ ...catalog, name: names.get(source) ?? source }) + '\n')
     const indexed = new Set(catalog.faces.map(f => f.familyId)).size
     console.log(`\n${source}: ${indexed} families, ${catalog.faces.length} faces${skipped.length ? `; skipped ${skipped.length}: ${skipped.map(f => f.id).join(', ')}` : ''}`)
   }

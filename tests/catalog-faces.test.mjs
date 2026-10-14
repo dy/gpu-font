@@ -32,6 +32,16 @@ test('a selected file without instances stays the default even when another file
   assert.deepEqual(faces.map(f => f.id), ['pp-kyoto/Kyoto-Upright', 'pp-kyoto/Kyoto-Italic@bold-italic', 'pp-kyoto/Kyoto-Extra'])
 })
 
+test('a hosted file gives its faces the address, and an instance of a variable file its axes, so the page draws the instance from the one file', () => {
+  const hosted = new Map([['pp/Kyoto-Upright.ttf', 'https://pp.example/cdn/Kyoto-Upright.ttf'], ['pp/Kyoto-Extra.ttf', 'https://pp.example/cdn/Kyoto-Extra.ttf']])
+  const withAxes = { ...instances, faces: { ...instances.faces, 'pp/Kyoto-Upright.ttf': instances.faces['pp/Kyoto-Upright.ttf'].map((i, k) => ({ ...i, axes: { wght: k ? 400 : 100 } })) } }
+  const faces = catalogFaces(family, { instances: withAxes, hosted })
+  assert.deepEqual(faces.map(f => [f.id, f.file ?? null, f.axes ?? null]), [
+    ['pp-kyoto/Kyoto-Upright@thin', 'https://pp.example/cdn/Kyoto-Upright.ttf', { wght: 100 }], ['pp-kyoto/Kyoto-Upright@regular', 'https://pp.example/cdn/Kyoto-Upright.ttf', { wght: 400 }],
+    ['pp-kyoto/Kyoto-Italic@bold-italic', null, null], ['pp-kyoto/Kyoto-Extra', 'https://pp.example/cdn/Kyoto-Extra.ttf', null]])
+  assert.deepEqual(catalogFaces(family, { instances }).filter(f => f.file || f.axes), [], 'nothing hosted, nothing carried')
+})
+
 test('style names round weights to the nearest hundred and name the slope', () => {
   assert.deepEqual([styleName(450, false), styleName(400, true), styleName(950, true), styleName(50, false)], ['Medium', 'Italic', 'Black Italic', 'Thin'])
 })

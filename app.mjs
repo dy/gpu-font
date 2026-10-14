@@ -203,7 +203,7 @@ async function loadFont(key, face) {
   if (!face) throw new Error('Font is absent from this catalog')
   const src = face.file ? `url("${face.file}")` : face.local && `local("${face.local}")`, family = specimenFamily(key)
   if (!fonts.has(key)) fonts.set(key, (src
-    ? new FontFace(family, src, { weight: String(face.weight ?? 400), style: face.style ?? 'normal' }).load().then(loaded => { document.fonts.add(loaded); return family })
+    ? new FontFace(family, src, { weight: String(face.weight ?? 400), style: face.style ?? 'normal', ...(face.axes ? { variationSettings: Object.entries(face.axes).map(([tag, value]) => `"${tag}" ${value}`).join(', ') } : {}) }).load().then(loaded => { document.fonts.add(loaded); return family })  // an instance of a variable file, drawn at its axes
     : new Promise((resolve, reject) => document.head.append(Object.assign(document.createElement('link'), { rel: 'stylesheet', href: googleCss(face), onload: resolve, onerror: () => reject(new Error(`Google Fonts does not serve ${face.family}`)) })))
       .then(() => document.fonts.load(`${face.style ?? 'normal'} ${face.weight ?? 400} 16px "${face.family}"`))
       .then(loaded => { if (!loaded.length) throw new Error(`Google Fonts does not serve ${face.family}`); return face.family })
@@ -530,7 +530,7 @@ function encoderResult(match, rank, index) {
 // picture: DaFont's own preview for a DaFont face, the one stored with the site for any other face of a shipped catalog.
 function previewSources(face) {
   const google = searchCatalog.builtin && catalog.previews[face.familyId]
-  return google ? [{ text: google }] : face.local ? [{ text: { latin: true } }] : searchCatalog.builtin ? [{ picture: face }] : []
+  return google ? [{ text: google }] : face.local || face.file ? [{ text: { latin: true } }] : searchCatalog.builtin ? [{ picture: face }] : []  // a face the page can draw shows the words; one it cannot, its picture
 }
 // The first source that shows: one that fails to load gives way to the next, the last to a note. Never a fallback face
 // displayed as if it were a matching specimen.

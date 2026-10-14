@@ -92,7 +92,15 @@ export async function matchPhotos(items, { limit = 20, log = console.log, text =
         })().catch(() => null))
         return loaded.get(key)
       }
-      const draw = async (row, words, size) => { const family = await googleFace(row.face); return family ? drawLine(drawing, family, words, size, row.face) : null }  // any row Google Fonts serves by that name
+      // A face its host serves (`file`, an instance at its `axes`), loaded once; the page draws it the same way (app.mjs loadFont).
+      const hostedFace = face => {
+        if (!loaded.has(face.id)) loaded.set(face.id, (async () => {
+          const alias = `hosted-${loaded.size}`, font = new FontFace(alias, `url("${face.file}")`, { weight: String(face.weight ?? 400), style: face.style ?? 'normal', ...(face.axes ? { variationSettings: Object.entries(face.axes).map(([tag, value]) => `"${tag}" ${value}`).join(', ') } : {}) })
+          document.fonts.add(await font.load()); return alias
+        })().catch(() => null))
+        return loaded.get(face.id)
+      }
+      const draw = async (row, words, size) => { const family = await (row.face.file ? hostedFace(row.face) : googleFace(row.face)); return family ? drawLine(drawing, family, words, size, row.face) : null }  // any row Google Fonts serves by that name, or whose host serves its file
       const plain = rows => rows.map(r => ({ family: r.family, name: r.face.family, siblings: r.siblings, score: r.score, weight: r.face.weight, style: r.face.style, ...(r.textScore !== undefined && { textScore: r.textScore, combined: r.combined }) }))
       window.photo = async (url, [x0, y0, x1, y1], limit, text) => {
         const start = performance.now(), bitmap = await createImageBitmap(await (await fetch(url)).blob())
