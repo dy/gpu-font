@@ -45,7 +45,7 @@
     },
     {
       "id": "pangram-pangram",
-      "sha256": "7cb4b6b2d2af7957fb2d604e9e21f804033f16211ae3d79b21e8c23db645630b",
+      "sha256": "720c59f636aaea21aec87f4260c1c707499936226d195e5074ae1229a253c796",
       "families": 201,
       "faces": 4580
     },
@@ -58,7 +58,7 @@
   ],
   "cpuError": 1.0058283805847168e-7,
   "gpuError": 4.172325134277344e-7,
-  "detectionMilliseconds": 70.39999997615814,
+  "detectionMilliseconds": 69.30000007152557,
   "checks": [
     "native CPU/PyTorch/WebGPU projections",
     "exact displayed tensors and input stats",

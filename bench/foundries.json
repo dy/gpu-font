@@ -2325,6 +2325,10 @@
     {
      "date": "2026-10-07",
      "event": "Shipping the catalog decided by the maintainer: names, links and style vectors only, as the other file-built catalogs"
+    },
+    {
+     "date": "2026-10-13",
+     "event": "Permission to draw the web fonts from the foundry's host on the page (Mat); faces carry their file and axes since"
     }
    ],
    "familiesAvailable": 62,
@@ -2333,7 +2337,10 @@
    "decision": {
     "ship": true,
     "date": "2026-10-07",
-    "note": "Shipped at the maintainer's decision, 2026-10-07, under the permission Mat at Pangram Pangram gave the same day to train the model with the library: names, product-page links and style vectors from the font files the site loads; no font files kept in the release; the catalog comes down at Pangram Pangram's request."
+    "note": "Shipped at the maintainer's decision, 2026-10-07, under the permission Mat at Pangram Pangram gave the same day to train the model with the library: names, product-page links and style vectors from the font files the site loads; no font files kept in the release; the catalog comes down at Pangram Pangram's request.",
+    "webFonts": true,
+    "webFontsDate": "2026-10-13",
+    "webFontsNote": "The page draws the foundry's faces from the web fonts its site serves (the same files, at an instance's axes) for previews and the same-text stage, by the foundry's permission of 2026-10-13 (Mat, via the maintainer); nothing stored; down on request."
    }
   },
   {

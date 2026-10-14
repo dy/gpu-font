@@ -495,13 +495,16 @@ try {
     await verify(page, value, option); assert.deepEqual(value.embedding, original.embedding); assert.deepEqual(value.inputs, original.inputs)
     assert.equal(value.cachedEmbedding, true)
     if (option.id !== 'google-fonts') {
-      assert.equal(await page.locator('.result-preview').count(), 0)
+      // Each match shows the words in its face when the face's host serves the file, else DaFont's own preview for a DaFont face,
+      // the picture stored with the site for any other, or says it has none.
+      // The rows as shown: the same-text stage re-sorts the shortlist once faces the page can draw take part.
+      const folded = foldTwins(value.matches, readCatalog(await read(option.file), data), { script: value.verdict?.script?.[0]?.label, limit: SHORTLIST }), byFamily = new Map(folded.map(m => [m.family, m]))
+      const faces = (value.sametext ? value.sametext.rows.map(r => byFamily.get(r.family)) : folded).slice(0, 5).map(m => m.face)
+      assert.equal(await page.locator('.result-preview').count(), faces.filter(f => f.file).length, 'Only a face its host serves is drawn')
       assert.equal(await page.locator('.reference-preview').count(), 0, 'Captured specimens are never shipped')
       assert.ok((await page.locator('.result .font-name a').evaluateAll(links => links.map(a => a.href))).every(href => /^https:\/\//.test(href)), 'Each match links to its source instead')
-      // Each match shows DaFont's own preview for a DaFont face, the picture stored with the site for any other, or says it has none.
-      const faces = foldTwins(value.matches, readCatalog(await read(option.file), data), { script: value.verdict?.script?.[0]?.label, limit: 5 }).map(m => m.face)
       await page.waitForFunction(() => [...document.querySelectorAll('#results .result')].every(previewState))
-      assert.deepEqual(await page.locator('#results .result').evaluateAll(rows => rows.map(previewState)), await Promise.all(faces.map(async f => pictureless.has(f.id) ? 'No preview available' : `image ${new URL(await previewAddress(f), `${base}/`)}`)), option.id)
+      assert.deepEqual((await page.locator('#results .result').evaluateAll(rows => rows.map(previewState))).map(state => state?.startsWith('font ') ? 'font' : state), await Promise.all(faces.map(async f => f.file ? 'font' : pictureless.has(f.id) ? 'No preview available' : `image ${new URL(await previewAddress(f), `${base}/`)}`)), option.id)
     }
   }
   assert.deepEqual((await result(page)).matches, original.matches)

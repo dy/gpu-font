@@ -91,7 +91,7 @@ const matcher = await createMatcher(catalogs.debian)
 | `adobe-fonts` | 4,784 | [Adobe Fonts](https://fonts.adobe.com/), from its specimen pages: one face a family |
 | `github` | 3,564 | Openly licensed font repositories on GitHub, from their files |
 | `whatfontis` | 226 | [WhatFontIs](https://www.whatfontis.com/), from its own renders: the fonts of its benchmark no other catalog holds, one face a family |
-| `pangram-pangram` | 201 | [Pangram Pangram](https://pangrampangram.com/), from its font files, by the foundry's permission: every cut and its variable twin, weight and style known |
+| `pangram-pangram` | 201 | [Pangram Pangram](https://pangrampangram.com/), from its font files, by the foundry's permission: every cut and its variable twin, weight and style known; the page draws each face from the web fonts the foundry's site serves, for its preview and the second stage |
 | `other` | 576 | Sources under 100 families: Uncut, Use & Modify, Velvetyne, Fontshare, Fontsource, Bye Bye Binary, Collletttivo, Tunera, Latin Modern, TeX Gyre, Paper Mono and more |
 
 DaFont, Adobe Fonts and WhatFontIs are indexed from the images their sites show, not from font files, and ship as names, links and style vectors, the first two by the maintainer's decision; Pangram Pangram ships the same way from its files, under the permission it gave to train on its library. Their terms are recorded in [bench/foundries.json](https://github.com/dy/gpu-font/blob/main/bench/foundries.json), and any of these catalogs comes down at its source's request.
